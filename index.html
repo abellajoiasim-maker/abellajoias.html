@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Marcinha Semijoias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<style>
+body{background:#F8F6F2}
+.font-serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+
+/* Overlay e animação do carrinho fullscreen */
+#telaCarrinho{
+  transform: translateX(100%);
+  transition: transform 0.4s ease-in-out;
+}
+#telaCarrinho.show{
+  transform: translateX(0);
+}
+</style>
+</head>
+<body>
+
+<header class="bg-white p-8 border-b text-center relative">
+  <h1 class="font-serif text-3xl tracking-widest gold">Marcinha Semijoias</h1>
+  <p class="text-xs tracking-widest text-gray-400 mt-1">CATÁLOGO EXCLUSIVO</p>
+
+  <!-- Botão desktop carrinho -->
+  <button id="btnCarrinhoDesktop" class="absolute top-5 right-10 hidden lg:inline-block bg-black text-white px-4 py-2 rounded text-xs tracking-widest">
+    🛒 Carrinho
+  </button>
+</header>
+
+<main class="max-w-7xl mx-auto p-8">
+  <!-- PRODUTOS GRID RESPONSIVO -->
+  <section id="produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8"></section>
+</main>
+
+<!-- BOTÃO FLUTUANTE MOBILE -->
+<button 
+  id="btnCarrinhoMobile"
+  class="fixed bottom-5 right-5 bg-black text-white px-5 py-3 rounded-full text-xs tracking-widest lg:hidden shadow-lg z-50">
+  🛒 Carrinho
+</button>
+
+<!-- TELA FULLSCREEN CARRINHO -->
+<div id="telaCarrinho" class="fixed inset-0 bg-black/50 z-50 hidden">
+  <div class="bg-white w-full lg:w-96 h-full p-6 overflow-y-auto relative">
+    <button id="voltarCompras" class="mb-4 bg-gray-200 px-3 py-1 rounded text-sm absolute top-4 right-4">✕</button>
+    <h2 class="font-serif text-lg gold mb-4">Carrinho</h2>
+
+    <div class="space-y-2">
+      <label class="text-xs tracking-widest">NOME DO CLIENTE</label>
+      <input id="clienteNomeFull" class="border p-2 w-full" placeholder="Digite seu nome">
+    </div>
+
+    <div id="carrinhoFull" class="space-y-4 max-h-[60vh] overflow-y-auto mb-4"></div>
+
+    <div class="text-sm space-y-1">
+      <p>Subtotal: <strong>R$ <span id="subtotalFull">0.00</span></strong></p>
+      <p id="descontoPixFull" class="text-green-600 hidden"></p>
+      <p class="text-lg font-semibold">Total: R$ <span id="totalFull">0.00</span></p>
+    </div>
+
+    <hr class="my-2">
+
+    <div class="space-y-3">
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pagamentoFull" value="PIX" checked>
+        <span class="gold font-medium">PIX</span>
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pagamentoFull" value="CARTAO">
+        <span class="font-medium">Cartão</span>
+      </label>
+      <select id="parcelasFull" class="border p-2 w-full hidden">
+        <option value="1x">1x sem juros</option>
+        <option value="2x">2x sem juros</option>
+        <option value="3x">3x sem juros</option>
+      </select>
+    </div>
+
+    <button onclick="finalizarPedidoFull()" class="w-full bg-black text-white py-3 tracking-widest text-xs mt-3">
+      FINALIZAR NO WHATSAPP
+    </button>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyD5RdWTYOnaTov7VtM9ZGenUpFYSZVGoPs",
+  authDomain: "marcinha-semijoias.firebaseapp.com",
+  databaseURL: "https://marcinha-semijoias-default-rtdb.firebaseio.com",
+  projectId: "marcinha-semijoias"
+});
+
+const db = firebase.database();
+const produtosEl = document.getElementById('produtos');
+const telaCarrinho = document.getElementById('telaCarrinho');
+const carrinhoFullEl = document.getElementById('carrinhoFull');
+const subtotalFullEl = document.getElementById('subtotalFull');
+const totalFullEl = document.getElementById('totalFull');
+const descontoPixFull = document.getElementById('descontoPixFull');
+const parcelasFull = document.getElementById('parcelasFull');
+const clienteNomeFull = document.getElementById('clienteNomeFull');
+const voltarCompras = document.getElementById('voltarCompras');
+const btnCarrinhoMobile = document.getElementById('btnCarrinhoMobile');
+const btnCarrinhoDesktop = document.getElementById('btnCarrinhoDesktop');
+
+let produtos = {};
+let carrinho = [];
+let config = {};
+
+/* CONFIG */
+db.ref('settings').once('value').then(s=>{ config = s.val()||{}; });
+
+/* PRODUTOS */
+db.ref('products').on('value', snap=>{
+  produtos = {};
+  produtosEl.innerHTML = '';
+
+  snap.forEach(s=>{
+    const p = s.val();
+    p.id = s.key;
+    produtos[p.id] = p;
+
+    produtosEl.innerHTML += `
+    <div class="bg-white border p-4 flex flex-col space-y-3 transition-shadow hover:shadow-lg rounded">
+      <div class="w-full aspect-[4/3] overflow-hidden rounded">
+        <img src="${p.image}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+      </div>
+      <h3 class="font-serif text-center">${p.name}</h3>
+      <p class="text-xs text-gray-400 text-center tracking-widest">SKU: ${p.sku || '-'}</p>
+      <p class="gold text-lg font-semibold text-center">R$ ${Number(p.price).toFixed(2)}</p>
+      <button data-id="${p.id}" class="w-full border py-2 text-xs tracking-widest btn-adicionar hover:bg-black hover:text-white transition">
+        ADICIONAR
+      </button>
+    </div>`;
+  });
+
+  document.querySelectorAll('.btn-adicionar').forEach(btn=>{
+    btn.addEventListener('click', ()=>adicionar(btn.dataset.id));
+  });
+});
+
+/* CARRINHO */
+function adicionar(id){
+  const item = carrinho.find(i=>i.id===id);
+  if(item) item.qty++;
+  else carrinho.push({id,qty:1});
+  renderCarrinhoFull();
+}
+
+function alterarQtd(id,delta){
+  const item = carrinho.find(i=>i.id===id);
+  item.qty += delta;
+  if(item.qty<=0) carrinho = carrinho.filter(i=>i.id!==id);
+  renderCarrinhoFull();
+}
+
+function renderCarrinhoFull(){
+  carrinhoFullEl.innerHTML='';
+  let subtotal=0;
+
+  carrinho.forEach(i=>{
+    const p = produtos[i.id];
+    subtotal += Number(p.price)*i.qty;
+    carrinhoFullEl.innerHTML += `
+    <div class="border-b pb-3 flex gap-4 items-start">
+      <img src="${p.image}" class="w-16 h-16 object-cover rounded border">
+      <div class="flex-1">
+        <p class="font-medium leading-tight">${p.name}</p>
+        <p class="text-xs text-gray-400">SKU: ${p.sku || '-'}</p>
+        <div class="mt-2 inline-flex items-center border rounded">
+          <button onclick="alterarQtd('${i.id}',-1)" class="px-3 py-1">➖</button>
+          <span class="px-4 text-sm">${i.qty}</span>
+          <button onclick="alterarQtd('${i.id}',1)" class="px-3 py-1">➕</button>
+        </div>
+      </div>
+      <div class="text-right font-medium whitespace-nowrap">
+        R$ ${(Number(p.price)*i.qty).toFixed(2)}
+      </div>
+    </div>`;
+  });
+
+  subtotalFullEl.textContent = subtotal.toFixed(2);
+  totalFullEl.textContent = calcularTotalFull(subtotal, descontoPixFull);
+}
+
+function calcularTotalFull(sub, descontoEl){
+  descontoEl.classList.add('hidden');
+  let total = sub;
+  if(document.querySelector('[name=pagamentoFull]:checked').value==='PIX'){
+    const d = config.pix||0;
+    if(d>0){
+      const desc = sub*(d/100);
+      total = sub-desc;
+      descontoEl.textContent = `Desconto PIX (${d}%): -R$ ${desc.toFixed(2)}`;
+      descontoEl.classList.remove('hidden');
+    }
+  }
+  return total.toFixed(2);
+}
+
+/* PAGAMENTO */
+document.querySelectorAll('[name=pagamentoFull]').forEach(r=>{
+  r.onchange = ()=>{
+    parcelasFull.classList.toggle('hidden', r.value!=='CARTAO');
+    renderCarrinhoFull();
+  };
+});
+
+/* CHECKOUT */
+function finalizarPedidoFull(){
+  if(carrinho.length===0) return alert('Carrinho vazio');
+  const nome = clienteNomeFull.value.trim();
+  if(!nome) return alert('Informe seu nome');
+
+  const pagamento = document.querySelector('[name=pagamentoFull]:checked').value;
+  const total = parseFloat(totalFullEl.textContent);
+
+  const pedido = {
+    cliente: nome,
+    customer: nome,
+    data: new Date().toLocaleString('pt-BR'),
+    status:'Novo',
+    pagamento,
+    parcelas: pagamento==='CARTAO'? parcelasFull.value:'À vista',
+    total,
+    itens:carrinho.map(i=>({
+      nome: produtos[i.id].name,
+      sku: produtos[i.id].sku,
+      qtd: i.qty,
+      valor: Number(produtos[i.id].price)
+    }))
+  };
+
+  db.ref('orders').push(pedido);
+  carrinho.forEach(i=>{
+    db.ref('products/'+i.id+'/stock').transaction(s=>s-i.qty);
+  });
+
+  let msg = `Olá! Pedido de *${nome}*:%0A%0A`;
+  pedido.itens.forEach(i=>{
+    msg += `${i.qtd}x ${i.nome} (SKU ${i.sku})%0A`;
+  });
+  msg += `%0ATotal: R$ ${total.toFixed(2)}%0APagamento: ${pedido.pagamento}`;
+  window.open(`https://wa.me/55${config.whatsapp}?text=${msg}`);
+}
+
+/* ABRIR E FECHAR CARRINHO */
+function abrirCarrinho(){ telaCarrinho.classList.remove('hidden'); setTimeout(()=>telaCarrinho.classList.add('show'),10);}
+function fecharCarrinho(){ telaCarrinho.classList.remove('show'); setTimeout(()=>telaCarrinho.classList.add('hidden'),400);}
+btnCarrinhoMobile.addEventListener('click', abrirCarrinho);
+btnCarrinhoDesktop.addEventListener('click', abrirCarrinho);
+voltarCompras.addEventListener('click', fecharCarrinho);
+</script>
+
+</body>
+</html>
+

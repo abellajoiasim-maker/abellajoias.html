@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Carrinho | Marcinha Semijoias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; }
+    </style>
+</head>
+<body>
+    <header class="py-10 text-center border-b bg-white">
+        <a href="index.html" class="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black">← Voltar para a Vitrine</a>
+        <h1 class="font-serif text-2xl uppercase mt-2">Meu Carrinho</h1>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="cartList" class="md:col-span-2 space-y-4">
+            <p class="text-xs text-gray-400 text-center py-10">Carregando itens...</p>
+        </div>
+
+        <div class="bg-white p-6 border h-fit sticky top-6 shadow-sm">
+            <h2 class="font-serif text-lg mb-4 uppercase tracking-tighter">Resumo da Compra</h2>
+            
+            <div class="space-y-2 border-b pb-4 mb-4 text-sm text-gray-500">
+                <div class="flex justify-between">
+                    <span>Subtotal</span>
+                    <span id="subTotalDisplay">R$ 0,00</span>
+                </div>
+                <div id="pixRow" class="flex justify-between text-green-600 font-bold">
+                    <span>Desconto PIX (<span id="pixPercentDisplay">0</span>%)</span>
+                    <span id="discountDisplay">- R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-[10px] uppercase text-gray-400 font-bold block mb-2 tracking-widest">Pagamento</label>
+                <select id="paymentMethod" onchange="renderCart()" class="w-full border p-3 text-xs bg-gray-50 focus:border-black outline-none">
+                    <option value="pix">PIX (com desconto)</option>
+                    <option value="cartao">Cartão de Crédito</option>
+                </select>
+            </div>
+
+            <div id="installmentsWrapper" class="mb-6 hidden">
+                <label class="text-[10px] uppercase text-gray-400 font-bold block mb-2 tracking-widest">Parcelas</label>
+                <select id="chosenInstallment" onchange="updateSummaryOnly()" class="w-full border p-3 text-xs bg-gray-50 focus:border-black outline-none">
+                    </select>
+            </div>
+
+            <div class="mb-6 text-center">
+                <p id="labelTotal" class="text-[10px] uppercase text-gray-400 tracking-widest">Total no PIX</p>
+                <p id="totalDisplay" class="text-3xl font-serif text-[#A68966]">R$ 0,00</p>
+                <p id="installmentsText" class="text-[10px] text-gray-400 mt-1 uppercase font-bold"></p>
+            </div>
+
+            <div class="space-y-4">
+                <input type="text" id="customerName" placeholder="Seu Nome Completo" class="w-full border-b py-3 text-sm focus:outline-none focus:border-[#A68966] bg-transparent">
+                <button onclick="sendOrder()" class="w-full bg-black text-white py-5 text-[10px] uppercase tracking-widest hover:bg-[#A68966] transition">Finalizar Pedido</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5RdWTYOnaTov7VtM9ZGenUpFYSZVGoPs",
+            authDomain: "marcinha-semijoias.firebaseapp.com",
+            databaseURL: "https://marcinha-semijoias-default-rtdb.firebaseio.com",
+            projectId: "marcinha-semijoias",
+            storageBucket: "marcinha-semijoias.firebasestorage.app",
+            messagingSenderId: "830107812924",
+            appId: "1:830107812924:web:1ee54d9b875514e48eef39"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let settings = { phone: '5511999999999', pixDiscount: 5, installments: 3 };
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+        db.ref('settings').on('value', snap => {
+            if (snap.val()) settings = snap.val();
+            renderCart();
+        });
+
+        function renderCart() {
+            const list = document.getElementById("cartList");
+            if (cart.length === 0) {
+                list.innerHTML = `<div class="text-center py-20 border-dashed border-2 border-gray-100 italic text-gray-400">Carrinho vazio</div>`;
+                updateSummary(0);
+                return;
+            }
+
+            list.innerHTML = cart.map((item, index) => `
+                <div class="flex gap-4 bg-white p-4 border border-[#E5E1DB] items-center">
+                    <img src="${item.image}" class="w-16 h-16 object-cover">
+                    <div class="flex-1">
+                        <p class="text-[8px] font-mono text-[#A68966] uppercase">${item.sku}</p>
+                        <h3 class="text-[10px] font-bold uppercase">${item.name}</h3>
+                        <p class="text-xs">R$ ${Number(item.price).toFixed(2)}</p>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="text-red-300">Remover</button>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + Number(item.price), 0);
+            
+            // Popula o select de parcelas baseado no seu painel admin
+            const selectInst = document.getElementById("chosenInstallment");
+            selectInst.innerHTML = "";
+            for (let i = 1; i <= settings.installments; i++) {
+                const valorParc = (total / i).toFixed(2);
+                selectInst.innerHTML += `<option value="${i}">${i}x de R$ ${valorParc} s/ juros</option>`;
+            }
+
+            updateSummary(total);
+        }
+
+        function updateSummary(total) {
+            const method = document.getElementById("paymentMethod").value;
+            const discountValue = total * (Number(settings.pixDiscount) / 100);
+            
+            document.getElementById("subTotalDisplay").innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById("pixPercentDisplay").innerText = settings.pixDiscount;
+            document.getElementById("discountDisplay").innerText = `- R$ ${discountValue.toFixed(2)}`;
+
+            const wrapper = document.getElementById("installmentsWrapper");
+            const labelTotal = document.getElementById("labelTotal");
+            const totalDisp = document.getElementById("totalDisplay");
+            const instText = document.getElementById("installmentsText");
+            const pixRow = document.getElementById("pixRow");
+
+            if (method === 'pix') {
+                wrapper.classList.add('hidden');
+                pixRow.style.display = 'flex';
+                labelTotal.innerText = "Total no PIX";
+                totalDisp.innerText = `R$ ${(total - discountValue).toFixed(2)}`;
+                instText.innerText = "À vista com desconto";
+            } else {
+                wrapper.classList.remove('hidden');
+                pixRow.style.display = 'none';
+                labelTotal.innerText = "Total no Cartão";
+                totalDisp.innerText = `R$ ${total.toFixed(2)}`;
+                updateSummaryOnly(); // Atualiza o texto da parcela escolhida
+            }
+        }
+
+        // Atualiza apenas o texto da parcela sem resetar o carrinho
+        function updateSummaryOnly() {
+            if(document.getElementById("paymentMethod").value === 'cartao') {
+                const total = cart.reduce((sum, item) => sum + Number(item.price), 0);
+                const n = document.getElementById("chosenInstallment").value;
+                document.getElementById("installmentsText").innerText = `${n}x de R$ ${(total/n).toFixed(2)}`;
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem("cart", JSON.stringify(cart));
+            renderCart();
+        }
+
+        async function sendOrder() {
+            const name = document.getElementById("customerName").value;
+            const method = document.getElementById("paymentMethod").value;
+            if (!name) return alert("Seu nome?");
+            if (cart.length === 0) return;
+
+            const totalFinal = document.getElementById("totalDisplay").innerText;
+            const instChosen = document.getElementById("chosenInstallment").value;
+            
+            let payDetail = method === 'pix' ? 'PIX' : `CARTÃO (${instChosen}x)`;
+
+            let message = `*PEDIDO: MARCINHA SEMIJOIAS*\n`;
+            message += `*Cliente:* ${name}\n`;
+            message += `*Pagamento:* ${payDetail}\n`;
+            message += `----------------------------\n`;
+            
+            let itemsReport = "";
+            cart.forEach(item => {
+                message += `• ${item.sku} - ${item.name} (R$ ${Number(item.price).toFixed(2)})\n`;
+                itemsReport += `[${item.sku}] ${item.name}<br>`;
+            });
+
+            message += `----------------------------\n`;
+            message += `*VALOR TOTAL:* ${totalFinal}\n\n`;
+            if(method === 'cartao') message += `*Plano:* ${document.getElementById("installmentsText").innerText}\n\n`;
+
+            const orderData = {
+                customerName: name,
+                total: totalFinal.replace('R$ ', ''),
+                items: itemsReport,
+                date: new Date().toLocaleString('pt-BR'),
+                payment: payDetail
+            };
+
+            try {
+                await db.ref('orders').push(orderData);
+                localStorage.removeItem("cart");
+                window.location.href = `https://api.whatsapp.com/send?phone=${settings.phone}&text=${encodeURIComponent(message)}`;
+            } catch (e) { alert("Erro ao enviar."); }
+        }
+    </script>
+</body>
+</html>

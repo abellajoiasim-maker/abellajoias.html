@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Checkout</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-neutral-50 p-4 max-w-xl mx-auto">
+
+<h1 class="text-xl font-serif mb-4 text-center">Finalizar Pedido</h1>
+
+<input id="name" placeholder="Nome" class="border p-2 w-full mb-2">
+<input id="whats" placeholder="WhatsApp" class="border p-2 w-full mb-4">
+
+<button onclick="send()"
+  class="bg-black text-white w-full py-3">
+Enviar Pedido no WhatsApp
+</button>
+
+<script>
+const cart = JSON.parse(localStorage.getItem("cart")) || [];
+const payment = localStorage.getItem("payment");
+const phone = localStorage.getItem("storePhone");
+
+function send(){
+  let total = 0;
+  let msg = "🛍️ Pedido:%0A";
+
+  cart.forEach(i=>{
+    total += i.price * i.qty;
+    msg += `${i.qty}x ${i.name} - R$ ${i.price}%0A`;
+  });
+
+  msg += `%0A💳 Pagamento: ${payment}`;
+  msg += `%0A💰 Total: R$ ${total.toFixed(2)}`;
+
+  const orders = JSON.parse(localStorage.getItem("orders")) || [];
+  orders.push({
+    date: new Date().toLocaleString(),
+    total
+  });
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  localStorage.removeItem("cart");
+
+  window.open(`https://wa.me/${phone}?text=${msg}`);
+}
+</script>
+
+
+</body>
+</html>
