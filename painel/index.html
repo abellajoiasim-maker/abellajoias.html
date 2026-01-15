@@ -186,16 +186,24 @@ db.ref('products').on('value',snap=>{
 
 /* PEDIDOS / RELATÓRIO */
 db.ref('orders').on('value',snap=>{
+  let total=0;
   listaPedidos.innerHTML='';
+
   snap.forEach(s=>{
     const o=s.val();
-    listaPedidos.innerHTML += `
-      <div class="bg-white border p-4">
-        <p><strong>${o.cliente || o.customer}</strong></p>
-        <p class="text-xs text-gray-400">${o.data}</p>
-        <p>Total: R$ ${o.total.toFixed(2)}</p>
-      </div>`;
+    total+=Number(o.total||0);
+
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-4 text-sm">
+      <p><strong>Cliente:</strong> ${o.cliente||'-'}</p>
+      <p><strong>Data:</strong> ${o.data}</p>
+      <p><strong>Total:</strong> R$ ${Number(o.total).toFixed(2)}</p>
+      <p><strong>Peso:</strong> ${o.peso||0} g</p>
+      <p><strong>Pagamento:</strong> ${o.pagamento||'-'}</p>
+    </div>`;
   });
+
+  totalVendas.innerText='R$ '+total.toFixed(2);
 });
 </script>
 
