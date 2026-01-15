@@ -2,35 +2,134 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Checkout</title>
+<title>Checkout | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 </head>
 
-<body class="bg-neutral-50 p-6 max-w-xl mx-auto">
+<body class="bg-neutral-50 max-w-xl mx-auto p-4">
 
-<h1 class="text-xl mb-4 text-center">Finalizar Pedido</h1>
+<h1 class="text-xl font-serif text-center mb-4">Finalizar Pedido</h1>
 
-<input id="nome" placeholder="Nome" class="border p-2 w-full mb-2">
+<input id="cliente" placeholder="Nome do cliente"
+  class="border p-3 w-full mb-3">
 
-<button onclick="send()" class="bg-black text-white w-full py-3">
-Enviar no WhatsApp
+<input id="whats" placeholder="WhatsApp (somente números)"
+  class="border p-3 w-full mb-4">
+
+<select id="pagamento" class="border p-3 w-full mb-4">
+  <option value="PIX">PIX</option>
+  <option value="CARTAO">Cartão</option>
+</select>
+
+<div id="resumo" class="bg-white border p-4 mb-4 text-sm"></div>
+
+<p class="text-right font-semibold">
+  Peso total: <span id="peso">0</span> g
+</p>
+
+<p class="text-right font-semibold text-lg">
+  Total: R$ <span id="total">0.00</span>
+</p>
+
+<button onclick="finalizar()"
+  class="bg-black text-white w-full py-4 mt-4">
+ENVIAR PEDIDO NO WHATSAPP
 </button>
 
 <script>
-const cart=JSON.parse(localStorage.getItem('cart'))||[];
-const phone="55SEUWHATS";
+/* 🔥 FIREBASE — USAR O MESMO DO PAINEL */
+firebase.initializeApp({
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+  projectId: "SEU_PROJETO"
+});
 
-function send(){
-  let total=0,peso=0,msg="🛍️ Pedido:%0A";
+const db = firebase.database();
+
+const cart = JSON.parse(localStorage.getItem("cart")) || [];
+const resumo = document.getElementById("resumo");
+const totalEl = document.getElementById("total");
+const pesoEl = document.getElementById("peso");
+
+let total = 0;
+let pesoTotal = 0;
+
+render();
+
+/* RESUMO */
+function render(){
+  resumo.innerHTML="";
+  total = 0;
+  pesoTotal = 0;
+
   cart.forEach(i=>{
-    total+=i.price*i.qty;
-    peso+=i.weight*i.qty;
-    msg+=`${i.qty}x ${i.name} (%0A)`;
+    const sub = i.price * i.qty;
+    const peso = (i.weight || 0) * i.qty;
+
+    total += sub;
+    pesoTotal += peso;
+
+    resumo.innerHTML += `
+      <p>${i.qty}x ${i.name}</p>
+      <p class="text-xs text-gray-400">
+        Peso unitário: ${i.weight || 0}g
+      </p>
+      <p class="mb-2">Subtotal: R$ ${sub.toFixed(2)}</p>
+      <hr class="mb-2">
+    `;
   });
-  msg+=`%0A💰 Total: R$ ${total.toFixed(2)}`;
-  msg+=`%0A⚖ Peso Total: ${peso.toFixed(2)}g`;
-  window.open(`https://wa.me/${phone}?text=${msg}`);
+
+  totalEl.textContent = total.toFixed(2);
+  pesoEl.textContent = pesoTotal;
+}
+
+/* FINALIZAR */
+function finalizar(){
+  if(cart.length === 0) return alert("Carrinho vazio");
+
+  const nome = cliente.value.trim();
+  const whats = whatsInput.value;
+
+  if(!nome || !whats) return alert("Preencha nome e WhatsApp");
+
+  const pagamento = document.getElementById("pagamento").value;
+
+  const pedido = {
+    cliente: nome,
+    customer: nome,
+    whatsapp: whats,
+    data: new Date().toLocaleString("pt-BR"),
+    status: "Novo",
+    pagamento,
+    total,
+    pesoTotal,
+    itens: cart.map(i=>({
+      nome: i.name,
+      sku: i.sku,
+      qtd: i.qty,
+      peso: i.weight || 0,
+      valor: i.price
+    }))
+  };
+
+  db.ref("orders").push(pedido);
+
+  /* WHATSAPP */
+  let msg = `🛍️ *Pedido Abella Joias*%0A%0A`;
+  cart.forEach(i=>{
+    msg += `${i.qty}x ${i.name} — ${i.weight||0}g%0A`;
+  });
+  msg += `%0A⚖️ Peso total: ${pesoTotal}g`;
+  msg += `%0A💳 Pagamento: ${pagamento}`;
+  msg += `%0A💰 Total: R$ ${total.toFixed(2)}`;
+
+  localStorage.removeItem("cart");
+  window.open(`https://wa.me/55${whats}?text=${msg}`);
 }
 </script>
 
