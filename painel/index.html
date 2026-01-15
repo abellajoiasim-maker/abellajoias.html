@@ -30,6 +30,7 @@ body{background:#F8F6F2}
     <button onclick="openTab('empresa')" class="gold">Empresa</button>
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
+    <button onclick="openTab('pedidos')">Pedidos</button>
   </nav>
 </header>
 
@@ -38,11 +39,15 @@ body{background:#F8F6F2}
 <!-- EMPRESA -->
 <section id="empresa" class="tab active space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
   <input id="empNome" placeholder="Nome da empresa" class="border p-3">
   <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
 </div>
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR</button>
+
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR CONFIGURAÇÕES
+</button>
 </section>
 
 <!-- CATEGORIAS -->
@@ -51,7 +56,9 @@ body{background:#F8F6F2}
 
 <div class="bg-white border p-6 flex gap-4">
   <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
-  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">SALVAR</button>
+  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">
+    SALVAR
+  </button>
 </div>
 
 <div id="listaCategorias" class="space-y-2"></div>
@@ -74,13 +81,27 @@ body{background:#F8F6F2}
   <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
 
-<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
+<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR PRODUTO
+</button>
+</section>
+
+<!-- PEDIDOS / RELATÓRIO -->
+<section id="pedidos" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos / Relatório de Vendas</h2>
+
+<div id="listaPedidos" class="space-y-4"></div>
+
+<div class="bg-white border p-4 text-right">
+  <strong>Total vendido:</strong>
+  <span id="totalVendas" class="gold font-semibold">R$ 0,00</span>
+</div>
 </section>
 
 </main>
 
 <script>
-// 🔥 FIREBASE (use o seu)
+// 🔥 FIREBASE
 firebase.initializeApp({
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -100,35 +121,33 @@ function salvarEmpresa(){
   db.ref('settings').set({
     name: empNome.value,
     whatsapp: empWhatsapp.value
-  });
+  }).then(()=>alert('Dados da empresa salvos'));
 }
+
 db.ref('settings').once('value').then(s=>{
   if(!s.val()) return;
   empNome.value = s.val().name || '';
   empWhatsapp.value = s.val().whatsapp || '';
 });
 
-/* =======================
-   CATEGORIAS — CRUD
-======================= */
-let categoriaEditId = null;
+/* CATEGORIAS */
+let editCat = null;
 
 function salvarCategoria(){
   if(!catNome.value) return;
 
-  if(categoriaEditId){
-    db.ref('categories/'+categoriaEditId).update({ name: catNome.value });
-    categoriaEditId = null;
+  if(editCat){
+    db.ref('categories/'+editCat).update({name:catNome.value});
+    editCat = null;
   } else {
-    db.ref('categories').push({ name: catNome.value });
+    db.ref('categories').push({name:catNome.value});
   }
-
   catNome.value='';
 }
 
 function editarCategoria(id,nome){
-  catNome.value = nome;
-  categoriaEditId = id;
+  catNome.value=nome;
+  editCat=id;
 }
 
 function excluirCategoria(id){
@@ -142,40 +161,60 @@ db.ref('categories').on('value',snap=>{
   pCategoria.innerHTML='<option value="">Selecione a categoria</option>';
 
   snap.forEach(s=>{
-    const c = s.val();
-    listaCategorias.innerHTML += `
-      <div class="bg-white border p-3 flex justify-between items-center">
-        <span>${c.name}</span>
-        <div class="flex gap-3 text-xs">
-          <button onclick="editarCategoria('${s.key}','${c.name}')" class="text-blue-600">Editar</button>
-          <button onclick="excluirCategoria('${s.key}')" class="text-red-600">Excluir</button>
-        </div>
-      </div>`;
-    pCategoria.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+    listaCategorias.innerHTML+=`
+    <div class="bg-white border p-3 flex justify-between">
+      ${s.val().name}
+      <div class="flex gap-3 text-xs">
+        <button onclick="editarCategoria('${s.key}','${s.val().name}')" class="text-blue-600">Editar</button>
+        <button onclick="excluirCategoria('${s.key}')" class="text-red-600">Excluir</button>
+      </div>
+    </div>`;
+    pCategoria.innerHTML+=`<option value="${s.val().name}">${s.val().name}</option>`;
   });
 });
 
 /* PRODUTOS */
 function salvarProduto(){
-  if(!pNome.value || !pCategoria.value) {
+  if(!pNome.value || !pCategoria.value){
     alert('Informe nome e categoria');
     return;
   }
 
   db.ref('products').push({
-    name: pNome.value,
-    sku: pSku.value,
-    price: Number(pPreco.value||0),
-    weight: Number(pPeso.value||0),
-    category: pCategoria.value,
-    image: pImagemUrl.value
+    name:pNome.value,
+    sku:pSku.value,
+    price:Number(pPreco.value||0),
+    weight:Number(pPeso.value||0),
+    category:pCategoria.value,
+    image:pImagemUrl.value
   });
 
   pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value='';
   pCategoria.value='';
 }
+
+/* PEDIDOS / RELATÓRIO */
+db.ref('orders').on('value',snap=>{
+  let total=0;
+  listaPedidos.innerHTML='';
+
+  snap.forEach(s=>{
+    const o=s.val();
+    total+=Number(o.total||0);
+
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-4 text-sm">
+      <p><strong>Cliente:</strong> ${o.cliente||'-'}</p>
+      <p><strong>Data:</strong> ${o.data}</p>
+      <p><strong>Total:</strong> R$ ${Number(o.total).toFixed(2)}</p>
+      <p><strong>Peso:</strong> ${o.peso||0} g</p>
+      <p><strong>Pagamento:</strong> ${o.pagamento||'-'}</p>
+    </div>`;
+  });
+
+  totalVendas.innerText='R$ '+total.toFixed(2);
+});
 </script>
 
 </body>
 </html>
-
