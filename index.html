@@ -10,55 +10,33 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body { background:#F8F6F2 }
-.font-serif { font-family:'Cinzel', serif }
-.gold { color:#A68966 }
-.bg-gold { background:#A68966 }
+body{background:#F8F6F2}
+.font-serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
 </style>
 </head>
 
-<body>
+<body class="max-w-7xl mx-auto p-4">
 
-<!-- HEADER -->
-<header class="bg-white border-b p-6 text-center sticky top-0 z-40">
-  <h1 class="font-serif text-3xl tracking-widest gold">ABELLA JOIAS</h1>
-  <p class="text-xs tracking-widest text-gray-400 mt-1">CATÁLOGO EXCLUSIVO</p>
+<!-- TOPO -->
+<header class="text-center mb-6">
+  <h1 class="font-serif text-3xl gold tracking-widest">Abella Joias</h1>
+  <p class="text-xs uppercase tracking-widest text-gray-400">Catálogo Online</p>
 </header>
 
 <!-- CATEGORIAS -->
-<section id="categorias" class="flex gap-3 overflow-x-auto p-4 bg-white border-b"></section>
+<div id="menuCategorias" class="flex gap-2 overflow-x-auto pb-4 mb-6"></div>
 
 <!-- PRODUTOS -->
-<main id="produtos"
-  class="max-w-7xl mx-auto p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-</main>
-
-<!-- BOTÃO CARRINHO -->
-<button onclick="openCart()"
-  class="fixed bottom-6 right-6 bg-black text-white px-5 py-3 rounded-full shadow-lg text-xs tracking-widest z-50">
-  🛒 Carrinho
-</button>
+<div id="listaProdutos"
+     class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+</div>
 
 <!-- CARRINHO -->
-<div id="cartOverlay" class="fixed inset-0 bg-black/50 hidden z-50">
-  <div class="bg-white w-full max-w-md h-full ml-auto p-6 overflow-y-auto">
-    <button onclick="closeCart()" class="absolute top-4 right-4 text-xl">✕</button>
-
-    <h2 class="font-serif gold text-xl mb-4">Carrinho</h2>
-
-    <div id="cartItems" class="space-y-4"></div>
-
-    <div class="mt-6 text-sm">
-      <p>Peso total: <strong><span id="pesoTotal">0</span> g</strong></p>
-      <p class="text-lg mt-2">Total: <strong>R$ <span id="total">0.00</span></strong></p>
-    </div>
-
-    <button onclick="irCheckout()"
-      class="w-full bg-black text-white py-3 mt-6 tracking-widest text-xs">
-      FINALIZAR PEDIDO
-    </button>
-  </div>
-</div>
+<a href="checkout.html"
+   class="fixed bottom-5 right-5 bg-black text-white px-6 py-3 rounded-full text-xs tracking-widest">
+Finalizar Pedido
+</a>
 
 <script>
 /* 🔥 FIREBASE */
@@ -70,126 +48,91 @@ firebase.initializeApp({
 });
 
 const db = firebase.database();
-const produtosEl = document.getElementById('produtos');
-const categoriasEl = document.getElementById('categorias');
+const lista = document.getElementById('listaProdutos');
+const menu = document.getElementById('menuCategorias');
 
-let produtos = {};
-let categorias = {};
-let carrinho = JSON.parse(localStorage.getItem('cart')) || [];
-let categoriaAtiva = 'all';
+let produtos = [];
+let categoriaAtiva = 'todos';
 
-/* CATEGORIAS */
+/* 🗂️ CATEGORIAS */
 db.ref('categories').on('value', snap => {
-  categoriasEl.innerHTML = `
-    <button class="border px-4 py-2 text-xs" onclick="filtrar('all')">Todos</button>
+  menu.innerHTML = `
+    <button onclick="filtrar('todos')"
+      class="px-4 py-2 border text-xs uppercase ${categoriaAtiva==='todos'?'bg-black text-white':'bg-white'}">
+      Todos
+    </button>
   `;
 
-  snap.forEach(s => {
-    categorias[s.key] = s.val();
-    categoriasEl.innerHTML += `
-      <button class="border px-4 py-2 text-xs"
-        onclick="filtrar('${s.key}')">${s.val().name}</button>
-    `;
+  snap.forEach(s=>{
+    const nome = s.val().name;
+    menu.innerHTML += `
+      <button onclick="filtrar('${nome}')"
+        class="px-4 py-2 border text-xs uppercase ${categoriaAtiva===nome?'bg-black text-white':'bg-white'}">
+        ${nome}
+      </button>`;
   });
 });
 
-/* PRODUTOS */
+/* 📦 PRODUTOS */
 db.ref('products').on('value', snap => {
-  produtos = {};
-  snap.forEach(s => {
-    produtos[s.key] = s.val();
+  produtos = [];
+  snap.forEach(s=>{
+    produtos.push({ id:s.key, ...s.val() });
   });
-  renderProdutos();
+  render();
 });
 
-function renderProdutos(){
-  produtosEl.innerHTML = '';
-  Object.keys(produtos).forEach(id => {
-    const p = produtos[id];
-    if(categoriaAtiva !== 'all' && p.category !== categoriaAtiva) return;
-
-    produtosEl.innerHTML += `
-      <div class="bg-white border rounded shadow-sm">
-        <div class="aspect-square overflow-hidden">
-          <img src="${p.image}"
-            class="w-full h-full object-cover hover:scale-105 transition">
-        </div>
-        <div class="p-4 text-center">
-          <p class="font-serif">${p.name}</p>
-          <p class="text-xs text-gray-400">SKU: ${p.sku || '-'}</p>
-          <p class="gold text-lg mt-1">R$ ${Number(p.price).toFixed(2)}</p>
-          <button onclick="addCart('${id}')"
-            class="mt-3 w-full border py-2 text-xs tracking-widest hover:bg-black hover:text-white transition">
-            ADICIONAR
-          </button>
-        </div>
-      </div>
-    `;
-  });
-}
-
+/* 🔎 FILTRO */
 function filtrar(cat){
   categoriaAtiva = cat;
-  renderProdutos();
+  render();
 }
 
-/* CARRINHO */
-function addCart(id){
-  const item = carrinho.find(i => i.id === id);
-  if(item) item.qty++;
-  else carrinho.push({
-    id,
-    qty: 1,
-    weight: Number(produtos[id].weight || 0)
-  });
-  salvarCarrinho();
-}
+/* 🖼️ RENDER */
+function render(){
+  lista.innerHTML = '';
+  produtos
+    .filter(p => categoriaAtiva==='todos' || p.category===categoriaAtiva)
+    .forEach(p=>{
+      lista.innerHTML += `
+      <div class="bg-white border">
+        <img src="${p.image}"
+          class="aspect-square object-cover w-full">
 
-function salvarCarrinho(){
-  localStorage.setItem('cart', JSON.stringify(carrinho));
-  renderCarrinho();
-}
+        <div class="p-3">
+          <p class="text-sm">${p.name}</p>
+          <p class="text-xs text-gray-400">${p.category}</p>
+          <p class="gold font-semibold mt-1">R$ ${p.price.toFixed(2)}</p>
 
-function renderCarrinho(){
-  const cartItems = document.getElementById('cartItems');
-  const totalEl = document.getElementById('total');
-  const pesoEl = document.getElementById('pesoTotal');
-
-  cartItems.innerHTML = '';
-  let total = 0;
-  let peso = 0;
-
-  carrinho.forEach(i => {
-    const p = produtos[i.id];
-    total += p.price * i.qty;
-    peso += i.weight * i.qty;
-
-    cartItems.innerHTML += `
-      <div class="flex justify-between items-center border-b pb-2">
-        <div>
-          <p>${p.name}</p>
-          <p class="text-xs text-gray-400">${i.qty}x</p>
+          <button onclick="addCarrinho('${p.id}')"
+            class="mt-2 w-full border py-2 text-xs uppercase">
+            Adicionar
+          </button>
         </div>
-        <strong>R$ ${(p.price*i.qty).toFixed(2)}</strong>
-      </div>
-    `;
-  });
-
-  totalEl.textContent = total.toFixed(2);
-  pesoEl.textContent = peso;
+      </div>`;
+    });
 }
 
-function openCart(){
-  document.getElementById('cartOverlay').classList.remove('hidden');
-  renderCarrinho();
-}
+/* 🛒 CARRINHO */
+function addCarrinho(id){
+  const p = produtos.find(x=>x.id===id);
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-function closeCart(){
-  document.getElementById('cartOverlay').classList.add('hidden');
-}
+  const i = cart.find(x=>x.id===id);
+  if(i){
+    i.qty++;
+  }else{
+    cart.push({
+      id:p.id,
+      name:p.name,
+      price:p.price,
+      weight:p.weight || 0,
+      qty:1
+    });
+  }
 
-function irCheckout(){
-  window.location.href = 'checkout.html';
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert('Produto adicionado!');
 }
 </script>
 
