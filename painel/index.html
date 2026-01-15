@@ -30,6 +30,7 @@ body{background:#F8F6F2}
     <button onclick="openTab('empresa')" class="gold">Empresa</button>
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
+    <button onclick="openTab('relatorios')">Relatórios</button>
   </nav>
 </header>
 
@@ -38,86 +39,72 @@ body{background:#F8F6F2}
 <!-- EMPRESA -->
 <section id="empresa" class="tab active space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Dados da Empresa</h2>
-
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
   <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp (somente números)" class="border p-3">
+  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
   <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
   <input id="empParcelas" type="number" placeholder="Parcelas no cartão" class="border p-3">
 </div>
-
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs tracking-widest">
-SALVAR
-</button>
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR</button>
 </section>
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="tab space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
-
 <div class="bg-white border p-6 flex gap-4">
   <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
   <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">ADICIONAR</button>
 </div>
-
 <div id="listaCategorias" class="space-y-2"></div>
 </section>
 
 <!-- PRODUTOS -->
 <section id="produtos" class="tab space-y-8">
 <h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
-
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
-  <input id="pNome" placeholder="Nome do produto" class="border p-3">
+  <input id="pNome" placeholder="Nome" class="border p-3">
   <input id="pSku" placeholder="SKU" class="border p-3">
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-  <input id="pEstoque" type="number" placeholder="Estoque" class="border p-3">
   <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-
-  <select id="pCategoria" class="border p-3">
-    <option value="">Selecione a categoria</option>
-  </select>
-
+  <select id="pCategoria" class="border p-3"><option value="">Categoria</option></select>
   <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
-
-<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">
-SALVAR PRODUTO
-</button>
-
+<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
 <div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
+</section>
+
+<!-- RELATÓRIOS -->
+<section id="relatorios" class="tab space-y-8">
+<h2 class="font-serif text-2xl gold border-b pb-2">Relatórios de Vendas</h2>
+
+<div class="grid md:grid-cols-3 gap-6">
+  <div class="bg-white border p-6">
+    <p class="text-xs text-gray-400">TOTAL VENDIDO</p>
+    <p class="text-2xl font-semibold gold">R$ <span id="rTotal">0.00</span></p>
+  </div>
+  <div class="bg-white border p-6">
+    <p class="text-xs text-gray-400">PEDIDOS</p>
+    <p class="text-2xl font-semibold"><span id="rQtd">0</span></p>
+  </div>
+  <div class="bg-white border p-6">
+    <p class="text-xs text-gray-400">TICKET MÉDIO</p>
+    <p class="text-2xl font-semibold">R$ <span id="rTicket">0.00</span></p>
+  </div>
+</div>
+
+<div id="listaRelatorios" class="space-y-4"></div>
 </section>
 
 </main>
 
 <script>
-/* 🔥 FIREBASE – USE O DA ABELLA */
 firebase.initializeApp({
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_PROJETO.firebaseapp.com",
   databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
   projectId: "SEU_PROJETO"
 });
-
 const db = firebase.database();
-
-/* ELEMENTOS */
-const empNome = document.getElementById('empNome');
-const empWhatsapp = document.getElementById('empWhatsapp');
-const empPix = document.getElementById('empPix');
-const empParcelas = document.getElementById('empParcelas');
-
-const catNome = document.getElementById('catNome');
-const listaCategorias = document.getElementById('listaCategorias');
-
-const pNome = document.getElementById('pNome');
-const pSku = document.getElementById('pSku');
-const pPreco = document.getElementById('pPreco');
-const pEstoque = document.getElementById('pEstoque');
-const pPeso = document.getElementById('pPeso');
-const pCategoria = document.getElementById('pCategoria');
-const pImagemUrl = document.getElementById('pImagemUrl');
-const listaProdutos = document.getElementById('listaProdutos');
 
 /* TABS */
 function openTab(id){
@@ -130,85 +117,68 @@ function salvarEmpresa(){
   db.ref('settings').set({
     name: empNome.value,
     whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value||0),
-    parcelas: Number(empParcelas.value||1)
-  }).then(()=>alert('Empresa salva!'));
+    pix:Number(empPix.value||0),
+    parcelas:Number(empParcelas.value||1)
+  });
 }
-
 db.ref('settings').once('value').then(s=>{
-  if(!s.val()) return;
-  empNome.value = s.val().name || '';
-  empWhatsapp.value = s.val().whatsapp || '';
-  empPix.value = s.val().pix || 0;
-  empParcelas.value = s.val().parcelas || 1;
+  if(!s.val())return;
+  empNome.value=s.val().name;
+  empWhatsapp.value=s.val().whatsapp;
+  empPix.value=s.val().pix;
+  empParcelas.value=s.val().parcelas;
 });
 
 /* CATEGORIAS */
 function salvarCategoria(){
-  if(!catNome.value.trim()) return;
-  db.ref('categories').push({ name: catNome.value.trim() });
+  if(!catNome.value)return;
+  db.ref('categories').push({name:catNome.value});
   catNome.value='';
 }
-
-db.ref('categories').on('value', snap=>{
-  listaCategorias.innerHTML = '';
-  pCategoria.innerHTML = '<option value="">Selecione a categoria</option>';
-
-  snap.forEach(s=>{
-    const nome = s.val().name;
-
-    listaCategorias.innerHTML += `
-      <div class="bg-white border p-3 flex justify-between items-center">
-        <span>${nome}</span>
-        <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600 text-xs">
-          Excluir
-        </button>
-      </div>
-    `;
-
-    const opt = document.createElement('option');
-    opt.value = nome;
-    opt.textContent = nome;
-    pCategoria.appendChild(opt);
+db.ref('categories').on('value',s=>{
+  listaCategorias.innerHTML='';
+  pCategoria.innerHTML='<option value="">Categoria</option>';
+  s.forEach(c=>{
+    listaCategorias.innerHTML+=`<div class="bg-white border p-3">${c.val().name}</div>`;
+    pCategoria.innerHTML+=`<option>${c.val().name}</option>`;
   });
 });
 
 /* PRODUTOS */
 function salvarProduto(){
-  if(!pNome.value || !pPreco.value || !pCategoria.value){
-    alert('Preencha nome, preço e categoria');
-    return;
-  }
-
   db.ref('products').push({
-    name: pNome.value,
-    sku: pSku.value,
-    price: Number(pPreco.value),
-    stock: Number(pEstoque.value||0),
-    weight: Number(pPeso.value||0),
-    category: pCategoria.value,
-    image: pImagemUrl.value
-  }).then(()=>{
-    alert('Produto salvo!');
-    pNome.value=pSku.value=pPreco.value=pEstoque.value=pPeso.value=pImagemUrl.value='';
-    pCategoria.value='';
+    name:pNome.value,
+    sku:pSku.value,
+    price:Number(pPreco.value),
+    weight:Number(pPeso.value),
+    category:pCategoria.value,
+    image:pImagemUrl.value
   });
 }
-
-/* LISTAR PRODUTOS */
-db.ref('products').on('value', snap=>{
+db.ref('products').on('value',s=>{
   listaProdutos.innerHTML='';
-  snap.forEach(s=>{
-    const p = s.val();
-    listaProdutos.innerHTML += `
+  s.forEach(p=>{
+    const i=p.val();
+    listaProdutos.innerHTML+=`
       <div class="bg-white border p-4">
-        <img src="${p.image}" class="h-40 w-full object-cover rounded">
-        <p class="mt-2 font-medium">${p.name}</p>
-        <p class="text-xs text-gray-500">${p.category} • ${p.weight}g</p>
-        <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-      </div>
-    `;
+        <img src="${i.image}" class="h-40 w-full object-cover">
+        <p>${i.name}</p>
+        <p class="text-xs">${i.category} • ${i.weight}g</p>
+        <p class="gold">R$ ${i.price.toFixed(2)}</p>
+      </div>`;
   });
+});
+
+/* RELATÓRIOS */
+db.ref('orders').on('value',snap=>{
+  let total=0,qtd=0;
+  snap.forEach(o=>{
+    total+=o.val().total;
+    qtd++;
+  });
+  rTotal.textContent=total.toFixed(2);
+  rQtd.textContent=qtd;
+  rTicket.textContent=qtd?(total/qtd).toFixed(2):'0.00';
 });
 </script>
 
