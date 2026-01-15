@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+</head>
+
+<body class="bg-neutral-50">
+
+<header class="bg-white p-6 border-b text-center">
+  <h1 class="font-serif text-2xl text-[#A68966]">Abella Joias</h1>
+  <p class="text-xs uppercase tracking-widest text-gray-400">
+    Catálogo Online
+  </p>
+</header>
+
+<main class="max-w-6xl mx-auto p-6">
+  <div id="produtos" class="grid sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+
+  <a href="checkout.html"
+     class="fixed bottom-5 right-5 bg-black text-white px-6 py-3 rounded-full text-sm">
+    Finalizar Pedido
+  </a>
+</main>
+
+<script>
+/* 🔥 MESMO FIREBASE DO PAINEL */
+firebase.initializeApp({
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+  projectId: "SEU_PROJETO"
+});
+
+const db = firebase.database();
+const produtosDiv = document.getElementById('produtos');
+
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+db.ref('products').on('value', snap=>{
+  produtosDiv.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+    produtosDiv.innerHTML+=`
+    <div class="bg-white border p-4">
+      <img src="${p.image}" class="h-40 w-full object-cover">
+      <h2 class="mt-2 font-medium">${p.name}</h2>
+      <p class="text-sm text-gray-400">SKU: ${p.sku}</p>
+      <p class="text-[#A68966] font-semibold">
+        R$ ${p.price.toFixed(2)}
+      </p>
+
+      <button onclick="addCart('${s.key}')"
+        class="mt-2 bg-black text-white px-4 py-2 text-xs w-full">
+        Adicionar
+      </button>
+    </div>`;
+  });
+});
+
+function addCart(id){
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val();
+    const item = cart.find(i=>i.id===id);
+
+    if(item){
+      item.qty++;
+    }else{
+      cart.push({
+        id:id,
+        name:p.name,
+        sku:p.sku,
+        price:p.price,
+        weight:p.weight||0,
+        qty:1
+      });
+    }
+
+    localStorage.setItem('cart',JSON.stringify(cart));
+    alert('Produto adicionado');
+  });
+}
+</script>
+
+</body>
+</html>
 
