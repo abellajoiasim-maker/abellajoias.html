@@ -77,7 +77,12 @@ body{background:#F8F6F2}
 </div>
 
 <button onclick="salvarProduto()" class="bg-black text-white px-6 py-2">Salvar Produto</button>
-<div id="listaProdutos" class="grid md:grid-cols-3 gap-6"></div>
+<select id="filtroCategoria" class="border p-3 w-full mb-6">
+  <option value="">Todas as categorias</option>
+</select>
+
+<div id="produtosGrid" class="grid md:grid-cols-3 gap-6"></div>
+
 </section>
 
 <!-- PEDIDOS -->
@@ -181,6 +186,42 @@ function backupAgora(){
       settings:s.val()
     });
     alert('Backup criado');
+  });
+}
+<script>
+let produtos=[];
+
+firebase.database().ref('categories').on('value',s=>{
+  filtroCategoria.innerHTML='<option value="">Todas</option>';
+  s.forEach(c=>{
+    filtroCategoria.innerHTML+=`<option>${c.val().name}</option>`;
+  });
+});
+
+firebase.database().ref('products').on('value',s=>{
+  produtos=[];
+  s.forEach(p=>produtos.push(p.val()));
+  render(produtos);
+});
+
+filtroCategoria.onchange=()=>{
+  render(
+    filtroCategoria.value
+      ? produtos.filter(p=>p.category===filtroCategoria.value)
+      : produtos
+  );
+};
+
+function render(lista){
+  produtosGrid.innerHTML='';
+  lista.forEach(p=>{
+    produtosGrid.innerHTML+=`
+      <div class="bg-white p-4 border">
+        <img src="${p.image}" class="h-48 w-full object-cover mb-2">
+        <h3>${p.name}</h3>
+        <p class="text-xs text-gray-500">${p.category}</p>
+        <strong>R$ ${p.price.toFixed(2)}</strong>
+      </div>`;
   });
 }
 </script>
