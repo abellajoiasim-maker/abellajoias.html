@@ -8,40 +8,62 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body { background:#F8F6F2 }
+.font-serif { font-family:'Cinzel', serif }
+.gold { color:#A68966 }
+</style>
 </head>
 
-<body class="bg-neutral-50 max-w-xl mx-auto p-4">
+<body class="max-w-xl mx-auto p-6">
 
-<h1 class="text-xl font-serif text-center mb-4">Finalizar Pedido</h1>
+<h1 class="font-serif text-2xl gold text-center mb-6">Finalizar Pedido</h1>
 
-<input id="cliente" placeholder="Nome do cliente"
+<!-- CLIENTE -->
+<input id="clienteNome" placeholder="Nome do cliente"
   class="border p-3 w-full mb-3">
 
-<input id="whats" placeholder="WhatsApp (somente números)"
-  class="border p-3 w-full mb-4">
+<input id="clienteWhats" placeholder="WhatsApp (somente números)"
+  class="border p-3 w-full mb-6">
 
-<select id="pagamento" class="border p-3 w-full mb-4">
-  <option value="PIX">PIX</option>
-  <option value="CARTAO">Cartão</option>
-</select>
+<!-- ITENS -->
+<div id="itens" class="space-y-3 mb-6"></div>
 
-<div id="resumo" class="bg-white border p-4 mb-4 text-sm"></div>
+<!-- RESUMO -->
+<div class="border-t pt-4 space-y-1 text-sm">
+  <p>Peso total: <strong><span id="pesoTotal">0</span> g</strong></p>
+  <p>Subtotal: R$ <span id="subtotal">0.00</span></p>
+  <p class="text-lg font-semibold">Total: R$ <span id="total">0.00</span></p>
+</div>
 
-<p class="text-right font-semibold">
-  Peso total: <span id="peso">0</span> g
-</p>
+<!-- PAGAMENTO -->
+<div class="mt-6 space-y-2">
+  <label class="flex items-center gap-2">
+    <input type="radio" name="pagamento" value="PIX" checked>
+    <span class="gold font-medium">PIX</span>
+  </label>
 
-<p class="text-right font-semibold text-lg">
-  Total: R$ <span id="total">0.00</span>
-</p>
+  <label class="flex items-center gap-2">
+    <input type="radio" name="pagamento" value="CARTAO">
+    <span>Cartão</span>
+  </label>
 
-<button onclick="finalizar()"
-  class="bg-black text-white w-full py-4 mt-4">
-ENVIAR PEDIDO NO WHATSAPP
+  <select id="parcelas" class="border p-2 w-full hidden">
+    <option value="1x">1x sem juros</option>
+    <option value="2x">2x sem juros</option>
+    <option value="3x">3x sem juros</option>
+  </select>
+</div>
+
+<!-- FINALIZAR -->
+<button onclick="finalizarPedido()"
+  class="w-full bg-black text-white py-3 mt-6 tracking-widest text-xs">
+  FINALIZAR NO WHATSAPP
 </button>
 
 <script>
-/* 🔥 FIREBASE — USAR O MESMO DO PAINEL */
+/* 🔥 FIREBASE — MESMO DO PROJETO */
 firebase.initializeApp({
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -51,84 +73,83 @@ firebase.initializeApp({
 
 const db = firebase.database();
 
-const cart = JSON.parse(localStorage.getItem("cart")) || [];
-const resumo = document.getElementById("resumo");
-const totalEl = document.getElementById("total");
-const pesoEl = document.getElementById("peso");
+/* DADOS LOCAIS (MANTÉM PADRÃO DA MARCINHA) */
+const cart = JSON.parse(localStorage.getItem('cart')) || [];
+const storePhone = localStorage.getItem('storePhone') || '';
+const config = JSON.parse(localStorage.getItem('storeConfig')) || {};
 
-let total = 0;
+const itensEl = document.getElementById('itens');
+const subtotalEl = document.getElementById('subtotal');
+const totalEl = document.getElementById('total');
+const pesoEl = document.getElementById('pesoTotal');
+const parcelasEl = document.getElementById('parcelas');
+
+let subtotal = 0;
 let pesoTotal = 0;
 
-render();
+/* RENDER */
+cart.forEach(i => {
+  subtotal += i.price * i.qty;
+  pesoTotal += (i.weight || 0) * i.qty;
 
-/* RESUMO */
-function render(){
-  resumo.innerHTML="";
-  total = 0;
-  pesoTotal = 0;
+  itensEl.innerHTML += `
+    <div class="flex justify-between border-b pb-2 text-sm">
+      <div>
+        <p>${i.qty}x ${i.name}</p>
+        <p class="text-xs text-gray-400">SKU: ${i.sku || '-'}</p>
+      </div>
+      <strong>R$ ${(i.price * i.qty).toFixed(2)}</strong>
+    </div>
+  `;
+});
 
-  cart.forEach(i=>{
-    const sub = i.price * i.qty;
-    const peso = (i.weight || 0) * i.qty;
+subtotalEl.textContent = subtotal.toFixed(2);
+totalEl.textContent = subtotal.toFixed(2);
+pesoEl.textContent = pesoTotal;
 
-    total += sub;
-    pesoTotal += peso;
-
-    resumo.innerHTML += `
-      <p>${i.qty}x ${i.name}</p>
-      <p class="text-xs text-gray-400">
-        Peso unitário: ${i.weight || 0}g
-      </p>
-      <p class="mb-2">Subtotal: R$ ${sub.toFixed(2)}</p>
-      <hr class="mb-2">
-    `;
-  });
-
-  totalEl.textContent = total.toFixed(2);
-  pesoEl.textContent = pesoTotal;
-}
+/* PAGAMENTO */
+document.querySelectorAll('[name=pagamento]').forEach(r => {
+  r.onchange = () => {
+    parcelasEl.classList.toggle('hidden', r.value !== 'CARTAO');
+  };
+});
 
 /* FINALIZAR */
-function finalizar(){
-  if(cart.length === 0) return alert("Carrinho vazio");
+function finalizarPedido(){
+  const nome = clienteNome.value.trim();
+  const whats = clienteWhats.value.trim();
+  if(!nome || !whats) return alert('Informe nome e WhatsApp');
 
-  const nome = cliente.value.trim();
-  const whats = whatsInput.value;
-
-  if(!nome || !whats) return alert("Preencha nome e WhatsApp");
-
-  const pagamento = document.getElementById("pagamento").value;
+  const pagamento = document.querySelector('[name=pagamento]:checked').value;
+  const parcelas = pagamento === 'CARTAO' ? parcelasEl.value : 'À vista';
 
   const pedido = {
     cliente: nome,
-    customer: nome,
     whatsapp: whats,
-    data: new Date().toLocaleString("pt-BR"),
-    status: "Novo",
+    data: new Date().toLocaleString('pt-BR'),
     pagamento,
-    total,
+    parcelas,
+    subtotal,
+    total: subtotal,
     pesoTotal,
-    itens: cart.map(i=>({
-      nome: i.name,
-      sku: i.sku,
-      qtd: i.qty,
-      peso: i.weight || 0,
-      valor: i.price
-    }))
+    status: 'Novo',
+    itens: cart
   };
 
-  db.ref("orders").push(pedido);
+  /* SALVA NO FIREBASE */
+  db.ref('orders').push(pedido);
 
-  /* WHATSAPP */
-  let msg = `🛍️ *Pedido Abella Joias*%0A%0A`;
-  cart.forEach(i=>{
-    msg += `${i.qty}x ${i.name} — ${i.weight||0}g%0A`;
+  /* MENSAGEM WHATSAPP (IGUAL AO FLUXO ANTIGO) */
+  let msg = `🛍️ Pedido de *${nome}*:%0A%0A`;
+  cart.forEach(i => {
+    msg += `${i.qty}x ${i.name} - R$ ${i.price}%0A`;
   });
-  msg += `%0A⚖️ Peso total: ${pesoTotal}g`;
+  msg += `%0A⚖️ Peso: ${pesoTotal} g`;
   msg += `%0A💳 Pagamento: ${pagamento}`;
-  msg += `%0A💰 Total: R$ ${total.toFixed(2)}`;
+  msg += `%0A💰 Total: R$ ${subtotal.toFixed(2)}`;
 
-  localStorage.removeItem("cart");
+  localStorage.removeItem('cart');
+
   window.open(`https://wa.me/55${whats}?text=${msg}`);
 }
 </script>
