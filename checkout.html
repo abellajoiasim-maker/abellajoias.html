@@ -2,9 +2,14 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Checkout</title>
+<title>Checkout | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 </head>
 
 <body class="bg-neutral-50 p-4 max-w-xl mx-auto">
@@ -15,40 +20,83 @@
 <input id="whats" placeholder="WhatsApp" class="border p-2 w-full mb-4">
 
 <button onclick="send()"
-  class="bg-black text-white w-full py-3">
-Enviar Pedido no WhatsApp
+  class="bg-black text-white w-full py-3 tracking-widest">
+FINALIZAR NO WHATSAPP
 </button>
 
 <script>
+/* 🔥 CONFIG FIREBASE — USE O MESMO DO PAINEL */
+firebase.initializeApp({
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+  projectId: "SEU_PROJETO"
+});
+
+const db = firebase.database();
+
+/* DADOS */
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
-const payment = localStorage.getItem("payment");
+const payment = localStorage.getItem("payment") || 'Não informado';
 const phone = localStorage.getItem("storePhone");
 
+/* ENVIO */
 function send(){
+  if(cart.length === 0){
+    alert('Carrinho vazio');
+    return;
+  }
+
+  const nome = document.getElementById('name').value.trim();
+  const whatsapp = document.getElementById('whats').value.trim();
+
+  if(!nome || !whatsapp){
+    alert('Preencha nome e WhatsApp');
+    return;
+  }
+
   let total = 0;
-  let msg = "🛍️ Pedido:%0A";
+  let pesoTotal = 0;
+
+  let msg = "🛍️ *Pedido Abella Joias*%0A%0A";
 
   cart.forEach(i=>{
     total += i.price * i.qty;
-    msg += `${i.qty}x ${i.name} - R$ ${i.price}%0A`;
+    pesoTotal += (i.weight || 0) * i.qty;
+
+    msg += `• ${i.qty}x ${i.name}%0A`;
+    msg += `  R$ ${i.price.toFixed(2)} | ${i.weight || 0}g%0A`;
   });
 
-  msg += `%0A💳 Pagamento: ${payment}`;
-  msg += `%0A💰 Total: R$ ${total.toFixed(2)}`;
+  msg += `%0A⚖️ *Peso total:* ${pesoTotal.toFixed(2)}g`;
+  msg += `%0A💳 *Pagamento:* ${payment}`;
+  msg += `%0A💰 *Total:* R$ ${total.toFixed(2)}`;
 
-  const orders = JSON.parse(localStorage.getItem("orders")) || [];
-  orders.push({
-    date: new Date().toLocaleString(),
-    total
+  /* SALVA NO FIREBASE */
+  db.ref('orders').push({
+    cliente: nome,
+    whatsapp: whatsapp,
+    itens: cart.map(i=>({
+      nome: i.name,
+      sku: i.sku || '',
+      qtd: i.qty,
+      valor: i.price,
+      peso: i.weight || 0
+    })),
+    total: Number(total.toFixed(2)),
+    pesoTotal: Number(pesoTotal.toFixed(2)),
+    pagamento: payment,
+    status: 'Novo',
+    data: new Date().toLocaleString('pt-BR')
   });
 
-  localStorage.setItem("orders", JSON.stringify(orders));
-  localStorage.removeItem("cart");
+  /* LIMPA */
+  localStorage.removeItem('cart');
 
-  window.open(`https://wa.me/${phone}?text=${msg}`);
+  /* WHATSAPP */
+  window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
 }
 </script>
-
 
 </body>
 </html>
