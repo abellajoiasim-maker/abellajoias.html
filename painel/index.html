@@ -15,73 +15,105 @@ body{background:#F8F6F2}
 .gold{color:#A68966}
 .tab{display:none}
 .tab.active{display:block}
+
+.status-Novo{background:#fef3c7;color:#92400e}
+.status-Emseparação{background:#e0f2fe;color:#075985}
+.status-Enviado{background:#ede9fe;color:#5b21b6}
+.status-Finalizado{background:#ecfdf5;color:#065f46}
+
+@media print{
+  body *{visibility:hidden}
+  #romaneio, #romaneio *{visibility:visible}
+  #romaneio{position:absolute;top:0;left:0;width:100%}
+}
 </style>
 </head>
 <body>
 
 <header class="bg-white border-b px-10 py-6 flex justify-between">
   <div>
-    <h1 class="font-serif text-xl gold">Abella Joias</h1>
-    <p class="text-xs text-gray-400 uppercase">Painel Administrativo</p>
+    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
+    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
   </div>
-  <nav class="flex gap-6 text-xs uppercase">
-    <button onclick="openTab('empresa')">Empresa</button>
-    <button onclick="openTab('categorias')">Categorias</button>
+
+  <nav class="flex gap-8 text-xs tracking-widest uppercase">
+    <button onclick="openTab('empresa')" class="gold">Empresa</button>
     <button onclick="openTab('produtos')">Produtos</button>
+    <button onclick="openTab('pedidos')">Pedidos</button>
   </nav>
 </header>
 
 <main class="max-w-6xl mx-auto p-8 space-y-16">
 
 <!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-4">
-<h2 class="font-serif text-2xl gold">Dados da Empresa</h2>
+<section id="empresa" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Dados da Empresa</h2>
 
-<input id="empNome" placeholder="Nome da empresa" class="border p-3 w-full">
-<input id="empWhatsapp" placeholder="WhatsApp (somente números)" class="border p-3 w-full">
-
-<button onclick="salvarEmpresa()" class="bg-black text-white px-6 py-2">
-Salvar
-</button>
-</section>
-
-<!-- CATEGORIAS -->
-<section id="categorias" class="tab space-y-4">
-<h2 class="font-serif text-2xl gold">Categorias</h2>
-
-<div class="flex gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
-  <button onclick="salvarCategoria()" class="bg-black text-white px-6">
-    Adicionar
-  </button>
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
+  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
+  <input id="empWhatsapp" placeholder="WhatsApp (somente números)" class="border p-3">
+  <input id="empPix" type="number" placeholder="% desconto PIX" class="border p-3">
+  <input id="empParcelas" type="number" placeholder="Parcelas no cartão" class="border p-3">
 </div>
 
-<div id="listaCategorias" class="space-y-2"></div>
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs tracking-widest">
+SALVAR
+</button>
 </section>
 
 <!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-4">
-<h2 class="font-serif text-2xl gold">Produtos</h2>
+<section id="produtos" class="tab space-y-8">
+<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
 
-<input id="pNome" placeholder="Nome do produto" class="border p-3 w-full">
-<input id="pSku" placeholder="SKU" class="border p-3 w-full">
-<input id="pPreco" type="number" placeholder="Preço" class="border p-3 w-full">
-<input id="pPeso" type="number" step="0.01" placeholder="Peso (gramas)" class="border p-3 w-full">
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-6">
+  <input id="pNome" placeholder="Nome do produto" class="border p-3">
+  <input id="pSku" placeholder="SKU" class="border p-3">
+  <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
+  <input id="pPeso" type="number" placeholder="Peso (gramas)" class="border p-3">
+  <input id="pEstoque" type="number" placeholder="Estoque" class="border p-3">
+  <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-2">
+</div>
 
-<select id="pCategoria" class="border p-3 w-full"></select>
-
-<input id="pImagem" placeholder="URL da imagem" class="border p-3 w-full">
-
-<button onclick="salvarProduto()" class="bg-black text-white px-6 py-2">
-Salvar Produto
+<button id="btnSalvarProduto" class="bg-black text-white px-8 py-3 text-xs tracking-widest">
+SALVAR PRODUTO
 </button>
 
-<div id="listaProdutos" class="grid sm:grid-cols-2 gap-4"></div>
+<div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
 </section>
+
+<!-- PEDIDOS -->
+<section id="pedidos" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
+<div id="listaPedidos" class="space-y-4"></div>
+</section>
+
+<!-- ROMANEIO -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm">
+  <h2 class="font-serif text-2xl gold mb-4">Romaneio</h2>
+  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+  <p><strong>Data:</strong> <span id="rData"></span></p>
+  <p><strong>Peso total:</strong> <span id="rPeso"></span> g</p>
+
+  <table class="w-full border mt-6">
+    <thead>
+      <tr class="border-b">
+        <th class="p-2">Produto</th>
+        <th class="p-2">SKU</th>
+        <th class="p-2">Qtd</th>
+        <th class="p-2">Peso</th>
+        <th class="p-2">Valor</th>
+      </tr>
+    </thead>
+    <tbody id="rItens"></tbody>
+  </table>
+
+  <p class="mt-6 text-right font-bold">Total: R$ <span id="rTotal"></span></p>
+</div>
 
 </main>
 
 <script>
+/* 🔥 FIREBASE — ABELLA JOIAS */
 firebase.initializeApp({
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -101,55 +133,119 @@ function openTab(id){
 function salvarEmpresa(){
   db.ref('settings').set({
     name: empNome.value,
-    whatsapp: empWhatsapp.value
-  });
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value||0),
+    parcelas: Number(empParcelas.value||1)
+  }).then(()=>alert('Empresa salva!'));
 }
 
-/* CATEGORIAS */
-function salvarCategoria(){
-  if(!catNome.value) return;
-  db.ref('categories').push({name:catNome.value});
-  catNome.value='';
-}
-
-db.ref('categories').on('value',snap=>{
-  listaCategorias.innerHTML='';
-  pCategoria.innerHTML='<option value="">Selecione</option>';
-  snap.forEach(s=>{
-    listaCategorias.innerHTML+=`
-      <div class="border p-2 flex justify-between">
-        ${s.val().name}
-        <button onclick="db.ref('categories/${s.key}').remove()">❌</button>
-      </div>`;
-    pCategoria.innerHTML+=`<option value="${s.key}">${s.val().name}</option>`;
-  });
+db.ref('settings').once('value').then(s=>{
+  if(!s.val())return;
+  empNome.value=s.val().name||'';
+  empWhatsapp.value=s.val().whatsapp||'';
+  empPix.value=s.val().pix||0;
+  empParcelas.value=s.val().parcelas||1;
 });
 
 /* PRODUTOS */
+let editarId=null;
+btnSalvarProduto.onclick=salvarProduto;
+
 function salvarProduto(){
+  if(!pNome.value||!pPreco.value||!pImagemUrl.value)
+    return alert('Preencha nome, preço e imagem');
+
   const produto={
     name:pNome.value,
     sku:pSku.value,
     price:Number(pPreco.value),
-    weight:Number(pPeso.value),
-    category:pCategoria.value,
-    image:pImagem.value
+    peso:Number(pPeso.value||0),
+    stock:Number(pEstoque.value||0),
+    image:pImagemUrl.value
   };
-  db.ref('products').push(produto);
+
+  const ref=editarId?db.ref('products/'+editarId):db.ref('products').push();
+  ref.set(produto).then(()=>{
+    alert('Produto salvo!');
+    editarId=null;
+    btnSalvarProduto.textContent='SALVAR PRODUTO';
+    pNome.value=pSku.value=pPreco.value=pPeso.value=pEstoque.value=pImagemUrl.value='';
+  });
 }
 
 db.ref('products').on('value',snap=>{
   listaProdutos.innerHTML='';
   snap.forEach(s=>{
-    const p=s.val();
+    const p=s.val(),id=s.key;
     listaProdutos.innerHTML+=`
-      <div class="bg-white border p-3">
-        <img src="${p.image}" class="h-32 w-full object-cover">
-        <p>${p.name}</p>
-        <p class="text-xs">Peso: ${p.weight}g</p>
-      </div>`;
+    <div class="bg-white border p-4">
+      <img src="${p.image}" class="h-40 w-full object-cover">
+      <p class="mt-2 font-medium">${p.name}</p>
+      <p class="text-xs">SKU: ${p.sku||'-'}</p>
+      <p class="text-xs">Peso: ${p.peso||0} g</p>
+      <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+      <div class="flex gap-2 mt-2 text-xs">
+        <button onclick="editarProduto('${id}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+        <button onclick="db.ref('products/${id}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
+      </div>
+    </div>`;
   });
 });
+
+function editarProduto(id){
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val();
+    pNome.value=p.name;
+    pSku.value=p.sku;
+    pPreco.value=p.price;
+    pPeso.value=p.peso||0;
+    pEstoque.value=p.stock;
+    pImagemUrl.value=p.image;
+    editarId=id;
+    btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
+  });
+}
+
+/* PEDIDOS */
+db.ref('orders').on('value',snap=>{
+  listaPedidos.innerHTML='';
+  snap.forEach(s=>{
+    const o=s.val(),id=s.key;
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-4 space-y-2">
+      <p>${o.cliente||o.customer}</p>
+      <p class="text-xs text-gray-400">${o.data}</p>
+      <p>Peso: ${o.pesoTotal||0} g</p>
+      <strong>R$ ${o.total.toFixed(2)}</strong>
+      <div class="flex gap-2 text-xs">
+        ${['Novo','Em separação','Enviado','Finalizado'].map(st=>`
+        <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>`).join('')}
+        <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="underline">Romaneio</button>
+      </div>
+    </div>`;
+  });
+});
+
+/* ROMANEIO */
+function imprimirRomaneio(o){
+  rCliente.textContent=o.cliente||o.customer;
+  rData.textContent=o.data;
+  rPeso.textContent=o.pesoTotal||0;
+  rItens.innerHTML='';
+  o.itens.forEach(i=>{
+    rItens.innerHTML+=`
+    <tr>
+      <td class="p-2">${i.nome}</td>
+      <td class="p-2">${i.sku||'-'}</td>
+      <td class="p-2">${i.qtd}</td>
+      <td class="p-2">${i.peso||0} g</td>
+      <td class="p-2">R$ ${i.valor.toFixed(2)}</td>
+    </tr>`;
+  });
+  rTotal.textContent=o.total.toFixed(2);
+  romaneio.classList.remove('hidden');
+  window.print();
+}
 </script>
 
 </body>
