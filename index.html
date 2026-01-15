@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Administrativo | Marcinha Semijoias</title>
+<title>Painel Administrativo | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +32,7 @@ body{background:#F8F6F2}
 
 <header class="bg-white border-b px-10 py-6 flex justify-between">
   <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Marcinha Semijoias</h1>
+    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
     <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
   </div>
 
@@ -110,11 +110,12 @@ SALVAR PRODUTO
 </main>
 
 <script>
+/* 🔥 FIREBASE — SUBSTITUA PELO DA ABELLA JOIAS 🔥 */
 firebase.initializeApp({
-  apiKey: "AIzaSyD5RdWTYOnaTov7VtM9ZGenUpFYSZVGoPs",
-  authDomain: "marcinha-semijoias.firebaseapp.com",
-  databaseURL: "https://marcinha-semijoias-default-rtdb.firebaseio.com",
-  projectId: "marcinha-semijoias"
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+  projectId: "SEU_PROJETO"
 });
 
 const db = firebase.database();
@@ -132,11 +133,11 @@ function salvarEmpresa(){
     whatsapp: empWhatsapp.value,
     pix: parseInt(empPix.value||0),
     parcelas: parseInt(empParcelas.value||1)
-  }).then(()=>alert('Empresa salva!'));
+  }).then(()=>alert('Dados da empresa salvos!'));
 }
 
 db.ref('settings').once('value').then(s=>{
-  if(!s.val())return;
+  if(!s.val()) return;
   empNome.value = s.val().name || '';
   empWhatsapp.value = s.val().whatsapp || '';
   empPix.value = s.val().pix || 0;
@@ -154,151 +155,80 @@ const btnSalvarProduto = document.getElementById('btnSalvarProduto');
 
 let editarId = null;
 
-function salvarProduto() {
-  const url = pImagemUrl.value.trim();
-
-  if(!pNome.value.trim() || !pPreco.value || (!editarId && !url)){
-    return alert('Preencha nome, preço e informe a URL da imagem!');
-  }
+function salvarProduto(){
+  if(!pNome.value || !pPreco.value || !pImagemUrl.value)
+    return alert('Preencha nome, preço e imagem.');
 
   const produto = {
-    name: pNome.value.trim(),
-    sku: pSku.value.trim(),
-    price: parseFloat(pPreco.value),
-    stock: parseInt(pEstoque.value) || 0,
-    image: url
+    name: pNome.value,
+    sku: pSku.value,
+    price: Number(pPreco.value),
+    stock: Number(pEstoque.value||0),
+    image: pImagemUrl.value
   };
 
-  const refProduto = editarId ? db.ref('products/' + editarId) : db.ref('products');
-  const salvar = editarId ? refProduto.update(produto) : refProduto.push(produto);
-
-  salvar.then(()=>{
-    alert(editarId ? 'Produto atualizado!' : 'Produto salvo!');
-    resetFormProduto();
-  }).catch(err=>alert('Erro ao salvar produto: '+err));
-}
-
-function resetFormProduto(){
-  pNome.value = '';
-  pSku.value = '';
-  pPreco.value = '';
-  pEstoque.value = '';
-  pImagemUrl.value = '';
-  editarId = null;
-  btnSalvarProduto.textContent = 'SALVAR PRODUTO';
+  const ref = editarId ? db.ref('products/'+editarId) : db.ref('products').push();
+  ref.set(produto).then(()=>{
+    alert('Produto salvo!');
+    editarId=null;
+    btnSalvarProduto.textContent='SALVAR PRODUTO';
+    pNome.value=pSku.value=pPreco.value=pEstoque.value=pImagemUrl.value='';
+  });
 }
 
 btnSalvarProduto.onclick = salvarProduto;
 
-/* LISTAR PRODUTOS */
-db.ref('products').on('value', snap => {
-  listaProdutos.innerHTML = '';
-  snap.forEach(s => {
-    const p = s.val();
-    const id = s.key;
-    listaProdutos.innerHTML += `
-      <div class="bg-white border p-4">
-        <img src="${p.image}" class="h-40 w-full object-cover">
-        <p class="font-medium mt-2">${p.name}</p>
-        <p class="text-xs text-gray-400">SKU: ${p.sku}</p>
-        <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-        <div class="flex gap-2 mt-2 text-xs">
-          <button onclick="editarProduto('${id}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-          <button onclick="excluirProduto('${id}')" class="bg-red-500 text-white px-2 py-1">Excluir</button>
-        </div>
-      </div>`;
-  });
-});
-
-function excluirProduto(id){
-  if(!confirm('Deseja excluir este produto?')) return;
-  db.ref('products/'+id).remove()
-    .then(()=>alert('Produto excluído!'))
-    .catch(err=>alert('Erro ao excluir: '+err));
-}
-
-function editarProduto(id){
-  db.ref('products/'+id).once('value')
-    .then(snap=>{
-      const p = snap.val();
-      pNome.value = p.name;
-      pSku.value = p.sku;
-      pPreco.value = p.price;
-      pEstoque.value = p.stock;
-      pImagemUrl.value = p.image || '';
-      editarId = id;
-      btnSalvarProduto.textContent = 'ATUALIZAR PRODUTO';
-    }).catch(err=>alert('Erro ao carregar produto: '+err));
-}
-
-/* PEDIDOS */
-const listaPedidos = document.getElementById('listaPedidos');
-
-db.ref('orders').on('value',snap=>{
-  listaPedidos.innerHTML='';
+db.ref('products').on('value',snap=>{
+  listaProdutos.innerHTML='';
   snap.forEach(s=>{
-    const o = s.val();
-    const id = s.key;
-    const status = o.status||'Novo';
-
-    listaPedidos.innerHTML+=`
-    <div class="bg-white border p-5 space-y-3">
-      <div class="flex justify-between">
-        <div>
-          <p>${o.cliente||o.customer}</p>
-          <p class="text-xs text-gray-400">${o.data}</p>
-        </div>
-        <span class="px-3 py-1 text-xs rounded status-${status.replace(' ','')}">${status}</span>
-      </div>
-
-      <div class="flex gap-2 text-xs">
-        ${['Novo','Em separação','Enviado','Finalizado'].map(st=>`
-          <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-3 py-1">${st}</button>
-        `).join('')}
-      </div>
-
-      <div class="flex justify-between items-center">
-        <strong>R$ ${o.total.toFixed(2)}</strong>
-
-        <div class="flex gap-4 text-xs">
-          <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="underline">Romaneio</button>
-          <button onclick="excluirPedido('${id}')" class="text-red-600 underline">Excluir</button>
-        </div>
+    const p=s.val(),id=s.key;
+    listaProdutos.innerHTML+=`
+    <div class="bg-white border p-4">
+      <img src="${p.image}" class="h-40 w-full object-cover">
+      <p class="mt-2">${p.name}</p>
+      <p class="text-xs text-gray-400">SKU: ${p.sku}</p>
+      <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+      <div class="flex gap-2 mt-2 text-xs">
+        <button onclick="editarProduto('${id}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+        <button onclick="db.ref('products/${id}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
       </div>
     </div>`;
   });
 });
 
-function excluirPedido(id){
-  if(!confirm('Deseja excluir este pedido?')) return;
-  db.ref('orders/'+id).remove()
-    .then(()=>alert('Pedido excluído!'));
-}
-
-/* ROMANEIO */
-function imprimirRomaneio(o){
-  const rCliente = document.getElementById('rCliente');
-  const rData = document.getElementById('rData');
-  const rItens = document.getElementById('rItens');
-  const rTotal = document.getElementById('rTotal');
-  const romaneio = document.getElementById('romaneio');
-
-  rCliente.textContent = o.cliente||o.customer;
-  rData.textContent = o.data;
-  rItens.innerHTML='';
-  o.itens.forEach(i=>{
-    rItens.innerHTML+=`
-    <tr>
-      <td class="p-2">${i.nome}</td>
-      <td class="p-2">${i.sku}</td>
-      <td class="p-2">${i.qtd}</td>
-      <td class="p-2">R$ ${i.valor.toFixed(2)}</td>
-    </tr>`;
+function editarProduto(id){
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val();
+    pNome.value=p.name;
+    pSku.value=p.sku;
+    pPreco.value=p.price;
+    pEstoque.value=p.stock;
+    pImagemUrl.value=p.image;
+    editarId=id;
+    btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
   });
-  rTotal.textContent = o.total.toFixed(2);
-  romaneio.classList.remove('hidden');
-  window.print();
 }
+
+/* PEDIDOS */
+const listaPedidos=document.getElementById('listaPedidos');
+
+db.ref('orders').on('value',snap=>{
+  listaPedidos.innerHTML='';
+  snap.forEach(s=>{
+    const o=s.val(),id=s.key;
+    listaPedidos.innerHTML+=`
+    <div class="bg-white border p-4">
+      <p>${o.cliente||o.customer}</p>
+      <p class="text-xs text-gray-400">${o.data}</p>
+      <strong>R$ ${o.total.toFixed(2)}</strong>
+      <div class="flex gap-2 mt-2 text-xs">
+        ${['Novo','Em separação','Enviado','Finalizado'].map(st=>`
+          <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
+        `).join('')}
+      </div>
+    </div>`;
+  });
+});
 </script>
 
 </body>
