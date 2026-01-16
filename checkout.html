@@ -6,173 +6,160 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
 body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
+.font-serif{font-family:'Cinzel',serif}
 </style>
 </head>
 
-<body class="max-w-xl mx-auto p-6 space-y-6">
+<body class="max-w-2xl mx-auto p-6">
 
-<h1 class="font-serif text-2xl text-center gold">Finalizar Pedido</h1>
+<h1 class="font-serif text-2xl gold mb-6 text-center">Finalizar Pedido</h1>
 
-<!-- DADOS CLIENTE -->
-<div class="bg-white border p-4 space-y-3">
-  <input id="nome" placeholder="Seu nome" class="border p-3 w-full">
-  <input id="whats" placeholder="WhatsApp (somente números)" class="border p-3 w-full">
+<!-- CLIENTE -->
+<div class="bg-white border p-4 mb-6 space-y-2">
+  <input id="cliente" placeholder="Nome completo" class="border p-2 w-full">
+  <input id="whatsapp" placeholder="WhatsApp (somente números)" class="border p-2 w-full">
 </div>
+
+<!-- CARRINHO -->
+<div id="listaCarrinho" class="space-y-4"></div>
 
 <!-- PAGAMENTO -->
-<div class="bg-white border p-4 space-y-3">
-  <p class="font-semibold">Forma de pagamento</p>
+<div class="bg-white border p-4 mt-6 space-y-3">
+  <select id="pagamento" onchange="calcularTotais()" class="border p-2 w-full">
+    <option value="PIX">PIX</option>
+    <option value="CARTAO">Cartão</option>
+  </select>
 
-  <label class="flex items-center gap-2">
-    <input type="radio" name="pagamento" value="PIX" checked>
-    PIX (com desconto)
-  </label>
-
-  <label class="flex items-center gap-2">
-    <input type="radio" name="pagamento" value="CARTAO">
-    Cartão
-  </label>
-</div>
-
-<!-- RESUMO -->
-<div class="bg-white border p-4 space-y-2 text-sm">
   <p>Subtotal: R$ <span id="subtotal">0.00</span></p>
-  <p id="linhaDesconto" class="text-green-600 hidden">
-    Desconto PIX: -R$ <span id="descontoPix">0.00</span>
-  </p>
-  <p>Peso total: <span id="pesoTotal">0</span> g</p>
-  <p class="text-lg font-semibold">
-    Total: R$ <span id="total">0.00</span>
-  </p>
+  <p class="text-green-700">Desconto PIX: R$ <span id="desconto">0.00</span></p>
+  <p><strong>Total: R$ <span id="total">0.00</span></strong></p>
+  <p class="text-xs text-gray-500">Peso total: <span id="pesoTotal">0</span>g</p>
 </div>
 
-<button onclick="finalizar()"
-  class="bg-black text-white w-full py-4 tracking-widest text-xs">
+<button onclick="finalizarPedido()"
+ class="bg-black text-white w-full py-4 mt-6">
 FINALIZAR NO WHATSAPP
 </button>
 
 <script>
-/* 🔥 FIREBASE — ABELLA JOIAS */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
+const db=firebase.database();
 
-const db = firebase.database();
+/* DADOS */
+const cart = JSON.parse(localStorage.getItem('cart')) || [];
+let pixDesconto = 0;
+let parcelas = '';
 
-/* 🔧 CONFIGURAÇÕES */
-const descontoPixPerc = 5;       // % desconto PIX
-const parcelas = 3;              // parcelamento cartão
-const whatsappLoja = "5511999999999"; // <<< TROQUE AQUI
-
-/* 🛒 CARRINHO */
-const carrinho = JSON.parse(localStorage.getItem('cart')) || [];
-
-const subtotalEl = document.getElementById('subtotal');
-const descontoEl = document.getElementById('descontoPix');
-const linhaDesconto = document.getElementById('linhaDesconto');
-const totalEl = document.getElementById('total');
-const pesoTotalEl = document.getElementById('pesoTotal');
-
-function calcular(){
-  let subtotal = 0;
-  let peso = 0;
-
-  carrinho.forEach(i=>{
-    subtotal += i.price * i.qty;
-    peso += (i.weight||0) * i.qty;
-  });
-
-  subtotalEl.textContent = subtotal.toFixed(2);
-  pesoTotalEl.textContent = peso;
-
-  const pagamento = document.querySelector('[name=pagamento]:checked').value;
-
-  if(pagamento==='PIX'){
-    const desc = subtotal * (descontoPixPerc/100);
-    descontoEl.textContent = desc.toFixed(2);
-    linhaDesconto.classList.remove('hidden');
-    totalEl.textContent = (subtotal-desc).toFixed(2);
-  }else{
-    linhaDesconto.classList.add('hidden');
-    totalEl.textContent = subtotal.toFixed(2);
-  }
-}
-
-document.querySelectorAll('[name=pagamento]').forEach(r=>{
-  r.onchange = calcular;
+db.ref('settings').once('value').then(s=>{
+  if(!s.val()) return;
+  pixDesconto = Number(s.val().pix||0);
+  parcelas = s.val().parcelas||'';
+  calcularTotais();
 });
 
-calcular();
+/* LISTAR CARRINHO */
+function renderCarrinho(){
+  listaCarrinho.innerHTML='';
+  cart.forEach((i,idx)=>{
+    listaCarrinho.innerHTML+=`
+    <div class="bg-white border p-4 flex gap-4">
+      <img src="${i.image}" class="w-20 h-20 object-cover">
+      <div class="flex-1">
+        <p class="font-semibold">${i.name}</p>
+        <p class="text-xs">SKU: ${i.sku}</p>
+        <p class="text-xs">Peso: ${i.weight}g</p>
 
-/* ✅ FINALIZAR PEDIDO */
-function finalizar(){
-  const nome = document.getElementById('nome').value.trim();
-  const whatsCliente = document.getElementById('whats').value.trim();
-  const pagamento = document.querySelector('[name=pagamento]:checked').value;
+        <div class="flex items-center gap-2 mt-2">
+          <button onclick="alterarQtd(${idx},-1)" class="border px-2">−</button>
+          <span>${i.qty}</span>
+          <button onclick="alterarQtd(${idx},1)" class="border px-2">+</button>
+        </div>
+      </div>
+      <div>
+        <p>R$ ${(i.price*i.qty).toFixed(2)}</p>
+      </div>
+    </div>`;
+  });
+  calcularTotais();
+}
 
-  if(!nome || !whatsCliente){
-    alert('Preencha nome e WhatsApp');
-    return;
-  }
+function alterarQtd(i,delta){
+  cart[i].qty+=delta;
+  if(cart[i].qty<1) cart[i].qty=1;
+  localStorage.setItem('cart',JSON.stringify(cart));
+  renderCarrinho();
+}
 
-  let subtotal = 0;
-  let pesoTotal = 0;
-  let msg = `🛍️ *NOVO PEDIDO — ABELLA JOIAS*%0A%0A`;
-  msg += `👤 *Cliente:* ${nome}%0A`;
-  msg += `📱 *WhatsApp:* ${whatsCliente}%0A%0A`;
-  msg += `📦 *Itens:*%0A`;
-
-  carrinho.forEach(i=>{
-    subtotal += i.price * i.qty;
-    pesoTotal += (i.weight||0) * i.qty;
-    msg += `• ${i.qty}x ${i.name}%0A`;
+/* CALCULOS */
+function calcularTotais(){
+  let subtotal=0,peso=0;
+  cart.forEach(i=>{
+    subtotal+=i.price*i.qty;
+    peso+=i.weight*i.qty;
   });
 
-  let totalFinal = subtotal;
-
-  if(pagamento==='PIX'){
-    const desc = subtotal * (descontoPixPerc/100);
-    totalFinal = subtotal-desc;
-    msg += `%0A💸 *Desconto PIX (${descontoPixPerc}%):* -R$ ${desc.toFixed(2)}%0A`;
-  }else{
-    msg += `%0A💳 *Cartão:* ${parcelas}x de R$ ${(subtotal/parcelas).toFixed(2)}%0A`;
+  let desconto=0,total=subtotal;
+  if(pagamento.value==='PIX'){
+    desconto=subtotal*(pixDesconto/100);
+    total=subtotal-desconto;
   }
 
-  msg += `⚖️ *Peso total:* ${pesoTotal}g%0A`;
-  msg += `💰 *Total:* R$ ${totalFinal.toFixed(2)}%0A%0A`;
-  msg += `✨ Obrigado por comprar na *Abella Joias*!%0A`;
-  msg += `Em breve nossa equipe entrará em contato para finalizar seu pedido.`;
+  subtotalSpan.textContent=subtotal.toFixed(2);
+  descontoSpan.textContent=desconto.toFixed(2);
+  totalSpan.textContent=total.toFixed(2);
+  pesoTotal.textContent=peso;
+}
 
-  const pedido = {
-    cliente: nome,
-    whatsapp: whatsCliente,
-    data: new Date().toLocaleString('pt-BR'),
-    itens: carrinho,
-    pagamento,
-    total: totalFinal,
-    pesoTotal,
-    status:'Novo'
+/* FINALIZAR */
+function finalizarPedido(){
+  if(!cliente.value||!whatsapp.value) return alert('Preencha seus dados.');
+
+  const pagamentoSel=pagamento.value;
+  const total=Number(totalSpan.textContent);
+
+  const pedido={
+    cliente:cliente.value,
+    whatsapp:whatsapp.value,
+    pagamento:pagamentoSel,
+    data:new Date().toLocaleString('pt-BR'),
+    status:'Novo',
+    itens:cart,
+    total,
+    peso:Number(pesoTotal.textContent)
   };
 
-  db.ref('orders').push(pedido).then(()=>{
-    localStorage.removeItem('cart');
-    window.open(`https://wa.me/${whatsappLoja}?text=${msg}`, '_blank');
-    alert('Pedido enviado com sucesso 💛');
-    window.location.href = 'index.html';
+  db.ref('orders').push(pedido);
+
+  let msg=`🛍️ *Pedido Abella Joias*%0A%0A`;
+  cart.forEach(i=>{
+    msg+=`${i.qty}x ${i.name} — R$ ${(i.price*i.qty).toFixed(2)}%0A`;
   });
+  msg+=`%0A💳 Pagamento: ${pagamentoSel}`;
+  msg+=`%0A⚖️ Peso total: ${pedido.peso}g`;
+  msg+=`%0A💰 Total: R$ ${total.toFixed(2)}`;
+  msg+=`%0A%0A✨ Obrigada pela preferência! A Abella Joias entrará em contato em breve para finalização do pedido.`;
+
+  localStorage.removeItem('cart');
+  window.open(`https://wa.me/55${whatsapp.value}?text=${msg}`);
 }
+
+const subtotalSpan=document.getElementById('subtotal');
+const descontoSpan=document.getElementById('desconto');
+const totalSpan=document.getElementById('total');
+
+renderCarrinho();
 </script>
 
 </body>
