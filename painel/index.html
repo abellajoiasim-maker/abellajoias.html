@@ -73,7 +73,7 @@ body{background:#F8F6F2}
 
 <div id="listaCategorias" class="space-y-2"></div>
 
-<h3 class="mt-6 font-semibold">Trocar imagem das categorias</h3>
+<h3 class="mt-6 font-semibold">Preview / Link de imagem</h3>
 <div id="categoriasAdmin" class="space-y-4"></div>
 </section>
 
@@ -86,16 +86,13 @@ body{background:#F8F6F2}
   <input id="pSku" placeholder="SKU" class="border p-3">
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
   <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-
   <select id="pCategoria" class="border p-3">
     <option value="">Selecione a categoria</option>
   </select>
-
   <input id="pImagem" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
 
 <button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
-
 <div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
 </section>
 
@@ -108,19 +105,20 @@ body{background:#F8F6F2}
 <!-- GALVÂNICAS -->
 <section id="galvanicas" class="tab space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Cadastrar / Editar Galvânicas</h2>
-<form id="formGalvanica" class="space-y-4">
 
-  <input type="text" id="nome" placeholder="Nome da Galvânica" class="border p-2 w-full rounded" required>
-  <input type="text" id="endereco" placeholder="Endereço" class="border p-2 w-full rounded" required>
-  <input type="text" id="telefone" placeholder="Telefone" class="border p-2 w-full rounded" required>
-  <input type="url" id="whatsapp" placeholder="Link WhatsApp" class="border p-2 w-full rounded" required>
-  <textarea id="descricao" placeholder="Descrição/Observações" class="border p-2 w-full rounded" rows="3"></textarea>
-  <input type="url" id="logoURL" placeholder="URL da Logo" class="border p-2 w-full rounded">
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
+  <input type="text" id="gNome" placeholder="Nome da Galvânica" class="border p-3">
+  <input type="text" id="gEndereco" placeholder="Endereço" class="border p-3">
+  <input type="text" id="gTelefone" placeholder="Telefone" class="border p-3">
+  <input type="url" id="gWhatsapp" placeholder="Link WhatsApp" class="border p-3">
+  <textarea id="gDescricao" placeholder="Descrição/Observações" class="border p-3 md:col-span-2" rows="3"></textarea>
+  <input type="url" id="gLogo" placeholder="URL da logo" class="border p-3 md:col-span-2">
+</div>
 
-  <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
-</form>
+<button onclick="salvarGalvanica()" id="btnGalvanica" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
 
-<div id="listaGalvanicas" class="mt-6 space-y-4"></div>
+<h3 class="mt-6 font-semibold">Lista / Preview</h3>
+<div id="listaGalvanicas" class="space-y-4"></div>
 </section>
 
 </main>
@@ -190,147 +188,157 @@ firebase.initializeApp({
 });
 const db=firebase.database();
 
-/* TABS */
-function openTab(id){
- document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+/* ===== TABS ===== */
+function openTab(tabId){
+  document.querySelectorAll('section.tab').forEach(t=>t.classList.remove('active'));
+  const aba=document.getElementById(tabId);
+  if(aba) aba.classList.add('active');
 }
+window.addEventListener('DOMContentLoaded',()=>openTab('empresa'));
 
-/* EMPRESA */
+/* ===== EMPRESA ===== */
 function salvarEmpresa(){
- db.ref('settings').set({
-   name: empNome.value,
-   whatsapp: empWhatsapp.value,
-   pix: Number(empPix.value||0),
-   parcelas: empParcelas.value
- });
- alert('Empresa salva');
+  db.ref('settings').set({
+    name: empNome.value,
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value||0),
+    parcelas: empParcelas.value
+  });
+  alert('Empresa salva');
 }
 
-db.ref('settings').on('value', s=>{
- if(!s.val()) return;
- empNome.value = s.val().name || '';
- empWhatsapp.value = s.val().whatsapp || '';
- empPix.value = s.val().pix || 0;
- empParcelas.value = s.val().parcelas || '';
+db.ref('settings').on('value',s=>{
+  if(!s.val()) return;
+  empNome.value=s.val().name||'';
+  empWhatsapp.value=s.val().whatsapp||'';
+  empPix.value=s.val().pix||0;
+  empParcelas.value=s.val().parcelas||'';
 });
 
-/* CATEGORIAS */
+/* ===== CATEGORIAS ===== */
 function salvarCategoria(){
- if(!catNome.value) return;
- db.ref('categories').push({name:catNome.value, image:''});
- catNome.value='';
+  if(!catNome.value) return;
+  db.ref('categories').push({name:catNome.value, image:''});
+  catNome.value='';
 }
 
-db.ref('categories').on('value', snap=>{
- listaCategorias.innerHTML='';
- pCategoria.innerHTML='<option value="">Selecione</option>';
- categoriasAdmin.innerHTML='';
- snap.forEach(s=>{
-   const cat=s.val();
-   const id=s.key;
+db.ref('categories').on('value',snap=>{
+  listaCategorias.innerHTML='';
+  pCategoria.innerHTML='<option value="">Selecione</option>';
+  categoriasAdmin.innerHTML='';
+  snap.forEach(s=>{
+    const cat=s.val(), id=s.key;
 
-   listaCategorias.innerHTML+=`
-   <div class="bg-white border p-3 flex justify-between">
-     ${cat.name}
-     <button onclick="db.ref('categories/${id}').remove()" class="text-red-600 text-xs">Excluir</button>
-   </div>`;
+    // Lista
+    listaCategorias.innerHTML+=`
+      <div class="bg-white border p-3 flex justify-between">
+        ${cat.name}
+        <button onclick="db.ref('categories/${id}').remove()" class="text-red-600 text-xs">Excluir</button>
+      </div>`;
 
-   categoriasAdmin.innerHTML+=`
-   <div class="flex items-center justify-between bg-gray-100 p-3 rounded">
-     <span class="font-semibold">${cat.name}</span>
-     <img src="${cat.image||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border">
-   </div>`;
+    // Preview link de imagem
+    categoriasAdmin.innerHTML+=`
+      <div class="flex items-center justify-between bg-gray-100 p-3 rounded">
+        <span class="font-semibold">${cat.name}</span>
+        <div class="flex items-center gap-2">
+          <img src="${cat.image||'https://via.placeholder.com/50'}" alt="${cat.name}" class="h-12 w-12 object-cover rounded border">
+          <input type="url" placeholder="Link da imagem" class="border p-1 rounded" oninput="atualizarImagemCategoria('${id}', this.value)">
+        </div>
+      </div>`;
 
-   pCategoria.innerHTML+=`<option>${cat.name}</option>`;
- });
+    pCategoria.innerHTML+=`<option>${cat.name}</option>`;
+  });
 });
 
-/* PRODUTOS */
-let editando=null;
-function salvarProduto(){
- const produto={
-  name:pNome.value,
-  sku:pSku.value,
-  price:Number(pPreco.value),
-  weight:Number(pPeso.value),
-  category:pCategoria.value,
-  image:pImagem.value
- };
- if(editando){
-  db.ref('products/'+editando).set(produto);
-  editando=null;
-  btnProduto.textContent='SALVAR PRODUTO';
- }else db.ref('products').push(produto);
- pNome.value=pSku.value=pPreco.value=pPeso.value=pImagem.value='';
- pCategoria.value='';
+function atualizarImagemCategoria(id,url){
+  db.ref('categories/'+id).update({image:url});
 }
 
-db.ref('products').on('value', snap=>{
- listaProdutos.innerHTML='';
- snap.forEach(s=>{
-  const p=s.val();
-  listaProdutos.innerHTML+=`
-  <div class="bg-white border p-4">
-   <img src="${p.image}" class="h-40 w-full object-cover">
-   <p class="mt-2 font-semibold">${p.name}</p>
-   <p class="text-xs">${p.category} • ${p.weight}g</p>
-   <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-   <div class="flex gap-2 mt-2 text-xs">
-    <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-    <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
-   </div>
-  </div>`;
- });
+/* ===== PRODUTOS ===== */
+let editandoProduto=null;
+function salvarProduto(){
+  const produto={
+    name:pNome.value,
+    sku:pSku.value,
+    price:Number(pPreco.value),
+    weight:Number(pPeso.value),
+    category:pCategoria.value,
+    image:pImagem.value
+  };
+  if(editandoProduto){
+    db.ref('products/'+editandoProduto).set(produto);
+    editandoProduto=null;
+    btnProduto.textContent='SALVAR PRODUTO';
+  }else db.ref('products').push(produto);
+
+  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagem.value='';
+  pCategoria.value='';
+}
+
+db.ref('products').on('value',snap=>{
+  listaProdutos.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+    listaProdutos.innerHTML+=`
+      <div class="bg-white border p-4">
+        <img src="${p.image}" class="h-40 w-full object-cover">
+        <p class="mt-2 font-semibold">${p.name}</p>
+        <p class="text-xs">${p.category} • ${p.weight}g</p>
+        <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+        <div class="flex gap-2 mt-2 text-xs">
+          <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+          <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
+        </div>
+      </div>`;
+  });
 });
 
 function editarProduto(id){
- db.ref('products/'+id).once('value').then(s=>{
-  const p=s.val();
-  pNome.value=p.name;
-  pSku.value=p.sku;
-  pPreco.value=p.price;
-  pPeso.value=p.weight;
-  pCategoria.value=p.category;
-  pImagem.value=p.image;
-  editando=id;
-  btnProduto.textContent='ATUALIZAR PRODUTO';
- });
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val();
+    pNome.value=p.name;
+    pSku.value=p.sku;
+    pPreco.value=p.price;
+    pPeso.value=p.weight;
+    pCategoria.value=p.category;
+    pImagem.value=p.image;
+    editandoProduto=id;
+    btnProduto.textContent='ATUALIZAR PRODUTO';
+  });
 }
 
-/* PEDIDOS */
-db.ref('orders').on('value', snap=>{
- listaPedidos.innerHTML='';
- snap.forEach(s=>{
-  const o=s.val(), id=s.key;
-  listaPedidos.innerHTML+=`
-  <div class="bg-white border p-4 status-${o.status}">
-   <p class="font-semibold">${o.cliente}</p>
-   <p class="text-xs">${o.data}</p>
-   <p>${o.pagamento} • ${o.peso}g</p>
-   <strong>R$ ${o.total.toFixed(2)}</strong>
-   <div class="flex gap-2 mt-2 text-xs">
-    ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
-     <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
-    `).join('')}
-    <button onclick="imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})" class="bg-black text-white px-2 py-1">Romaneio</button>
-    <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">Excluir</button>
-   </div>
-  </div>`;
- });
+/* ===== PEDIDOS ===== */
+db.ref('orders').on('value',snap=>{
+  listaPedidos.innerHTML='';
+  snap.forEach(s=>{
+    const o=s.val(),id=s.key;
+    listaPedidos.innerHTML+=`
+      <div class="bg-white border p-4 status-${o.status}">
+        <p class="font-semibold">${o.cliente}</p>
+        <p class="text-xs">${o.data}</p>
+        <p>${o.pagamento} • ${o.peso}g</p>
+        <strong>R$ ${o.total.toFixed(2)}</strong>
+        <div class="flex gap-2 mt-2 text-xs">
+          ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
+            <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
+          `).join('')}
+          <button onclick="imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})" class="bg-black text-white px-2 py-1">Romaneio</button>
+          <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">Excluir</button>
+        </div>
+      </div>`;
+  });
 });
 
-/* ROMANEIO */
+/* ===== ROMANEIO ===== */
 function imprimir(o){
-  rCliente.textContent = o.cliente;
-  rWhats.textContent = o.whatsapp;
-  rPag.textContent = o.pagamento;
-  // substitui "sem juros" por "sem acréscimo"
-  rParcelas.textContent = (o.parcelas || '-').replace('sem juros','sem acréscimo');
-  rPeso.textContent = o.peso;
-  rTotal.textContent = o.total.toFixed(2);
-  rData.textContent = o.data;
-  rStatus.textContent = o.status;
+  rCliente.textContent=o.cliente;
+  rWhats.textContent=o.whatsapp;
+  rPag.textContent=o.pagamento;
+  rParcelas.textContent=(o.parcelas||'-').replace('sem juros','sem acréscimo');
+  rPeso.textContent=o.peso;
+  rTotal.textContent=o.total.toFixed(2);
+  rData.textContent=o.data;
+  rStatus.textContent=o.status;
 
   rItens.innerHTML='';
   o.itens.forEach(i=>{
@@ -350,109 +358,66 @@ function imprimir(o){
   romaneio.classList.add('hidden');
 }
 
-<!-- GALVÂNICAS -->
-<section id="galvanicas" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Cadastrar / Editar Galvânicas</h2>
-<form id="formGalvanica" class="space-y-4">
+/* ===== GALVÂNICAS ===== */
+let editandoGalv=null;
+function salvarGalvanica(){
+  const nome=gNome.value.trim();
+  const endereco=gEndereco.value.trim();
+  const telefone=gTelefone.value.trim();
+  const whatsapp=gWhatsapp.value.trim();
+  const descricao=gDescricao.value.trim();
+  const logo=gLogo.value.trim();
 
-  <input type="text" id="nome" placeholder="Nome da Galvânica" class="border p-2 w-full rounded" required>
-  <input type="text" id="endereco" placeholder="Endereço" class="border p-2 w-full rounded" required>
-  <input type="text" id="telefone" placeholder="Telefone" class="border p-2 w-full rounded" required>
-  <input type="url" id="whatsapp" placeholder="Link WhatsApp" class="border p-2 w-full rounded" required>
-  <textarea id="descricao" placeholder="Descrição/Observações" class="border p-2 w-full rounded" rows="3"></textarea>
-  <input type="url" id="logoURL" placeholder="URL da Logo" class="border p-2 w-full rounded">
+  if(!nome) return alert('Informe o nome da galvanica');
 
-  <!-- Preview instantâneo -->
-  <div id="previewLogo" class="mt-2"></div>
+  const dados={nome,endereco,telefone,whatsapp,descricao,logo};
 
-  <button type="submit" id="btnSalvarGalvanica" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
-</form>
+  if(editandoGalv){
+    db.ref('galvanicas/'+editandoGalv).set(dados);
+    editandoGalv=null;
+    btnGalvanica.textContent='Salvar Galvânica';
+  } else db.ref('galvanicas').push(dados);
 
-<div id="listaGalvanicas" class="mt-6 space-y-4"></div>
-</section>
+  gNome.value=gEndereco.value=gTelefone.value=gWhatsapp.value=gDescricao.value=gLogo.value='';
+}
 
-<script>
-let editandoGalvanica = null; // Armazena o ID da galvanica em edição
-
-const formGalvanica = document.getElementById('formGalvanica');
-const listaGalvanicas = document.getElementById('listaGalvanicas');
-const logoURL = document.getElementById('logoURL');
-const previewLogo = document.getElementById('previewLogo');
-const btnSalvarGalvanica = document.getElementById('btnSalvarGalvanica');
-
-formGalvanica.addEventListener('submit', e => {
-  e.preventDefault();
-  const nome = document.getElementById('nome').value;
-  const endereco = document.getElementById('endereco').value;
-  const telefone = document.getElementById('telefone').value;
-  const whatsapp = document.getElementById('whatsapp').value;
-  const descricao = document.getElementById('descricao').value;
-  const logo = logoURL.value.trim();
-
-  if (!nome) return alert('Informe o nome da galvanica');
-
-  const dados = { nome, endereco, telefone, whatsapp, descricao, logo };
-
-  if (editandoGalvanica) {
-    db.ref('galvanicas/' + editandoGalvanica).set(dados);
-    editandoGalvanica = null;
-    btnSalvarGalvanica.textContent = 'Salvar Galvânica';
-  } else {
-    db.ref('galvanicas').push(dados);
-  }
-
-  formGalvanica.reset();
-  previewLogo.innerHTML = '';
-});
-
-// Preview instantâneo
-logoURL.addEventListener('input', () => {
-  previewLogo.innerHTML = logoURL.value ? `<img src="${logoURL.value}" class="h-12 w-12 object-cover rounded border">` : '';
-});
-
-// Mostrar lista de galvanicas
-db.ref('galvanicas').on('value', snap => {
-  listaGalvanicas.innerHTML = '';
-  snap.forEach(s => {
-    const g = s.val();
-    const id = s.key;
-    const logoSrc = g.logo && g.logo.trim() !== '' ? g.logo : 'https://via.placeholder.com/50';
-
-    listaGalvanicas.innerHTML += `
+db.ref('galvanicas').on('value',snap=>{
+  listaGalvanicas.innerHTML='';
+  snap.forEach(s=>{
+    const g=s.val(),id=s.key;
+    listaGalvanicas.innerHTML+=`
       <div class="bg-white border p-4 flex justify-between items-center rounded">
         <div class="flex items-center gap-4">
-          <img src="${logoSrc}" class="h-12 w-12 object-cover rounded border">
+          <img src="${g.logo||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border">
           <div>
             <p class="font-semibold">${g.nome}</p>
             <p class="text-xs">${g.endereco}</p>
             <p class="text-xs">${g.telefone} • ${g.whatsapp}</p>
+            <p class="text-xs italic">${g.descricao}</p>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-col gap-1">
           <button onclick="editarGalvanica('${id}')" class="bg-blue-500 text-white px-2 py-1 text-xs rounded">Editar</button>
-          <button onclick="db.ref('galvanicas/${id}').remove()" class="bg-red-500 text-white px-2 py-1 text-xs rounded">Excluir</button>
+          <button onclick="db.ref('galvanicas/${id}').remove()" class="text-red-600 px-2 py-1 text-xs rounded">Excluir</button>
         </div>
       </div>`;
   });
 });
 
-// Função de edição
-function editarGalvanica(id) {
-  db.ref('galvanicas/' + id).once('value').then(s => {
-    const g = s.val();
-    document.getElementById('nome').value = g.nome;
-    document.getElementById('endereco').value = g.endereco;
-    document.getElementById('telefone').value = g.telefone;
-    document.getElementById('whatsapp').value = g.whatsapp;
-    document.getElementById('descricao').value = g.descricao;
-    document.getElementById('logoURL').value = g.logo;
-    previewLogo.innerHTML = g.logo ? `<img src="${g.logo}" class="h-12 w-12 object-cover rounded border">` : '';
-    editandoGalvanica = id;
-    btnSalvarGalvanica.textContent = 'Atualizar Galvânica';
+function editarGalvanica(id){
+  db.ref('galvanicas/'+id).once('value').then(s=>{
+    const g=s.val();
+    gNome.value=g.nome;
+    gEndereco.value=g.endereco;
+    gTelefone.value=g.telefone;
+    gWhatsapp.value=g.whatsapp;
+    gDescricao.value=g.descricao;
+    gLogo.value=g.logo;
+    editandoGalv=id;
+    btnGalvanica.textContent='Atualizar Galvânica';
   });
 }
 </script>
-
 
 </body>
 </html>
