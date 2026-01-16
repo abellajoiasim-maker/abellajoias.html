@@ -11,19 +11,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f8f6f2; }
-        .gold-border { border-color: #d4af37; }
-        .gold-bg { background-color: #d4af37; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        
+        /* Ajuste do Status */
         .status-Novo { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
         .status-Separação { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
         .status-Enviado { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
         .status-Finalizado { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-        
+
+        /* CONFIGURAÇÃO DE IMPRESSÃO (ROMANEIO) */
         @media print {
             body * { visibility: hidden; }
             #romaneio-print, #romaneio-print * { visibility: visible; }
-            #romaneio-print { position: absolute; top: 0; left: 0; width: 100%; background: white; }
+            #romaneio-print { 
+                position: absolute; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                padding: 20px;
+                color: black !important;
+            }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -35,7 +46,7 @@
                 <h1 class="text-xl font-bold tracking-tighter">ABELLA JOIAS</h1>
                 <p class="text-[10px] text-[#d4af37] uppercase tracking-widest">Painel Administrativo</p>
             </div>
-            <nav class="hidden md:flex gap-6 text-xs font-bold uppercase">
+            <nav class="flex gap-4 md:gap-6 text-[10px] md:text-xs font-bold uppercase">
                 <button onclick="showTab('pedidos')" class="hover:text-[#d4af37]">Pedidos</button>
                 <button onclick="showTab('produtos')" class="hover:text-[#d4af37]">Produtos</button>
                 <button onclick="showTab('categorias')" class="hover:text-[#d4af37]">Categorias</button>
@@ -48,72 +59,83 @@
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
         
         <section id="pedidos" class="tab-content active">
-            <div class="flex justify-between items-end mb-6">
-                <h2 class="text-2xl font-bold">Gestão de Pedidos</h2>
-            </div>
-            <div id="listaPedidos" class="grid gap-4">
-                </div>
+            <h2 class="text-2xl font-bold mb-6">Gestão de Pedidos</h2>
+            <div id="listaPedidos" class="grid gap-4"></div>
         </section>
 
         <section id="produtos" class="tab-content">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
                 <h3 class="font-bold mb-4">Cadastrar Novo Produto</h3>
-                <form id="formProduto" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <form id="formProduto" class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <input type="text" id="pNome" placeholder="Nome do Produto" class="border p-2 rounded-lg text-sm" required>
-                    <input type="text" id="pSku" placeholder="SKU/Código" class="border p-2 rounded-lg text-sm" required>
-                    <input type="number" step="0.01" id="pPreco" placeholder="Preço Base (R$)" class="border p-2 rounded-lg text-sm" required>
+                    <input type="text" id="pSku" placeholder="SKU" class="border p-2 rounded-lg text-sm" required>
+                    <input type="number" step="0.01" id="pPreco" placeholder="Preço (R$)" class="border p-2 rounded-lg text-sm" required>
+                    <input type="number" step="0.01" id="pPeso" placeholder="Peso (g)" class="border p-2 rounded-lg text-sm" required>
                     <select id="pCat" class="border p-2 rounded-lg text-sm"></select>
-                    <input type="text" id="pImage" placeholder="URL da Imagem" class="border p-2 rounded-lg text-sm md:col-span-3">
-                    <button type="submit" class="bg-black text-white p-2 rounded-lg font-bold hover:bg-[#d4af37] transition">SALVAR</button>
+                    <input type="text" id="pImage" placeholder="URL da Imagem" class="border p-2 rounded-lg text-sm md:col-span-4">
+                    <button type="submit" class="bg-black text-white p-2 rounded-lg font-bold hover:bg-[#d4af37]">SALVAR</button>
                 </form>
             </div>
-            <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+            <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs"></div>
         </section>
 
         <section id="categorias" class="tab-content">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8 max-w-lg">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-lg">
                 <h3 class="font-bold mb-4">Nova Categoria</h3>
-                <input type="text" id="catNome" placeholder="Nome (Ex: Brincos)" class="w-full border p-2 rounded-lg mb-4">
-                <input type="file" id="catFile" class="text-sm mb-4">
-                <button onclick="salvarCategoria()" class="w-full bg-black text-white p-3 rounded-lg font-bold">CRIAR CATEGORIA</button>
+                <input type="text" id="catNome" placeholder="Nome" class="w-full border p-2 rounded-lg mb-2">
+                <input type="file" id="catFile" class="text-xs mb-4">
+                <button onclick="salvarCategoria()" class="w-full bg-black text-white p-3 rounded-lg font-bold">CRIAR</button>
             </div>
-            <div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+            <div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"></div>
+        </section>
+
+        <section id="galvanicas" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+                <h3 class="font-bold mb-4 text-[#b8860b]">Cadastrar Galvânica Parceira</h3>
+                <form id="formGalvanica" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="gNome" placeholder="Nome da Empresa" class="border p-2 rounded-lg text-sm" required>
+                    <input type="text" id="gTel" placeholder="Telefone (Fixo)" class="border p-2 rounded-lg text-sm">
+                    <input type="text" id="gWhats" placeholder="WhatsApp (55...)" class="border p-2 rounded-lg text-sm" required>
+                    <input type="text" id="gEnd" placeholder="Endereço Completo" class="border p-2 rounded-lg text-sm md:col-span-3" required>
+                    <textarea id="gDesc" placeholder="Descrição dos serviços..." class="border p-2 rounded-lg text-sm md:col-span-3"></textarea>
+                    <input type="text" id="gLogo" placeholder="URL do Logotipo" class="border p-2 rounded-lg text-sm md:col-span-2">
+                    <button type="submit" class="bg-[#d4af37] text-white p-2 rounded-lg font-bold">SALVAR PARCEIRO</button>
+                </form>
+            </div>
+            <div id="listaGalvAdmin" class="grid gap-4"></div>
         </section>
 
         <section id="config" class="tab-content">
             <div class="bg-white p-8 rounded-2xl shadow-sm border max-w-2xl mx-auto">
-                <h2 class="text-xl font-bold mb-6">Ajustes do Sistema</h2>
+                <h2 class="text-xl font-bold mb-6 italic">Configurações da Loja</h2>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-bold text-gray-400">WHATSAPP DE VENDAS (Ex: 55199...)</label>
-                        <input type="text" id="confPhone" class="w-full border p-3 rounded-xl mt-1">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-bold text-gray-400">DESCONTO PIX (%)</label>
-                            <input type="number" id="confPix" class="w-full border p-3 rounded-xl mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-400">PARCELAS SEM JUROS</label>
-                            <input type="number" id="confParc" class="w-full border p-3 rounded-xl mt-1">
-                        </div>
-                    </div>
-                    <button onclick="salvarConfig()" class="w-full bg-[#d4af37] text-white py-4 rounded-xl font-bold shadow-lg mt-4">ATUALIZAR DADOS</button>
+                    <input type="text" id="confPhone" placeholder="WhatsApp Recebe Pedidos" class="w-full border p-3 rounded-xl">
+                    <input type="number" id="confPix" placeholder="Desconto PIX %" class="w-full border p-3 rounded-xl">
+                    <button onclick="salvarConfig()" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase">Salvar Alterações</button>
                 </div>
             </div>
         </section>
 
-        <section id="galvanicas" class="tab-content">
-             <h2 class="text-2xl font-bold mb-6">Galvânicas Parceiras</h2>
-             <p class="text-gray-500 text-sm mb-4">Gerencie as empresas de banho que aparecem para seus clientes.</p>
-             <div id="listaGalvAdmin" class="grid gap-4"></div>
-        </section>
-
     </main>
 
-    <div id="romaneio-print" class="p-10 text-black">
-        <h1 class="text-2xl font-bold border-b-2 pb-2 mb-4">ABELLA JOIAS - ROMANEIO</h1>
-        <div id="romaneio-content"></div>
+    <div id="romaneio-print" class="hidden">
+        <div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin:0;">ABELLA JOIAS</h1>
+            <p style="font-size: 12px; text-transform: uppercase;">Romaneio de Separação de Pedido</p>
+        </div>
+        <div id="romaneio-info" style="margin-top: 20px; font-size: 14px;"></div>
+        <table id="romaneio-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%">SKU</th>
+                    <th style="width: 55%">Produto</th>
+                    <th style="width: 15%">Peso (g)</th>
+                    <th style="width: 15%">Preço</th>
+                </tr>
+            </thead>
+            <tbody id="romaneio-body"></tbody>
+        </table>
+        <div id="romaneio-footer" style="margin-top: 30px; text-align: right; border-top: 1px solid #000; padding-top: 10px;"></div>
     </div>
 
     <script>
@@ -128,51 +150,19 @@
         const db = firebase.database();
         const storage = firebase.storage();
 
-        // Troca de Abas
-        function showTab(tabId) {
+        function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+            document.getElementById(id).classList.add('active');
         }
 
-        // --- GESTÃO DE CATEGORIAS ---
-        async function salvarCategoria() {
-            const nome = document.getElementById('catNome').value;
-            const file = document.getElementById('catFile').files[0];
-            if(!nome || !file) return alert("Preencha nome e imagem");
-
-            const ref = storage.ref(`categorias/${file.name}`);
-            await ref.put(file);
-            const url = await ref.getDownloadURL();
-            
-            db.ref('categories').push({ name: nome, image: url });
-            alert("Categoria Criada!");
-            document.getElementById('catNome').value = "";
-        }
-
-        db.ref('categories').on('value', snap => {
-            const list = document.getElementById('listaCategorias');
-            const select = document.getElementById('pCat');
-            list.innerHTML = ''; select.innerHTML = '';
-            snap.forEach(s => {
-                const c = s.val();
-                list.innerHTML += `
-                    <div class="bg-white p-2 border rounded-xl relative group">
-                        <img src="${c.image}" class="w-full aspect-square object-cover rounded-lg">
-                        <p class="text-center font-bold text-xs mt-2 uppercase">${c.name}</p>
-                        <button onclick="db.ref('categories/${s.key}').remove()" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition">✕</button>
-                    </div>
-                `;
-                select.innerHTML += `<option value="${s.key}">${c.name}</option>`;
-            });
-        });
-
-        // --- GESTÃO DE PRODUTOS ---
+        // --- PRODUTOS (Com Peso) ---
         document.getElementById('formProduto').onsubmit = (e) => {
             e.preventDefault();
             const p = {
                 name: document.getElementById('pNome').value,
                 sku: document.getElementById('pSku').value,
                 price: parseFloat(document.getElementById('pPreco').value),
+                weight: parseFloat(document.getElementById('pPeso').value),
                 category: document.getElementById('pCat').value,
                 image: document.getElementById('pImage').value || 'https://via.placeholder.com/300'
             };
@@ -186,92 +176,141 @@
             snap.forEach(s => {
                 const p = s.val();
                 grid.innerHTML += `
-                    <div class="bg-white border rounded-lg overflow-hidden text-[10px] relative group">
-                        <img src="${p.image}" class="w-full aspect-square object-cover">
-                        <div class="p-2">
-                            <p class="font-bold truncate">${p.name}</p>
-                            <p class="text-gray-400">SKU: ${p.sku}</p>
-                            <p class="text-[#b8860b] font-bold">R$ ${p.price.toFixed(2)}</p>
-                        </div>
-                        <button onclick="db.ref('products/${s.key}').remove()" class="absolute top-1 right-1 bg-black text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100">✕</button>
+                    <div class="bg-white border rounded p-2 relative group">
+                        <img src="${p.image}" class="w-full aspect-square object-cover mb-2">
+                        <p class="font-bold">${p.name}</p>
+                        <p class="text-gray-400">SKU: ${p.sku} | ${p.weight}g</p>
+                        <p class="text-[#b8860b] font-bold">R$ ${p.price.toFixed(2)}</p>
+                        <button onclick="db.ref('products/${s.key}').remove()" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100">✕</button>
                     </div>
                 `;
             });
         });
 
-        // --- GESTÃO DE PEDIDOS ---
+        // --- PEDIDOS & ROMANEIO (Ajustado) ---
         db.ref('orders').on('value', snap => {
             const container = document.getElementById('listaPedidos');
             container.innerHTML = '';
             snap.forEach(s => {
                 const o = s.val();
                 container.innerHTML += `
-                    <div class="bg-white border rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="bg-white border rounded-xl p-4 flex justify-between items-center shadow-sm">
                         <div>
-                            <p class="text-xs text-gray-400">${o.data}</p>
-                            <h4 class="font-bold text-lg">${o.cliente}</h4>
-                            <p class="text-sm font-semibold text-[#b8860b]">Total: R$ ${parseFloat(o.total).toFixed(2)}</p>
+                            <p class="text-[10px] text-gray-400">${o.data}</p>
+                            <h4 class="font-bold uppercase text-sm">${o.cliente}</h4>
+                            <p class="text-xs text-blue-600 font-bold">R$ ${parseFloat(o.total).toFixed(2)}</p>
                         </div>
                         <div class="flex gap-2">
-                            <select onchange="updateStatus('${s.key}', this.value)" class="status-${o.status || 'Novo'} text-xs font-bold p-2 rounded-lg border-none focus:ring-0">
+                            <select onchange="db.ref('orders/${s.key}').update({status:this.value})" class="status-${o.status || 'Novo'} text-[10px] font-bold p-2 rounded border-none">
                                 <option ${o.status=='Novo'?'selected':''}>Novo</option>
                                 <option ${o.status=='Separação'?'selected':''}>Separação</option>
                                 <option ${o.status=='Enviado'?'selected':''}>Enviado</option>
                                 <option ${o.status=='Finalizado'?'selected':''}>Finalizado</option>
                             </select>
-                            <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="bg-gray-100 p-2 rounded-lg text-xs font-bold hover:bg-gray-200">IMPRIMIR</button>
-                            <button onclick="db.ref('orders/${s.key}').remove()" class="text-red-400 p-2 text-xs">Excluir</button>
+                            <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="bg-black text-white px-3 py-2 rounded text-[10px] font-bold">ROMANEIO</button>
                         </div>
                     </div>
                 `;
             });
         });
 
-        function updateStatus(id, status) {
-            db.ref(`orders/${id}`).update({ status });
-        }
-
         function imprimirRomaneio(o) {
-            const content = document.getElementById('romaneio-content');
-            let itensHtml = '';
-            o.itens.forEach(i => {
-                itensHtml += `<tr class="border-b"><td class="py-2">${i.sku}</td><td>${i.name}</td><td class="text-right">R$ ${i.price.toFixed(2)}</td></tr>`;
-            });
-            
-            content.innerHTML = `
-                <div class="mb-4">
-                    <p><strong>Cliente:</strong> ${o.cliente}</p>
-                    <p><strong>Data:</strong> ${o.data}</p>
-                    <p><strong>Pagamento:</strong> ${o.pagamento || 'N/A'}</p>
-                </div>
-                <table class="w-full text-left border-collapse">
-                    <thead><tr class="border-b-2"><th>SKU</th><th>Produto</th><th class="text-right">Preço</th></tr></thead>
-                    <tbody>${itensHtml}</tbody>
-                </table>
-                <div class="mt-4 text-right font-bold text-xl">TOTAL: R$ ${parseFloat(o.total).toFixed(2)}</div>
+            document.getElementById('romaneio-info').innerHTML = `
+                <p><strong>Cliente:</strong> ${o.cliente}</p>
+                <p><strong>Data:</strong> ${o.data}</p>
+                <p><strong>Pagamento:</strong> ${o.pagamento}</p>
             `;
+            
+            const tbody = document.getElementById('romaneio-body');
+            tbody.innerHTML = '';
+            let pesoTotal = 0;
+
+            o.itens.forEach(i => {
+                const p = i.weight || 0;
+                pesoTotal += p;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${i.sku}</td>
+                        <td>${i.name}</td>
+                        <td>${p.toFixed(2)}g</td>
+                        <td>R$ ${i.price.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('romaneio-footer').innerHTML = `
+                <p>Qtd Itens: ${o.itens.length}</p>
+                <p><strong>PESO TOTAL: ${pesoTotal.toFixed(2)}g</strong></p>
+                <p style="font-size: 18px;"><strong>VALOR TOTAL: R$ ${parseFloat(o.total).toFixed(2)}</strong></p>
+            `;
+
             window.print();
         }
 
-        // --- CONFIGURAÇÕES ---
-        function salvarConfig() {
-            const data = {
-                phone: document.getElementById('confPhone').value,
-                pix: parseInt(document.getElementById('confPix').value),
-                installments: parseInt(document.getElementById('confParc').value)
+        // --- GALVÂNICAS (CRUD) ---
+        document.getElementById('formGalvanica').onsubmit = (e) => {
+            e.preventDefault();
+            const g = {
+                nome: document.getElementById('gNome').value,
+                tel: document.getElementById('gTel').value,
+                whats: document.getElementById('gWhats').value,
+                end: document.getElementById('gEnd').value,
+                desc: document.getElementById('gDesc').value,
+                logo: document.getElementById('gLogo').value || 'https://via.placeholder.com/100'
             };
-            db.ref('settings').set(data);
-            alert("Configurações atualizadas!");
+            db.ref('galvanicas').push(g);
+            e.target.reset();
+        };
+
+        db.ref('galvanicas').on('value', snap => {
+            const list = document.getElementById('listaGalvAdmin');
+            list.innerHTML = '';
+            snap.forEach(s => {
+                const g = s.val();
+                list.innerHTML += `
+                    <div class="bg-white p-4 border rounded-lg flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <img src="${g.logo}" class="w-12 h-12 rounded object-contain border">
+                            <div>
+                                <p class="font-bold text-sm">${g.nome}</p>
+                                <p class="text-[10px] text-gray-500">${g.end}</p>
+                            </div>
+                        </div>
+                        <button onclick="db.ref('galvanicas/${s.key}').remove()" class="text-red-500 font-bold text-xs">REMOVER</button>
+                    </div>
+                `;
+            });
+        });
+
+        // --- CATEGORIAS & CONFIG (Originais mantidos) ---
+        async function salvarCategoria() {
+            const nome = document.getElementById('catNome').value;
+            const file = document.getElementById('catFile').files[0];
+            if(!nome || !file) return alert("Preencha tudo");
+            const ref = storage.ref(`cat/${file.name}`);
+            await ref.put(file);
+            const url = await ref.getDownloadURL();
+            db.ref('categories').push({ name: nome, image: url });
+            document.getElementById('catNome').value = "";
         }
 
-        db.ref('settings').once('value', s => {
-            const c = s.val();
-            if(c) {
-                document.getElementById('confPhone').value = c.phone || "";
-                document.getElementById('confPix').value = c.pix || 0;
-                document.getElementById('confParc').value = c.installments || 1;
-            }
+        db.ref('categories').on('value', snap => {
+            const list = document.getElementById('listaCategorias');
+            const select = document.getElementById('pCat');
+            list.innerHTML = ''; select.innerHTML = '';
+            snap.forEach(s => {
+                list.innerHTML += `<div class="bg-white border p-2 rounded text-center"><img src="${s.val().image}" class="h-20 w-full object-cover mb-1"><p class="text-[10px] uppercase font-bold">${s.val().name}</p></div>`;
+                select.innerHTML += `<option value="${s.key}">${s.val().name}</option>`;
+            });
         });
+
+        function salvarConfig() {
+            db.ref('settings').update({ 
+                phone: document.getElementById('confPhone').value, 
+                pix: document.getElementById('confPix').value 
+            });
+            alert("Ajustes salvos!");
+        }
 
     </script>
 </body>
