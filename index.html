@@ -18,130 +18,101 @@ body{background:#F8F6F2}
 
 <body>
 
+<!-- HEADER -->
 <header class="bg-white border-b px-8 py-6 flex justify-between items-center">
-  <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-  <button onclick="abrirCarrinho()" class="text-sm">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</button>
+  <h1 class="font-serif text-2xl gold">Abella Joias</h1>
+  <a href="checkout.html" class="text-sm uppercase tracking-widest">
+    🛒 Carrinho (<span id="cartCount">0</span>)
+  </a>
 </header>
 
-<main class="max-w-6xl mx-auto p-8">
-  <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-</main>
+<!-- CATEGORIAS -->
+<nav class="px-8 py-4 flex gap-4 overflow-x-auto text-sm uppercase tracking-widest">
+  <button onclick="filtrar('')" class="border px-4 py-2">Todas</button>
+  <div id="menuCategorias" class="flex gap-4"></div>
+</nav>
 
-<!-- CARRINHO -->
-<div id="modalCarrinho" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-  <div class="bg-white w-full max-w-md p-6 space-y-4">
-    <h2 class="font-serif gold text-lg">Carrinho</h2>
-
-    <div id="itensCarrinho" class="space-y-2"></div>
-
-    <p class="text-sm">Peso total: <strong><span id="pesoTotal">0</span>g</strong></p>
-    <p class="text-sm">Total: <strong>R$ <span id="totalCarrinho">0.00</span></strong></p>
-
-    <div class="flex gap-2">
-      <button onclick="finalizar()" class="bg-black text-white px-4 py-2 text-xs flex-1">Finalizar</button>
-      <button onclick="fecharCarrinho()" class="border px-4 py-2 text-xs">Fechar</button>
-    </div>
-  </div>
-</div>
+<!-- PRODUTOS -->
+<main class="px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8" id="listaProdutos"></main>
 
 <script>
-/* FIREBASE */
+/* 🔥 FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
+const db = firebase.database();
 
-const db=firebase.database();
-const listaProdutos=document.getElementById('listaProdutos');
+let produtos=[];
+let carrinho = JSON.parse(localStorage.getItem('cart'))||[];
 
-let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
+/* CARRINHO */
+function atualizarCarrinho(){
+  localStorage.setItem('cart',JSON.stringify(carrinho));
+  cartCount.textContent = carrinho.reduce((s,i)=>s+i.qty,0);
+}
 atualizarCarrinho();
 
-/* CONFIGURAÇÕES DA LOJA */
-let descontoPix=0;
-let parcelas=1;
+function addCarrinho(p){
+  const item = carrinho.find(i=>i.id===p.id);
+  if(item) item.qty++;
+  else carrinho.push({...p, qty:1});
+  atualizarCarrinho();
+  alert('Produto adicionado ao carrinho');
+}
 
-db.ref('settings').once('value').then(s=>{
-  if(!s.val())return;
-  descontoPix=Number(s.val().pix||0);
-  parcelas=Number(s.val().parcelas||1);
+/* FILTRO */
+function filtrar(cat){
+  render(produtos.filter(p=>!cat || p.category===cat));
+}
+
+/* RENDER */
+function render(lista){
+  listaProdutos.innerHTML='';
+  lista.forEach(p=>{
+    const pix = (p.price * 0.9).toFixed(2);
+    listaProdutos.innerHTML+=`
+    <div class="bg-white p-4 shadow-sm">
+      <img src="${p.image}" class="aspect-square object-cover mb-3">
+      <h2 class="font-serif text-sm">${p.name}</h2>
+      <p class="text-xs text-gray-400">${p.category} • ${p.weight}g</p>
+
+      <div class="mt-2 space-y-1">
+        <p class="text-sm">R$ ${p.price.toFixed(2)}</p>
+        <p class="text-xs text-green-700">PIX R$ ${pix}</p>
+        <p class="text-xs text-gray-500">
+          ${p.parcelas||3}x de R$ ${(p.price/(p.parcelas||3)).toFixed(2)}
+        </p>
+      </div>
+
+      <button onclick='addCarrinho(${JSON.stringify(p)})'
+        class="mt-3 w-full bg-black text-white text-xs py-2">
+        ADICIONAR AO CARRINHO
+      </button>
+    </div>`;
+  });
+}
+
+/* CATEGORIAS */
+db.ref('categories').on('value',snap=>{
+  menuCategorias.innerHTML='';
+  snap.forEach(s=>{
+    const c=s.val().name;
+    menuCategorias.innerHTML+=`
+      <button onclick="filtrar('${c}')" class="border px-4 py-2">${c}</button>`;
+  });
 });
 
 /* PRODUTOS */
 db.ref('products').on('value',snap=>{
-  listaProdutos.innerHTML='';
+  produtos=[];
   snap.forEach(s=>{
-    const p=s.val();
-
-    const precoPix=(p.price*(1-descontoPix/100)).toFixed(2);
-    const parcela=(p.price/parcelas).toFixed(2);
-
-    listaProdutos.innerHTML+=`
-      <div class="bg-white border p-3 space-y-2">
-        <img src="${p.image}" class="aspect-square object-cover">
-        <p class="text-sm">${p.name}</p>
-
-        <p class="text-xs">💳 ${parcelas}x R$ ${parcela}</p>
-        <p class="text-xs text-green-700">⚡ PIX R$ ${precoPix}</p>
-        <p class="font-semibold gold">R$ ${p.price.toFixed(2)}</p>
-
-        <button onclick='addCarrinho(${JSON.stringify(p)})'
-          class="bg-black text-white w-full text-xs py-2">Adicionar ao carrinho</button>
-      </div>
-    `;
+    produtos.push({id:s.key,...s.val(), parcelas:3});
   });
+  render(produtos);
 });
-
-/* CARRINHO */
-function addCarrinho(p){
-  const item=carrinho.find(i=>i.sku===p.sku);
-  if(item) item.qty++;
-  else carrinho.push({...p,qty:1});
-  salvarCarrinho();
-}
-
-function salvarCarrinho(){
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  atualizarCarrinho();
-}
-
-function atualizarCarrinho(){
-  document.getElementById('qtdCarrinho').textContent=
-    carrinho.reduce((s,i)=>s+i.qty,0);
-}
-
-function abrirCarrinho(){
-  const lista=document.getElementById('itensCarrinho');
-  let total=0,peso=0;
-  lista.innerHTML='';
-
-  carrinho.forEach(i=>{
-    total+=i.price*i.qty;
-    peso+=(i.weight||0)*i.qty;
-    lista.innerHTML+=`
-      <div class="flex justify-between text-xs">
-        <span>${i.name} (${i.qty})</span>
-        <span>R$ ${(i.price*i.qty).toFixed(2)}</span>
-      </div>
-    `;
-  });
-
-  document.getElementById('totalCarrinho').textContent=total.toFixed(2);
-  document.getElementById('pesoTotal').textContent=peso;
-
-  document.getElementById('modalCarrinho').classList.remove('hidden');
-}
-
-function fecharCarrinho(){
-  document.getElementById('modalCarrinho').classList.add('hidden');
-}
-
-/* FINALIZAR */
-function finalizar(){
-  location.href="checkout.html";
-}
 </script>
 
 </body>
