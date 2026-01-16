@@ -106,31 +106,73 @@ SALVAR PRODUTO
 
 </main>
 
-<!-- ROMANEIO -->
-<div id="romaneio" class="hidden bg-white p-10 text-sm">
-  <h2 class="font-serif text-xl gold mb-4">Romaneio - Abella Joias</h2>
-  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
-  <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
-  <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
-  <p><strong>Peso total:</strong> <span id="rPeso"></span> g</p>
+<!-- ROMANEIO PREMIUM -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm font-sans">
 
-  <table class="w-full border mt-6">
+  <div class="flex justify-between items-center border-b pb-4 mb-6">
+    <div>
+      <h1 class="text-xl font-bold tracking-widest gold">ABELLA JOIAS</h1>
+      <p class="text-xs uppercase tracking-widest text-gray-400">
+        Romaneio de Separação e Envio
+      </p>
+    </div>
+    <div class="text-xs text-right">
+      <p><strong>Data:</strong> <span id="rData"></span></p>
+      <p><strong>Status:</strong> <span id="rStatus"></span></p>
+    </div>
+  </div>
+
+  <!-- CLIENTE -->
+  <div class="grid grid-cols-2 gap-6 mb-6">
+    <div>
+      <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+      <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
+    </div>
+    <div>
+      <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
+      <p><strong>Parcelas:</strong> <span id="rParcelas"></span></p>
+    </div>
+  </div>
+
+  <!-- TABELA -->
+  <table class="w-full border text-xs">
     <thead>
-      <tr>
+      <tr class="bg-gray-100">
+        <th class="border p-2">✔</th>
         <th class="border p-2">Produto</th>
         <th class="border p-2">SKU</th>
         <th class="border p-2">Qtd</th>
-        <th class="border p-2">Peso</th>
-        <th class="border p-2">Total</th>
+        <th class="border p-2">Peso (g)</th>
+        <th class="border p-2">Total (g)</th>
       </tr>
     </thead>
     <tbody id="rItens"></tbody>
   </table>
 
-  <p class="mt-6 text-right font-bold">
-    Total: R$ <span id="rTotal"></span>
-  </p>
+  <!-- RESUMO -->
+  <div class="grid grid-cols-2 gap-6 mt-6 text-sm">
+    <div>
+      <p><strong>Observações:</strong></p>
+      <div class="border h-20 mt-1"></div>
+    </div>
+    <div class="text-right space-y-1">
+      <p><strong>Peso Total:</strong> <span id="rPeso"></span> g</p>
+      <p><strong>Total Pedido:</strong> R$ <span id="rTotal"></span></p>
+    </div>
+  </div>
+
+  <!-- ASSINATURA -->
+  <div class="grid grid-cols-2 gap-6 mt-12 text-xs">
+    <div>
+      <div class="border-t pt-2">Separação / Conferência</div>
+    </div>
+    <div>
+      <div class="border-t pt-2">Cliente / Recebimento</div>
+    </div>
+  </div>
+
 </div>
+
 
 <script>
 /* 🔥 FIREBASE */
@@ -265,26 +307,34 @@ db.ref('orders').on('value',snap=>{
 });
 
 /* ROMANEIO */
+<script>
 function imprimir(o){
- rCliente.textContent=o.cliente;
- rWhats.textContent=o.whatsapp;
- rPag.textContent=o.pagamento;
- rPeso.textContent=o.peso;
- rTotal.textContent=o.total.toFixed(2);
- rItens.innerHTML='';
- o.itens.forEach(i=>{
-  rItens.innerHTML+=`
-   <tr>
-    <td class="border p-2">${i.name}</td>
-    <td class="border p-2">${i.sku}</td>
-    <td class="border p-2">${i.qty}</td>
-    <td class="border p-2">${(i.weight*i.qty).toFixed(2)}g</td>
-    <td class="border p-2">R$ ${(i.price*i.qty).toFixed(2)}</td>
-   </tr>`;
- });
- romaneio.classList.remove('hidden');
- window.print();
- romaneio.classList.add('hidden');
+  rCliente.textContent = o.cliente;
+  rWhats.textContent = o.whatsapp;
+  rPag.textContent = o.pagamento;
+  rParcelas.textContent = o.parcelas || '-';
+  rPeso.textContent = o.peso;
+  rTotal.textContent = o.total.toFixed(2);
+  rData.textContent = o.data;
+  rStatus.textContent = o.status;
+
+  rItens.innerHTML='';
+  o.itens.forEach(i=>{
+    rItens.innerHTML += `
+      <tr>
+        <td class="border p-2"></td>
+        <td class="border p-2">${i.name}</td>
+        <td class="border p-2">${i.sku}</td>
+        <td class="border p-2">${i.qty}</td>
+        <td class="border p-2">${i.weight}</td>
+        <td class="border p-2">${(i.weight * i.qty).toFixed(2)}</td>
+      </tr>
+    `;
+  });
+
+  romaneio.classList.remove('hidden');
+  window.print();
+  romaneio.classList.add('hidden');
 }
 </script>
 
