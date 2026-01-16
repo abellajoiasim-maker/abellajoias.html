@@ -3,223 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Admin Premium | Abella Joias</title>
+<title>Painel Admin Luxuoso | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 <style>
 body{font-family:Poppins,sans-serif;background:#fdfbf7;}
-h2{font-family:'Cinzel',serif;}
-.card{border:1px solid #eee;border-radius:1rem;padding:1rem;margin-bottom:1rem;transition:all 0.2s ease;}
-.card:hover{box-shadow:0 5px 15px rgba(212,175,55,0.2);transform:translateY(-2px);}
+.sidebar{width:220px;background:#1a1a1a;color:white;min-height:100vh;position:fixed;}
+.sidebar a{display:block;padding:1rem;font-semibold;text-sm;color:white;transition:0.2s;}
+.sidebar a:hover{background:#d4af37;color:black;}
+.main{margin-left:220px;padding:2rem;}
+h1,h2{font-family:'Cinzel',serif;}
+.table{width:100%;border-collapse:collapse;}
+.table th,.table td{border:1px solid #eee;padding:0.5rem;text-align:left;}
 .btn{padding:0.5rem 1rem;border-radius:0.5rem;text-xs font-bold;transition:0.2s;}
 .btn-edit{background:#1d4ed8;color:white;}
 .btn-delete{background:#dc2626;color:white;}
 .btn:hover{opacity:0.8;}
 </style>
 </head>
-<body class="max-w-6xl mx-auto p-6">
+<body>
 
-<h1 class="text-2xl font-bold text-center mb-8">Painel Admin Premium | Abella Joias</h1>
-
-<!-- GALVÂNICAS -->
-<section class="mb-12">
-<h2 class="text-xl font-semibold mb-4">Galvânicas Parceiras</h2>
-<form id="formGalv" class="mb-4 space-y-2 p-4 border rounded-xl bg-white">
-<input type="hidden" id="gId">
-<input type="text" id="gNome" placeholder="Nome" class="border p-2 w-full">
-<input type="text" id="gWhats" placeholder="WhatsApp/Telefone" class="border p-2 w-full">
-<input type="text" id="gEnd" placeholder="Endereço" class="border p-2 w-full">
-<input type="text" id="gDesc" placeholder="Descrição" class="border p-2 w-full">
-<input type="text" id="gLogo" placeholder="URL da Logo" class="border p-2 w-full">
-<div class="flex gap-2">
-<button type="submit" class="btn btn-edit">Salvar Galvânica</button>
-<button type="button" id="btnCancelGalv" class="btn btn-delete hidden" onclick="cancelarGalv()">Cancelar</button>
+<div class="sidebar">
+  <h1 class="text-xl font-bold text-center py-4 border-b border-gray-600">ABELLA ADMIN</h1>
+  <a href="pedidos.html">Pedidos</a>
+  <a href="produtos.html">Produtos</a>
+  <a href="categorias.html">Categorias</a>
+  <a href="galvanicas.html">Galvânicas</a>
+  <a href="ajustes.html">Ajustes</a>
 </div>
-</form>
-<div id="listaGalv"></div>
-</section>
 
-<!-- CATEGORIAS -->
-<section class="mb-12">
-<h2 class="text-xl font-semibold mb-4">Categorias</h2>
-<form id="formCat" class="mb-4 space-y-2 p-4 border rounded-xl bg-white">
-<input type="text" id="catNome" placeholder="Nome da Categoria" class="border p-2 w-full">
-<input type="file" id="catFile" class="w-full">
-<button type="button" onclick="salvarCategoria()" class="btn btn-edit">Salvar Categoria</button>
-</form>
-<div id="listaCategorias"></div>
-</section>
-
-<!-- PRODUTOS -->
-<section class="mb-12">
-<h2 class="text-xl font-semibold mb-4">Produtos</h2>
-<form id="formProd" class="mb-4 space-y-2 p-4 border rounded-xl bg-white">
-<input type="hidden" id="pId">
-<input type="text" id="pNome" placeholder="Nome do Produto" class="border p-2 w-full">
-<input type="text" id="pSKU" placeholder="SKU" class="border p-2 w-full">
-<input type="number" id="pPrice" placeholder="Preço" class="border p-2 w-full">
-<input type="number" id="pWeight" placeholder="Peso (g)" class="border p-2 w-full">
-<select id="pCat" class="border p-2 w-full"></select>
-<input type="text" id="pImage" placeholder="URL da Imagem" class="border p-2 w-full">
-<div class="flex gap-2">
-<button type="submit" class="btn btn-edit">Salvar Produto</button>
-<button type="button" class="btn btn-delete" onclick="cancelarProd()">Cancelar</button>
+<div class="main">
+  <h2 class="text-2xl font-bold mb-6">Bem-vindo ao Painel Admin Luxuoso</h2>
+  <p>Use o menu lateral para acessar pedidos, produtos, categorias, galvanicas e ajustes da loja.</p>
 </div>
-</form>
-<div id="listaProdutos"></div>
-</section>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// ---------------- GALVÂNICAS ----------------
-const formGalv = document.getElementById('formGalv');
-const listaGalv = document.getElementById('listaGalv');
-
-formGalv.onsubmit = e => {
-  e.preventDefault();
-  const id = document.getElementById('gId').value;
-  const galv = {
-    name: document.getElementById('gNome').value,
-    whats: document.getElementById('gWhats').value,
-    end: document.getElementById('gEnd').value,
-    desc: document.getElementById('gDesc').value,
-    logo: document.getElementById('gLogo').value || 'https://via.placeholder.com/150'
-  };
-  if(id) db.ref('galvanicas/'+id).update(galv);
-  else db.ref('galvanicas').push(galv);
-  cancelarGalv();
-};
-
-db.ref('galvanicas').on('value', snap=>{
-  listaGalv.innerHTML='';
-  snap.forEach(s=>{
-    const g = s.val();
-    listaGalv.innerHTML += `
-    <div class="card flex justify-between items-center">
-      <div class="flex items-center gap-4">
-        <img src="${g.logo}" class="w-12 h-12 rounded-full object-cover border">
-        <div>
-          <p class="font-bold">${g.name}</p>
-          <p class="text-xs text-gray-500">${g.whats}</p>
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn btn-edit" onclick="editarGalv('${s.key}')">Editar</button>
-        <button class="btn btn-delete" onclick="db.ref('galvanicas/${s.key}').remove()">Excluir</button>
-      </div>
-    </div>`;
-  });
-});
-
-function editarGalv(id){
-  db.ref('galvanicas/'+id).once('value').then(s=>{
-    const g = s.val();
-    document.getElementById('gId').value = id;
-    document.getElementById('gNome').value = g.name;
-    document.getElementById('gWhats').value = g.whats;
-    document.getElementById('gEnd').value = g.end;
-    document.getElementById('gDesc').value = g.desc;
-    document.getElementById('gLogo').value = g.logo;
-    document.getElementById('btnCancelGalv').classList.remove('hidden');
-  });
-}
-function cancelarGalv(){
-  formGalv.reset();
-  document.getElementById('gId').value='';
-  document.getElementById('btnCancelGalv').classList.add('hidden');
-}
-
-// ---------------- CATEGORIAS ----------------
-function salvarCategoria(){
-  const nome = document.getElementById('catNome').value;
-  const file = document.getElementById('catFile').files[0];
-  if(!nome) return alert('Digite o nome da categoria');
-  if(file){
-    const ref = firebase.storage().ref('categorias/'+file.name);
-    ref.put(file).then(()=> ref.getDownloadURL().then(url=>{
-      db.ref('categories').push({name:nome,image:url});
-    }));
-  } else db.ref('categories').push({name:nome,image:'https://via.placeholder.com/150'});
-}
-
-const listaCategorias = document.getElementById('listaCategorias');
-db.ref('categories').on('value', snap=>{
-  listaCategorias.innerHTML='';
-  const select = document.getElementById('pCat');
-  select.innerHTML='';
-  snap.forEach(s=>{
-    const c = s.val();
-    listaCategorias.innerHTML += `<div class="card">${c.name}</div>`;
-    select.innerHTML += `<option value="${s.key}">${c.name}</option>`;
-  });
-});
-
-// ---------------- PRODUTOS ----------------
-const formProd = document.getElementById('formProd');
-const listaProdutos = document.getElementById('listaProdutos');
-
-formProd.onsubmit = e=>{
-  e.preventDefault();
-  const id = document.getElementById('pId').value;
-  const produto = {
-    name: document.getElementById('pNome').value,
-    sku: document.getElementById('pSKU').value,
-    price: Number(document.getElementById('pPrice').value),
-    weight: Number(document.getElementById('pWeight').value),
-    image: document.getElementById('pImage').value || 'https://via.placeholder.com/150',
-    category: document.getElementById('pCat').value
-  };
-  if(id) db.ref('products/'+id).update(produto);
-  else db.ref('products').push(produto);
-  cancelarProd();
-};
-
-db.ref('products').on('value', snap=>{
-  listaProdutos.innerHTML='';
-  snap.forEach(s=>{
-    const p = s.val();
-    listaProdutos.innerHTML += `
-    <div class="card flex justify-between items-center">
-      <div>
-        <p class="font-bold">${p.name}</p>
-        <p class="text-xs">SKU: ${p.sku}</p>
-        <p class="text-xs text-gray-500">R$ ${Number(p.price).toFixed(2)}</p>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn btn-edit" onclick="editarProd('${s.key}')">Editar</button>
-        <button class="btn btn-delete" onclick="db.ref('products/${s.key}').remove()">Excluir</button>
-      </div>
-    </div>`;
-  });
-});
-
-function editarProd(id){
-  db.ref('products/'+id).once('value').then(s=>{
-    const p = s.val();
-    document.getElementById('pId').value=id;
-    document.getElementById('pNome').value=p.name;
-    document.getElementById('pSKU').value=p.sku;
-    document.getElementById('pPrice').value=p.price;
-    document.getElementById('pWeight').value=p.weight;
-    document.getElementById('pImage').value=p.image;
-    document.getElementById('pCat').value=p.category;
-  });
-}
-
-function cancelarProd(){
-  formProd.reset();
-  document.getElementById('pId').value='';
-}
-</script>
 </body>
 </html>
