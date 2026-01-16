@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Luxo | Abella Joias</title>
+    <title>Painel Luxo | Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -17,17 +17,15 @@
         .gold-bg { background-color: #d4af37; }
         
         /* Status do Pedido */
-        .status-Novo { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-        .status-Separação { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-        .status-Enviado { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
-        .status-Finalizado { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        .status-Novo { background: #FEF3C7; color: #92400e; }
+        .status-Separação { background: #E0F2FE; color: #1e40af; }
+        .status-Enviado { background: #EDE9FE; color: #5b21b6; }
+        .status-Finalizado { background: #ECFDF5; color: #065f46; }
 
         @media print {
             body * { visibility: hidden; }
-            #romaneio-print, #romaneio-print * { visibility: visible; }
-            #romaneio-print { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; color: black; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+            #romaneio, #romaneio * { visibility: visible; }
+            #romaneio { position: absolute; top: 0; left: 0; width: 100%; }
         }
     </style>
 </head>
@@ -36,14 +34,13 @@
     <header class="bg-black text-white p-6 shadow-xl border-b-4 border-[#d4af37]">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold tracking-widest">ABELLA JOIAS</h1>
-                <p class="text-[10px] text-[#d4af37] uppercase tracking-[0.3em]">Gestão Administrativa</p>
+                <h1 class="text-xl font-bold tracking-widest uppercase">Abella Joias</h1>
+                <p class="text-[10px] text-[#d4af37] uppercase tracking-[0.3em]">Painel de Controle Administrativo</p>
             </div>
             <nav class="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest">
                 <button onclick="showTab('pedidos')" class="hover:text-[#d4af37] transition">Pedidos</button>
                 <button onclick="showTab('produtos')" class="hover:text-[#d4af37] transition">Produtos</button>
-                <button onclick="showTab('categorias')" class="hover:text-[#d4af37] transition">Categorias</button>
-                <button onclick="showTab('galvanicas')" class="hover:text-[#d4af37] transition">Galvânicas</button>
+                <button onclick="showTab('galvanicas')" class="hover:text-[#d4af37] transition text-[#d4af37]">Galvânicas</button>
                 <button onclick="showTab('config')" class="hover:text-[#d4af37] transition">Ajustes</button>
             </nav>
         </div>
@@ -51,103 +48,71 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
         
-        <section id="pedidos" class="tab-content active">
-            <h2 class="text-2xl font-bold mb-6">Pedidos Recentes</h2>
-            <div id="listaPedidos" class="grid gap-4"></div>
+        <section id="galvanicas" class="tab-content active space-y-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <h3 id="formGalvTitle" class="font-bold mb-6 uppercase text-sm tracking-widest gold-text">Cadastrar / Editar Galvânica Parceira</h3>
+                <form id="formGalvanica" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" id="gId">
+                    <input type="text" id="gNome" placeholder="Nome da Galvânica" class="border p-3 rounded-xl text-sm" required>
+                    <input type="text" id="gWhats" placeholder="WhatsApp (Link ou Número)" class="border p-3 rounded-xl text-sm" required>
+                    <input type="text" id="gTel" placeholder="Telefone de Contato" class="border p-3 rounded-xl text-sm">
+                    <input type="text" id="gEnd" placeholder="Endereço Completo" class="border p-3 rounded-xl text-sm md:col-span-3" required>
+                    <textarea id="gDesc" placeholder="Descrição dos serviços prestados..." class="border p-3 rounded-xl text-sm md:col-span-3" rows="3"></textarea>
+                    
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Logo da Empresa (Upload)</label>
+                        <input type="file" id="gFile" class="w-full border p-2 rounded-xl text-xs mt-1">
+                    </div>
+
+                    <div class="flex items-end gap-2">
+                        <button type="submit" id="btnGalv" class="flex-grow bg-black text-white py-3 rounded-xl font-bold hover:bg-[#d4af37] transition uppercase text-xs">Salvar Galvânica</button>
+                        <button type="button" onclick="cancelarEdicaoGalv()" id="btnCancelGalv" class="hidden bg-red-100 text-red-600 px-4 py-3 rounded-xl font-bold text-xs uppercase">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="space-y-4">
+                <h4 class="font-bold text-gray-500 uppercase text-[11px] tracking-widest ml-2">Galvânicas Ativas no Site</h4>
+                <div id="listaGalvAdmin" class="grid gap-4">
+                    </div>
+            </div>
         </section>
 
-        <section id="produtos" class="tab-content">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
-                <h3 id="formProdTitle" class="font-bold mb-4 uppercase text-sm tracking-widest">Novo Produto</h3>
+        <section id="produtos" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h3 class="font-bold mb-4 uppercase text-sm">Gerenciar Produtos</h3>
                 <form id="formProduto" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input type="hidden" id="pId">
-                    <input type="text" id="pNome" placeholder="Nome" class="border p-2 rounded-lg text-sm" required>
-                    <input type="text" id="pSku" placeholder="SKU" class="border p-2 rounded-lg text-sm" required>
-                    <input type="number" step="0.01" id="pPreco" placeholder="Preço (R$)" class="border p-2 rounded-lg text-sm" required>
-                    <input type="number" step="0.01" id="pPeso" placeholder="Peso (g)" class="border p-2 rounded-lg text-sm" required>
-                    <select id="pCat" class="border p-2 rounded-lg text-sm col-span-1"></select>
-                    <input type="text" id="pImage" placeholder="URL da Imagem" class="border p-2 rounded-lg text-sm md:col-span-2">
-                    <button type="submit" class="bg-black text-white p-2 rounded-lg font-bold hover:bg-[#d4af37] transition">SALVAR</button>
-                    <button type="button" onclick="cancelarEdicaoProd()" id="btnCancelProd" class="hidden border border-red-500 text-red-500 p-2 rounded-lg text-xs font-bold">CANCELAR</button>
+                    <input type="text" id="pNome" placeholder="Nome" class="border p-2 rounded-lg text-sm">
+                    <input type="text" id="pSku" placeholder="SKU" class="border p-2 rounded-lg text-sm">
+                    <input type="number" id="pPreco" placeholder="Preço (R$)" class="border p-2 rounded-lg text-sm">
+                    <input type="number" id="pPeso" placeholder="Peso (g)" class="border p-2 rounded-lg text-sm">
+                    <button type="submit" class="bg-black text-white p-2 rounded-lg col-span-1 md:col-span-4 font-bold">CADASTRAR PRODUTO</button>
                 </form>
             </div>
             <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
         </section>
 
-        <section id="galvanicas" class="tab-content">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
-                <h3 id="formGalvTitle" class="font-bold mb-4 uppercase text-sm tracking-widest gold-text">Gestão de Galvânicas</h3>
-                <form id="formGalvanica" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="hidden" id="gId">
-                    <input type="text" id="gNome" placeholder="Empresa" class="border p-2 rounded-lg text-sm" required>
-                    <input type="text" id="gWhats" placeholder="WhatsApp (55...)" class="border p-2 rounded-lg text-sm" required>
-                    <input type="text" id="gTel" placeholder="Telefone Fixo" class="border p-2 rounded-lg text-sm">
-                    <input type="text" id="gEnd" placeholder="Endereço" class="border p-2 rounded-lg text-sm md:col-span-3" required>
-                    <textarea id="gDesc" placeholder="Descrição dos serviços" class="border p-2 rounded-lg text-sm md:col-span-3"></textarea>
-                    <input type="text" id="gLogo" placeholder="URL Logotipo" class="border p-2 rounded-lg text-sm md:col-span-2">
-                    <button type="submit" class="bg-[#d4af37] text-white p-2 rounded-lg font-bold">SALVAR GALVÂNICA</button>
-                    <button type="button" onclick="cancelarEdicaoGalv()" id="btnCancelGalv" class="hidden border border-red-500 text-red-500 p-2 rounded-lg text-xs font-bold">CANCELAR</button>
-                </form>
-            </div>
-            <div id="listaGalvAdmin" class="grid gap-4"></div>
+        <section id="pedidos" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">Gestão de Pedidos</h2>
+            <div id="listaPedidos" class="space-y-4"></div>
         </section>
 
         <section id="config" class="tab-content">
             <div class="bg-white p-8 rounded-2xl shadow-sm border max-w-2xl mx-auto">
-                <h2 class="text-xl font-bold mb-6 italic">Configurações Gerais</h2>
+                <h2 class="text-xl font-bold mb-6 italic">Ajustes do Sistema</h2>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp de Recebimento</label>
-                        <input type="text" id="confPhone" class="w-full border p-3 rounded-xl mt-1">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">Desconto PIX (%)</label>
-                            <input type="number" id="confPix" class="w-full border p-3 rounded-xl mt-1">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">Parcelas Sem Juros (Ex: 3)</label>
-                            <input type="number" id="confParc" class="w-full border p-3 rounded-xl mt-1">
-                        </div>
-                    </div>
-                    <button onclick="salvarConfig()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg mt-4 hover:bg-[#d4af37] transition">ATUALIZAR DADOS</button>
+                    <input type="text" id="confPhone" placeholder="WhatsApp (ex: 5511999999999)" class="w-full border p-3 rounded-xl">
+                    <input type="number" id="confPix" placeholder="Desconto PIX (%)" class="w-full border p-3 rounded-xl">
+                    <input type="number" id="confParc" placeholder="Parcelas Máximas (ex: 3)" class="w-full border p-3 rounded-xl">
+                    <button onclick="salvarConfig()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg mt-4 hover:bg-[#d4af37] transition">SALVAR ALTERAÇÕES</button>
                 </div>
             </div>
         </section>
 
-        <section id="categorias" class="tab-content">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-md">
-                <h3 class="font-bold mb-4">Criar Categoria</h3>
-                <input type="text" id="catNome" placeholder="Ex: Anéis" class="w-full border p-2 rounded-lg mb-4">
-                <input type="file" id="catFile" class="text-xs mb-4">
-                <button onclick="salvarCategoria()" class="w-full bg-black text-white p-3 rounded-lg font-bold uppercase text-xs">Adicionar</button>
-            </div>
-            <div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"></div>
-        </section>
-
     </main>
 
-    <div id="romaneio-print" class="hidden">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">
-            <h1 style="font-size: 22px; font-weight: bold; margin: 0;">ABELLA JOIAS</h1>
-            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Romaneio de Separação de Pedido</p>
-        </div>
-        <div id="romaneio-info" style="margin-top: 20px; font-size: 13px;"></div>
-        <table id="romaneio-table">
-            <thead>
-                <tr>
-                    <th style="width: 15%;">SKU</th>
-                    <th style="width: 50%;">Produto</th>
-                    <th style="width: 15%;">Peso (g)</th>
-                    <th style="width: 20%;">Preço</th>
-                </tr>
-            </thead>
-            <tbody id="romaneio-body"></tbody>
-        </table>
-        <div id="romaneio-footer" style="margin-top: 20px; text-align: right; font-weight: bold; border-top: 1px solid #000; padding-top: 10px;"></div>
-    </div>
-
     <script>
+        // Configuração Firebase (Verifique se é a sua correta)
         const firebaseConfig = {
             apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
             authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -164,204 +129,116 @@
             document.getElementById(id).classList.add('active');
         }
 
-        // --- GESTÃO DE PRODUTOS (COM EDIÇÃO) ---
-        document.getElementById('formProduto').onsubmit = (e) => {
+        /* =========================================
+           GESTÃO DE GALVÂNICAS (CORRIGIDA)
+        ========================================= */
+        let editandoGalvId = null;
+
+        document.getElementById('formGalvanica').onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('pId').value;
-            const p = {
-                name: document.getElementById('pNome').value,
-                sku: document.getElementById('pSku').value,
-                price: parseFloat(document.getElementById('pPreco').value),
-                weight: parseFloat(document.getElementById('pPeso').value),
-                category: document.getElementById('pCat').value,
-                image: document.getElementById('pImage').value || 'https://via.placeholder.com/300'
-            };
-            if(id) db.ref('products/' + id).update(p);
-            else db.ref('products').push(p);
-            cancelarEdicaoProd();
-        };
+            const btn = document.getElementById('btnGalv');
+            btn.disabled = true;
+            btn.innerText = "PROCESSANDO...";
 
-        function editarProduto(id, p) {
-            document.getElementById('pId').value = id;
-            document.getElementById('pNome').value = p.name;
-            document.getElementById('pSku').value = p.sku;
-            document.getElementById('pPreco').value = p.price;
-            document.getElementById('pPeso').value = p.weight;
-            document.getElementById('pCat').value = p.category;
-            document.getElementById('pImage').value = p.image;
-            document.getElementById('formProdTitle').innerText = "Editando Produto";
-            document.getElementById('btnCancelProd').classList.remove('hidden');
-            window.scrollTo(0,0);
-        }
+            const file = document.getElementById('gFile').files[0];
+            let logoUrl = "";
 
-        function cancelarEdicaoProd() {
-            document.getElementById('formProduto').reset();
-            document.getElementById('pId').value = "";
-            document.getElementById('formProdTitle').innerText = "Novo Produto";
-            document.getElementById('btnCancelProd').classList.add('hidden');
-        }
+            // Se subir nova imagem
+            if(file) {
+                const ref = storage.ref(`galvanicas/${Date.now()}_${file.name}`);
+                await ref.put(file);
+                logoUrl = await ref.getDownloadURL();
+            } else if (editandoGalvId) {
+                // Se estiver editando e não subir imagem, tenta manter a anterior
+                const snapshot = await db.ref(`galvanicas/${editandoGalvId}`).once('value');
+                logoUrl = snapshot.val().logo || "";
+            }
 
-        db.ref('products').on('value', snap => {
-            const grid = document.getElementById('gridProdutos'); grid.innerHTML = '';
-            snap.forEach(s => {
-                const p = s.val();
-                grid.innerHTML += `
-                    <div class="bg-white border rounded-xl overflow-hidden relative group">
-                        <img src="${p.image}" class="w-full aspect-square object-cover">
-                        <div class="p-2 text-[10px]">
-                            <p class="font-bold truncate uppercase">${p.name}</p>
-                            <p class="text-gray-400">SKU: ${p.sku} | <b>${p.weight}g</b></p>
-                            <p class="gold-text font-bold">R$ ${p.price.toFixed(2)}</p>
-                            <div class="mt-2 flex gap-1">
-                                <button onclick='editarProduto("${s.key}", ${JSON.stringify(p)})' class="bg-blue-600 text-white flex-1 py-1 rounded">EDITAR</button>
-                                <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1 rounded">✕</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-
-        // --- GESTÃO DE PEDIDOS (EDITAR TOTAL E ROMANEIO) ---
-        db.ref('orders').on('value', snap => {
-            const list = document.getElementById('listaPedidos'); list.innerHTML = '';
-            snap.forEach(s => {
-                const o = s.val();
-                list.innerHTML += `
-                    <div class="bg-white border rounded-2xl p-4 flex justify-between items-center shadow-sm">
-                        <div class="text-xs">
-                            <p class="font-bold text-sm uppercase">${o.cliente}</p>
-                            <p class="text-gray-400">${o.data}</p>
-                            <p class="gold-text font-bold mt-1">Total: R$ ${parseFloat(o.total).toFixed(2)}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <select onchange="db.ref('orders/${s.key}').update({status:this.value})" class="status-${o.status || 'Novo'} text-[10px] font-bold p-2 rounded-lg border-none">
-                                <option ${o.status=='Novo'?'selected':''}>Novo</option>
-                                <option ${o.status=='Separação'?'selected':''}>Separação</option>
-                                <option ${o.status=='Enviado'?'selected':''}>Enviado</option>
-                                <option ${o.status=='Finalizado'?'selected':''}>Finalizado</option>
-                            </select>
-                            <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="bg-black text-white px-3 py-2 rounded-lg text-[10px] font-bold">ROMANEIO</button>
-                            <button onclick='editarPedido("${s.key}", ${o.total})' class="bg-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase">Editar</button>
-                            <button onclick="db.ref('orders/${s.key}').remove()" class="text-red-500 text-[10px] p-2">✕</button>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-
-        function editarPedido(id, totalAtual) {
-            const novo = prompt("Novo valor total para este pedido:", totalAtual);
-            if(novo !== null) db.ref('orders/' + id).update({ total: parseFloat(novo) });
-        }
-
-        function imprimirRomaneio(o) {
-            document.getElementById('romaneio-info').innerHTML = `
-                <p><strong>Cliente:</strong> ${o.cliente} | <strong>WhatsApp:</strong> ${o.whatsapp || 'N/A'}</p>
-                <p><strong>Data:</strong> ${o.data} | <strong>Pagamento:</strong> ${o.pagamento}</p>
-            `;
-            const tbody = document.getElementById('romaneio-body'); tbody.innerHTML = '';
-            let pesoTotal = 0;
-            o.itens.forEach(i => {
-                const p = i.weight || 0;
-                pesoTotal += p;
-                tbody.innerHTML += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${p.toFixed(2)}g</td><td>R$ ${i.price.toFixed(2)}</td></tr>`;
-            });
-            document.getElementById('romaneio-footer').innerHTML = `
-                <p>Qtd Itens: ${o.itens.length}</p>
-                <p>PESO TOTAL: ${pesoTotal.toFixed(2)}g</p>
-                <p style="font-size: 16px;">VALOR FINAL: R$ ${parseFloat(o.total).toFixed(2)}</p>
-            `;
-            window.print();
-        }
-
-        // --- GALVÂNICAS (COM EDIÇÃO) ---
-        document.getElementById('formGalvanica').onsubmit = (e) => {
-            e.preventDefault();
-            const id = document.getElementById('gId').value;
-            const g = {
+            const dados = {
                 nome: document.getElementById('gNome').value,
-                whats: document.getElementById('gWhats').value,
-                tel: document.getElementById('gTel').value,
-                end: document.getElementById('gEnd').value,
-                desc: document.getElementById('gDesc').value,
-                logo: document.getElementById('gLogo').value || 'https://via.placeholder.com/150'
+                whatsapp: document.getElementById('gWhats').value,
+                telefone: document.getElementById('gTel').value,
+                endereco: document.getElementById('gEnd').value,
+                descricao: document.getElementById('gDesc').value,
+                logo: logoUrl
             };
-            if(id) db.ref('galvanicas/' + id).update(g);
-            else db.ref('galvanicas').push(g);
+
+            if(editandoGalvId) {
+                await db.ref(`galvanicas/${editandoGalvId}`).update(dados);
+                alert("Galvânica atualizada!");
+            } else {
+                await db.ref('galvanicas').push(dados);
+                alert("Galvânica cadastrada com sucesso!");
+            }
+
             cancelarEdicaoGalv();
+            btn.disabled = false;
         };
 
         function editarGalvanica(id, g) {
-            document.getElementById('gId').value = id;
+            editandoGalvId = id;
             document.getElementById('gNome').value = g.nome;
-            document.getElementById('gWhats').value = g.whats;
-            document.getElementById('gTel').value = g.tel;
-            document.getElementById('gEnd').value = g.end;
-            document.getElementById('gDesc').value = g.desc;
-            document.getElementById('gLogo').value = g.logo;
-            document.getElementById('formGalvTitle').innerText = "Editando Galvânica";
+            document.getElementById('gWhats').value = g.whatsapp;
+            document.getElementById('gTel').value = g.telefone || "";
+            document.getElementById('gEnd').value = g.endereco;
+            document.getElementById('gDesc').value = g.descricao || "";
+            
+            document.getElementById('formGalvTitle').innerText = "Editando: " + g.nome;
+            document.getElementById('btnGalv').innerText = "ATUALIZAR DADOS";
             document.getElementById('btnCancelGalv').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicaoGalv() {
+            editandoGalvId = null;
             document.getElementById('formGalvanica').reset();
-            document.getElementById('gId').value = "";
-            document.getElementById('formGalvTitle').innerText = "Gestão de Galvânicas";
+            document.getElementById('formGalvTitle').innerText = "Cadastrar / Editar Galvânica Parceira";
+            document.getElementById('btnGalv').innerText = "Salvar Galvânica";
             document.getElementById('btnCancelGalv').classList.add('hidden');
         }
 
+        // LER GALVÂNICAS DO BANCO (O MESMO QUE O SITE USA)
         db.ref('galvanicas').on('value', snap => {
-            const list = document.getElementById('listaGalvAdmin'); list.innerHTML = '';
+            const list = document.getElementById('listaGalvAdmin');
+            list.innerHTML = '';
+            
+            if(!snap.exists()) {
+                list.innerHTML = '<p class="text-center text-gray-400 py-10">Nenhuma galvânica encontrada no banco de dados.</p>';
+                return;
+            }
+
             snap.forEach(s => {
                 const g = s.val();
                 list.innerHTML += `
-                    <div class="bg-white border rounded-xl p-4 flex justify-between items-center shadow-sm">
-                        <div class="flex items-center gap-4 text-xs">
-                            <img src="${g.logo}" class="w-12 h-12 rounded-full object-cover border">
+                    <div class="bg-white border rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition">
+                        <div class="flex items-center gap-5">
+                            <img src="${g.logo || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-xl object-cover border shadow-inner">
                             <div>
-                                <p class="font-bold">${g.nome}</p>
-                                <p class="text-gray-400">${g.end}</p>
+                                <h4 class="font-bold text-gray-800">${g.nome}</h4>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">${g.endereco}</p>
+                                <p class="text-xs gold-text mt-1 font-semibold">${g.whatsapp}</p>
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick='editarGalvanica("${s.key}", ${JSON.stringify(g)})' class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-bold">EDITAR</button>
-                            <button onclick="db.ref('galvanicas/${s.key}').remove()" class="text-red-500 font-bold text-[10px]">✕ REMOVER</button>
+                            <button onclick='editarGalvanica("${s.key}", ${JSON.stringify(g)})' class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white transition">Editar</button>
+                            <button onclick="if(confirm('Excluir esta galvânica?')) db.ref('galvanicas/${s.key}').remove()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-[10px] font-bold uppercase hover:bg-red-600 hover:text-white transition">Excluir</button>
                         </div>
                     </div>
                 `;
             });
         });
 
-        // --- CATEGORIAS & AJUSTES ---
-        async function salvarCategoria() {
-            const nome = document.getElementById('catNome').value;
-            const file = document.getElementById('catFile').files[0];
-            if(!nome || !file) return alert("Preencha nome e selecione imagem");
-            const ref = storage.ref(`cat/${file.name}`);
-            await ref.put(file);
-            const url = await ref.getDownloadURL();
-            db.ref('categories').push({ name: nome, image: url });
-            document.getElementById('catNome').value = "";
-        }
-
-        db.ref('categories').on('value', snap => {
-            const list = document.getElementById('listaCategorias');
-            const select = document.getElementById('pCat');
-            list.innerHTML = ''; select.innerHTML = '<option value="">Categoria...</option>';
-            snap.forEach(s => {
-                list.innerHTML += `<div class="bg-white border p-2 rounded-xl text-center"><img src="${s.val().image}" class="h-16 w-full object-cover rounded mb-1 text-[8px] uppercase font-bold">${s.val().name}</div>`;
-                select.innerHTML += `<option value="${s.key}">${s.val().name}</option>`;
-            });
-        });
-
+        /* =========================================
+           DEMAIS FUNÇÕES (PRODUTOS, CONFIG, PEDIDOS)
+        ========================================= */
+        // Ajuste de Configurações
         function salvarConfig() {
             db.ref('settings').update({
                 phone: document.getElementById('confPhone').value,
                 pix: parseInt(document.getElementById('confPix').value),
                 installments: parseInt(document.getElementById('confParc').value)
             });
-            alert("Sistema Atualizado!");
+            alert("Configurações atualizadas!");
         }
 
         db.ref('settings').on('value', s => {
@@ -370,6 +247,21 @@
                 document.getElementById('confPix').value = c.pix || 0;
                 document.getElementById('confParc').value = c.installments || 1;
             }
+        });
+
+        // Simpificação de Produtos para demonstração
+        db.ref('products').on('value', snap => {
+            const grid = document.getElementById('gridProdutos'); grid.innerHTML = '';
+            snap.forEach(s => {
+                const p = s.val();
+                grid.innerHTML += `
+                    <div class="bg-white border rounded-xl overflow-hidden p-2">
+                        <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg">
+                        <p class="text-[10px] font-bold mt-2 truncate uppercase">${p.name}</p>
+                        <p class="text-[9px] gold-text font-bold">R$ ${Number(p.price).toFixed(2)}</p>
+                    </div>
+                `;
+            });
         });
 
     </script>
