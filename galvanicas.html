@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Galvânicas Parceiras | Abella Joias - Banho de Qualidade em Limeira</title>
+    <meta name="description" content="Conheça as principais Galvânicas Parceiras da Abella Joias em Limeira. Garantia de banho de ouro, prata e ródio de altíssima qualidade para joias no bruto.">
+    <style>
+      /* ===== Geral / Grid ===== */
+      :root { --gold-border: #d4af37; --gold-text: #b8860b; --card-shadow: rgba(212,175,55,0.45); }
+      body { font-family: "Poppins", Arial, sans-serif; margin: 0; padding: 0; background: transparent; color: #222; }
+      .container { max-width: 1300px; margin: 0 auto; padding: 30px 20px; }
+      .titulo-galvanicas {
+        text-align: center;
+        font-size: 28px;
+        color: var(--gold-text);
+        font-weight: 800;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .galvanicas-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+        align-items: start;
+      }
+      /* responsivo: 1 por linha em telas pequenas */
+      @media (max-width: 1024px) {
+        .galvanicas-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 720px) {
+        .galvanicas-grid { grid-template-columns: 1fr; }
+      }
+      /* ===== Card ===== */
+      .card {
+        background: transparent; /* transparente para se adaptar ao fundo do Elementor */
+        border-radius: 18px;
+        border: 2px solid var(--gold-border);
+        box-shadow: 0 6px 22px var(--card-shadow);
+        padding: 18px;
+        text-align: center;
+        position: relative;
+        overflow: visible;
+        transition: transform .25s ease, box-shadow .25s ease;
+        min-height: 320px;
+      }
+      .card:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(212,175,55,0.7); }
+      /* selo dourado (medalha) */
+      .card::before {
+        content: "Parceiro Abella Joias";
+        position: absolute;
+        top: -16px;
+        right: -16px;
+        background: linear-gradient(135deg,#ffd700,#ffec8b);
+        color: #6b4f00;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 10px 12px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,245,204,0.9);
+        box-shadow: 0 4px 14px rgba(255,215,0,0.55);
+        text-shadow: 0 1px 1px #fff;
+        animation: selo-brilho 2.8s infinite ease-in-out;
+      }
+      @keyframes selo-brilho {
+        0%,100% { filter: brightness(1); }
+        50% { filter: brightness(1.18); }
+      }
+      /* logo grande */
+      .card-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 140px;
+        margin-bottom: 14px;
+        padding: 6px;
+        background: rgba(255,255,255,0.02); /* leve proteção dependendo do fundo */
+        border-radius: 12px;
+      }
+      .card-logo img {
+        max-width: 95%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 8px;
+      }
+      /* conteúdo */
+      .card h2 {
+        font-size: 20px;
+        color: var(--gold-text);
+        font-weight: 800;
+        margin: 8px 0;
+      }
+      .card p { margin: 6px 0; color: #333; font-size: 14px; text-align: left; line-height: 1.4; }
+      .card p strong { display:inline-block; min-width: 90px; color: #222; }
+      .card .whatsapp-link {
+        display: inline-block;
+        background: linear-gradient(90deg,#25d366,#128c7e);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 24px;
+        font-weight: 700;
+        text-decoration: none;
+        margin-top: 10px;
+        box-shadow: 0 6px 14px rgba(18,140,126,0.18);
+      }
+      .card .whatsapp-link:hover { transform: translateY(-2px); }
+      .slogan { margin-top: 14px; font-weight: 800; color: #1f1f1f; text-align: center; font-size: 15px; }
+      /* footer partner gold image block */
+      .partner-gold {
+        margin-top: 36px;
+        text-align: center;
+      }
+      .partner-gold img { max-width: 100%; height: auto; display: inline-block; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h2>Galvânicas Parceiras da Abella Joias</h2>
+      <!-- Franco Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg" alt="Franco Galvânica">
+        <h2>Franco Galvânica</h2>
+        <p><strong>Endereço:</strong> R: José Motta dos Santos, 113 - Jd. Adélia Cavicchia Grotta</p>
+        <p><strong>Telefone:</strong> (19) 3451-6246</p>
+        <a href="https://wa.me/5519984202600?text=Ol%C3%A1%20Franco.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Empresa com mais de 20 anos de tradição, especializada em banhos de Ouro, Prata, Ródio Branco e Negro
+      <!-- Costa Rica Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0045-300x150.jpg" alt="Costa Rica Galvânica">
+        <h2>Costa Rica Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Mário Lima, 241 - Bairro Jardim Anhanguera</p>
+        <p><strong>Telefone:</strong> (19) 98876-0429</p>
+        <a href="https://wa.me/5519988760429?text=Ol%C3%A1%20Costa%20Rica.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Especializada em banhos folheados, com foco em acabamento de alto padrão
+      <!-- Queen / Queem Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0042-300x150.jpg" alt="Queen Galvânica">
+        <h2>Queen Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Arthur Salibe, 589 - Jd. Nova Suiça</p>
+        <p><strong>Telefone:</strong> (19) 99970-2895</p>
+        <a href="https://wa.me/5519999702895?text=Ol%C3%A1%20Queen.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Serviços de galvanoplastia com os melhores produtos e controles de qualidade
+      <!-- Atenas Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0039.jpg" alt="Atenas Galvânica">
+        <h2>Atenas Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Tancre Leitão, 34 - Jardim Aeroporto</p>
+        <p><strong>Telefone:</strong> (19) 98122-6758</p>
+        <a href="https://wa.me/5519981226758?text=Ol%C3%A1%20Atenas.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Serviços de galvanoplastia com foco em atendimento comercial especializado para o mercado de semijoias
+      <!-- 4D Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-7-300x232.jpg" alt="4D Galvânica">
+        <h2>4D Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Giocondo Negro, 316 - Vila Rosana</p>
+        <p><strong>Telefone:</strong> (19) 3451-9651</p>
+        <a href="https://wa.me/5519971796251?text=Ol%C3%A1%204D.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Soluções completas para fabricantes e empreendedores, elevando o padrão das semijoias
+      <!-- Sul Folheados -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-6-300x121.jpg" alt="Sul Folheados">
+        <h2>Sul Folheados</h2>
+        <p><strong>Endereço:</strong> Rua: Major Francisco Barcellos, 453 - Jardim Glória</p>
+        <p><strong>Telefone:</strong> (19) 98324-2156</p>
+        <a href="https://wa.me/5519983242156?text=Ol%C3%A1%20Sul%20Folheados.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Transformar semijoias através da galvanoplastia com credibilidade e pontualidade
+      <!-- Viena Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Imagem-do-WhatsApp-de-2025-10-14-as-21.47.01_f45b979f.jpg" alt="Viena Galvânica">
+        <h2>Viena Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: João Bozza, 496 - Jardim Maria Buchi Modeneis</p>
+        <p><strong>Telefone:</strong> (19) 99216-2908</p>
+        <a href="https://wa.me/5519992162908?text=Ol%C3%A1%20Viena.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Serviços de galvanoplastia para semijoias
+      <!-- Fiori Galvânica / Fiori Semijoias -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0041-300x150.jpg" alt="Fiori Galvânica">
+        <h2>Fiori Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Desembargador. Júlio César da Silveira, 1352 - Vila Claudia </p>
+        <p><strong>Telefone:</strong> (19) 3704-4590</p>
+        <a href="https://wa.me/5519983148195?text=Ol%C3%A1%20Fiori.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Oferece serviços de banho com foco na rapidez de entrega e qualidade do acabamento
+      <!-- Amazon Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0043-300x150.jpg" alt="Amazon Galvânica">
+        <h2>Amazon Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Clarindo Peixoto de Oliveira, 201 - Jd. Maria Buchi Modeneis</p>
+        <p><strong>Telefone:</strong> (19) 3792-9005</p>
+        <a href="https://wa.me/5519988839762?text=Ol%C3%A1%20Amazon.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Reconhecida por profissionalismo e compromisso. Banhos em ouro, prata, ródio e verniz Diamond
+      <!-- Reluz Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0044-300x150.jpg" alt="Reluz Galvânica">
+        <h2>Reluz Galvânica</h2>
+        <p><strong>Endereço:</strong> Av. Mal. Artur da Costa e Silva, 708 – Jardim Glória</p>
+        <p><strong>Telefone:</strong> (19) 99380-6585</p>
+        <a href="https://wa.me/5519998893690?text=Ol%C3%A1%20Reluz.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Três décadas de experiência — banhos duradouros e confiáveis
+      <!-- Magri Folheados -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Imagem-do-WhatsApp-de-2025-10-18-as-12.02.21_cf8ffdba-300x150.jpg" alt="Magri Folheados">
+        <h2>Magri Folheados</h2>
+        <p><strong>Endereço:</strong> Rua: Roque Vaz Gonçalves, 88 - Jardim Boa Vista</p>
+        <p><strong>Telefone:</strong> (19) 3442-4287</p>
+        <a href="https://wa.me/5519996942050?text=Ol%C3%A1%20Magri%20Folheados.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Focada em qualidade, honestidade e compromisso — banho de ouro 18k e folheados
+      <!-- Banho do Salvador -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/72dpi_0002_LOGO_SALVADOR_HORIZONTAL_FUNDO_CLARO.png" alt="Banho do Salvador">
+        <h2>Banho do Salvador</h2>
+        <p><strong>Endereço:</strong> Rua: Paraná, 698 - Vila Rocha</p>
+        <p><strong>Telefone:</strong> (19) 99817-3164</p>
+        <a href="https://wa.me/5519998173164?text=Ol%C3%A1%20Banho%20do%20Salvador.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Há mais de 30 anos como referência
+      <!-- Fenix Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0038.jpg" alt="Fenix Galvânica">
+        <h2>Fenix Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua: Maria Tomeo de Almeida, 94 - Jardim Glória</p>
+        <p><strong>Telefone:</strong> (19) 98829-2435</p>
+        <a href="https://wa.me/5519988292435?text=Ol%C3%A1%20Fenix.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Empresa parceira focada em serviços de banho para o setor de semijoias
+      <!-- ORO Galvânica -->
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" alt="ORO Galvânica">
+        <h2>ORO Galvânica</h2>
+        <p><strong>Endereço:</strong> Rua Pércio Machado Gomes, 243 - Jardim Anhanguera</p>
+        <p><strong>Telefone:</strong> (19) 98907-2453 </p>
+        <p><strong>Telefone:</strong> (19) 97171-6251 </p>
+        <a href="https://wa.me/5519989072453?text=Ol%C3%A1%20ORO.%20Sou%20cliente%20da%20Abella%20Joias%20e%20gostar%C3%ADamos%20de%20iniciar%20uma%20parceria%20para%20os%20servi%C3%A7os%20de%20banho%20de%20semijoias.%20Qual%20o%20melhor%20contato%20para%20essa%20conversa%3F" target="_blank">Falar no WhatsApp 📲</a>
+        Excelência em Banhos Galvânicos para Semijoias de Alto Padrão
+     <!-- fim grid -->
+    <!-- Botão / Banner: Seja Parceiro GOLD -->
+      <p>
+        <a href="https://wa.me/5519988207658?text=Ol%C3%A1%2C%20tenho%20interesse%20em%20ser%20Parceiro%20GOLD%20Abella%20Joias." 
+           target="_blank" 
+           rel="noopener noreferrer"
+          >
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Gemini_Generated_Image_56v05c56v05c56v0.png"
+               alt="Seja Nosso Parceiro GOLD Abella Joias - Chamar no WhatsApp (19) 98820-7658"
+               style="width:100%; height:auto; display:block; border-radius:8px;">
+        </a>
+      </p>
+  <!-- Observação: atualizei apenas a mensagem automática do WhatsApp conforme solicitado -->
+</body>
+</html>
