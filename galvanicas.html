@@ -1,97 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Galvânicas Parceiras | Abella Joias</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --gold-border: #d4af37; --gold-text: #b8860b; --card-shadow: rgba(212,175,55,0.2); }
-        body { font-family: "Poppins", sans-serif; background: #fcfaf7; }
-        .card-galv {
-            border: 2px solid var(--gold-border);
-            border-radius: 18px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .card-galv:hover { transform: translateY(-5px); box-shadow: 0 10px 30px var(--card-shadow); }
-        .selo {
-            position: absolute; top: -12px; right: -12px;
-            background: linear-gradient(135deg,#ffd700,#ffec8b);
-            color: #6b4f00; font-size: 10px; font-weight: 800;
-            padding: 8px; border-radius: 50%; border: 2px solid white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galvânicas | Abella Joias</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+body{font-family:'Poppins',sans-serif;background:#fcfaf7;margin:0;padding:2rem;}
+h1{text-align:center;color:#b8860b;font-weight:800;margin-bottom:2rem;}
+.grid-gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;}
+.card{border:2px solid #d4af37;border-radius:18px;padding:1rem;box-shadow:0 6px 22px rgba(212,175,55,0.3);position:relative;}
+.card h2{color:#b8860b;font-weight:800;margin:0.5rem 0;}
+.card p{font-size:14px;margin:0.2rem 0;}
+.btn-whats{background:#25d366;color:white;padding:0.5rem 1rem;border-radius:9999px;font-weight:700;display:inline-block;text-decoration:none;margin-top:0.5rem;}
+</style>
 </head>
 <body>
-    <header class="p-6 border-b bg-white flex items-center gap-4">
-        <a href="index.html" class="font-bold text-gray-400 italic">← VOLTAR</a>
-        <h1 class="text-xl font-extrabold text-[#b8860b] uppercase tracking-tighter">Galvânicas Parceiras</h1>
-    </header>
+<h1>Galvânicas Parceiras da Abella Joias</h1>
+<div class="grid-gal" id="galvanicasGrid"></div>
 
-    <main class="max-w-6xl mx-auto p-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
-                <div class="selo">PARCEIRA</div>
-                <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg" class="h-24 object-contain mb-4">
-                <h2 class="text-lg font-bold text-gray-800">Franco Galvânica</h2>
-                <p class="text-xs text-gray-500 mb-4">Especializada em Ouro, Prata e Ródio Branco/Negro.</p>
-                <div class="text-left w-full text-xs space-y-1 mb-4">
-                    <p><strong>📍 Endereço:</strong> R. José Motta dos Santos, 113</p>
-                    <p><strong>📞 Tel:</strong> (19) 3451-6246</p>
-                </div>
-                <a href="https://wa.me/5519984202600" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
-            </div>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  messagingSenderId: "727568435294",
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-            <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
-                <div class="selo">PARCEIRA</div>
-                <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" class="h-24 object-contain mb-4">
-                <h2 class="text-lg font-bold text-gray-800">ORO Galvânica</h2>
-                <p class="text-xs text-gray-500 mb-4">Excelência em Banhos para Semijoias de Alto Padrão.</p>
-                <div class="text-left w-full text-xs space-y-1 mb-4">
-                    <p><strong>📍 Endereço:</strong> R. Pércio Machado Gomes, 243</p>
-                    <p><strong>📞 Tel:</strong> (19) 98907-2453</p>
-                </div>
-                <a href="https://wa.me/5519989072453" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
-            </div>
-
-        <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
-                <div class="selo">PARCEIRA</div>
-                <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" class="h-24 object-contain mb-4">
-                <h2 class="text-lg font-bold text-gray-800">ORO Galvânica</h2>
-                <p class="text-xs text-gray-500 mb-4">Excelência em Banhos para Semijoias de Alto Padrão.</p>
-                <div class="text-left w-full text-xs space-y-1 mb-4">
-                    <p><strong>📍 Endereço:</strong> R. Pércio Machado Gomes, 243</p>
-                    <p><strong>📞 Tel:</strong> (19) 98907-2453</p>
-                </div>
-                <a href="https://wa.me/5519989072453" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
-            </div>
-
-             <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
-                <div class="selo">PARCEIRA</div>
-                <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" class="h-24 object-contain mb-4">
-                <h2 class="text-lg font-bold text-gray-800">ORO Galvânica</h2>
-                <p class="text-xs text-gray-500 mb-4">Excelência em Banhos para Semijoias de Alto Padrão.</p>
-                <div class="text-left w-full text-xs space-y-1 mb-4">
-                    <p><strong>📍 Endereço:</strong> R. Pércio Machado Gomes, 243</p>
-                    <p><strong>📞 Tel:</strong> (19) 98907-2453</p>
-                </div>
-                <a href="https://wa.me/5519989072453" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
-            </div>
-
-             <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
-                <div class="selo">PARCEIRA</div>
-                <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" class="h-24 object-contain mb-4">
-                <h2 class="text-lg font-bold text-gray-800">ORO Galvânica</h2>
-                <p class="text-xs text-gray-500 mb-4">Excelência em Banhos para Semijoias de Alto Padrão.</p>
-                <div class="text-left w-full text-xs space-y-1 mb-4">
-                    <p><strong>📍 Endereço:</strong> R. Pércio Machado Gomes, 243</p>
-                    <p><strong>📞 Tel:</strong> (19) 98907-2453</p>
-                </div>
-                <a href="https://wa.me/5519989072453" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
-            </div>
-
-      
+db.ref('galvanicas').on('value',snap=>{
+  const div=document.getElementById('galvanicasGrid');
+  div.innerHTML='';
+  snap.forEach(s=>{
+    const g=s.val();
+    div.innerHTML+=`
+      <div class="card">
+        <h2>${g.name}</h2>
+        <p><strong>Endereço:</strong> ${g.endereco}</p>
+        <p><strong>Telefone:</strong> ${g.telefone}</p>
+        <a href="https://wa.me/${g.whatsapp}" target="_blank" class="btn-whats">Falar no WhatsApp 📲</a>
+      </div>
+    `;
+  });
+});
+</script>
+</body>
+</html>
