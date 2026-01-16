@@ -1,450 +1,377 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel Administrativo | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Luxo | Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f6f2; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .gold-text { color: #d4af37; }
+        .gold-bg { background-color: #d4af37; }
+        
+        /* Status do Pedido */
+        .status-Novo { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .status-Separação { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .status-Enviado { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
+        .status-Finalizado { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
-
-<style>
-body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.tab{display:none}
-.tab.active{display:block}
-
-.status-Novo{background:#FEF3C7}
-.status-Separação{background:#E0F2FE}
-.status-Enviado{background:#EDE9FE}
-.status-Finalizado{background:#ECFDF5}
-
-@media print{
- body *{visibility:hidden}
- #romaneio, #romaneio *{visibility:visible}
- #romaneio{position:absolute;top:0;left:0;width:100%}
-}
-</style>
+        @media print {
+            body * { visibility: hidden; }
+            #romaneio-print, #romaneio-print * { visibility: visible; }
+            #romaneio-print { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; color: black; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+        }
+    </style>
 </head>
+<body class="flex flex-col min-h-screen">
 
-<body>
+    <header class="bg-black text-white p-6 shadow-xl border-b-4 border-[#d4af37]">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold tracking-widest">ABELLA JOIAS</h1>
+                <p class="text-[10px] text-[#d4af37] uppercase tracking-[0.3em]">Gestão Administrativa</p>
+            </div>
+            <nav class="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest">
+                <button onclick="showTab('pedidos')" class="hover:text-[#d4af37] transition">Pedidos</button>
+                <button onclick="showTab('produtos')" class="hover:text-[#d4af37] transition">Produtos</button>
+                <button onclick="showTab('categorias')" class="hover:text-[#d4af37] transition">Categorias</button>
+                <button onclick="showTab('galvanicas')" class="hover:text-[#d4af37] transition">Galvânicas</button>
+                <button onclick="showTab('config')" class="hover:text-[#d4af37] transition">Ajustes</button>
+            </nav>
+        </div>
+    </header>
 
-<header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl gold tracking-widest">ABELLA JOIAS</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
-  </div>
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
+        
+        <section id="pedidos" class="tab-content active">
+            <h2 class="text-2xl font-bold mb-6">Pedidos Recentes</h2>
+            <div id="listaPedidos" class="grid gap-4"></div>
+        </section>
 
-  <nav class="flex gap-6 text-xs tracking-widest uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
-    <button onclick="openTab('categorias')">Categorias</button>
-    <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('pedidos')">Pedidos</button>
-    <button onclick="openTab('galvanicas')">Galvânicas</button>
-  </nav>
-</header>
+        <section id="produtos" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+                <h3 id="formProdTitle" class="font-bold mb-4 uppercase text-sm tracking-widest">Novo Produto</h3>
+                <form id="formProduto" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="hidden" id="pId">
+                    <input type="text" id="pNome" placeholder="Nome" class="border p-2 rounded-lg text-sm" required>
+                    <input type="text" id="pSku" placeholder="SKU" class="border p-2 rounded-lg text-sm" required>
+                    <input type="number" step="0.01" id="pPreco" placeholder="Preço (R$)" class="border p-2 rounded-lg text-sm" required>
+                    <input type="number" step="0.01" id="pPeso" placeholder="Peso (g)" class="border p-2 rounded-lg text-sm" required>
+                    <select id="pCat" class="border p-2 rounded-lg text-sm col-span-1"></select>
+                    <input type="text" id="pImage" placeholder="URL da Imagem" class="border p-2 rounded-lg text-sm md:col-span-2">
+                    <button type="submit" class="bg-black text-white p-2 rounded-lg font-bold hover:bg-[#d4af37] transition">SALVAR</button>
+                    <button type="button" onclick="cancelarEdicaoProd()" id="btnCancelProd" class="hidden border border-red-500 text-red-500 p-2 rounded-lg text-xs font-bold">CANCELAR</button>
+                </form>
+            </div>
+            <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+        </section>
 
-<main class="max-w-6xl mx-auto p-8 space-y-20">
+        <section id="galvanicas" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+                <h3 id="formGalvTitle" class="font-bold mb-4 uppercase text-sm tracking-widest gold-text">Gestão de Galvânicas</h3>
+                <form id="formGalvanica" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" id="gId">
+                    <input type="text" id="gNome" placeholder="Empresa" class="border p-2 rounded-lg text-sm" required>
+                    <input type="text" id="gWhats" placeholder="WhatsApp (55...)" class="border p-2 rounded-lg text-sm" required>
+                    <input type="text" id="gTel" placeholder="Telefone Fixo" class="border p-2 rounded-lg text-sm">
+                    <input type="text" id="gEnd" placeholder="Endereço" class="border p-2 rounded-lg text-sm md:col-span-3" required>
+                    <textarea id="gDesc" placeholder="Descrição dos serviços" class="border p-2 rounded-lg text-sm md:col-span-3"></textarea>
+                    <input type="text" id="gLogo" placeholder="URL Logotipo" class="border p-2 rounded-lg text-sm md:col-span-2">
+                    <button type="submit" class="bg-[#d4af37] text-white p-2 rounded-lg font-bold">SALVAR GALVÂNICA</button>
+                    <button type="button" onclick="cancelarEdicaoGalv()" id="btnCancelGalv" class="hidden border border-red-500 text-red-500 p-2 rounded-lg text-xs font-bold">CANCELAR</button>
+                </form>
+            </div>
+            <div id="listaGalvAdmin" class="grid gap-4"></div>
+        </section>
 
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+        <section id="config" class="tab-content">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border max-w-2xl mx-auto">
+                <h2 class="text-xl font-bold mb-6 italic">Configurações Gerais</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp de Recebimento</label>
+                        <input type="text" id="confPhone" class="w-full border p-3 rounded-xl mt-1">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase">Desconto PIX (%)</label>
+                            <input type="number" id="confPix" class="w-full border p-3 rounded-xl mt-1">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase">Parcelas Sem Juros (Ex: 3)</label>
+                            <input type="number" id="confParc" class="w-full border p-3 rounded-xl mt-1">
+                        </div>
+                    </div>
+                    <button onclick="salvarConfig()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg mt-4 hover:bg-[#d4af37] transition">ATUALIZAR DADOS</button>
+                </div>
+            </div>
+        </section>
 
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas cartão (ex: 3x sem juros)" class="border p-3">
-</div>
+        <section id="categorias" class="tab-content">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-md">
+                <h3 class="font-bold mb-4">Criar Categoria</h3>
+                <input type="text" id="catNome" placeholder="Ex: Anéis" class="w-full border p-2 rounded-lg mb-4">
+                <input type="file" id="catFile" class="text-xs mb-4">
+                <button onclick="salvarCategoria()" class="w-full bg-black text-white p-3 rounded-lg font-bold uppercase text-xs">Adicionar</button>
+            </div>
+            <div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"></div>
+        </section>
 
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR EMPRESA</button>
-</section>
+    </main>
 
-<section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
-
-<div class="bg-white border p-6 flex gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
-  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">ADICIONAR</button>
-</div>
-
-<div id="listaCategorias" class="space-y-2"></div>
-
-<h3 class="mt-6 font-semibold">Trocar imagem das categorias</h3>
-<div id="categoriasAdmin" class="space-y-4"></div>
-</section>
-
-<section id="produtos" class="tab space-y-8">
-<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="pNome" placeholder="Nome do produto" class="border p-3">
-  <input id="pSku" placeholder="SKU" class="border p-3">
-  <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-  <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-
-  <select id="pCategoria" class="border p-3">
-    <option value="">Selecione a categoria</option>
-  </select>
-
-  <input id="pImagem" placeholder="URL da imagem" class="border p-3 md:col-span-2">
-</div>
-
-<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
-
-<div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
-</section>
-
-<section id="pedidos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
-<div id="listaPedidos" class="space-y-4"></div>
-</section>
-
-<section id="galvanicas" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Cadastrar / Editar Galvânicas</h2>
-<form id="formGalvanica" class="space-y-4">
-
-  <input type="text" id="nome" placeholder="Nome da Galvânica" class="border p-2 w-full rounded" required>
-  <input type="text" id="endereco" placeholder="Endereço" class="border p-2 w-full rounded" required>
-  <input type="text" id="telefone" placeholder="Telefone" class="border p-2 w-full rounded" required>
-  <input type="url" id="whatsapp" placeholder="Link WhatsApp" class="border p-2 w-full rounded" required>
-  <textarea id="descricao" placeholder="Descrição/Observações" class="border p-2 w-full rounded" rows="3"></textarea>
-  <label class="block">
-    Logo Padronizada:
-    <input type="file" id="logo" accept="image/*" class="border p-2 rounded w-full">
-  </label>
-
-  <button type="submit" id="btnGalvanica" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
-</form>
-
-<div id="listaGalvanicas" class="mt-6 space-y-4"></div>
-</section>
-
-</main>
-
-<div id="romaneio" class="hidden bg-white p-10 text-sm font-sans">
-  <div class="flex justify-between items-center border-b pb-4 mb-6">
-    <div>
-      <h1 class="text-xl font-bold tracking-widest gold">ABELLA JOIAS</h1>
-      <p class="text-xs uppercase tracking-widest text-gray-400">Romaneio de Separação e Envio</p>
+    <div id="romaneio-print" class="hidden">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">
+            <h1 style="font-size: 22px; font-weight: bold; margin: 0;">ABELLA JOIAS</h1>
+            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Romaneio de Separação de Pedido</p>
+        </div>
+        <div id="romaneio-info" style="margin-top: 20px; font-size: 13px;"></div>
+        <table id="romaneio-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">SKU</th>
+                    <th style="width: 50%;">Produto</th>
+                    <th style="width: 15%;">Peso (g)</th>
+                    <th style="width: 20%;">Preço</th>
+                </tr>
+            </thead>
+            <tbody id="romaneio-body"></tbody>
+        </table>
+        <div id="romaneio-footer" style="margin-top: 20px; text-align: right; font-weight: bold; border-top: 1px solid #000; padding-top: 10px;"></div>
     </div>
-    <div class="text-xs text-right">
-      <p><strong>Data:</strong> <span id="rData"></span></p>
-      <p><strong>Status:</strong> <span id="rStatus"></span></p>
-    </div>
-  </div>
-  <div class="grid grid-cols-2 gap-6 mb-6">
-    <div>
-      <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
-      <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
-    </div>
-    <div>
-      <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
-      <p><strong>Parcelas:</strong> <span id="rParcelas"></span></p>
-    </div>
-  </div>
-  <table class="w-full border text-xs">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="border p-2">✔</th>
-        <th class="border p-2">Produto</th>
-        <th class="border p-2">SKU</th>
-        <th class="border p-2">Qtd</th>
-        <th class="border p-2">Peso (g)</th>
-        <th class="border p-2">Total (g)</th>
-      </tr>
-    </thead>
-    <tbody id="rItens"></tbody>
-  </table>
-  <div class="grid grid-cols-2 gap-6 mt-6 text-sm">
-    <div>
-      <p><strong>Observações:</strong></p>
-      <div class="border h-20 mt-1"></div>
-    </div>
-    <div class="text-right space-y-1">
-      <p><strong>Peso Total:</strong> <span id="rPeso"></span> g</p>
-      <p><strong>Total Pedido:</strong> R$ <span id="rTotal"></span></p>
-    </div>
-  </div>
-  <div class="grid grid-cols-2 gap-6 mt-12 text-xs">
-    <div>
-      <div class="border-t pt-2">Separação / Conferência</div>
-    </div>
-    <div>
-      <div class="border-t pt-2">Cliente / Recebimento</div>
-    </div>
-  </div>
-</div>
 
-<script>
-/* 🔥 FIREBASE */
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com"
-});
-const db=firebase.database();
-const storage=firebase.storage();
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+            authDomain: "catalogo-abella-joias.firebaseapp.com",
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+            projectId: "catalogo-abella-joias",
+            storageBucket: "catalogo-abella-joias.appspot.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
 
-/* TABS */
-function openTab(id){
- document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
- document.getElementById(id).classList.add('active');
-}
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-/* EMPRESA */
-function salvarEmpresa(){
- db.ref('settings').set({
-   name: empNome.value,
-   whatsapp: empWhatsapp.value,
-   pix: Number(empPix.value||0),
-   parcelas: empParcelas.value
- });
- alert('Empresa salva');
-}
+        // --- GESTÃO DE PRODUTOS (COM EDIÇÃO) ---
+        document.getElementById('formProduto').onsubmit = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('pId').value;
+            const p = {
+                name: document.getElementById('pNome').value,
+                sku: document.getElementById('pSku').value,
+                price: parseFloat(document.getElementById('pPreco').value),
+                weight: parseFloat(document.getElementById('pPeso').value),
+                category: document.getElementById('pCat').value,
+                image: document.getElementById('pImage').value || 'https://via.placeholder.com/300'
+            };
+            if(id) db.ref('products/' + id).update(p);
+            else db.ref('products').push(p);
+            cancelarEdicaoProd();
+        };
 
-db.ref('settings').on('value',s=>{
- if(!s.val())return;
- empNome.value=s.val().name||'';
- empWhatsapp.value=s.val().whatsapp||'';
- empPix.value=s.val().pix||0;
- empParcelas.value=s.val().parcelas||'';
-});
+        function editarProduto(id, p) {
+            document.getElementById('pId').value = id;
+            document.getElementById('pNome').value = p.name;
+            document.getElementById('pSku').value = p.sku;
+            document.getElementById('pPreco').value = p.price;
+            document.getElementById('pPeso').value = p.weight;
+            document.getElementById('pCat').value = p.category;
+            document.getElementById('pImage').value = p.image;
+            document.getElementById('formProdTitle').innerText = "Editando Produto";
+            document.getElementById('btnCancelProd').classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
 
-/* CATEGORIAS */
-function salvarCategoria(){
- if(!catNome.value)return;
- db.ref('categories').push({name:catNome.value, image:''});
- catNome.value='';
-}
+        function cancelarEdicaoProd() {
+            document.getElementById('formProduto').reset();
+            document.getElementById('pId').value = "";
+            document.getElementById('formProdTitle').innerText = "Novo Produto";
+            document.getElementById('btnCancelProd').classList.add('hidden');
+        }
 
-db.ref('categories').on('value',snap=>{
- listaCategorias.innerHTML='';
- pCategoria.innerHTML='<option value="">Selecione</option>';
- categoriasAdmin.innerHTML='';
- snap.forEach(s=>{
-   const cat=s.val();
-   const id=s.key;
+        db.ref('products').on('value', snap => {
+            const grid = document.getElementById('gridProdutos'); grid.innerHTML = '';
+            snap.forEach(s => {
+                const p = s.val();
+                grid.innerHTML += `
+                    <div class="bg-white border rounded-xl overflow-hidden relative group">
+                        <img src="${p.image}" class="w-full aspect-square object-cover">
+                        <div class="p-2 text-[10px]">
+                            <p class="font-bold truncate uppercase">${p.name}</p>
+                            <p class="text-gray-400">SKU: ${p.sku} | <b>${p.weight}g</b></p>
+                            <p class="gold-text font-bold">R$ ${p.price.toFixed(2)}</p>
+                            <div class="mt-2 flex gap-1">
+                                <button onclick='editarProduto("${s.key}", ${JSON.stringify(p)})' class="bg-blue-600 text-white flex-1 py-1 rounded">EDITAR</button>
+                                <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1 rounded">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
 
-   // Lista simples
-   listaCategorias.innerHTML+=`
-   <div class="bg-white border p-3 flex justify-between">
-     ${cat.name}
-     <button onclick="db.ref('categories/${id}').remove()" class="text-red-600 text-xs">Excluir</button>
-   </div>`;
+        // --- GESTÃO DE PEDIDOS (EDITAR TOTAL E ROMANEIO) ---
+        db.ref('orders').on('value', snap => {
+            const list = document.getElementById('listaPedidos'); list.innerHTML = '';
+            snap.forEach(s => {
+                const o = s.val();
+                list.innerHTML += `
+                    <div class="bg-white border rounded-2xl p-4 flex justify-between items-center shadow-sm">
+                        <div class="text-xs">
+                            <p class="font-bold text-sm uppercase">${o.cliente}</p>
+                            <p class="text-gray-400">${o.data}</p>
+                            <p class="gold-text font-bold mt-1">Total: R$ ${parseFloat(o.total).toFixed(2)}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <select onchange="db.ref('orders/${s.key}').update({status:this.value})" class="status-${o.status || 'Novo'} text-[10px] font-bold p-2 rounded-lg border-none">
+                                <option ${o.status=='Novo'?'selected':''}>Novo</option>
+                                <option ${o.status=='Separação'?'selected':''}>Separação</option>
+                                <option ${o.status=='Enviado'?'selected':''}>Enviado</option>
+                                <option ${o.status=='Finalizado'?'selected':''}>Finalizado</option>
+                            </select>
+                            <button onclick='imprimirRomaneio(${JSON.stringify(o)})' class="bg-black text-white px-3 py-2 rounded-lg text-[10px] font-bold">ROMANEIO</button>
+                            <button onclick='editarPedido("${s.key}", ${o.total})' class="bg-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase">Editar</button>
+                            <button onclick="db.ref('orders/${s.key}').remove()" class="text-red-500 text-[10px] p-2">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
 
-   // Opção upload de imagem
-   categoriasAdmin.innerHTML+=`
-   <div class="flex items-center justify-between bg-gray-100 p-3 rounded">
-     <span class="font-semibold">${cat.name}</span>
-     <div class="flex items-center gap-2">
-       <img src="${cat.image||'https://via.placeholder.com/50'}" alt="${cat.name}" class="h-12 w-12 object-cover rounded border">
-       <input type="file" onchange="trocarImagem('${id}', this.files[0])" class="border p-1 rounded">
-     </div>
-   </div>`;
+        function editarPedido(id, totalAtual) {
+            const novo = prompt("Novo valor total para este pedido:", totalAtual);
+            if(novo !== null) db.ref('orders/' + id).update({ total: parseFloat(novo) });
+        }
 
-   pCategoria.innerHTML+=`<option>${cat.name}</option>`;
- });
-});
+        function imprimirRomaneio(o) {
+            document.getElementById('romaneio-info').innerHTML = `
+                <p><strong>Cliente:</strong> ${o.cliente} | <strong>WhatsApp:</strong> ${o.whatsapp || 'N/A'}</p>
+                <p><strong>Data:</strong> ${o.data} | <strong>Pagamento:</strong> ${o.pagamento}</p>
+            `;
+            const tbody = document.getElementById('romaneio-body'); tbody.innerHTML = '';
+            let pesoTotal = 0;
+            o.itens.forEach(i => {
+                const p = i.weight || 0;
+                pesoTotal += p;
+                tbody.innerHTML += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${p.toFixed(2)}g</td><td>R$ ${i.price.toFixed(2)}</td></tr>`;
+            });
+            document.getElementById('romaneio-footer').innerHTML = `
+                <p>Qtd Itens: ${o.itens.length}</p>
+                <p>PESO TOTAL: ${pesoTotal.toFixed(2)}g</p>
+                <p style="font-size: 16px;">VALOR FINAL: R$ ${parseFloat(o.total).toFixed(2)}</p>
+            `;
+            window.print();
+        }
 
-function trocarImagem(id,file){
- const ref=storage.ref('categorias/'+file.name);
- ref.put(file).then(()=>ref.getDownloadURL().then(url=>{
-   db.ref('categories/'+id).update({image:url});
-   alert('Imagem atualizada com sucesso!');
- }));
-}
+        // --- GALVÂNICAS (COM EDIÇÃO) ---
+        document.getElementById('formGalvanica').onsubmit = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('gId').value;
+            const g = {
+                nome: document.getElementById('gNome').value,
+                whats: document.getElementById('gWhats').value,
+                tel: document.getElementById('gTel').value,
+                end: document.getElementById('gEnd').value,
+                desc: document.getElementById('gDesc').value,
+                logo: document.getElementById('gLogo').value || 'https://via.placeholder.com/150'
+            };
+            if(id) db.ref('galvanicas/' + id).update(g);
+            else db.ref('galvanicas').push(g);
+            cancelarEdicaoGalv();
+        };
 
-/* PRODUTOS */
-let editando=null;
-function salvarProduto(){
- const produto={
-  name:pNome.value,
-  sku:pSku.value,
-  price:Number(pPreco.value),
-  weight:Number(pPeso.value),
-  category:pCategoria.value,
-  image:pImagem.value
- };
- if(editando){
-  db.ref('products/'+editando).set(produto);
-  editando=null;
-  btnProduto.textContent='SALVAR PRODUTO';
- }else db.ref('products').push(produto);
- pNome.value=pSku.value=pPreco.value=pPeso.value=pImagem.value='';
- pCategoria.value='';
-}
+        function editarGalvanica(id, g) {
+            document.getElementById('gId').value = id;
+            document.getElementById('gNome').value = g.nome;
+            document.getElementById('gWhats').value = g.whats;
+            document.getElementById('gTel').value = g.tel;
+            document.getElementById('gEnd').value = g.end;
+            document.getElementById('gDesc').value = g.desc;
+            document.getElementById('gLogo').value = g.logo;
+            document.getElementById('formGalvTitle').innerText = "Editando Galvânica";
+            document.getElementById('btnCancelGalv').classList.remove('hidden');
+        }
 
-db.ref('products').on('value',snap=>{
- listaProdutos.innerHTML='';
- snap.forEach(s=>{
-  const p=s.val();
-  listaProdutos.innerHTML+=`
-  <div class="bg-white border p-4">
-   <img src="${p.image}" class="h-40 w-full object-cover">
-   <p class="mt-2 font-semibold">${p.name}</p>
-   <p class="text-xs">${p.category} • ${p.weight}g</p>
-   <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-   <div class="flex gap-2 mt-2 text-xs">
-    <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-    <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
-   </div>
-  </div>`;
- });
-});
+        function cancelarEdicaoGalv() {
+            document.getElementById('formGalvanica').reset();
+            document.getElementById('gId').value = "";
+            document.getElementById('formGalvTitle').innerText = "Gestão de Galvânicas";
+            document.getElementById('btnCancelGalv').classList.add('hidden');
+        }
 
-function editarProduto(id){
- db.ref('products/'+id).once('value').then(s=>{
-  const p=s.val();
-  pNome.value=p.name;
-  pSku.value=p.sku;
-  pPreco.value=p.price;
-  pPeso.value=p.weight;
-  pCategoria.value=p.category;
-  pImagem.value=p.image;
-  editando=id;
-  btnProduto.textContent='ATUALIZAR PRODUTO';
- });
-}
+        db.ref('galvanicas').on('value', snap => {
+            const list = document.getElementById('listaGalvAdmin'); list.innerHTML = '';
+            snap.forEach(s => {
+                const g = s.val();
+                list.innerHTML += `
+                    <div class="bg-white border rounded-xl p-4 flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-4 text-xs">
+                            <img src="${g.logo}" class="w-12 h-12 rounded-full object-cover border">
+                            <div>
+                                <p class="font-bold">${g.nome}</p>
+                                <p class="text-gray-400">${g.end}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick='editarGalvanica("${s.key}", ${JSON.stringify(g)})' class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-bold">EDITAR</button>
+                            <button onclick="db.ref('galvanicas/${s.key}').remove()" class="text-red-500 font-bold text-[10px]">✕ REMOVER</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
 
-/* PEDIDOS */
-db.ref('orders').on('value',snap=>{
- listaPedidos.innerHTML='';
- snap.forEach(s=>{
-  const o=s.val(),id=s.key;
-  listaPedidos.innerHTML+=`
-  <div class="bg-white border p-4 status-${o.status}">
-   <p class="font-semibold">${o.cliente}</p>
-   <p class="text-xs">${o.data}</p>
-   <p>${o.pagamento} • ${o.peso}g</p>
-   <strong>R$ ${o.total.toFixed(2)}</strong>
-   <div class="flex gap-2 mt-2 text-xs">
-    ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
-     <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
-    `).join('')}
-    <button onclick="imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})" class="bg-black text-white px-2 py-1">Romaneio</button>
-    <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">Excluir</button>
-   </div>
-  </div>`;
- });
-});
+        // --- CATEGORIAS & AJUSTES ---
+        async function salvarCategoria() {
+            const nome = document.getElementById('catNome').value;
+            const file = document.getElementById('catFile').files[0];
+            if(!nome || !file) return alert("Preencha nome e selecione imagem");
+            const ref = storage.ref(`cat/${file.name}`);
+            await ref.put(file);
+            const url = await ref.getDownloadURL();
+            db.ref('categories').push({ name: nome, image: url });
+            document.getElementById('catNome').value = "";
+        }
 
-/* ROMANEIO */
-function imprimir(o){
-  rCliente.textContent = o.cliente;
-  rWhats.textContent = o.whatsapp;
-  rPag.textContent = o.pagamento;
-  rParcelas.textContent = o.parcelas || '-';
-  rPeso.textContent = o.peso;
-  rTotal.textContent = o.total.toFixed(2);
-  rData.textContent = o.data;
-  rStatus.textContent = o.status;
-  rItens.innerHTML='';
-  o.itens.forEach(i=>{
-    rItens.innerHTML+=`
-      <tr>
-        <td class="border p-2"></td>
-        <td class="border p-2">${i.name}</td>
-        <td class="border p-2">${i.sku}</td>
-        <td class="border p-2">${i.qty}</td>
-        <td class="border p-2">${i.weight}</td>
-        <td class="border p-2">${(i.weight*i.qty).toFixed(2)}</td>
-      </tr>`;
-  });
-  romaneio.classList.remove('hidden');
-  window.print();
-  romaneio.classList.add('hidden');
-}
+        db.ref('categories').on('value', snap => {
+            const list = document.getElementById('listaCategorias');
+            const select = document.getElementById('pCat');
+            list.innerHTML = ''; select.innerHTML = '<option value="">Categoria...</option>';
+            snap.forEach(s => {
+                list.innerHTML += `<div class="bg-white border p-2 rounded-xl text-center"><img src="${s.val().image}" class="h-16 w-full object-cover rounded mb-1 text-[8px] uppercase font-bold">${s.val().name}</div>`;
+                select.innerHTML += `<option value="${s.key}">${s.val().name}</option>`;
+            });
+        });
 
-/* ===== GALVÂNICAS (COM AJUSTE DE EDIÇÃO) ===== */
-const formGalvanica=document.getElementById('formGalvanica');
-const listaGalvanicas=document.getElementById('listaGalvanicas');
-let editandoGalv = null; // Controle de edição
+        function salvarConfig() {
+            db.ref('settings').update({
+                phone: document.getElementById('confPhone').value,
+                pix: parseInt(document.getElementById('confPix').value),
+                installments: parseInt(document.getElementById('confParc').value)
+            });
+            alert("Sistema Atualizado!");
+        }
 
-formGalvanica.addEventListener('submit', e=>{
- e.preventDefault();
- const nome=document.getElementById('nome').value;
- const endereco=document.getElementById('endereco').value;
- const telefone=document.getElementById('telefone').value;
- const whatsapp=document.getElementById('whatsapp').value;
- const descricao=document.getElementById('descricao').value;
- const logoFile=document.getElementById('logo').files[0];
+        db.ref('settings').on('value', s => {
+            const c = s.val(); if(c){
+                document.getElementById('confPhone').value = c.phone || "";
+                document.getElementById('confPix').value = c.pix || 0;
+                document.getElementById('confParc').value = c.installments || 1;
+            }
+        });
 
- if(logoFile){
-   const logoRef=storage.ref('galvanicas/'+logoFile.name);
-   logoRef.put(logoFile).then(()=>logoRef.getDownloadURL().then(url=>{
-     processarSalvamentoGalvanica(nome,endereco,telefone,whatsapp,descricao,url);
-   }));
- } else {
-   // Se estiver editando e não subiu nova logo, mantém a antiga
-   if (editandoGalv) {
-     db.ref('galvanicas/' + editandoGalv).once('value').then(s => {
-       processarSalvamentoGalvanica(nome, endereco, telefone, whatsapp, descricao, s.val().logo || '');
-     });
-   } else {
-     processarSalvamentoGalvanica(nome, endereco, telefone, whatsapp, descricao, '');
-   }
- }
-});
-
-function processarSalvamentoGalvanica(nome,endereco,telefone,whatsapp,descricao,logo){
- const dados = {nome,endereco,telefone,whatsapp,descricao,logo};
- 
- if(editandoGalv){
-  db.ref('galvanicas/'+editandoGalv).update(dados);
-  editandoGalv = null;
-  document.getElementById('btnGalvanica').textContent = 'Salvar Galvânica';
- } else {
-  db.ref('galvanicas').push(dados);
- }
- 
- alert('Dados da galvânica salvos!');
- formGalvanica.reset();
-}
-
-function editarGalvanica(id) {
- db.ref('galvanicas/' + id).once('value').then(s => {
-  const g = s.val();
-  document.getElementById('nome').value = g.nome;
-  document.getElementById('endereco').value = g.endereco;
-  document.getElementById('telefone').value = g.telefone;
-  document.getElementById('whatsapp').value = g.whatsapp;
-  document.getElementById('descricao').value = g.descricao;
-  
-  editandoGalv = id;
-  document.getElementById('btnGalvanica').textContent = 'ATUALIZAR GALVÂNICA';
-  document.getElementById('galvanicas').scrollIntoView({ behavior: 'smooth' });
- });
-}
-
-/* Mostrar lista de galvanicas com botão Editar */
-db.ref('galvanicas').on('value',snap=>{
- listaGalvanicas.innerHTML='';
- snap.forEach(s=>{
-   const g=s.val();
-   const id=s.key;
-   listaGalvanicas.innerHTML+=`
-   <div class="bg-white border p-4 flex justify-between items-center rounded shadow-sm">
-     <div class="flex items-center gap-4">
-       <img src="${g.logo||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border">
-       <div>
-         <p class="font-semibold">${g.nome}</p>
-         <p class="text-xs text-gray-500">${g.endereco}</p>
-         <p class="text-xs">${g.telefone} • ${g.whatsapp}</p>
-       </div>
-     </div>
-     <div class="flex gap-2">
-       <button onclick="editarGalvanica('${id}')" class="bg-blue-500 text-white px-3 py-1 text-xs rounded">Editar</button>
-       <button onclick="db.ref('galvanicas/${id}').remove()" class="text-red-600 border border-red-600 px-3 py-1 text-xs rounded hover:bg-red-50">Excluir</button>
-     </div>
-   </div>`;
- });
-});
-</script>
-
+    </script>
 </body>
 </html>
