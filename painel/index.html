@@ -51,42 +51,51 @@ body{background:#F8F6F2}
 <!-- EMPRESA -->
 <section id="empresa" class="tab active space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
   <input id="empNome" placeholder="Nome da empresa" class="border p-3">
   <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
   <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas cartão (ex: 3x sem juros)" class="border p-3">
+  <input id="empParcelas" placeholder="Parcelas cartão (ex: 3x sem acréscimo)" class="border p-3">
 </div>
+
 <button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR EMPRESA</button>
 </section>
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="tab space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
+
 <div class="bg-white border p-6 flex gap-4">
   <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
   <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">ADICIONAR</button>
 </div>
+
 <div id="listaCategorias" class="space-y-2"></div>
 
-<h3 class="mt-6 font-semibold">Imagem da categoria (URL)</h3>
+<h3 class="mt-6 font-semibold">Trocar imagem das categorias</h3>
 <div id="categoriasAdmin" class="space-y-4"></div>
 </section>
 
 <!-- PRODUTOS -->
 <section id="produtos" class="tab space-y-8">
 <h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+
 <div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
   <input id="pNome" placeholder="Nome do produto" class="border p-3">
   <input id="pSku" placeholder="SKU" class="border p-3">
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
   <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
+
   <select id="pCategoria" class="border p-3">
     <option value="">Selecione a categoria</option>
   </select>
+
   <input id="pImagem" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
+
 <button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
+
 <div id="listaProdutos" class="grid sm:grid-cols-2 gap-6 mt-6"></div>
 </section>
 
@@ -100,14 +109,17 @@ body{background:#F8F6F2}
 <section id="galvanicas" class="tab space-y-6">
 <h2 class="font-serif text-2xl gold border-b pb-2">Cadastrar / Editar Galvânicas</h2>
 <form id="formGalvanica" class="space-y-4">
+
   <input type="text" id="nome" placeholder="Nome da Galvânica" class="border p-2 w-full rounded" required>
   <input type="text" id="endereco" placeholder="Endereço" class="border p-2 w-full rounded" required>
   <input type="text" id="telefone" placeholder="Telefone" class="border p-2 w-full rounded" required>
   <input type="url" id="whatsapp" placeholder="Link WhatsApp" class="border p-2 w-full rounded" required>
   <textarea id="descricao" placeholder="Descrição/Observações" class="border p-2 w-full rounded" rows="3"></textarea>
-  <input type="url" id="logo" placeholder="URL da logo" class="border p-2 w-full rounded">
+  <input type="url" id="logoURL" placeholder="URL da Logo" class="border p-2 w-full rounded">
+
   <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
 </form>
+
 <div id="listaGalvanicas" class="mt-6 space-y-4"></div>
 </section>
 
@@ -194,21 +206,23 @@ function salvarEmpresa(){
  });
  alert('Empresa salva');
 }
-db.ref('settings').on('value',s=>{
- if(!s.val())return;
- empNome.value=s.val().name||'';
- empWhatsapp.value=s.val().whatsapp||'';
- empPix.value=s.val().pix||0;
- empParcelas.value=s.val().parcelas||'';
+
+db.ref('settings').on('value', s=>{
+ if(!s.val()) return;
+ empNome.value = s.val().name || '';
+ empWhatsapp.value = s.val().whatsapp || '';
+ empPix.value = s.val().pix || 0;
+ empParcelas.value = s.val().parcelas || '';
 });
 
 /* CATEGORIAS */
 function salvarCategoria(){
- if(!catNome.value)return;
+ if(!catNome.value) return;
  db.ref('categories').push({name:catNome.value, image:''});
  catNome.value='';
 }
-db.ref('categories').on('value',snap=>{
+
+db.ref('categories').on('value', snap=>{
  listaCategorias.innerHTML='';
  pCategoria.innerHTML='<option value="">Selecione</option>';
  categoriasAdmin.innerHTML='';
@@ -225,20 +239,12 @@ db.ref('categories').on('value',snap=>{
    categoriasAdmin.innerHTML+=`
    <div class="flex items-center justify-between bg-gray-100 p-3 rounded">
      <span class="font-semibold">${cat.name}</span>
-     <div class="flex items-center gap-2">
-       <img src="${cat.image||'https://via.placeholder.com/50'}" alt="${cat.name}" class="h-12 w-12 object-cover rounded border">
-       <input type="url" placeholder="URL da imagem" onchange="atualizarImagemCategoria('${id}', this.value)" class="border p-1 rounded">
-     </div>
+     <img src="${cat.image||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border">
    </div>`;
 
    pCategoria.innerHTML+=`<option>${cat.name}</option>`;
  });
 });
-
-function atualizarImagemCategoria(id, url){
- db.ref('categories/'+id).update({image: url});
- alert('Imagem da categoria atualizada!');
-}
 
 /* PRODUTOS */
 let editando=null;
@@ -260,7 +266,7 @@ function salvarProduto(){
  pCategoria.value='';
 }
 
-db.ref('products').on('value',snap=>{
+db.ref('products').on('value', snap=>{
  listaProdutos.innerHTML='';
  snap.forEach(s=>{
   const p=s.val();
@@ -293,10 +299,10 @@ function editarProduto(id){
 }
 
 /* PEDIDOS */
-db.ref('orders').on('value',snap=>{
+db.ref('orders').on('value', snap=>{
  listaPedidos.innerHTML='';
  snap.forEach(s=>{
-  const o=s.val(),id=s.key;
+  const o=s.val(), id=s.key;
   listaPedidos.innerHTML+=`
   <div class="bg-white border p-4 status-${o.status}">
    <p class="font-semibold">${o.cliente}</p>
@@ -319,11 +325,13 @@ function imprimir(o){
   rCliente.textContent = o.cliente;
   rWhats.textContent = o.whatsapp;
   rPag.textContent = o.pagamento;
-  rParcelas.textContent = o.parcelas || '-';
+  // substitui "sem juros" por "sem acréscimo"
+  rParcelas.textContent = (o.parcelas || '-').replace('sem juros','sem acréscimo');
   rPeso.textContent = o.peso;
   rTotal.textContent = o.total.toFixed(2);
   rData.textContent = o.data;
   rStatus.textContent = o.status;
+
   rItens.innerHTML='';
   o.itens.forEach(i=>{
     rItens.innerHTML+=`
@@ -336,6 +344,7 @@ function imprimir(o){
         <td class="border p-2">${(i.weight*i.qty).toFixed(2)}</td>
       </tr>`;
   });
+
   romaneio.classList.remove('hidden');
   window.print();
   romaneio.classList.add('hidden');
@@ -344,6 +353,7 @@ function imprimir(o){
 /* GALVÂNICAS */
 const formGalvanica=document.getElementById('formGalvanica');
 const listaGalvanicas=document.getElementById('listaGalvanicas');
+const logoURL=document.getElementById('logoURL');
 
 formGalvanica.addEventListener('submit', e=>{
  e.preventDefault();
@@ -352,7 +362,8 @@ formGalvanica.addEventListener('submit', e=>{
  const telefone=document.getElementById('telefone').value;
  const whatsapp=document.getElementById('whatsapp').value;
  const descricao=document.getElementById('descricao').value;
- const logo=document.getElementById('logo').value; // URL direto
+ const logo=logoURL.value.trim();
+
  salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,logo);
 });
 
@@ -361,18 +372,32 @@ function salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,logo){
  newGalv.set({nome,endereco,telefone,whatsapp,descricao,logo});
  alert('Galvânica cadastrada com sucesso!');
  formGalvanica.reset();
+ logoURL.value='';
 }
 
-/* Mostrar lista de galvanicas */
-db.ref('galvanicas').on('value',snap=>{
+// preview instantâneo enquanto digita a URL da galvanica
+logoURL.addEventListener('input', ()=>{
+ const preview = document.getElementById('previewLogo');
+ if(!preview){
+   const div=document.createElement('div');
+   div.id='previewLogo';
+   div.className='mt-2';
+   logoURL.parentNode.appendChild(div);
+ }
+ document.getElementById('previewLogo').innerHTML = logoURL.value ? `<img src="${logoURL.value}" class="h-12 w-12 object-cover rounded border">` : '';
+});
+
+// mostrar lista de galvanicas
+db.ref('galvanicas').on('value', snap=>{
  listaGalvanicas.innerHTML='';
  snap.forEach(s=>{
    const g=s.val();
    const id=s.key;
+   const logoSrc = g.logo && g.logo.trim()!=='' ? g.logo : 'https://via.placeholder.com/50';
    listaGalvanicas.innerHTML+=`
    <div class="bg-white border p-4 flex justify-between items-center rounded">
      <div class="flex items-center gap-4">
-       <img src="${g.logo||'https://via.placeholder.com/50'}" class="h-12 w-12 object-cover rounded border">
+       <img src="${logoSrc}" class="h-12 w-12 object-cover rounded border">
        <div>
          <p class="font-semibold">${g.nome}</p>
          <p class="text-xs">${g.endereco}</p>
