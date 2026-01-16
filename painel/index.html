@@ -11,165 +11,100 @@
 
 <style>
 body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-.tab{display:none}
-.tab.active{display:block}
-
-.status-Novo{background:#FEF3C7;color:#92400E}
-.status-Emseparação{background:#E0F2FE;color:#075985}
-.status-Enviado{background:#EDE9FE;color:#5B21B6}
-.status-Finalizado{background:#ECFDF5;color:#065F46}
+.font-serif{font-family:'Cinzel',serif}
+.status-Novo{background:#FEF3C7}
+.status-Separação{background:#E0F2FE}
+.status-Enviado{background:#EDE9FE}
+.status-Finalizado{background:#ECFDF5}
 
 @media print{
-  body *{visibility:hidden}
-  #printArea, #printArea *{visibility:visible}
-  #printArea{
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-  }
+ body *{visibility:hidden}
+ #romaneio, #romaneio *{visibility:visible}
+ #romaneio{position:absolute;top:0;left:0;width:100%}
 }
 </style>
 </head>
 
-<body>
+<body class="p-8 max-w-5xl mx-auto">
 
-<header class="bg-white border-b px-10 py-6 flex justify-between items-center">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
-  </div>
-</header>
+<h1 class="font-serif gold text-2xl mb-6">Pedidos</h1>
 
-<main class="max-w-6xl mx-auto p-8 space-y-12">
+<div id="listaPedidos" class="space-y-4"></div>
 
-<section class="tab active space-y-6">
-  <h2 class="font-serif text-2xl gold border-b pb-2">Pedidos / Relatório de Vendas</h2>
-  <div id="listaPedidos" class="space-y-4"></div>
-</section>
+<!-- ROMANEIO -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm">
+  <h2 class="font-serif text-xl gold mb-4">Romaneio</h2>
+  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+  <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
+  <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
+  <p><strong>Peso total:</strong> <span id="rPeso"></span>g</p>
 
-<!-- ÁREA DE IMPRESSÃO -->
-<div id="printArea" class="hidden bg-white p-6 text-sm">
-  <h2 id="printTitulo" class="font-serif text-xl gold mb-4"></h2>
-
-  <p><strong>Cliente:</strong> <span id="pCliente"></span></p>
-  <p><strong>Data:</strong> <span id="pData"></span></p>
-  <p><strong>Pedido:</strong> <span id="pId"></span></p>
-
-  <table class="w-full border mt-4 text-xs">
+  <table class="w-full border mt-6">
     <thead>
-      <tr class="border-b">
-        <th class="p-2">Produto</th>
-        <th class="p-2">SKU</th>
-        <th class="p-2">Qtd</th>
-        <th class="p-2">Peso</th>
-        <th class="p-2">Valor</th>
+      <tr>
+        <th class="border p-2">Produto</th>
+        <th class="border p-2">Qtd</th>
+        <th class="border p-2">Valor</th>
       </tr>
     </thead>
-    <tbody id="pItens"></tbody>
+    <tbody id="rItens"></tbody>
   </table>
 
-  <p class="mt-4"><strong>Peso Total:</strong> <span id="pPeso"></span> g</p>
-  <p><strong>Total:</strong> R$ <span id="pTotal"></span></p>
+  <p class="mt-6 text-right font-bold">
+    Total: R$ <span id="rTotal"></span>
+  </p>
 </div>
 
-</main>
-
 <script>
-/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
+const db=firebase.database();
 
-const db = firebase.database();
-const listaPedidos = document.getElementById('listaPedidos');
-
-/* PEDIDOS */
-db.ref('orders').on('value', snap=>{
+db.ref('orders').on('value',snap=>{
   listaPedidos.innerHTML='';
-
   snap.forEach(s=>{
-    const o=s.val();
-    const id=s.key;
-    const status=o.status||'Novo';
-
-    let pesoTotal=0;
-    o.itens.forEach(i=>{
-      pesoTotal += (i.weight||0)*i.qty;
-    });
-
+    const o=s.val(),id=s.key;
     listaPedidos.innerHTML+=`
-      <div class="bg-white border rounded p-5 space-y-3">
-        <div class="flex justify-between">
-          <div>
-            <p class="font-semibold">${o.cliente}</p>
-            <p class="text-xs text-gray-400">${o.data}</p>
-          </div>
-          <span class="px-3 py-1 text-xs rounded status-${status.replace(' ','')}">${status}</span>
-        </div>
+    <div class="bg-white border p-4 status-${o.status}">
+      <p class="font-semibold">${o.cliente}</p>
+      <p class="text-xs">${o.data}</p>
+      <p>${o.pagamento} • ${o.peso}g</p>
+      <strong>R$ ${o.total.toFixed(2)}</strong>
 
-        <p class="text-sm">Total: <strong>R$ ${o.total.toFixed(2)}</strong></p>
-        <p class="text-sm">Peso: <strong>${pesoTotal}g</strong></p>
-
-        <div class="flex flex-wrap gap-2 text-xs">
-          <button onclick="imprimirRomaneio('${id}')" class="border px-3 py-1">Romaneio</button>
-          <button onclick="imprimirEtiqueta('${id}')" class="border px-3 py-1">Etiqueta</button>
-          ${['Novo','Em separação','Enviado','Finalizado'].map(st=>`
-            <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-3 py-1">${st}</button>
-          `).join('')}
-        </div>
+      <div class="flex gap-2 mt-2 text-xs">
+        ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
+          <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
+        `).join('')}
+        <button onclick="imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})" class="bg-black text-white px-2 py-1">Romaneio</button>
+        <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">Excluir</button>
       </div>
-    `;
+    </div>`;
   });
 });
 
-/* IMPRESSÃO */
-function montarImpressao(o,id,titulo){
-  document.getElementById('printTitulo').textContent=titulo;
-  document.getElementById('pCliente').textContent=o.cliente;
-  document.getElementById('pData').textContent=o.data;
-  document.getElementById('pId').textContent=id;
-
-  let itens='';
-  let peso=0;
-
+function imprimir(o){
+  rCliente.textContent=o.cliente;
+  rWhats.textContent=o.whatsapp;
+  rPag.textContent=o.pagamento;
+  rPeso.textContent=o.peso;
+  rTotal.textContent=o.total.toFixed(2);
+  rItens.innerHTML='';
   o.itens.forEach(i=>{
-    itens+=`
+    rItens.innerHTML+=`
       <tr>
-        <td class="p-2">${i.name}</td>
-        <td class="p-2">${i.sku}</td>
-        <td class="p-2">${i.qty}</td>
-        <td class="p-2">${i.weight||0}g</td>
-        <td class="p-2">R$ ${i.price.toFixed(2)}</td>
-      </tr>
-    `;
-    peso+=(i.weight||0)*i.qty;
+        <td class="border p-2">${i.name}</td>
+        <td class="border p-2">${i.qty}</td>
+        <td class="border p-2">R$ ${(i.price*i.qty).toFixed(2)}</td>
+      </tr>`;
   });
-
-  document.getElementById('pItens').innerHTML=itens;
-  document.getElementById('pPeso').textContent=peso;
-  document.getElementById('pTotal').textContent=o.total.toFixed(2);
-
-  document.getElementById('printArea').classList.remove('hidden');
+  romaneio.classList.remove('hidden');
   window.print();
-  document.getElementById('printArea').classList.add('hidden');
-}
-
-function imprimirRomaneio(id){
-  db.ref('orders/'+id).once('value').then(s=>{
-    montarImpressao(s.val(),id,'ROMANEIO – LOJA');
-  });
-}
-
-function imprimirEtiqueta(id){
-  db.ref('orders/'+id).once('value').then(s=>{
-    montarImpressao(s.val(),id,'ETIQUETA – CLIENTE');
-  });
+  romaneio.classList.add('hidden');
 }
 </script>
 
