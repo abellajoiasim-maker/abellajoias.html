@@ -3,229 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Admin Luxuoso | Abella Joias</title>
+<title>Painel Admin | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
-body{font-family:Poppins,sans-serif;background:#fdfbf7;margin:0;}
-.sidebar{width:240px;background:#1a1a1a;color:white;min-height:100vh;position:fixed;}
-.sidebar a{display:block;padding:1rem;font-semibold;text-sm;color:white;transition:0.2s;}
-.sidebar a:hover{background:#d4af37;color:black;}
-.main{margin-left:240px;padding:2rem;}
-h1,h2{font-family:'Cinzel',serif;}
-.table{width:100%;border-collapse:collapse;margin-top:10px;}
-.table th,.table td{border:1px solid #eee;padding:0.5rem;text-align:left;}
-.btn{padding:0.3rem 0.5rem;border-radius:0.3rem;text-xs;font-bold;cursor:pointer;transition:0.2s;}
-.btn-edit{background:#1d4ed8;color:white;}
-.btn-delete{background:#dc2626;color:white;}
-.btn-status{background:#d4af37;color:black;}
-.btn-whats{background:#25d366;color:white;}
-.btn:hover{opacity:0.8;}
-.card{border-radius:12px;border:2px solid #d4af37;padding:10px;margin-bottom:10px;box-shadow:0 4px 12px rgba(212,175,55,0.25);}
+body{font-family:'Poppins',sans-serif;background:#fcfaf7;margin:0;}
+header{background:white;padding:1.5rem;box-shadow:0 2px 6px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;}
+h1{color:#b8860b;font-weight:800;font-size:1.75rem;}
+nav button{margin-left:0.5rem;}
+button{cursor:pointer;transition:0.2s;}
+button:hover{opacity:0.85;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:1rem;}
+@media(max-width:768px){.grid{grid-template-columns:1fr;}}
+.card{background:white;border:1px solid #eee;border-radius:16px;padding:1rem;box-shadow:0 4px 20px rgba(212,175,55,0.15);}
+.card img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin-bottom:0.5rem;}
+.card button{margin-top:0.5rem;padding:0.4rem 0.6rem;border-radius:9999px;font-weight:600;font-size:0.75rem;}
+.section{display:none;}
+.section.active{display:block;}
 </style>
 </head>
 <body>
-<div class="sidebar">
-  <h1 class="text-xl font-bold text-center py-4 border-b border-gray-600">ABELLA ADMIN</h1>
-  <a href="#pedidos">Pedidos</a>
-  <a href="#produtos">Produtos</a>
-  <a href="#categorias">Categorias</a>
-  <a href="#galvanicas">Galvânicas</a>
-  <a href="#ajustes">Ajustes</a>
-</div>
 
-<div class="main">
-  <h2 class="text-2xl font-bold mb-6" id="dashboard-title">Bem-vindo ao Painel Admin Luxuoso</h2>
+<header>
+  <h1>Admin <span class="text-black">Abella Joias</span></h1>
+  <nav>
+    <button class="btn btn-gold" onclick="showSection('pedidos')">Pedidos</button>
+    <button class="btn btn-gold" onclick="showSection('produtos')">Produtos</button>
+    <button class="btn btn-gold" onclick="showSection('categorias')">Categorias</button>
+    <button class="btn btn-gold" onclick="showSection('galvanicas')">Galvânicas</button>
+    <button class="btn btn-gold" onclick="showSection('ajustes')">Ajustes</button>
+  </nav>
+</header>
 
-  <!-- Pedidos -->
-  <section id="pedidos">
-    <h2 class="text-xl font-bold mb-4">Pedidos</h2>
-    <table class="table">
-      <thead>
-        <tr><th>Cliente</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr>
-      </thead>
-      <tbody id="listaPedidos"></tbody>
-    </table>
-  </section>
+<main class="max-w-7xl mx-auto p-6">
 
-  <!-- Produtos -->
-  <section id="produtos" class="mt-8">
-    <h2 class="text-xl font-bold mb-4">Produtos</h2>
-    <form id="formProduto" class="mb-4">
-      <input type="text" id="nomeProduto" placeholder="Nome do produto" class="border p-1">
-      <input type="text" id="skuProduto" placeholder="SKU" class="border p-1">
-      <input type="number" id="precoProduto" placeholder="Preço" class="border p-1">
-      <select id="categoriaProduto" class="border p-1"></select>
-      <button type="submit" class="btn btn-edit">Adicionar Produto</button>
-    </form>
-    <div id="listaProdutos"></div>
-  </section>
+<!-- Pedidos -->
+<section id="pedidos" class="section active">
+<h2 class="text-xl font-bold mb-4">Pedidos</h2>
+<button onclick="gerarRomaneio()" class="btn btn-black mb-4">Gerar Romaneio / Imprimir</button>
+<div id="listaPedidos"></div>
+</section>
 
-  <!-- Categorias -->
-  <section id="categorias" class="mt-8">
-    <h2 class="text-xl font-bold mb-4">Categorias</h2>
-    <form id="formCategoria" class="mb-4">
-      <input type="text" id="nomeCategoria" placeholder="Nome da categoria" class="border p-1">
-      <button type="submit" class="btn btn-edit">Adicionar Categoria</button>
-    </form>
-    <div id="listaCategorias"></div>
-  </section>
+<!-- Produtos -->
+<section id="produtos" class="section">
+<h2 class="text-xl font-bold mb-4">Produtos</h2>
+<div class="grid" id="gridProdutos"></div>
+</section>
 
-  <!-- Galvanicas -->
-  <section id="galvanicas" class="mt-8">
-    <h2 class="text-xl font-bold mb-4">Galvânicas</h2>
-    <form id="formGalvanica" class="mb-4">
-      <input type="text" id="nomeGalvanica" placeholder="Nome da galvanica" class="border p-1">
-      <input type="text" id="enderecoGalvanica" placeholder="Endereço" class="border p-1">
-      <input type="text" id="telefoneGalvanica" placeholder="Telefone" class="border p-1">
-      <input type="text" id="whatsappGalvanica" placeholder="WhatsApp" class="border p-1">
-      <button type="submit" class="btn btn-edit">Adicionar Galvânica</button>
-    </form>
-    <div id="listaGalvanicas"></div>
-  </section>
+<!-- Categorias -->
+<section id="categorias" class="section">
+<h2 class="text-xl font-bold mb-4">Categorias</h2>
+<div class="grid" id="gridCategorias"></div>
+</section>
 
-  <!-- Ajustes -->
-  <section id="ajustes" class="mt-8">
-    <h2 class="text-xl font-bold mb-4">Ajustes da Loja</h2>
-    <form id="formAjustes">
-      <input type="text" id="telefoneAjuste" placeholder="Telefone WhatsApp da Loja" class="border p-1 mb-2">
-      <input type="number" id="descontoPIX" placeholder="Desconto PIX (%)" class="border p-1 mb-2">
-      <input type="number" id="parcelasCartao" placeholder="Parcelas Cartão" class="border p-1 mb-2">
-      <button type="submit" class="btn btn-edit">Salvar Ajustes</button>
-    </form>
-  </section>
-</div>
+<!-- Galvanicas -->
+<section id="galvanicas" class="section">
+<h2 class="text-xl font-bold mb-4">Galvânicas</h2>
+<div class="grid" id="gridGalvanicas"></div>
+</section>
+
+<!-- Ajustes -->
+<section id="ajustes" class="section">
+<h2 class="text-xl font-bold mb-4">Ajustes</h2>
+<p>Configurações futuras...</p>
+</section>
+
+</main>
 
 <script>
-  // Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    authDomain: "catalogo-abella-joias.firebaseapp.com",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-    projectId: "catalogo-abella-joias",
-    storageBucket: "catalogo-abella-joias.firebasestorage.app",
-    messagingSenderId: "727568435294",
-    appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.firebasestorage.app",
+  messagingSenderId: "727568435294",
+  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-  // Listagem de Pedidos
-  db.ref('orders').on('value', snap => {
-    const tbody = document.getElementById('listaPedidos');
-    tbody.innerHTML='';
-    snap.forEach(s=>{
-      const p = s.val();
-      let itensText='';
-      if(p.itens) p.itens.forEach(i=> itensText+=`${i.qty}x ${i.name} (${i.sku})\n`);
-      tbody.innerHTML+=`
-      <tr>
-        <td>${p.cliente}</td>
-        <td><pre>${itensText}</pre></td>
-        <td>R$ ${Number(p.total).toFixed(2)}</td>
-        <td>${p.pagamento}</td>
-        <td><input type="text" value="${p.status}" onchange="db.ref('orders/${s.key}').update({status:this.value})" class="border p-1 text-xs"></td>
-        <td>
-          <button class="btn btn-whats" onclick="window.open('https://wa.me/${p.whatsapp}?text=🛍️ Pedido Abella Joias%0A%0A${encodeURIComponent(itensText)}%0A💰 R$ ${Number(p.total).toFixed(2)}')">WhatsApp</button>
-          <button class="btn btn-delete" onclick="db.ref('orders/${s.key}').remove()">Excluir</button>
-        </td>
-      </tr>`;
-    });
-  });
+// Toggle Sections
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-  // Categorias
-  const categoriaSelect = document.getElementById('categoriaProduto');
-  db.ref('categories').on('value', snap=>{
-    document.getElementById('listaCategorias').innerHTML='';
-    categoriaSelect.innerHTML='<option value="">Selecione</option>';
-    snap.forEach(s=>{
-      const c = s.val();
-      categoriaSelect.innerHTML+=`<option value="${s.key}">${c.name}</option>`;
-      document.getElementById('listaCategorias').innerHTML+=`<div class="card"><b>${c.name}</b>
-        <button class="btn btn-edit" onclick="editarCategoria('${s.key}','${c.name}')">Editar</button>
-        <button class="btn btn-delete" onclick="db.ref('categories/${s.key}').remove()">Excluir</button>
-      </div>`;
-    });
-  });
-
-  // Produtos
-  db.ref('products').on('value', snap=>{
-    const div = document.getElementById('listaProdutos');
+// LISTA PEDIDOS
+function carregarPedidos(){
+  const div=document.getElementById('listaPedidos');
+  div.innerHTML='';
+  db.ref('orders').on('value',snap=>{
     div.innerHTML='';
     snap.forEach(s=>{
-      const p = s.val();
-      div.innerHTML+=`<div class="card">
-        <b>${p.name}</b> | SKU: ${p.sku} | R$ ${p.preco}
-        <br>Categoria: ${p.categoria}
-        <br><button class="btn btn-edit" onclick="editarProduto('${s.key}','${p.name}','${p.sku}',${p.preco},'${p.categoria}')">Editar</button>
-        <button class="btn btn-delete" onclick="db.ref('products/${s.key}').remove()">Excluir</button>
-      </div>`;
+      const o=s.val();
+      div.innerHTML+=`
+        <div class="card">
+          <div><strong>Cliente:</strong> ${o.cliente} | <strong>WhatsApp:</strong> ${o.whatsapp}</div>
+          <div><strong>Total:</strong> R$ ${o.total.toFixed(2)} | <strong>Status:</strong> ${o.status}</div>
+          <button onclick="removerPedido('${s.key}')" class="btn btn-gold">Excluir</button>
+        </div>
+      `;
     });
   });
+}
+function removerPedido(key){if(confirm('Excluir pedido?')) db.ref('orders/'+key).remove();}
 
-  // Galvanicas
-  db.ref('galvanicas').on('value', snap=>{
-    const div = document.getElementById('listaGalvanicas');
+// ROMANEIO
+function gerarRomaneio(){
+  db.ref('orders').once('value').then(snap=>{
+    let html=`<html><head><title>Romaneio de Pedidos</title>
+      <style>body{font-family:Poppins,sans-serif;}h1{text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;}td,th{border:1px solid #222;padding:8px;text-align:left;}th{background:#d4af37;color:white;}</style>
+      </head><body><h1>Romaneio de Pedidos</h1><table><tr><th>Cliente</th><th>WhatsApp</th><th>Total</th></tr>`;
+    snap.forEach(s=>{const o=s.val(); html+=`<tr><td>${o.cliente}</td><td>${o.whatsapp}</td><td>R$ ${o.total.toFixed(2)}</td></tr>`});
+    html+=`</table></body></html>`;
+    let win=window.open(); win.document.write(html); win.document.close(); win.print();
+  });
+}
+
+// LISTA PRODUTOS
+function carregarProdutos(){
+  const div=document.getElementById('gridProdutos');
+  db.ref('products').on('value',snap=>{
     div.innerHTML='';
     snap.forEach(s=>{
-      const g = s.val();
-      div.innerHTML+=`<div class="card">
-        <b>${g.name}</b><br>${g.endereco}<br>${g.telefone}
-        <br><a href="https://wa.me/${g.whatsapp}" target="_blank" class="btn btn-whats">WhatsApp</a>
-        <button class="btn btn-edit" onclick="editarGalvanica('${s.key}','${g.name}','${g.endereco}','${g.telefone}','${g.whatsapp}')">Editar</button>
-        <button class="btn btn-delete" onclick="db.ref('galvanicas/${s.key}').remove()">Excluir</button>
-      </div>`;
+      const p=s.val();
+      div.innerHTML+=`
+        <div class="card">
+          <img src="${p.image||'https://via.placeholder.com/400'}" alt="${p.name}">
+          <div class="font-bold">${p.name}</div>
+          <div>R$ ${p.preco}</div>
+          <button onclick="editarProduto('${s.key}')">Editar</button>
+          <button onclick="excluirProduto('${s.key}')">Excluir</button>
+        </div>`;
     });
   });
+}
+function editarProduto(key){alert('Editar produto: '+key);}
+function excluirProduto(key){if(confirm('Excluir produto?')) db.ref('products/'+key).remove();}
 
-  // Forms (Adicionar)
-  document.getElementById('formCategoria').onsubmit = e=>{
-    e.preventDefault();
-    const nome = document.getElementById('nomeCategoria').value;
-    if(nome) db.ref('categories').push({name:nome});
-  };
-  document.getElementById('formProduto').onsubmit = e=>{
-    e.preventDefault();
-    const name = document.getElementById('nomeProduto').value;
-    const sku = document.getElementById('skuProduto').value;
-    const preco = Number(document.getElementById('precoProduto').value);
-    const categoria = document.getElementById('categoriaProduto').value;
-    if(name && sku && preco && categoria) db.ref('products').push({name,sku,preco,categoria});
-  };
-  document.getElementById('formGalvanica').onsubmit = e=>{
-    e.preventDefault();
-    const name = document.getElementById('nomeGalvanica').value;
-    const endereco = document.getElementById('enderecoGalvanica').value;
-    const telefone = document.getElementById('telefoneGalvanica').value;
-    const whatsapp = document.getElementById('whatsappGalvanica').value;
-    if(name) db.ref('galvanicas').push({name,endereco,telefone,whatsapp});
-  };
-  document.getElementById('formAjustes').onsubmit = e=>{
-    e.preventDefault();
-    const telefone = document.getElementById('telefoneAjuste').value;
-    const desconto = Number(document.getElementById('descontoPIX').value);
-    const parcelas = Number(document.getElementById('parcelasCartao').value);
-    db.ref('settings').set({telefone,desconto,parcelas});
-    alert('Ajustes salvos!');
-  };
+// LISTA CATEGORIAS
+function carregarCategorias(){
+  const div=document.getElementById('gridCategorias');
+  db.ref('categories').on('value',snap=>{
+    div.innerHTML='';
+    snap.forEach(s=>{
+      const c=s.val();
+      div.innerHTML+=`
+        <div class="card">
+          <img src="${c.image||'https://via.placeholder.com/400'}" alt="${c.name}">
+          <div class="font-bold">${c.name}</div>
+          <button onclick="editarCategoria('${s.key}')">Editar</button>
+          <button onclick="excluirCategoria('${s.key}')">Excluir</button>
+        </div>`;
+    });
+  });
+}
+function editarCategoria(key){alert('Editar categoria: '+key);}
+function excluirCategoria(key){if(confirm('Excluir categoria?')) db.ref('categories/'+key).remove();}
 
-  // Edit functions
-  function editarCategoria(id,nome){ const novo=prompt("Editar categoria:",nome); if(novo) db.ref('categories/'+id).update({name:novo}); }
-  function editarProduto(id,name,sku,preco,categoria){ 
-    const novoName=prompt("Nome:",name); 
-    const novoSKU=prompt("SKU:",sku); 
-    const novoPreco=prompt("Preço:",preco); 
-    const novaCategoria=prompt("Categoria:",categoria);
-    if(novoName && novoSKU && novoPreco && novaCategoria) db.ref('products/'+id).update({name:novoName,sku:novoSKU,preco:Number(novoPreco),categoria:novaCategoria});
-  }
-  function editarGalvanica(id,name,endereco,telefone,whatsapp){ 
-    const novoName=prompt("Nome:",name);
-    const novoEnd=prompt("Endereço:",endereco);
-    const novoTel=prompt("Telefone:",telefone);
-    const novoWhats=prompt("WhatsApp:",whatsapp);
-    if(novoName) db.ref('galvanicas/'+id).update({name:novoName,endereco:novoEnd,telefone:novoTel,whatsapp:novoWhats});
-  }
+// LISTA GALVÂNICAS
+function carregarGalvanicas(){
+  const div=document.getElementById('gridGalvanicas');
+  db.ref('galvanicas').on('value',snap=>{
+    div.innerHTML='';
+    snap.forEach(s=>{
+      const g=s.val();
+      div.innerHTML+=`
+        <div class="card">
+          <div class="font-bold">${g.name}</div>
+          <div>${g.endereco}</div>
+          <div>${g.telefone}</div>
+          <button onclick="editarGalvanica('${s.key}')">Editar</button>
+          <button onclick="excluirGalvanica('${s.key}')">Excluir</button>
+        </div>`;
+    });
+  });
+}
+function editarGalvanica(key){alert('Editar galvanica: '+key);}
+function excluirGalvanica(key){if(confirm('Excluir galvanica?')) db.ref('galvanicas/'+key).remove();}
+
+// Inicializar
+carregarPedidos(); carregarProdutos(); carregarCategorias(); carregarGalvanicas();
 </script>
+
 </body>
 </html>
