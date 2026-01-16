@@ -2,44 +2,81 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<title>Categoria | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Categorias | Abella Joias</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const firebaseConfig = {
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{background:#F8F6F2}
+.gold{color:#A68966}
+.font-serif{font-family:'Cinzel',serif}
+</style>
+</head>
+
+<body class="max-w-7xl mx-auto p-6">
+
+<header class="flex justify-between items-center mb-6">
+  <button onclick="history.back()"
+   class="border px-4 py-2 text-xs">Voltar</button>
+
+  <h1 id="titulo" class="font-serif text-2xl gold"></h1>
+
+  <a href="cart_checkout_premium.html"
+   class="border px-4 py-2 text-xs">Carrinho</a>
+</header>
+
+<div id="produtos" class="grid sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+
+<a href="galvanicas.html"
+ class="fixed bottom-6 right-6 bg-black text-white px-6 py-3 text-xs rounded-full shadow-lg">
+Galvânicas
+</a>
+
+<script>
+firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com",
-  messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
+});
+const db=firebase.database();
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const params=new URLSearchParams(location.search);
+const categoria=params.get('cat');
+titulo.textContent=categoria;
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  const container=document.getElementById('categoriasContainer');
-  onValue(ref(db,'categories'),snapshot=>{
-    container.innerHTML='';
-    snapshot.forEach(s=>{
-      const c = s.val();
-      container.innerHTML += `
-      <div class="border p-4 rounded aspect-square flex flex-col items-center bg-white shadow-md">
-        <img src="${c.image||'https://via.placeholder.com/300'}" class="w-full h-full object-cover rounded mb-2">
-        <p class="text-center font-semibold">${c.name}</p>
+db.ref('products').orderByChild('sku').on('value',snap=>{
+  produtos.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+    if(p.category===categoria){
+      produtos.innerHTML+=`
+      <div class="bg-white border p-4">
+        <img src="${p.image}" class="w-full h-48 object-cover">
+        <p class="mt-2 font-semibold">${p.name}</p>
+        <p class="text-xs">SKU: ${p.sku}</p>
+        <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
+        <button onclick="addCarrinho('${s.key}')"
+         class="bg-black text-white w-full mt-3 py-2 text-xs">
+        Adicionar ao carrinho
+        </button>
       </div>`;
-    });
+    }
   });
 });
+
+function addCarrinho(id){
+  let cart=JSON.parse(localStorage.getItem('cart')||'[]');
+  const existe=cart.find(i=>i.id===id);
+  if(existe){ existe.qty++; }
+  else{ cart.push({id,qty:1}); }
+  localStorage.setItem('cart',JSON.stringify(cart));
+  alert('Produto adicionado ao carrinho');
+}
 </script>
-</head>
-<body class="bg-gray-50 p-6">
-<h1 class="text-xl font-serif gold mb-4">Categorias</h1>
-<div id="categoriasContainer" class="grid sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
+
 </body>
 </html>
