@@ -1,13 +1,6 @@
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open('catalogo-v1').then(cache =>
-      cache.addAll([
-        './',
-        './index.html',
-        './cart.html',
-        './checkout.html',
-        './admin.html'
-      ])
-    )
-  );
+self.addEventListener('install', e=>{
+  console.log('Service Worker instalado');
+});
+self.addEventListener('fetch', e=>{
+  e.respondWith(fetch(e.request));
 });
