@@ -2,88 +2,62 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abella Joias | Catálogo Digital</title>
+<title>Abella Joias | Catálogo por Categorias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
 <style>
-body{font-family:'Poppins',sans-serif;background:#fcfaf7}
-.card-cat{transition:all 0.3s ease;border:1px solid #eee}.card-cat:hover{transform:translateY(-5px);border-color:#d4af37;box-shadow:0 10px 20px rgba(212,175,55,0.1)}
-.aspect-square{aspect-ratio:1/1}
+body{background:#F8F6F2}
+.gold{color:#A68966}
+.font-serif{font-family:'Cinzel',serif}
 </style>
 </head>
-<body>
-<header class="bg-white shadow-sm py-8 text-center border-b-2 border-[#d4af37]">
-<h1 class="text-3xl font-extrabold tracking-tighter text-gray-800">ABELLA <span class="text-[#d4af37]">JOIAS</span></h1>
-<p class="text-xs uppercase tracking-[0.3em] text-gray-500 mt-2">Semijoias no Bruto em Limeira</p>
-<div class="mt-6 flex justify-center gap-4">
-  <a href="galvanicas.html" class="text-[10px] font-bold border-2 border-[#d4af37] px-4 py-2 rounded-full text-[#b8860b] hover:bg-[#d4af37] hover:text-white transition">GALVÂNICAS PARCEIRAS</a>
-  <a href="cart_checkout_premium.html" class="text-[10px] font-bold bg-black px-4 py-2 rounded-full text-white hover:bg-gray-800 transition">MEU CARRINHO</a>
-</div>
+
+<body class="max-w-7xl mx-auto p-6">
+
+<header class="text-center mb-10">
+  <h1 class="font-serif text-3xl gold tracking-widest">Abella Joias</h1>
+  <p class="text-sm tracking-widest uppercase text-gray-500 mt-2">
+    Catálogo por Categorias
+  </p>
 </header>
 
-<main class="max-w-6xl mx-auto p-6 space-y-12">
+<div id="categorias" class="grid sm:grid-cols-2 md:grid-cols-3 gap-8"></div>
 
-<h2 class="text-center text-xl font-semibold mb-8 text-gray-700">Explore nossas Categorias</h2>
-<div id="gridCategorias" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
-
-<h2 class="text-center text-xl font-semibold mt-12 mb-8 text-gray-700">Produtos</h2>
-<div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
-
-</main>
+<!-- Botão Galvânicas -->
+<a href="galvanicas.html"
+ class="fixed bottom-6 right-6 bg-black text-white px-6 py-3 text-xs rounded-full shadow-lg">
+Galvânicas Parceiras
+</a>
 
 <script>
-const firebaseConfig={
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain:"catalogo-abella-joias.firebaseapp.com",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId:"catalogo-abella-joias"
-};
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
+});
 const db=firebase.database();
 
-// Categorias
 db.ref('categories').on('value',snap=>{
- const grid=document.getElementById('gridCategorias'); grid.innerHTML='';
- snap.forEach(s=>{
-   const cat=s.val();
-   grid.innerHTML+=`<a href="categoria.html?id=${s.key}&name=${encodeURIComponent(cat.name)}" class="card-cat bg-white rounded-2xl overflow-hidden block">
-     <div class="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
-       <img src="${cat.image||'https://via.placeholder.com/300'}" class="w-full h-full object-cover">
-     </div>
-     <div class="p-4 text-center">
-       <span class="font-bold text-gray-800 uppercase text-sm tracking-wide">${cat.name}</span>
-     </div>
-   </a>`;
- });
+  categorias.innerHTML='';
+  snap.forEach(s=>{
+    const c=s.val();
+    categorias.innerHTML+=`
+    <a href="categoria.html?cat=${encodeURIComponent(c.name)}"
+       class="bg-white border shadow hover:shadow-xl transition rounded overflow-hidden">
+      <img src="${c.image}" class="w-full h-60 object-cover">
+      <div class="p-4 text-center">
+        <h2 class="font-serif text-xl gold">${c.name}</h2>
+        <p class="text-xs text-gray-500 mt-2">Ver catálogo completo</p>
+      </div>
+    </a>`;
+  });
 });
-
-// Produtos
-db.ref('products').on('value',snap=>{
- const grid=document.getElementById('gridProdutos'); grid.innerHTML='';
- snap.forEach(s=>{
-   const p=s.val();
-   grid.innerHTML+=`<div class="bg-white border rounded-lg overflow-hidden">
-     <div class="aspect-square overflow-hidden"><img src="${p.image}" class="w-full h-full object-cover"></div>
-     <div class="p-4 text-center">
-       <p class="font-semibold">${p.name}</p>
-       <p class="text-xs">${p.category} • ${p.weight}g</p>
-       <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-       <button onclick="addToCart('${s.key}')" class="mt-2 bg-black text-white px-4 py-2 rounded text-xs">Adicionar</button>
-     </div>
-   </div>`;
- });
-});
-
-// Carrinho (localStorage temporário)
-function addToCart(id){
- let cart=JSON.parse(localStorage.getItem('abellaCart')||'[]');
- if(!cart.find(p=>p.id===id)) cart.push({id,qty:1});
- else cart=cart.map(p=>p.id===id?{...p,qty:p.qty+1}:p);
- localStorage.setItem('abellaCart',JSON.stringify(cart));
- alert('Produto adicionado ao carrinho');
-}
 </script>
+
 </body>
 </html>
