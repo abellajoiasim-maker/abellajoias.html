@@ -350,65 +350,109 @@ function imprimir(o){
   romaneio.classList.add('hidden');
 }
 
-/* GALVÂNICAS */
-const formGalvanica=document.getElementById('formGalvanica');
-const listaGalvanicas=document.getElementById('listaGalvanicas');
-const logoURL=document.getElementById('logoURL');
+<!-- GALVÂNICAS -->
+<section id="galvanicas" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Cadastrar / Editar Galvânicas</h2>
+<form id="formGalvanica" class="space-y-4">
 
-formGalvanica.addEventListener('submit', e=>{
- e.preventDefault();
- const nome=document.getElementById('nome').value;
- const endereco=document.getElementById('endereco').value;
- const telefone=document.getElementById('telefone').value;
- const whatsapp=document.getElementById('whatsapp').value;
- const descricao=document.getElementById('descricao').value;
- const logo=logoURL.value.trim();
+  <input type="text" id="nome" placeholder="Nome da Galvânica" class="border p-2 w-full rounded" required>
+  <input type="text" id="endereco" placeholder="Endereço" class="border p-2 w-full rounded" required>
+  <input type="text" id="telefone" placeholder="Telefone" class="border p-2 w-full rounded" required>
+  <input type="url" id="whatsapp" placeholder="Link WhatsApp" class="border p-2 w-full rounded" required>
+  <textarea id="descricao" placeholder="Descrição/Observações" class="border p-2 w-full rounded" rows="3"></textarea>
+  <input type="url" id="logoURL" placeholder="URL da Logo" class="border p-2 w-full rounded">
 
- salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,logo);
+  <!-- Preview instantâneo -->
+  <div id="previewLogo" class="mt-2"></div>
+
+  <button type="submit" id="btnSalvarGalvanica" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Salvar Galvânica</button>
+</form>
+
+<div id="listaGalvanicas" class="mt-6 space-y-4"></div>
+</section>
+
+<script>
+let editandoGalvanica = null; // Armazena o ID da galvanica em edição
+
+const formGalvanica = document.getElementById('formGalvanica');
+const listaGalvanicas = document.getElementById('listaGalvanicas');
+const logoURL = document.getElementById('logoURL');
+const previewLogo = document.getElementById('previewLogo');
+const btnSalvarGalvanica = document.getElementById('btnSalvarGalvanica');
+
+formGalvanica.addEventListener('submit', e => {
+  e.preventDefault();
+  const nome = document.getElementById('nome').value;
+  const endereco = document.getElementById('endereco').value;
+  const telefone = document.getElementById('telefone').value;
+  const whatsapp = document.getElementById('whatsapp').value;
+  const descricao = document.getElementById('descricao').value;
+  const logo = logoURL.value.trim();
+
+  if (!nome) return alert('Informe o nome da galvanica');
+
+  const dados = { nome, endereco, telefone, whatsapp, descricao, logo };
+
+  if (editandoGalvanica) {
+    db.ref('galvanicas/' + editandoGalvanica).set(dados);
+    editandoGalvanica = null;
+    btnSalvarGalvanica.textContent = 'Salvar Galvânica';
+  } else {
+    db.ref('galvanicas').push(dados);
+  }
+
+  formGalvanica.reset();
+  previewLogo.innerHTML = '';
 });
 
-function salvarGalvanica(nome,endereco,telefone,whatsapp,descricao,logo){
- const newGalv=db.ref('galvanicas').push();
- newGalv.set({nome,endereco,telefone,whatsapp,descricao,logo});
- alert('Galvânica cadastrada com sucesso!');
- formGalvanica.reset();
- logoURL.value='';
+// Preview instantâneo
+logoURL.addEventListener('input', () => {
+  previewLogo.innerHTML = logoURL.value ? `<img src="${logoURL.value}" class="h-12 w-12 object-cover rounded border">` : '';
+});
+
+// Mostrar lista de galvanicas
+db.ref('galvanicas').on('value', snap => {
+  listaGalvanicas.innerHTML = '';
+  snap.forEach(s => {
+    const g = s.val();
+    const id = s.key;
+    const logoSrc = g.logo && g.logo.trim() !== '' ? g.logo : 'https://via.placeholder.com/50';
+
+    listaGalvanicas.innerHTML += `
+      <div class="bg-white border p-4 flex justify-between items-center rounded">
+        <div class="flex items-center gap-4">
+          <img src="${logoSrc}" class="h-12 w-12 object-cover rounded border">
+          <div>
+            <p class="font-semibold">${g.nome}</p>
+            <p class="text-xs">${g.endereco}</p>
+            <p class="text-xs">${g.telefone} • ${g.whatsapp}</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="editarGalvanica('${id}')" class="bg-blue-500 text-white px-2 py-1 text-xs rounded">Editar</button>
+          <button onclick="db.ref('galvanicas/${id}').remove()" class="bg-red-500 text-white px-2 py-1 text-xs rounded">Excluir</button>
+        </div>
+      </div>`;
+  });
+});
+
+// Função de edição
+function editarGalvanica(id) {
+  db.ref('galvanicas/' + id).once('value').then(s => {
+    const g = s.val();
+    document.getElementById('nome').value = g.nome;
+    document.getElementById('endereco').value = g.endereco;
+    document.getElementById('telefone').value = g.telefone;
+    document.getElementById('whatsapp').value = g.whatsapp;
+    document.getElementById('descricao').value = g.descricao;
+    document.getElementById('logoURL').value = g.logo;
+    previewLogo.innerHTML = g.logo ? `<img src="${g.logo}" class="h-12 w-12 object-cover rounded border">` : '';
+    editandoGalvanica = id;
+    btnSalvarGalvanica.textContent = 'Atualizar Galvânica';
+  });
 }
-
-// preview instantâneo enquanto digita a URL da galvanica
-logoURL.addEventListener('input', ()=>{
- const preview = document.getElementById('previewLogo');
- if(!preview){
-   const div=document.createElement('div');
-   div.id='previewLogo';
-   div.className='mt-2';
-   logoURL.parentNode.appendChild(div);
- }
- document.getElementById('previewLogo').innerHTML = logoURL.value ? `<img src="${logoURL.value}" class="h-12 w-12 object-cover rounded border">` : '';
-});
-
-// mostrar lista de galvanicas
-db.ref('galvanicas').on('value', snap=>{
- listaGalvanicas.innerHTML='';
- snap.forEach(s=>{
-   const g=s.val();
-   const id=s.key;
-   const logoSrc = g.logo && g.logo.trim()!=='' ? g.logo : 'https://via.placeholder.com/50';
-   listaGalvanicas.innerHTML+=`
-   <div class="bg-white border p-4 flex justify-between items-center rounded">
-     <div class="flex items-center gap-4">
-       <img src="${logoSrc}" class="h-12 w-12 object-cover rounded border">
-       <div>
-         <p class="font-semibold">${g.nome}</p>
-         <p class="text-xs">${g.endereco}</p>
-         <p class="text-xs">${g.telefone} • ${g.whatsapp}</p>
-       </div>
-     </div>
-     <button onclick="db.ref('galvanicas/${id}').remove()" class="text-red-600 px-2 py-1 text-xs">Excluir</button>
-   </div>`;
- });
-});
 </script>
+
 
 </body>
 </html>
