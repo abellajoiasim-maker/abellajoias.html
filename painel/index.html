@@ -13,6 +13,7 @@
 body{background:#F8F6F2}
 .gold{color:#A68966}
 .font-serif{font-family:'Cinzel',serif}
+
 .status-Novo{background:#FEF3C7}
 .status-Separação{background:#E0F2FE}
 .status-Enviado{background:#EDE9FE}
@@ -32,29 +33,48 @@ body{background:#F8F6F2}
 
 <div id="listaPedidos" class="space-y-4"></div>
 
-<!-- ROMANEIO -->
+<!-- ================= ROMANEIO ================= -->
 <div id="romaneio" class="hidden bg-white p-10 text-sm">
-  <h2 class="font-serif text-xl gold mb-4">Romaneio</h2>
-  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
-  <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
-  <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
-  <p><strong>Peso total:</strong> <span id="rPeso"></span>g</p>
 
-  <table class="w-full border mt-6">
-    <thead>
-      <tr>
-        <th class="border p-2">Produto</th>
-        <th class="border p-2">Qtd</th>
-        <th class="border p-2">Valor</th>
-      </tr>
-    </thead>
-    <tbody id="rItens"></tbody>
-  </table>
+<h2 class="font-serif text-2xl gold mb-6 text-center">
+Romaneio de Pedido
+</h2>
 
-  <p class="mt-6 text-right font-bold">
-    Total: R$ <span id="rTotal"></span>
-  </p>
+<div class="mb-4 space-y-1">
+<p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+<p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
+<p><strong>Data:</strong> <span id="rData"></span></p>
+<p><strong>Pagamento:</strong> <span id="rPag"></span></p>
 </div>
+
+<table class="w-full border text-xs mt-4">
+<thead>
+<tr class="bg-gray-100 border-b">
+<th class="p-2 text-left">Produto</th>
+<th class="p-2 text-left">SKU</th>
+<th class="p-2 text-center">Qtd</th>
+<th class="p-2 text-center">Peso unit.</th>
+<th class="p-2 text-center">Peso total</th>
+<th class="p-2 text-right">Valor unit.</th>
+<th class="p-2 text-right">Total</th>
+</tr>
+</thead>
+<tbody id="rItens"></tbody>
+</table>
+
+<div class="mt-6 space-y-1">
+<p><strong>Peso total do pedido:</strong> <span id="rPeso"></span> g</p>
+
+<p id="rDesconto" class="text-green-600 font-medium hidden"></p>
+<p id="rParcelas" class="hidden"></p>
+
+<p class="text-lg font-bold text-right mt-2">
+TOTAL DO PEDIDO: R$ <span id="rTotal"></span>
+</p>
+</div>
+
+</div>
+<!-- ================= FIM ROMANEIO ================= -->
 
 <script>
 firebase.initializeApp({
@@ -63,45 +83,95 @@ firebase.initializeApp({
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
 
+/* LISTAR PEDIDOS */
 db.ref('orders').on('value',snap=>{
   listaPedidos.innerHTML='';
   snap.forEach(s=>{
-    const o=s.val(),id=s.key;
+    const o=s.val(), id=s.key;
+
     listaPedidos.innerHTML+=`
-    <div class="bg-white border p-4 status-${o.status}">
+    <div class="bg-white border p-4 status-${o.status || 'Novo'}">
       <p class="font-semibold">${o.cliente}</p>
       <p class="text-xs">${o.data}</p>
-      <p>${o.pagamento} • ${o.peso}g</p>
-      <strong>R$ ${o.total.toFixed(2)}</strong>
+      <p>${o.pagamento} • ${o.pesoTotal || 0}g</p>
+      <strong>R$ ${Number(o.total).toFixed(2)}</strong>
 
-      <div class="flex gap-2 mt-2 text-xs">
+      <div class="flex flex-wrap gap-2 mt-2 text-xs">
         ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
           <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
         `).join('')}
-        <button onclick="imprimir(${JSON.stringify(o).replace(/"/g,'&quot;')})" class="bg-black text-white px-2 py-1">Romaneio</button>
-        <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">Excluir</button>
+
+        <button onclick='imprimirRomaneio(${JSON.stringify(o).replace(/"/g,'&quot;')})'
+        class="bg-black text-white px-2 py-1">
+        Romaneio
+        </button>
+
+        <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">
+        Excluir
+        </button>
       </div>
     </div>`;
   });
 });
 
-function imprimir(o){
-  rCliente.textContent=o.cliente;
-  rWhats.textContent=o.whatsapp;
-  rPag.textContent=o.pagamento;
-  rPeso.textContent=o.peso;
-  rTotal.textContent=o.total.toFixed(2);
+/* ROMANEIO COMPLETO */
+function imprimirRomaneio(o){
+
+  rCliente.textContent = o.cliente || '-';
+  rWhats.textContent = o.whatsapp || '-';
+  rData.textContent = o.data || '-';
+  rPag.textContent = o.pagamento || '-';
+
   rItens.innerHTML='';
+  let subtotal = 0;
+  let pesoTotal = 0;
+
   o.itens.forEach(i=>{
+    const qtd = Number(i.qtd || i.qty || 0);
+    const pesoUnit = Number(i.weight || 0);
+    const pesoItem = pesoUnit * qtd;
+    const valorUnit = Number(i.valor || i.price || 0);
+    const totalItem = valorUnit * qtd;
+
+    subtotal += totalItem;
+    pesoTotal += pesoItem;
+
     rItens.innerHTML+=`
-      <tr>
-        <td class="border p-2">${i.name}</td>
-        <td class="border p-2">${i.qty}</td>
-        <td class="border p-2">R$ ${(i.price*i.qty).toFixed(2)}</td>
-      </tr>`;
+    <tr class="border-b">
+      <td class="p-2">${i.nome || i.name}</td>
+      <td class="p-2">${i.sku || '-'}</td>
+      <td class="p-2 text-center">${qtd}</td>
+      <td class="p-2 text-center">${pesoUnit} g</td>
+      <td class="p-2 text-center">${pesoItem} g</td>
+      <td class="p-2 text-right">R$ ${valorUnit.toFixed(2)}</td>
+      <td class="p-2 text-right">R$ ${totalItem.toFixed(2)}</td>
+    </tr>`;
   });
+
+  rPeso.textContent = pesoTotal.toFixed(0);
+
+  rDesconto.classList.add('hidden');
+  rParcelas.classList.add('hidden');
+
+  let totalFinal = subtotal;
+
+  if(o.pagamento === 'PIX' && o.pix){
+    const desc = subtotal * (o.pix/100);
+    totalFinal -= desc;
+    rDesconto.textContent = `Desconto PIX (${o.pix}%): - R$ ${desc.toFixed(2)}`;
+    rDesconto.classList.remove('hidden');
+  }
+
+  if(o.pagamento === 'CARTAO' && o.parcelas){
+    const p = Number(o.parcelas.replace('x',''));
+    rParcelas.textContent = `Parcelamento: ${o.parcelas} de R$ ${(totalFinal/p).toFixed(2)}`;
+    rParcelas.classList.remove('hidden');
+  }
+
+  rTotal.textContent = totalFinal.toFixed(2);
+
   romaneio.classList.remove('hidden');
   window.print();
   romaneio.classList.add('hidden');
