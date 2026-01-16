@@ -1,113 +1,64 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Catálogo | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-
-.card-cat{
-  aspect-ratio:1/1;
-  background-size:cover;
-  background-position:center;
-  position:relative;
-  border-radius:16px;
-  overflow:hidden;
-  cursor:pointer;
-  transition:.3s;
-}
-.card-cat:hover{transform:scale(1.02)}
-
-.card-overlay{
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.55),transparent 60%);
-}
-
-.card-title{
-  position:absolute;
-  bottom:16px;
-  left:16px;
-  color:#fff;
-  font-size:18px;
-  font-weight:600;
-  letter-spacing:1px;
-  text-transform:uppercase;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abella Joias | Catálogo Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #fcfaf7; }
+        .gold-gradient { background: linear-gradient(135deg, #d4af37, #b8860b); }
+        .card-cat { transition: all 0.3s ease; border: 1px solid #eee; }
+        .card-cat:hover { transform: translateY(-5px); border-color: #d4af37; box-shadow: 0 10px 20px rgba(212,175,55,0.1); }
+    </style>
 </head>
-
 <body>
+    <header class="bg-white shadow-sm py-8 text-center border-b-2 border-[#d4af37]">
+        <h1 class="text-3xl font-extrabold tracking-tighter text-gray-800">ABELLA <span class="text-[#d4af37]">JOIAS</span></h1>
+        <p class="text-xs uppercase tracking-[0.3em] text-gray-500 mt-2">Semijoias no Bruto em Limeira</p>
+        
+        <div class="mt-6 flex justify-center gap-4">
+            <a href="galvanicas.html" class="text-[10px] font-bold border-2 border-[#d4af37] px-4 py-2 rounded-full text-[#b8860b] hover:bg-[#d4af37] hover:text-white transition">GALVÂNICAS PARCEIRAS</a>
+            <a href="cart.html" class="text-[10px] font-bold bg-black px-4 py-2 rounded-full text-white hover:bg-gray-800 transition">MEU CARRINHO</a>
+        </div>
+    </header>
 
-<header class="bg-white border-b px-8 py-6 flex justify-between items-center">
-  <h1 class="font-serif gold text-xl tracking-widest">
-    Abella Joias
-  </h1>
+    <main class="max-w-6xl mx-auto p-6">
+        <h2 class="text-center text-xl font-semibold mb-8 text-gray-700">Explore nossas Categorias</h2>
+        <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            </div>
+    </main>
 
-  <!-- BOTÃO GALVÂNICAS -->
-  <a href="galvanicas.html"
-     class="text-xs tracking-widest uppercase border px-4 py-2 hover:bg-black hover:text-white transition">
-    Galvânicas Parceiras
-  </a>
-</header>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+            authDomain: "catalogo-abella-joias.firebaseapp.com",
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+            projectId: "catalogo-abella-joias"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-<main class="max-w-7xl mx-auto p-8">
-
-  <h2 class="font-serif gold text-2xl tracking-widest mb-8 text-center">
-    Catálogo por Categorias
-  </h2>
-
-  <div id="gridCategorias"
-       class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-  </div>
-
-</main>
-
-<script>
-/* 🔥 FIREBASE */
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
-const db = firebase.database();
-
-/* CATEGORIAS */
-db.ref('categories').on('value', snap => {
-  gridCategorias.innerHTML = '';
-
-  snap.forEach(s => {
-    const nome = s.val().name;
-
-    /* imagem padrão (você pode trocar depois) */
-    const img = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338';
-
-    gridCategorias.innerHTML += `
-      <div class="card-cat"
-           style="background-image:url('${img}')"
-           onclick="abrirCategoria('${nome}')">
-
-        <div class="card-overlay"></div>
-        <div class="card-title">${nome}</div>
-      </div>
-    `;
-  });
-});
-
-/* REDIRECIONA */
-function abrirCategoria(cat){
-  window.location.href = `categoria.html?cat=${encodeURIComponent(cat)}`;
-}
-</script>
-
+        db.ref('categories').on('value', snap => {
+            const grid = document.getElementById('gridCategorias');
+            grid.innerHTML = '';
+            snap.forEach(s => {
+                const cat = s.val();
+                grid.innerHTML += `
+                    <a href="categoria.html?id=${s.key}&name=${encodeURIComponent(cat.name)}" class="card-cat bg-white rounded-2xl overflow-hidden block">
+                        <div class="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+                            <img src="${cat.image || 'https://via.placeholder.com/300'}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 text-center">
+                            <span class="font-bold text-gray-800 uppercase text-sm tracking-wide">${cat.name}</span>
+                        </div>
+                    </a>
+                `;
+            });
+        });
+    </script>
 </body>
 </html>
