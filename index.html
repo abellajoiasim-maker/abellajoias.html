@@ -2,11 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Catálogo | Abella Joias</title>
+<title>Abella Joias | Catálogo de Categorias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
@@ -14,89 +13,50 @@
 body{background:#F8F6F2}
 .gold{color:#A68966}
 .font-serif{font-family:'Cinzel',serif}
-
-/* botão flutuante */
 .float-btn{
-  position:fixed;
-  right:20px;
-  background:#000;
-  color:#fff;
-  padding:14px;
-  border-radius:50%;
-  box-shadow:0 8px 20px rgba(0,0,0,.25);
-  z-index:50;
+ position:fixed;right:20px;bottom:20px;
+ background:#000;color:#fff;padding:12px 16px;
+ border-radius:999px;font-size:12px;z-index:50
 }
 </style>
 </head>
 
-<body>
+<body class="p-6 max-w-7xl mx-auto">
 
-<header class="bg-white border-b py-6 px-6 text-center">
-  <h1 class="font-serif text-2xl gold tracking-widest">Abella Joias</h1>
-  <p class="text-xs text-gray-400 tracking-widest mt-1 uppercase">
-    Catálogo de Categorias
-  </p>
-</header>
+<h1 class="font-serif text-3xl gold mb-8 text-center">
+Catálogo Abella Joias
+</h1>
 
-<main class="max-w-7xl mx-auto p-6">
+<div id="listaCategorias"
+ class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+</div>
 
-  <div id="gridCategorias"
-    class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
-  </div>
-
-</main>
-
-<!-- Botão Galvânicas -->
-<a href="galvanicas.html"
-   class="float-btn bottom-24"
-   title="Galvânicas Parceiras">
-🔧
-</a>
-
-<!-- Botão Carrinho -->
-<a href="cart_checkout_premium.html"
-   class="float-btn bottom-6"
-   title="Carrinho">
-🛒
+<a href="galvanicas.html" class="float-btn">
+Galvânicas Parceiras
 </a>
 
 <script>
-/* 🔥 FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
   projectId: "catalogo-abella-joias"
 });
+const db=firebase.database();
 
-const db = firebase.database();
-const grid = document.getElementById('gridCategorias');
-
-/* LISTAR CATEGORIAS */
-db.ref('categories').on('value', snap => {
-  grid.innerHTML = '';
-
-  snap.forEach(s => {
-    const c = s.val();
-    const nome = c.name;
-    const imagem = c.image || `images/categorias/${nome}.jpg`;
-
-    grid.innerHTML += `
-      <a href="categoria.html?cat=${encodeURIComponent(nome)}"
-         class="bg-white border rounded-lg overflow-hidden hover:shadow-xl transition">
-
-        <div class="aspect-square bg-gray-100">
-          <img src="${imagem}"
-               onerror="this.src='images/placeholder.jpg'"
-               class="w-full h-full object-cover">
+db.ref('categories').on('value',snap=>{
+  listaCategorias.innerHTML='';
+  snap.forEach(s=>{
+    const c=s.val();
+    listaCategorias.innerHTML+=`
+      <a href="categoria.html?cat=${s.key}"
+       class="bg-white border rounded overflow-hidden hover:shadow-lg transition">
+        <img src="images/categorias/${c.image}"
+         class="aspect-square object-cover w-full">
+        <div class="p-3 text-center font-semibold">
+          ${c.name}
         </div>
-
-        <div class="p-3 text-center">
-          <p class="font-semibold tracking-wide">${nome}</p>
-        </div>
-
-      </a>
-    `;
+      </a>`;
   });
 });
 </script>
