@@ -113,32 +113,53 @@
     }
 
     /* Botões flutuantes */
-    .fab {
-      position: fixed;
-      right: 18px;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-      color: #111;
-      font-size: 22px;
-      font-weight: bold;
-      box-shadow: 0 8px 22px rgba(230,201,122,.5);
-      z-index: 999;
-      cursor: pointer;
-      text-decoration: none;
-    }
+   .nav-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+}
 
-    .fab:hover {
-      transform: scale(1.08);
-    }
+.nav-box {
+  display: flex;
+  align-items: center;
+  padding: 10px 18px;
+  text-decoration: none;
+  border-radius: 8px; /* Bordas levemente arredondadas para elegância */
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  min-width: 130px;
+}
 
-    .fab-cart { bottom: 90px; }
-    .fab-galv { bottom: 20px; }
+.nav-box:hover {
+  transform: translateX(-5px); /* Efeito sutil ao passar o mouse */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
 
+.nav-box .icon {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+/* Cores Personalizadas */
+.btn-back {
+  background-color: #6c757d; /* Cinza sóbrio */
+}
+
+.btn-galv {
+  background-color: #2c3e50; /* Azul escuro elegante */
+}
+
+.btn-cart {
+  background-color: #27ae60; /* Verde sofisticado */
+}
   </style>
 </head>
 
@@ -156,14 +177,22 @@
   </div>
 
   <!-- Botões flutuantes -->
-  <a href="cart_checkout_premium.html" class="fab fab-cart" title="Carrinho">
-    🛒
+  <div class="nav-container">
+  <a href="javascript:history.back()" class="nav-box btn-back" title="Voltar">
+    <span class="icon">⬅️</span>
+    <span class="label">Voltar</span>
   </a>
 
-  <a href="galvanicas.html" class="fab fab-galv" title="Galvânicas Parceiras">
-    🧪
+  <a href="galvanicas.html" class="nav-box btn-galv" title="Galvânicas Parceiras">
+    <span class="icon">🧪</span>
+    <span class="label">Galvânicas</span>
   </a>
 
+  <a href="cart_checkout_premium.html" class="nav-box btn-cart" title="Carrinho">
+    <span class="icon">🛒</span>
+    <span class="label">Carrinho</span>
+  </a>
+</div>
   <!-- Firebase + Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
