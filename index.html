@@ -1,62 +1,176 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Abella Joias | Catálogo por Categorias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.tailwindcss.com"></script>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Catálogo de Categorias | Abella Joias</title>
 
 <style>
-body{background:#F8F6F2}
-.gold{color:#A68966}
-.font-serif{font-family:'Cinzel',serif}
+:root{
+  --gold:#d4af37;
+  --dark:#111;
+  --bg:#0b0b0b;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:'Poppins',Arial,sans-serif;
+}
+
+header{
+  padding:20px;
+  text-align:center;
+  border-bottom:1px solid #222;
+}
+
+header h1{
+  margin:0;
+  font-size:26px;
+  color:var(--gold);
+  letter-spacing:1px;
+}
+
+.container{
+  max-width:1400px;
+  margin:auto;
+  padding:30px 20px;
+}
+
+/* GRID CATEGORIAS */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:28px;
+}
+
+@media(max-width:1024px){
+  .grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr;}
+}
+
+/* CARD CATEGORIA */
+.card{
+  background:#111;
+  border:2px solid var(--gold);
+  border-radius:20px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.3s;
+  box-shadow:0 10px 25px rgba(212,175,55,.25);
+}
+
+.card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 18px 35px rgba(212,175,55,.45);
+}
+
+.card img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  display:block;
+}
+
+.card-title{
+  padding:14px;
+  text-align:center;
+  font-size:18px;
+  font-weight:700;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+
+/* BOTÕES FLUTUANTES */
+.floating{
+  position:fixed;
+  bottom:22px;
+  right:22px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:999;
+}
+
+.float-btn{
+  background:linear-gradient(135deg,#ffd700,#b8860b);
+  color:#111;
+  font-weight:800;
+  padding:12px 16px;
+  border-radius:26px;
+  border:none;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(212,175,55,.55);
+  transition:.2s;
+}
+
+.float-btn:hover{
+  transform:scale(1.05);
+}
 </style>
 </head>
 
-<body class="max-w-7xl mx-auto p-6">
+<body>
 
-<header class="text-center mb-10">
-  <h1 class="font-serif text-3xl gold tracking-widest">Abella Joias</h1>
-  <p class="text-sm tracking-widest uppercase text-gray-500 mt-2">
-    Catálogo por Categorias
-  </p>
+<header>
+  <h1>Catálogo de Categorias</h1>
 </header>
 
-<div id="categorias" class="grid sm:grid-cols-2 md:grid-cols-3 gap-8"></div>
+<div class="container">
+  <div class="grid" id="categoriaGrid"></div>
+</div>
 
-<!-- Botão Galvânicas -->
-<a href="galvanicas.html"
- class="fixed bottom-6 right-6 bg-black text-white px-6 py-3 text-xs rounded-full shadow-lg">
-Galvânicas Parceiras
-</a>
+<!-- BOTÕES FLUTUANTES -->
+<div class="floating">
+  <button class="float-btn" onclick="window.location.href='galvanicas.html'">
+    Galvânicas Parceiras
+  </button>
+  <button class="float-btn" onclick="window.location.href='cart_checkout_premium.html'">
+    Carrinho
+  </button>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
-const db=firebase.database();
+/* 🔥 CONFIG FIREBASE (USE A MESMA DO PAINEL) */
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO",
+  projectId: "SEU_PROJECT_ID",
+};
 
-db.ref('categories').on('value',snap=>{
-  categorias.innerHTML='';
-  snap.forEach(s=>{
-    const c=s.val();
-    categorias.innerHTML+=`
-    <a href="categoria.html?cat=${encodeURIComponent(c.name)}"
-       class="bg-white border shadow hover:shadow-xl transition rounded overflow-hidden">
-      <img src="${c.image}" class="w-full h-60 object-cover">
-      <div class="p-4 text-center">
-        <h2 class="font-serif text-xl gold">${c.name}</h2>
-        <p class="text-xs text-gray-500 mt-2">Ver catálogo completo</p>
-      </div>
-    </a>`;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* CARREGAR CATEGORIAS */
+const grid = document.getElementById('categoriaGrid');
+
+db.collection("categorias")
+  .orderBy("nome")
+  .onSnapshot(snapshot=>{
+    grid.innerHTML="";
+    snapshot.forEach(doc=>{
+      const c = doc.data();
+
+      const card = document.createElement('div');
+      card.className="card";
+      card.onclick=()=> {
+        window.location.href = `categoria.html?cat=${encodeURIComponent(c.nome)}`;
+      };
+
+      card.innerHTML = `
+        <img src="${c.imagem || 'images/categorias/padrao.jpg'}">
+        <div class="card-title">${c.nome}</div>
+      `;
+      grid.appendChild(card);
+    });
   });
-});
 </script>
 
 </body>
