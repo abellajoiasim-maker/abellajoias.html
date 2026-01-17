@@ -1,48 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Galvânicas Parceiras | Abella Joias</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com",
-  messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-document.addEventListener('DOMContentLoaded',()=>{
-  const container = document.getElementById('galvanicasContainer');
-  onValue(ref(db,'galvanicas'),snapshot=>{
-    container.innerHTML='';
-    snapshot.forEach(s=>{
-      const g=s.val();
-      container.innerHTML+=`
-      <div class="border p-4 rounded shadow-md flex flex-col items-center bg-white">
-        <img src="${g.logo||'https://via.placeholder.com/150'}" class="w-32 h-32 object-cover rounded mb-2">
-        <h2 class="font-semibold text-center">${g.nome}</h2>
-        <p class="text-xs text-center">${g.endereco}</p>
-        <p class="text-xs text-center">${g.telefone} • <a href="${g.whatsapp}" target="_blank" class="text-green-600">WhatsApp</a></p>
-        <p class="text-sm mt-2 text-center">${g.descricao}</p>
-      </div>`;
-    });
-  });
-});
-</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Galvânicas Parceiras | Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold-border: #d4af37; --gold-text: #b8860b; --card-shadow: rgba(212,175,55,0.2); }
+        body { font-family: "Poppins", sans-serif; background: #fcfaf7; }
+        .card-galv {
+            border: 2px solid var(--gold-border);
+            border-radius: 18px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .card-galv:hover { transform: translateY(-5px); box-shadow: 0 10px 30px var(--card-shadow); }
+        .selo {
+            position: absolute; top: -12px; right: -12px;
+            background: linear-gradient(135deg,#ffd700,#ffec8b);
+            color: #6b4f00; font-size: 10px; font-weight: 800;
+            padding: 8px; border-radius: 50%; border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
-<body class="bg-gray-50 p-6">
-<h1 class="text-xl font-serif gold mb-4">Galvânicas Parceiras</h1>
-<div id="galvanicasContainer" class="grid sm:grid-cols-1 md:grid-cols-4 gap-6"></div>
+<body>
+    <header class="p-6 border-b bg-white flex items-center gap-4">
+        <a href="index.html" class="font-bold text-gray-400 italic">← VOLTAR</a>
+        <h1 class="text-xl font-extrabold text-[#b8860b] uppercase tracking-tighter">Galvânicas Parceiras</h1>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
+                <div class="selo">ABELLA GOLD</div>
+                <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg" class="h-24 object-contain mb-4">
+                <h2 class="text-lg font-bold text-gray-800">Franco Galvânica</h2>
+                <p class="text-xs text-gray-500 mb-4">Especializada em Ouro, Prata e Ródio Branco/Negro.</p>
+                <div class="text-left w-full text-xs space-y-1 mb-4">
+                    <p><strong>📍 Endereço:</strong> R. José Motta dos Santos, 113</p>
+                    <p><strong>📞 Tel:</strong> (19) 3451-6246</p>
+                </div>
+                <a href="https://wa.me/5519984202600" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
+            </div>
+
+            <div class="card-galv bg-white p-6 flex flex-col items-center text-center">
+                <div class="selo">ABELLA GOLD</div>
+                <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" class="h-24 object-contain mb-4">
+                <h2 class="text-lg font-bold text-gray-800">ORO Galvânica</h2>
+                <p class="text-xs text-gray-500 mb-4">Excelência em Banhos para Semijoias de Alto Padrão.</p>
+                <div class="text-left w-full text-xs space-y-1 mb-4">
+                    <p><strong>📍 Endereço:</strong> R. Pércio Machado Gomes, 243</p>
+                    <p><strong>📞 Tel:</strong> (19) 98907-2453</p>
+                </div>
+                <a href="https://wa.me/5519989072453" class="w-full bg-[#25d366] text-white py-3 rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition">FALAR NO WHATSAPP 📲</a>
+            </div>
+
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="https://wa.me/5519988207658">
+                <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Gemini_Generated_Image_56v05c56v05c56v0.png" class="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl border-4 border-[#d4af37]">
+            </a>
+        </div>
+    </main>
 </body>
 </html>
