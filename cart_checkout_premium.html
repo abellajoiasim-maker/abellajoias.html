@@ -11,162 +11,181 @@
 
 <style>
 body{background:#F8F6F2}
+.font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-
-.voltar{
-  position:fixed;
-  bottom:20px;
-  left:20px;
-  background:#000;
-  color:#fff;
-  padding:12px 16px;
-  border-radius:50px;
-  font-size:12px;
-}
+.btn-float{position:fixed;bottom:20px;right:20px;z-index:50}
 </style>
 </head>
 
-<body class="max-w-3xl mx-auto p-6">
+<body>
 
-<h1 class="text-2xl font-serif gold mb-6 text-center">
-Finalizar Pedido
-</h1>
+<header class="bg-white border-b px-6 py-6 text-center">
+  <h1 class="font-serif text-2xl gold tracking-widest">
+    CHECKOUT ABELLA JOIAS
+  </h1>
+</header>
 
-<!-- DADOS CLIENTE -->
-<div class="bg-white border p-6 mb-6 space-y-4">
-  <input id="nome" placeholder="Nome completo"
-   class="border p-3 w-full">
+<main class="max-w-5xl mx-auto p-6 space-y-6">
 
-  <input id="whats" placeholder="WhatsApp (DDD + número)"
-   class="border p-3 w-full">
-
-  <select id="pagamento"
-   class="border p-3 w-full">
-    <option value="">Forma de pagamento</option>
-    <option value="PIX">PIX</option>
-    <option value="Cartão">Cartão</option>
-  </select>
-</div>
+<!-- LISTA -->
+<div id="lista"></div>
 
 <!-- RESUMO -->
-<div class="bg-white border p-6 mb-6">
-  <h2 class="font-semibold mb-4">Resumo do Pedido</h2>
-  <div id="lista"></div>
-
-  <div class="mt-4 space-y-1 text-sm">
-    <p>Peso total: <strong><span id="peso"></span> g</strong></p>
-    <p>Valor cheio: <strong>R$ <span id="total"></span></strong></p>
-    <p id="linhaPix" class="hidden">
-      Valor com desconto PIX:
-      <strong>R$ <span id="totalPix"></span></strong>
-    </p>
-  </div>
+<div class="bg-white border p-6 rounded space-y-3">
+  <p>Total cheio: <strong>R$ <span id="totalCheio">0.00</span></strong></p>
+  <p class="gold">PIX: <strong>R$ <span id="totalPix">0.00</span></strong></p>
+  <p class="text-sm text-gray-500">
+    Cartão: <span id="parcelas"></span> sem acréscimo
+  </p>
 </div>
 
-<button onclick="finalizar()"
- class="bg-black text-white w-full py-4 text-sm tracking-wide">
-FINALIZAR PEDIDO
-</button>
+<!-- PAGAMENTO -->
+<div class="bg-white border p-6 rounded space-y-4">
+  <p class="font-semibold">Forma de pagamento</p>
+  <label class="block">
+    <input type="radio" name="pg" value="PIX" checked>
+    PIX (desconto aplicado)
+  </label>
+  <label class="block">
+    <input type="radio" name="pg" value="Cartão">
+    Cartão de Crédito
+  </label>
 
-<a href="index.html" class="voltar">← Voltar</a>
+  <button onclick="finalizar()"
+    class="w-full bg-black text-white py-4 uppercase tracking-widest">
+    Finalizar Pedido
+  </button>
+</div>
+
+</main>
+
+<!-- BOTÃO VOLTAR -->
+<a href="index.html"
+ class="btn-float bg-white border px-5 py-3 rounded-full shadow text-xs uppercase tracking-widest">
+⬅ Voltar à Loja
+</a>
 
 <script>
 /* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain:"catalogo-abella-joias.firebaseapp.com",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId:"catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-/* DADOS */
-const cart=JSON.parse(localStorage.getItem('cart'))||[];
-let settings={};
+/* VARIÁVEIS */
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let descontoPix = 0;
+let parcelasTxt = '';
 
-/* CARREGA CONFIGURAÇÕES */
+/* EMPRESA */
 db.ref('settings').once('value').then(s=>{
-  settings=s.val()||{};
-  render();
+ if(s.val()){
+   descontoPix = Number(s.val().pix || 0);
+   parcelasTxt = s.val().parcelas || '';
+   document.getElementById('parcelas').textContent = parcelasTxt;
+ }
+ render();
 });
 
+/* RENDER */
 function render(){
-  let html='',peso=0,total=0;
-  cart.forEach(i=>{
-    peso+=i.weight*i.qty;
-    total+=i.price*i.qty;
-    html+=`
-      <div class="flex items-center gap-3 mb-3 text-sm">
-        <img src="${i.image}" class="w-16 h-16 object-cover border">
-        <div class="flex-1">
-          <p>${i.name}</p>
-          <p class="text-xs">${i.qty}x • ${i.weight}g</p>
-        </div>
-        <strong>R$ ${(i.price*i.qty).toFixed(2)}</strong>
-      </div>`;
-  });
-  lista.innerHTML=html;
-  peso.textContent=peso.toFixed(2);
-  total.textContent=total.toFixed(2);
+ let html = '';
+ let total = 0;
+ let totalPeso = 0;
 
-  if(settings.pix>0){
-    totalPix.textContent=(total*(1-settings.pix/100)).toFixed(2);
-  }
+ cart.forEach((i,idx)=>{
+  const sub = i.price * i.qty;
+  total += sub;
+  totalPeso += i.weight * i.qty;
+
+  html += `
+   <div class="bg-white border rounded p-4 mb-4 flex gap-4 items-center">
+     <img src="${i.image}"
+      class="w-20 h-20 object-cover">
+
+     <div class="flex-1">
+       <p class="font-semibold">${i.name}</p>
+       <p class="text-xs text-gray-400">${i.sku}</p>
+       <p class="text-xs">Peso unit: ${i.weight}g</p>
+     </div>
+
+     <div class="flex items-center gap-2">
+       <button onclick="menos(${idx})" class="px-3 border">−</button>
+       <span>${i.qty}</span>
+       <button onclick="mais(${idx})" class="px-3 border">+</button>
+     </div>
+   </div>
+  `;
+ });
+
+ document.getElementById('lista').innerHTML = html;
+
+ document.getElementById('totalCheio').textContent =
+  total.toFixed(2);
+
+ const pix = total * (1 - descontoPix/100);
+ document.getElementById('totalPix').textContent =
+  pix.toFixed(2);
 }
 
-pagamento.onchange=()=>{
-  linhaPix.classList.toggle('hidden',pagamento.value!=='PIX');
-};
+/* + − */
+function mais(i){ cart[i].qty++; salvar(); }
+function menos(i){
+ if(cart[i].qty>1) cart[i].qty--;
+ else cart.splice(i,1);
+ salvar();
+}
+function salvar(){
+ localStorage.setItem('cart',JSON.stringify(cart));
+ render();
+}
 
+/* FINALIZAR */
 function finalizar(){
-  if(!nome.value||!whats.value||!pagamento.value){
-    alert('Preencha todos os campos.');
-    return;
-  }
+ if(cart.length===0){
+   alert('Carrinho vazio');
+   return;
+ }
 
-  let total=cart.reduce((s,i)=>s+i.price*i.qty,0);
-  let peso=cart.reduce((s,i)=>s+i.weight*i.qty,0);
-  let desconto=0;
+ const pg =
+  document.querySelector('input[name=pg]:checked').value;
 
-  if(pagamento.value==='PIX'){
-    desconto=total*(settings.pix||0)/100;
-  }
+ let total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+ let totalPix = total*(1-descontoPix/100);
 
-  const pedido={
-    cliente:nome.value,
-    whatsapp:whats.value,
-    pagamento:pagamento.value,
-    total,
-    desconto,
-    totalFinal:total-desconto,
-    peso,
-    itens:cart,
-    status:'Novo',
-    data:new Date().toLocaleString()
-  };
+ const pedido = {
+   data:new Date().toISOString(),
+   pagamento:pg,
+   totalCheio:total.toFixed(2),
+   totalPix:totalPix.toFixed(2),
+   itens:cart
+ };
 
-  db.ref('orders').push(pedido);
+ db.ref('orders').push(pedido);
 
-  /* MENSAGEM WHATSAPP — CURTA E PROFISSIONAL */
-  const msg=
-`Olá! Acabei de finalizar um pedido no App da Abella Joias.
+ /* WHATSAPP COMPACTO */
+ let msg =
+ `Olá Abella Joias,%0A
+ Novo pedido realizado.%0A
+ Valor: R$ ${(pg==='PIX'?totalPix:total).toFixed(2)}%0A
+ Pagamento: ${pg}%0A
+ Aguardando contato para confirmação.`;
 
-Nome: ${pedido.cliente}
-Valor total: R$ ${pedido.totalFinal.toFixed(2)}
-Forma de pagamento: ${pedido.pagamento}
+ window.open(
+ `https://wa.me/5519988207658?text=${msg}`,
+ '_blank'
+ );
 
-Fico no aguardo do contato para confirmação e pagamento.`;
+ localStorage.removeItem('cart');
 
-  localStorage.removeItem('cart');
+ alert(
+ 'Pedido enviado com sucesso! Em instantes a Abella Joias entrará em contato.'
+ );
 
-  alert('Pedido enviado com sucesso! Em instantes a Abella Joias entrará em contato.');
-
-  window.open(
-    `https://wa.me/55${pedido.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,
-    '_blank'
-  );
-
-  location.href='index.html';
+ window.location.href='index.html';
 }
 </script>
 
