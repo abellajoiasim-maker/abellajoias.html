@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias | Categoria</title>
+<title>Categoria | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -11,158 +11,74 @@
 
 <style>
 body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-.btn-float{
- position:fixed;
- right:20px;
- z-index:50;
-}
-.btn-cart{bottom:20px}
-.btn-galv{bottom:90px}
-.btn-back{bottom:160px}
+.font-serif{font-family:'Cinzel',serif}
+.floating{position:fixed;bottom:20px;right:20px;z-index:50}
 </style>
 </head>
 
-<body>
+<body class="p-6">
 
-<!-- HEADER -->
-<header class="bg-white border-b px-6 py-6 text-center">
-  <h1 class="font-serif text-2xl gold tracking-widest">ABELLA JOIAS</h1>
-  <p id="tituloCategoria"
-     class="text-xs tracking-widest text-gray-400 uppercase mt-1"></p>
-</header>
+<h1 id="titulo" class="font-serif text-2xl gold text-center mb-6"></h1>
 
-<!-- PRODUTOS -->
-<main class="max-w-7xl mx-auto p-6">
-  <div id="gridProdutos"
-       class="grid grid-cols-2 md:grid-cols-4 gap-6">
-  </div>
-</main>
+<div id="produtos" class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
 
-<!-- BOTÕES FLUTUANTES -->
-<a href="cart_checkout_premium.html"
- class="btn-float btn-cart bg-black text-white px-5 py-3 rounded-full shadow-lg text-xs uppercase tracking-widest">
-🛒 Carrinho
-</a>
-
-<a href="galvanicas.html"
- class="btn-float btn-galv bg-white border px-5 py-3 rounded-full shadow-lg text-xs uppercase tracking-widest gold">
-✨ Galvânicas
-</a>
-
-<a href="index.html"
- class="btn-float btn-back bg-white border px-5 py-3 rounded-full shadow-lg text-xs uppercase tracking-widest">
-⬅ Voltar
-</a>
+<!-- Botões flutuantes -->
+<div class="floating flex flex-col gap-3">
+  <button onclick="history.back()" class="bg-gray-700 text-white px-4 py-3 rounded-full text-sm">🔙 Voltar</button>
+  <a href="cart_checkout_premium.html" class="bg-black text-white px-4 py-3 rounded-full text-sm">🛒 Carrinho</a>
+  <a href="galvanicas.html" class="bg-gold text-white px-4 py-3 rounded-full text-sm" style="background:#A68966">✨ Galvânicas</a>
+</div>
 
 <script>
-/* FIREBASE */
 firebase.initializeApp({
- apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain: "catalogo-abella-joias.firebaseapp.com",
- databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
- projectId: "catalogo-abella-joias"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
-const db = firebase.database();
+const db=firebase.database();
 
-/* CATEGORIA */
-const params = new URLSearchParams(window.location.search);
-const categoria = params.get('cat');
-document.getElementById('tituloCategoria').textContent = categoria;
+const cat=new URLSearchParams(location.search).get('cat');
+titulo.textContent=cat;
 
-/* CARRINHO */
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+db.ref('settings').once('value').then(cfg=>{
+  const pix=cfg.val()?.pix||0;
+  const parcelas=cfg.val()?.parcelas||1;
 
-/* EMPRESA (PIX + PARCELAS) */
-let descontoPix = 0;
-let parcelas = '';
+  db.ref('products').orderByChild('sku').on('value',snap=>{
+    produtos.innerHTML='';
+    snap.forEach(s=>{
+      const p=s.val();
+      if(p.category!==cat) return;
 
-db.ref('settings').once('value').then(s=>{
- if(s.val()){
-   descontoPix = Number(s.val().pix || 0);
-   parcelas = s.val().parcelas || '';
- }
- carregarProdutos();
+      const valorPix=(p.price*(1-pix/100)).toFixed(2);
+
+      produtos.innerHTML+=`
+      <div class="bg-white border p-3">
+        <img src="${p.image}" class="w-full aspect-square object-contain mb-2">
+        <p class="text-sm font-semibold">${p.name}</p>
+        <p class="text-xs text-gray-500">SKU ${p.sku}</p>
+
+        <p class="mt-1">Valor: <strong>R$ ${p.price.toFixed(2)}</strong></p>
+        <p class="text-green-700 text-sm">Pix: R$ ${valorPix}</p>
+        <p class="text-xs">${parcelas}x sem acréscimo</p>
+
+        <button onclick='addCart(${JSON.stringify(p)})'
+          class="mt-2 bg-black text-white w-full py-2 text-xs">
+          ADICIONAR AO CARRINHO
+        </button>
+      </div>`;
+    });
+  });
 });
 
-/* PRODUTOS */
-function carregarProdutos(){
- db.ref('products')
-   .orderByChild('sku')
-   .once('value')
-   .then(snap=>{
-     const grid = document.getElementById('gridProdutos');
-     grid.innerHTML='';
-
-     snap.forEach(s=>{
-       const p = s.val();
-       if(p.category !== categoria) return;
-
-       const valorPix =
-        descontoPix
-          ? (p.price * (1 - descontoPix/100))
-          : p.price;
-
-       grid.innerHTML += `
-        <div class="bg-white border shadow-sm hover:shadow-lg transition rounded overflow-hidden">
-
-          <div class="aspect-square w-full overflow-hidden">
-            <img src="${p.image}"
-                 class="w-full h-full object-cover">
-          </div>
-
-          <div class="p-4 space-y-1">
-            <p class="text-xs text-gray-400">${p.sku}</p>
-            <p class="font-semibold text-sm">${p.name}</p>
-
-            <p class="text-xs text-gray-500">
-              Peso: ${p.weight}g
-            </p>
-
-            <p class="text-sm">
-              <span class="line-through text-gray-400">
-                R$ ${p.price.toFixed(2)}
-              </span>
-            </p>
-
-            <p class="gold font-semibold">
-              PIX: R$ ${valorPix.toFixed(2)}
-            </p>
-
-            <p class="text-xs text-gray-500">
-              Cartão: ${parcelas} sem acréscimo
-            </p>
-
-            <button onclick='addCart(${JSON.stringify(p).replace(/"/g,"&quot;")})'
-             class="mt-2 w-full bg-black text-white py-2 text-xs uppercase tracking-widest">
-              Adicionar ao Carrinho
-            </button>
-          </div>
-
-        </div>
-       `;
-     });
-   });
-}
-
-/* ADD CARRINHO */
 function addCart(p){
- const i = cart.find(i => i.sku === p.sku);
- if(i){
-   i.qty++;
- }else{
-   cart.push({
-     sku:p.sku,
-     name:p.name,
-     price:p.price,
-     weight:p.weight,
-     image:p.image,
-     qty:1
-   });
- }
- localStorage.setItem('cart', JSON.stringify(cart));
- alert('Produto adicionado ao carrinho');
+  let cart=JSON.parse(localStorage.getItem('cart')||'[]');
+  const i=cart.find(i=>i.sku===p.sku);
+  i ? i.qty++ : cart.push({...p,qty:1});
+  localStorage.setItem('cart',JSON.stringify(cart));
+  alert('Produto adicionado ao carrinho');
 }
 </script>
 
