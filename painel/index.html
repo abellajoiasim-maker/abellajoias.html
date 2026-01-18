@@ -6,17 +6,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
 
 <style>
 body{background:#F8F6F2}
-.font-serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
+.font-serif{font-family:'Cinzel',serif}
 .tab{display:none}
 .tab.active{display:block}
+
+.status-Novo{background:#FEF3C7}
+.status-Separação{background:#E0F2FE}
+.status-Enviado{background:#EDE9FE}
+.status-Finalizado{background:#ECFDF5}
+
+@media print{
+ body *{visibility:hidden}
+ #romaneio, #romaneio *{visibility:visible}
+ #romaneio{position:absolute;top:0;left:0;width:100%}
+}
 </style>
 </head>
 
@@ -28,7 +37,7 @@ body{background:#F8F6F2}
     <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
   </div>
 
-  <nav class="flex gap-6 text-xs uppercase">
+  <nav class="flex gap-8 text-xs tracking-widest uppercase">
     <button onclick="openTab('empresa')" class="gold">Empresa</button>
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
@@ -39,171 +48,255 @@ body{background:#F8F6F2}
 <main class="max-w-6xl mx-auto p-8 space-y-16">
 
 <!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-4">
-<h2 class="font-serif gold text-2xl">Empresa</h2>
-
-<div class="bg-white p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome" class="border p-3">
+<section id="empresa" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
+  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
   <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
   <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas cartão (ex: 3)" class="border p-3">
 </div>
-
-<button onclick="salvarEmpresa()" class="bg-black text-white px-6 py-3 text-xs">
-SALVAR
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR EMPRESA
 </button>
 </section>
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="tab space-y-6">
-<h2 class="font-serif gold text-2xl">Categorias</h2>
+<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
 
-<div class="bg-white p-6 space-y-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3 w-full">
-
-  <input type="file" id="catImagem" accept="image/*" class="border p-3">
-  <img id="catPreview" class="h-32 hidden object-cover">
-
-  <button onclick="salvarCategoria()" class="bg-black text-white px-6 py-3 text-xs">
-ADICIONAR CATEGORIA
-</button>
+<div class="bg-white border p-6 flex gap-4">
+  <input id="catNome" placeholder="Nome da categoria" class="border p-3 flex-1">
+  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">ADICIONAR</button>
 </div>
 
 <div id="listaCategorias" class="space-y-2"></div>
 </section>
 
 <!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-6">
-<h2 class="font-serif gold text-2xl">Produtos</h2>
+<section id="produtos" class="tab space-y-8">
+<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
 
-<div class="bg-white p-6 grid md:grid-cols-2 gap-4">
-  <input id="pNome" placeholder="Nome" class="border p-3">
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
+  <input id="pNome" placeholder="Nome do produto" class="border p-3">
   <input id="pSku" placeholder="SKU" class="border p-3">
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
-  <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-
-  <select id="pCategoria" class="border p-3 md:col-span-2"></select>
-
-  <input type="file" id="pImagem" accept="image/*" class="border p-3 md:col-span-2">
-  <img id="pPreview" class="h-32 hidden object-cover">
+  <input id="pPeso" type="number" placeholder="Peso unitário (g)" class="border p-3">
+  <select id="pCategoria" class="border p-3">
+    <option value="">Selecione a categoria</option>
+  </select>
+  <input id="pImagemUrl" placeholder="URL da imagem" class="border p-3 md:col-span-2">
 </div>
 
-<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-6 py-3 text-xs">
+<button onclick="salvarProduto()" id="btnSalvarProduto"
+ class="bg-black text-white px-8 py-3 text-xs">
 SALVAR PRODUTO
 </button>
 
-<div id="listaProdutos" class="grid grid-cols-4 gap-4 mt-6"></div>
+<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"></div>
 </section>
 
 <!-- PEDIDOS -->
-<section id="pedidos" class="tab">
-<h2 class="font-serif gold text-2xl">Pedidos</h2>
+<section id="pedidos" class="tab space-y-4">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
 <div id="listaPedidos"></div>
 </section>
 
 </main>
 
+<!-- ROMANEIO -->
+<div id="romaneio" class="hidden bg-white p-10 text-sm">
+<h2 class="font-serif text-xl gold mb-4">Romaneio</h2>
+
+<p><strong>Cliente:</strong> <span id="rCliente"></span></p>
+<p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
+<p><strong>Pagamento:</strong> <span id="rPag"></span></p>
+<p><strong>Data:</strong> <span id="rData"></span></p>
+
+<table class="w-full border mt-6 text-xs">
+<thead>
+<tr class="bg-gray-100">
+<th class="border p-2">Imagem</th>
+<th class="border p-2">Produto</th>
+<th class="border p-2">SKU</th>
+<th class="border p-2">Qtd</th>
+<th class="border p-2">Peso Unit.</th>
+<th class="border p-2">Peso Total</th>
+<th class="border p-2">Valor</th>
+</tr>
+</thead>
+<tbody id="rItens"></tbody>
+</table>
+
+<div class="mt-6 text-right space-y-1">
+<p>Valor cheio: R$ <strong><span id="rValorCheio"></span></strong></p>
+<p>Desconto PIX: R$ <strong><span id="rDesconto"></span></strong></p>
+<p class="text-lg">Total: R$ <strong><span id="rTotal"></span></strong></p>
+<p>Peso total: <strong><span id="rPeso"></span> g</strong></p>
+</div>
+
+<div class="mt-6 flex gap-4">
+<button onclick="printRomaneio(false)" class="bg-gray-800 text-white px-4 py-2 text-xs">
+Imprimir sem imagem
+</button>
+<button onclick="printRomaneio(true)" class="bg-black text-white px-4 py-2 text-xs">
+Imprimir com imagem
+</button>
+</div>
+</div>
+
 <script>
-// FIREBASE
 firebase.initializeApp({
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId:"catalogo-abella-joias"
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain:"catalogo-abella-joias.firebaseapp.com",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId:"catalogo-abella-joias"
 });
 const db=firebase.database();
-const storage=firebase.storage();
 
-// TABS
 function openTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
 }
 
-// PREVIEW
-catImagem.onchange=e=>{
-  catPreview.src=URL.createObjectURL(e.target.files[0]);
-  catPreview.classList.remove('hidden');
-};
-pImagem.onchange=e=>{
-  pPreview.src=URL.createObjectURL(e.target.files[0]);
-  pPreview.classList.remove('hidden');
-};
-
-// EMPRESA
+/* EMPRESA */
 function salvarEmpresa(){
-  db.ref('settings').set({
-    name:empNome.value,
-    whatsapp:empWhatsapp.value,
-    pix:+empPix.value,
-    parcelas:+empParcelas.value
-  });
+ db.ref('settings').set({
+  name:empNome.value,
+  whatsapp:empWhatsapp.value,
+  pix:Number(empPix.value||0)
+ });
 }
 db.ref('settings').on('value',s=>{
-  if(!s.val()) return;
-  empNome.value=s.val().name||'';
-  empWhatsapp.value=s.val().whatsapp||'';
-  empPix.value=s.val().pix||0;
-  empParcelas.value=s.val().parcelas||0;
+ if(!s.val())return;
+ empNome.value=s.val().name||'';
+ empWhatsapp.value=s.val().whatsapp||'';
+ empPix.value=s.val().pix||0;
 });
 
-// CATEGORIAS
+/* CATEGORIAS */
 function salvarCategoria(){
-  const file=catImagem.files[0];
-  const nome=catNome.value;
-  if(!nome||!file) return alert('Preencha tudo');
-
-  const ref=storage.ref(`images/categorias/${nome}.jpg`);
-  ref.put(file).then(()=>{
-    ref.getDownloadURL().then(url=>{
-      db.ref('categories').push({name:nome,image:url});
-      catNome.value=''; catPreview.classList.add('hidden');
-    });
-  });
+ if(!catNome.value)return;
+ db.ref('categories').push({name:catNome.value});
+ catNome.value='';
 }
-
 db.ref('categories').on('value',snap=>{
-  listaCategorias.innerHTML='';
-  pCategoria.innerHTML='<option value="">Selecione</option>';
-  snap.forEach(s=>{
-    listaCategorias.innerHTML+=`
-    <div class="bg-white p-3 flex justify-between">
-      ${s.val().name}
-      <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600">Excluir</button>
-    </div>`;
-    pCategoria.innerHTML+=`<option>${s.val().name}</option>`;
-  });
+ listaCategorias.innerHTML='';
+ pCategoria.innerHTML='<option value="">Selecione</option>';
+ snap.forEach(s=>{
+  listaCategorias.innerHTML+=`
+   <div class="bg-white border p-3 flex justify-between">
+    ${s.val().name}
+    <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600 text-xs">Excluir</button>
+   </div>`;
+  pCategoria.innerHTML+=`<option>${s.val().name}</option>`;
+ });
 });
 
-// PRODUTOS
+/* PRODUTOS */
+let editId=null;
 function salvarProduto(){
-  const file=pImagem.files[0];
-  if(!file) return alert('Imagem obrigatória');
-
-  const sku=pSku.value;
-  const ref=storage.ref(`images/produtos/${sku}.jpg`);
-
-  ref.put(file).then(()=>{
-    ref.getDownloadURL().then(url=>{
-      db.ref('products').push({
-        name:pNome.value,
-        sku:sku,
-        price:+pPreco.value,
-        weight:+pPeso.value,
-        category:pCategoria.value,
-        image:url
-      });
-      alert('Produto salvo');
-    });
-  });
+ const p={
+  name:pNome.value,
+  sku:pSku.value,
+  price:Number(pPreco.value),
+  weight:Number(pPeso.value),
+  category:pCategoria.value,
+  image:pImagemUrl.value
+ };
+ editId?db.ref('products/'+editId).set(p):db.ref('products').push(p);
+ editId=null;
+ btnSalvarProduto.textContent='SALVAR PRODUTO';
+ pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value='';
+}
+db.ref('products').on('value',snap=>{
+ listaProdutos.innerHTML='';
+ snap.forEach(s=>{
+  const p=s.val();
+  listaProdutos.innerHTML+=`
+  <div class="bg-white border p-3">
+   <img src="${p.image}" class="aspect-square object-contain">
+   <p class="font-semibold">${p.name}</p>
+   <p class="text-xs">${p.sku} • ${p.weight}g</p>
+   <p class="gold">R$ ${p.price.toFixed(2)}</p>
+   <div class="flex gap-2 text-xs mt-1">
+    <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2">Editar</button>
+    <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2">Excluir</button>
+   </div>
+  </div>`;
+ });
+});
+function editarProduto(id){
+ db.ref('products/'+id).once('value').then(s=>{
+  const p=s.val();
+  pNome.value=p.name;
+  pSku.value=p.sku;
+  pPreco.value=p.price;
+  pPeso.value=p.weight;
+  pCategoria.value=p.category;
+  pImagemUrl.value=p.image;
+  editId=id;
+  btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
+ });
 }
 
-db.ref('products').on('value',snap=>{
-  listaProdutos.innerHTML='';
-  snap.forEach(s=>{
-    listaProdutos.innerHTML+=`
-    <img src="${s.val().image}" class="aspect-square object-cover border">`;
-  });
+/* PEDIDOS + ROMANEIO */
+let pedidoAtual=null;
+db.ref('orders').on('value',snap=>{
+ listaPedidos.innerHTML='';
+ snap.forEach(s=>{
+  const o=s.val(),id=s.key;
+  listaPedidos.innerHTML+=`
+  <div class="bg-white border p-4 status-${o.status}">
+   <p class="font-semibold">${o.cliente}</p>
+   <p class="text-xs">${o.data}</p>
+   <p>${o.pagamento}</p>
+   <strong>R$ ${o.total.toFixed(2)}</strong>
+   <div class="flex gap-2 mt-2 text-xs">
+    ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
+     <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2">${st}</button>`).join('')}
+    <button onclick='abrirRomaneio(${JSON.stringify(o).replace(/"/g,"&quot;")})'
+     class="bg-black text-white px-2">Romaneio</button>
+    <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2">Excluir</button>
+   </div>
+  </div>`;
+ });
 });
+
+function abrirRomaneio(o){
+ pedidoAtual=o;
+ rCliente.textContent=o.cliente;
+ rWhats.textContent=o.whatsapp;
+ rPag.textContent=o.pagamento;
+ rData.textContent=o.data;
+ let peso=0,val=0;
+ rItens.innerHTML='';
+ o.itens.forEach(i=>{
+  const pTot=i.weight*i.qty;
+  peso+=pTot;
+  val+=i.price*i.qty;
+  rItens.innerHTML+=`
+  <tr>
+   <td class="border p-2 r-img"><img src="${i.image}" class="h-10 mx-auto"></td>
+   <td class="border p-2">${i.name}</td>
+   <td class="border p-2">${i.sku||'-'}</td>
+   <td class="border p-2">${i.qty}</td>
+   <td class="border p-2">${i.weight}g</td>
+   <td class="border p-2">${pTot.toFixed(2)}g</td>
+   <td class="border p-2">R$ ${(i.price*i.qty).toFixed(2)}</td>
+  </tr>`;
+ });
+ const desc=o.pagamento==='PIX'?val*(o.pixDesconto||0)/100:0;
+ rValorCheio.textContent=val.toFixed(2);
+ rDesconto.textContent=desc.toFixed(2);
+ rTotal.textContent=(val-desc).toFixed(2);
+ rPeso.textContent=peso.toFixed(2);
+ romaneio.classList.remove('hidden');
+}
+function printRomaneio(img){
+ document.querySelectorAll('.r-img').forEach(e=>e.style.display=img?'table-cell':'none');
+ window.print();
+ romaneio.classList.add('hidden');
+}
 </script>
 
 </body>
