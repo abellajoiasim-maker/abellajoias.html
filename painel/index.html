@@ -79,8 +79,9 @@ function openTab(id){
  document.getElementById(id).classList.add('active');
 }
 
-function importarCSV() {
-  const file = document.getElementById('csvFile').files[0];
+async function importarCSV() {
+  const fileInput = document.getElementById('csvFile');
+  const file = fileInput.files[0];
   const status = document.getElementById('importStatus');
   const log = document.getElementById('importLog');
 
@@ -92,74 +93,92 @@ function importarCSV() {
     return;
   }
 
-  status.innerHTML = '⏳ Lendo arquivo e enviando para o Firebase...';
+  status.innerHTML = '⏳ Lendo arquivo e conectando ao Firebase...';
 
   const reader = new FileReader();
 
   reader.onload = async (e) => {
-    const texto = e.target.result.replace(/\r/g, '').trim();
-    const linhas = texto.split('\n');
+    try {
+      // Remove retornos de carro e espaços em branco nas extremidades
+      const texto = e.target.result.replace(/\r/g, '').trim();
+      const linhas = texto.split('\n');
 
-    if (linhas.length < 2) {
-      status.innerHTML = '<span class="log-err">❌ CSV vazio ou inválido</span>';
-      return;
-    }
-
-    const cabecalho = linhas[0].toLowerCase().trim();
-    // Verificação flexível do cabeçalho
-    if (!cabecalho.includes('tipo') || !cabecalho.includes('sku')) {
-      status.innerHTML = '<span class="log-err">❌ Cabeçalho inválido. Use: tipo;nome;sku...</span>';
-      return;
-    }
-
-    let sucesso = 0;
-    let erros = 0;
-
-    // Usar for...of para permitir o uso de 'await' e garantir a gravação
-    const dados = linhas.slice(1);
-
-    for (const [index, linha] of dados.entries()) {
-      if (!linha.trim()) continue;
-
-      const col = linha.split(';');
-      if (col.length < 6) {
-        log.innerHTML += `<div class="log-err">Linha ${index + 2}: Colunas insuficientes</div>`;
-        erros++;
-        continue;
+      if (linhas.length < 2) {
+        status.innerHTML = '<span class="log-err">❌ O arquivo está vazio ou contém apenas o cabeçalho</span>';
+        return;
       }
 
-      // Limpeza de dados: remove espaços e garante formato numérico
-      const precoLimpo = col[4].replace(',', '.').trim();
-      const pesoLimpo = col[5].replace(',', '.').trim();
-
-      const produto = {
-        tipo: col[0].trim(),
-        nome: col[1].trim(),
-        sku: col[2].trim(),
-        categoria: col[3].trim(),
-        preco: parseFloat(precoLimpo) || 0,
-        peso: parseFloat(pesoLimpo) || 0,
-        imagem: col[6] ? col[6].trim() : '',
-        variacoes: col[7] ? col[7].trim() : 'FALSE',
-        dataImportacao: new Date().toISOString()
-      };
-
-      try {
-        // IMPORTANTE: Verifique se o caminho 'products' é o mesmo usado na sua página de exibição
-        await db.ref('products').push(produto);
-        sucesso++;
-        log.innerHTML += `<div class="log-ok">✔ ${produto.nome} (${produto.sku}) salvo.</div>`;
-      } catch (error) {
-        erros++;
-        log.innerHTML += `<div class="log-err">❌ Erro no SKU ${produto.sku}: ${error.message}</div>`;
+      // Validação do Cabeçalho
+      const cabecalho = linhas[0].toLowerCase().trim();
+      if (!cabecalho.includes('tipo') || !cabecalho.includes('sku')) {
+        status.innerHTML = '<span class="log-err">❌ Cabeçalho inválido. Verifique se usou ";" como separador.</span>';
+        return;
       }
-    }
 
-    status.innerHTML = `
-      <b class="log-ok">✅ Importação Finalizada!</b><br>
-      Produtos salvos no banco: ${sucesso}<br>
-      Falhas: ${erros}
-    `;
+      let sucesso = 0;
+      let erros = 0;
+
+      // Itera sobre as linhas de dados
+      const dados = linhas.slice(1);
+      
+      for (const [index, linha] of dados.entries()) {
+        const linhaLimpa = linha.trim();
+        if (!linhaLimpa) continue; // Pula linhas vazias
+
+        const col = linhaLimpa.split(';');
+
+        // Validação mínima de colunas
+        if (col.length < 6) {
+          log.innerHTML += `<div class="log-err">Linha ${index + 2}: Colunas insuficientes (esperado 8, obtido ${col.length})</div>`;
+          erros++;
+          continue;
+        }
+
+        // Tratamento de Preço e Peso (substitui vírgula por ponto para o JavaScript entender)
+        const precoNum = parseFloat(col[4].replace(',', '.').trim()) || 0;
+        const pesoNum = parseFloat(col[5].replace(',', '.').trim()) || 0;
+
+        const produto = {
+          tipo: col[0].trim(),
+          nome: col[1].trim(),
+          sku: col[2].trim(),
+          categoria: col[3].trim(),
+          preco: precoNum,
+          peso: pesoNum,
+          imagem: col[6] ? col[6].trim() : "",
+          variacoes: col[7] ? col[7].trim() : "FALSE",
+          dataImportacao: new Date().toISOString()
+        };
+
+        try {
+          // Envia para o nó 'products' no Realtime Database
+          await db.ref('products').push(produto);
+          sucesso++;
+          log.innerHTML += `<div class="log-ok">✔ [${produto.sku}] ${produto.nome} - Salvo com sucesso</div>`;
+        } catch (dbError) {
+          erros++;
+          log.innerHTML += `<div class="log-err">❌ Erro no SKU ${produto.sku}: ${dbError.message}</div>`;
+        }
+      }
+
+      status.innerHTML = `
+        <div class="p-4 bg-white border-l-4 border-green-500 shadow-sm">
+          <b class="text-green-700 text-lg">✅ Importação Finalizada!</b><br>
+          <span class="text-gray-700">Produtos no banco: <b>${sucesso}</b></span><br>
+          <span class="text-red-600">Falhas ignoradas: <b>${erros}</b></span>
+        </div>
+      `;
+      
+      // Limpa o input de arquivo para permitir nova importação
+      fileInput.value = '';
+
+    } catch (processError) {
+      status.innerHTML = `<span class="log-err">❌ Erro no processamento: ${processError.message}</span>`;
+    }
+  };
+
+  reader.onerror = () => {
+    status.innerHTML = '<span class="log-err">❌ Erro ao ler o arquivo físico</span>';
   };
 
   reader.readAsText(file, 'UTF-8');
