@@ -6,8 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
 
 <style>
 body{background:#F8F6F2}
@@ -15,17 +17,6 @@ body{background:#F8F6F2}
 .gold{color:#A68966}
 .tab{display:none}
 .tab.active{display:block}
-
-.status-Novo{background:#FEF3C7}
-.status-Separação{background:#E0F2FE}
-.status-Enviado{background:#EDE9FE}
-.status-Finalizado{background:#ECFDF5}
-
-@media print{
- body *{visibility:hidden}
- #romaneio, #romaneio *{visibility:visible}
- #romaneio{position:absolute;top:0;left:0;width:100%}
-}
 </style>
 </head>
 
@@ -37,7 +28,7 @@ body{background:#F8F6F2}
     <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
   </div>
 
-  <nav class="flex gap-8 text-xs tracking-widest uppercase">
+  <nav class="flex gap-6 text-xs uppercase">
     <button onclick="openTab('empresa')" class="gold">Empresa</button>
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
@@ -48,274 +39,171 @@ body{background:#F8F6F2}
 <main class="max-w-6xl mx-auto p-8 space-y-16">
 
 <!-- EMPRESA -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+<section id="empresa" class="tab active space-y-4">
+<h2 class="font-serif gold text-2xl">Empresa</h2>
 
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
+<div class="bg-white p-6 grid md:grid-cols-2 gap-4">
+  <input id="empNome" placeholder="Nome" class="border p-3">
   <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
   <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" placeholder="Parcelas no cartão (ex: 3x)" class="border p-3">
+  <input id="empParcelas" placeholder="Parcelas cartão (ex: 3)" class="border p-3">
 </div>
 
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
-SALVAR EMPRESA
+<button onclick="salvarEmpresa()" class="bg-black text-white px-6 py-3 text-xs">
+SALVAR
 </button>
 </section>
 
 <!-- CATEGORIAS -->
 <section id="categorias" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
+<h2 class="font-serif gold text-2xl">Categorias</h2>
 
-<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-  <input id="catNome" placeholder="Nome da categoria" class="border p-3">
-  <input id="catImagem" placeholder="URL imagem (Firebase Storage)" class="border p-3 md:col-span-2">
-</div>
+<div class="bg-white p-6 space-y-4">
+  <input id="catNome" placeholder="Nome da categoria" class="border p-3 w-full">
 
-<button onclick="salvarCategoria()" class="bg-black text-white px-6 py-3 text-xs">
+  <input type="file" id="catImagem" accept="image/*" class="border p-3">
+  <img id="catPreview" class="h-32 hidden object-cover">
+
+  <button onclick="salvarCategoria()" class="bg-black text-white px-6 py-3 text-xs">
 ADICIONAR CATEGORIA
 </button>
+</div>
 
 <div id="listaCategorias" class="space-y-2"></div>
 </section>
 
 <!-- PRODUTOS -->
-<section id="produtos" class="tab space-y-8">
-<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+<section id="produtos" class="tab space-y-6">
+<h2 class="font-serif gold text-2xl">Produtos</h2>
 
-<!-- IMPORTAÇÃO CSV -->
-<div class="bg-white border p-6 space-y-4">
-  <h3 class="font-semibold text-sm">Importar Produtos em Massa (CSV)</h3>
-  <input type="file" id="csvFile" accept=".csv" class="border p-2">
-  <button onclick="importarCSV()" class="bg-black text-white px-6 py-2 text-xs">
-    IMPORTAR CSV
-  </button>
-  <p class="text-xs text-gray-500">
-    Colunas obrigatórias: name, sku, category, price, weight, image
-  </p>
-</div>
-
-<!-- CADASTRO MANUAL -->
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="pNome" placeholder="Nome do produto" class="border p-3">
+<div class="bg-white p-6 grid md:grid-cols-2 gap-4">
+  <input id="pNome" placeholder="Nome" class="border p-3">
   <input id="pSku" placeholder="SKU" class="border p-3">
   <input id="pPreco" type="number" placeholder="Preço" class="border p-3">
   <input id="pPeso" type="number" placeholder="Peso (g)" class="border p-3">
-  <select id="pCategoria" class="border p-3">
-    <option value="">Selecione a categoria</option>
-  </select>
-  <input id="pImagemUrl" placeholder="URL da imagem (Firebase)" class="border p-3 md:col-span-2">
+
+  <select id="pCategoria" class="border p-3 md:col-span-2"></select>
+
+  <input type="file" id="pImagem" accept="image/*" class="border p-3 md:col-span-2">
+  <img id="pPreview" class="h-32 hidden object-cover">
 </div>
 
-<button onclick="salvarProduto()" id="btnSalvarProduto"
- class="bg-black text-white px-8 py-3 text-xs">
+<button onclick="salvarProduto()" id="btnProduto" class="bg-black text-white px-6 py-3 text-xs">
 SALVAR PRODUTO
 </button>
 
-<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"></div>
+<div id="listaProdutos" class="grid grid-cols-4 gap-4 mt-6"></div>
 </section>
 
 <!-- PEDIDOS -->
-<section id="pedidos" class="tab space-y-4">
-<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
-<div id="listaPedidos" class="space-y-4"></div>
+<section id="pedidos" class="tab">
+<h2 class="font-serif gold text-2xl">Pedidos</h2>
+<div id="listaPedidos"></div>
 </section>
 
 </main>
 
-<!-- ROMANEIO -->
-<div id="romaneio" class="hidden bg-white p-10 text-sm">
-  <h2 class="font-serif text-xl gold mb-4">Romaneio</h2>
-  <p><strong>Cliente:</strong> <span id="rCliente"></span></p>
-  <p><strong>WhatsApp:</strong> <span id="rWhats"></span></p>
-  <p><strong>Pagamento:</strong> <span id="rPag"></span></p>
-
-  <table class="w-full border mt-6">
-    <thead>
-      <tr>
-        <th class="border p-2">Produto</th>
-        <th class="border p-2">SKU</th>
-        <th class="border p-2">Qtd</th>
-        <th class="border p-2">Peso Unit.</th>
-        <th class="border p-2">Peso Total</th>
-        <th class="border p-2">Valor</th>
-      </tr>
-    </thead>
-    <tbody id="rItens"></tbody>
-  </table>
-
-  <div class="mt-6 text-right space-y-1">
-    <p>Valor Cheio: R$ <span id="rCheio"></span></p>
-    <p>Desconto PIX: R$ <span id="rDesconto"></span></p>
-    <p class="font-bold text-lg">Total: R$ <span id="rTotal"></span></p>
-  </div>
-</div>
-
 <script>
 // FIREBASE
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId:"catalogo-abella-joias"
 });
 const db=firebase.database();
+const storage=firebase.storage();
 
 // TABS
 function openTab(id){
- document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
+
+// PREVIEW
+catImagem.onchange=e=>{
+  catPreview.src=URL.createObjectURL(e.target.files[0]);
+  catPreview.classList.remove('hidden');
+};
+pImagem.onchange=e=>{
+  pPreview.src=URL.createObjectURL(e.target.files[0]);
+  pPreview.classList.remove('hidden');
+};
 
 // EMPRESA
 function salvarEmpresa(){
- db.ref('settings').set({
-  name:empNome.value,
-  whatsapp:empWhatsapp.value,
-  pix:Number(empPix.value||0),
-  parcelas:empParcelas.value
- });
+  db.ref('settings').set({
+    name:empNome.value,
+    whatsapp:empWhatsapp.value,
+    pix:+empPix.value,
+    parcelas:+empParcelas.value
+  });
 }
 db.ref('settings').on('value',s=>{
- if(!s.val())return;
- empNome.value=s.val().name||'';
- empWhatsapp.value=s.val().whatsapp||'';
- empPix.value=s.val().pix||0;
- empParcelas.value=s.val().parcelas||'';
+  if(!s.val()) return;
+  empNome.value=s.val().name||'';
+  empWhatsapp.value=s.val().whatsapp||'';
+  empPix.value=s.val().pix||0;
+  empParcelas.value=s.val().parcelas||0;
 });
 
 // CATEGORIAS
-let catEdit=null;
 function salvarCategoria(){
- const data={name:catNome.value,image:catImagem.value};
- if(catEdit){ db.ref('categories/'+catEdit).set(data); catEdit=null; }
- else db.ref('categories').push(data);
- catNome.value=catImagem.value='';
+  const file=catImagem.files[0];
+  const nome=catNome.value;
+  if(!nome||!file) return alert('Preencha tudo');
+
+  const ref=storage.ref(`images/categorias/${nome}.jpg`);
+  ref.put(file).then(()=>{
+    ref.getDownloadURL().then(url=>{
+      db.ref('categories').push({name:nome,image:url});
+      catNome.value=''; catPreview.classList.add('hidden');
+    });
+  });
 }
+
 db.ref('categories').on('value',snap=>{
- listaCategorias.innerHTML='';
- pCategoria.innerHTML='<option value="">Selecione</option>';
- snap.forEach(s=>{
-  listaCategorias.innerHTML+=`
-   <div class="bg-white border p-3 flex justify-between">
-    ${s.val().name}
-    <div class="text-xs flex gap-2">
-      <button onclick="editarCategoria('${s.key}','${s.val().name}','${s.val().image||''}')" class="text-blue-600">Editar</button>
+  listaCategorias.innerHTML='';
+  pCategoria.innerHTML='<option value="">Selecione</option>';
+  snap.forEach(s=>{
+    listaCategorias.innerHTML+=`
+    <div class="bg-white p-3 flex justify-between">
+      ${s.val().name}
       <button onclick="db.ref('categories/${s.key}').remove()" class="text-red-600">Excluir</button>
-    </div>
-   </div>`;
-  pCategoria.innerHTML+=`<option>${s.val().name}</option>`;
- });
+    </div>`;
+    pCategoria.innerHTML+=`<option>${s.val().name}</option>`;
+  });
 });
-function editarCategoria(id,n,i){
- catEdit=id; catNome.value=n; catImagem.value=i;
-}
 
 // PRODUTOS
-let produtoEditando=null;
 function salvarProduto(){
- const p={name:pNome.value,sku:pSku.value,price:Number(pPreco.value),weight:Number(pPeso.value),category:pCategoria.value,image:pImagemUrl.value};
- if(produtoEditando){ db.ref('products/'+produtoEditando).set(p); produtoEditando=null; btnSalvarProduto.textContent='SALVAR PRODUTO'; }
- else db.ref('products').push(p);
- pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value=''; pCategoria.value='';
+  const file=pImagem.files[0];
+  if(!file) return alert('Imagem obrigatória');
+
+  const sku=pSku.value;
+  const ref=storage.ref(`images/produtos/${sku}.jpg`);
+
+  ref.put(file).then(()=>{
+    ref.getDownloadURL().then(url=>{
+      db.ref('products').push({
+        name:pNome.value,
+        sku:sku,
+        price:+pPreco.value,
+        weight:+pPeso.value,
+        category:pCategoria.value,
+        image:url
+      });
+      alert('Produto salvo');
+    });
+  });
 }
+
 db.ref('products').on('value',snap=>{
- listaProdutos.innerHTML='';
- snap.forEach(s=>{
-  const p=s.val();
-  listaProdutos.innerHTML+=`
-  <div class="bg-white border p-3">
-    <img src="${p.image}" class="aspect-square object-cover w-full">
-    <p class="mt-1 font-semibold">${p.name}</p>
-    <p class="text-xs">${p.sku} • ${p.category}</p>
-    <p class="gold font-semibold">R$ ${p.price.toFixed(2)}</p>
-    <div class="flex gap-2 text-xs mt-2">
-      <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-      <button onclick="db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
-    </div>
-  </div>`;
- });
+  listaProdutos.innerHTML='';
+  snap.forEach(s=>{
+    listaProdutos.innerHTML+=`
+    <img src="${s.val().image}" class="aspect-square object-cover border">`;
+  });
 });
-function editarProduto(id){
- db.ref('products/'+id).once('value').then(s=>{
-  const p=s.val();
-  pNome.value=p.name; pSku.value=p.sku; pPreco.value=p.price; pPeso.value=p.weight;
-  pCategoria.value=p.category; pImagemUrl.value=p.image;
-  produtoEditando=id; btnSalvarProduto.textContent='ATUALIZAR PRODUTO';
- });
-}
-
-// IMPORTAR CSV
-function importarCSV(){
- const file=document.getElementById('csvFile').files[0];
- if(!file){alert('Selecione um arquivo CSV');return;}
- const reader=new FileReader();
- reader.onload=e=>{
-  const lines=e.target.result.split('\n');
-  const headers=lines[0].split(',').map(h=>h.trim());
-  for(let i=1;i<lines.length;i++){
-   if(!lines[i].trim())continue;
-   const data=lines[i].split(',');
-   let obj={};
-   headers.forEach((h,idx)=>obj[h]=data[idx]?.trim());
-   db.ref('products').push({
-    name:obj.name,
-    sku:obj.sku,
-    category:obj.category,
-    price:Number(obj.price),
-    weight:Number(obj.weight),
-    image:obj.image
-   });
-  }
-  alert('Produtos importados com sucesso!');
- };
- reader.readAsText(file);
-}
-
-// PEDIDOS + ROMANEIO
-db.ref('orders').on('value',snap=>{
- listaPedidos.innerHTML='';
- snap.forEach(s=>{
-  const o=s.val(),id=s.key;
-  listaPedidos.innerHTML+=`
-  <div class="bg-white border p-4 status-${o.status}">
-    <p class="font-semibold">${o.cliente}</p>
-    <p class="text-xs">${o.pagamento}</p>
-    <p class="text-sm">Total: R$ ${o.total.toFixed(2)}</p>
-    <div class="flex gap-2 text-xs mt-2">
-      ${['Novo','Separação','Enviado','Finalizado'].map(st=>`
-        <button onclick="db.ref('orders/${id}/status').set('${st}')" class="border px-2 py-1">${st}</button>
-      `).join('')}
-      <button onclick='imprimir(${JSON.stringify(o)})' class="bg-black text-white px-2 py-1">Romaneio</button>
-      <button onclick="db.ref('orders/${id}').remove()" class="text-red-600 px-2 py-1">Excluir</button>
-    </div>
-  </div>`;
- });
-});
-
-function imprimir(o){
- rCliente.textContent=o.cliente;
- rWhats.textContent=o.whatsapp;
- rPag.textContent=o.pagamento;
- rCheio.textContent=o.valorCheio.toFixed(2);
- rDesconto.textContent=o.desconto.toFixed(2);
- rTotal.textContent=o.total.toFixed(2);
- rItens.innerHTML='';
- o.itens.forEach(i=>{
-  rItens.innerHTML+=`
-  <tr>
-    <td class="border p-2">${i.name}</td>
-    <td class="border p-2">${i.sku}</td>
-    <td class="border p-2">${i.qty}</td>
-    <td class="border p-2">${i.weight}g</td>
-    <td class="border p-2">${(i.weight*i.qty).toFixed(2)}g</td>
-    <td class="border p-2">R$ ${(i.price*i.qty).toFixed(2)}</td>
-  </tr>`;
- });
- romaneio.classList.remove('hidden');
- window.print();
- romaneio.classList.add('hidden');
-}
 </script>
 
 </body>
