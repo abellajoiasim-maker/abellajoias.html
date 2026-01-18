@@ -15,7 +15,6 @@ body{background:#F8F6F2}
 .gold{color:#A68966}
 .tab{display:none}
 .tab.active{display:block}
-img.square{aspect-ratio:1/1;object-fit:contain}
 .log-ok{color:#047857}
 .log-err{color:#b91c1c}
 </style>
@@ -29,56 +28,218 @@ img.square{aspect-ratio:1/1;object-fit:contain}
     <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
   </div>
 
-  <nav class="flex gap-6 text-xs uppercase tracking-widest">
+  <nav class="flex gap-8 text-xs tracking-widest uppercase">
     <button onclick="openTab('empresa')" class="gold">Empresa</button>
     <button onclick="openTab('categorias')">Categorias</button>
     <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('importacao')" class="font-bold">Importação CSV</button>
     <button onclick="openTab('pedidos')">Pedidos</button>
   </nav>
 </header>
 
 <main class="max-w-7xl mx-auto p-8 space-y-16">
 
-<!-- IMPORTAÇÃO CSV -->
-<section id="importacao" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold">Importação de Produtos (CSV)</h2>
+<section id="empresa" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
 
-<div class="bg-white border p-6 space-y-4">
-<p class="text-sm text-gray-600">
-📥 Envie um arquivo CSV usando <b>;</b> como separador<br>
-Cabeçalho obrigatório:
-</p>
+<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
+  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
+  <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
+  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
+  <input id="empParcelas" type="number" placeholder="Parcelas cartão sem acréscimo" class="border p-3">
+</div>
 
-<pre class="bg-gray-100 p-3 text-xs">tipo;nome;sku;categoria;preco;peso;imagem;variacoes</pre>
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR EMPRESA
+</button>
+</section>
 
-<input type="file" id="csvFile" accept=".csv" class="border p-3 w-full">
+<section id="categorias" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
 
-<button onclick="importarCSV()" class="bg-green-600 text-white px-6 py-3">
+<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
+  <input id="catNome" placeholder="Nome da categoria" class="border p-3">
+  <input id="catImagem" placeholder="Imagem (Firebase Storage)" class="border p-3">
+  <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">SALVAR</button>
+</div>
+
+<div id="listaCategorias" class="grid md:grid-cols-3 gap-4"></div>
+</section>
+
+<section id="produtos" class="tab space-y-8">
+<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+
+<div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
+  <input id="pNome" placeholder="Nome do produto" class="border p-3">
+  <input id="pSku" placeholder="SKU" class="border p-3">
+  <input id="pPreco" type="number" step="0.01" placeholder="Preço" class="border p-3">
+  <input id="pPeso" type="number" step="0.01" placeholder="Peso (g)" class="border p-3">
+
+  <select id="pCategoria" class="border p-3">
+    <option value="">Selecione a categoria</option>
+  </select>
+
+  <input id="pImagemUrl" placeholder="Imagem (Firebase Storage)" class="border p-3 md:col-span-3">
+</div>
+
+<button onclick="salvarProduto()" id="btnSalvarProduto" class="bg-black text-white px-8 py-3 text-xs">
+SALVAR PRODUTO
+</button>
+
+<hr class="my-8">
+<h3 class="font-serif gold text-lg">Importação em Massa (CSV)</h3>
+<p class="text-xs text-gray-500 mb-2">Use ";" como separador e cabeçalho: tipo;nome;sku;categoria;preco;peso;imagem;variacoes</p>
+
+<input type="file" id="csvFile" accept=".csv" class="border p-3 w-full max-w-md">
+<button onclick="importarCSV()" class="bg-black text-white px-6 py-2 text-xs mt-2 block">
 IMPORTAR PRODUTOS
 </button>
 
 <div id="importStatus" class="text-sm mt-4"></div>
-<div id="importLog" class="text-xs mt-4 space-y-1"></div>
-</div>
+<div id="importLog" class="text-xs mt-4 space-y-1 max-h-60 overflow-y-auto border p-2 bg-gray-50 hidden"></div>
+
+<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"></div>
+</section>
+
+<section id="pedidos" class="tab space-y-4">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
+<div id="listaPedidos"></div>
 </section>
 
 </main>
 
 <script>
+/* 🔥 CONFIGURAÇÃO FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-   authDomain: "catalogo-abella-joias.firebaseapp.com",
- databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
 const db = firebase.database();
 
+/* NAVEGAÇÃO TABS */
 function openTab(id){
- document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
+/* ===== FUNÇÕES EMPRESA ===== */
+function salvarEmpresa(){
+  db.ref('settings').set({
+    name: empNome.value,
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value || 0),
+    parcelas: Number(empParcelas.value || 1)
+  }).then(() => alert("Configurações salvas!"));
+}
+
+db.ref('settings').on('value', s => {
+  const v = s.val();
+  if(!v) return;
+  document.getElementById('empNome').value = v.name || '';
+  document.getElementById('empWhatsapp').value = v.whatsapp || '';
+  document.getElementById('empPix').value = v.pix || 0;
+  document.getElementById('empParcelas').value = v.parcelas || 1;
+});
+
+/* ===== FUNÇÕES CATEGORIAS ===== */
+let catEdit = null;
+function salvarCategoria(){
+  const dados = { name: catNome.value, image: catImagem.value };
+  if(catEdit){
+    db.ref('categories/' + catEdit).set(dados);
+    catEdit = null;
+  } else {
+    db.ref('categories').push(dados);
+  }
+  catNome.value = ''; catImagem.value = '';
+}
+
+db.ref('categories').on('value', snap => {
+  const lista = document.getElementById('listaCategorias');
+  const select = document.getElementById('pCategoria');
+  lista.innerHTML = '';
+  select.innerHTML = '<option value="">Selecione a categoria</option>';
+  
+  snap.forEach(s => {
+    const c = s.val();
+    lista.innerHTML += `
+      <div class="bg-white border p-4">
+        <img src="${c.image}" class="w-full h-40 object-cover">
+        <p class="mt-2 font-semibold">${c.name}</p>
+        <div class="flex gap-2 mt-2 text-xs">
+          <button onclick="editarCategoria('${s.key}','${c.name}','${c.image}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+          <button onclick="if(confirm('Excluir categoria?')) db.ref('categories/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
+        </div>
+      </div>`;
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+});
+
+function editarCategoria(id, n, i){
+  catNome.value = n;
+  catImagem.value = i;
+  catEdit = id;
+}
+
+/* ===== FUNÇÕES PRODUTOS ===== */
+let produtoEdit = null;
+function salvarProduto(){
+  const p = {
+    nome: pNome.value,
+    sku: pSku.value,
+    preco: parseFloat(pPreco.value) || 0,
+    peso: parseFloat(pPeso.value) || 0,
+    categoria: pCategoria.value,
+    imagem: pImagemUrl.value,
+    dataImportacao: new Date().toISOString()
+  };
+  
+  if(produtoEdit){
+    db.ref('products/' + produtoEdit).set(p);
+    produtoEdit = null;
+    alert("Produto atualizado!");
+  } else {
+    db.ref('products').push(p);
+    alert("Produto cadastrado!");
+  }
+  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value=pCategoria.value='';
+}
+
+db.ref('products').on('value', snap => {
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '';
+  snap.forEach(s => {
+    const p = s.val();
+    lista.innerHTML += `
+    <div class="bg-white border p-4">
+      <img src="${p.imagem || p.image}" class="aspect-square object-cover w-full">
+      <p class="mt-2 font-semibold text-sm truncate">${p.nome}</p>
+      <p class="text-[10px] text-gray-400">${p.sku}</p>
+      <p class="gold font-semibold">R$ ${(p.preco || 0).toFixed(2)}</p>
+      <div class="flex gap-2 mt-2 text-xs">
+        <button onclick="editarProduto('${s.key}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+        <button onclick="if(confirm('Excluir produto?')) db.ref('products/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button>
+      </div>
+    </div>`;
+  });
+});
+
+function editarProduto(id){
+  db.ref('products/' + id).once('value').then(s => {
+    const p = s.val();
+    pNome.value = p.nome || p.name;
+    pSku.value = p.sku;
+    pPreco.value = p.preco || p.price;
+    pPeso.value = p.peso || p.weight;
+    pCategoria.value = p.categoria || p.category;
+    pImagemUrl.value = p.imagem || p.image;
+    produtoEdit = id;
+    window.scrollTo(0,0);
+  });
+}
+
+/* ===== FUNÇÕES IMPORTAÇÃO CSV (Lógica Código 2) ===== */
 async function importarCSV() {
   const fileInput = document.getElementById('csvFile');
   const file = fileInput.files[0];
@@ -86,6 +247,7 @@ async function importarCSV() {
   const log = document.getElementById('importLog');
 
   log.innerHTML = '';
+  log.classList.remove('hidden');
   status.innerHTML = '';
 
   if (!file) {
@@ -96,53 +258,45 @@ async function importarCSV() {
   status.innerHTML = '⏳ Lendo arquivo e conectando ao Firebase...';
 
   const reader = new FileReader();
-
   reader.onload = async (e) => {
     try {
-      // Remove retornos de carro e espaços em branco nas extremidades
       const texto = e.target.result.replace(/\r/g, '').trim();
       const linhas = texto.split('\n');
 
       if (linhas.length < 2) {
-        status.innerHTML = '<span class="log-err">❌ O arquivo está vazio ou contém apenas o cabeçalho</span>';
+        status.innerHTML = '<span class="log-err">❌ Arquivo vazio ou inválido</span>';
         return;
       }
 
-      // Validação do Cabeçalho
       const cabecalho = linhas[0].toLowerCase().trim();
-      if (!cabecalho.includes('tipo') || !cabecalho.includes('sku')) {
-        status.innerHTML = '<span class="log-err">❌ Cabeçalho inválido. Verifique se usou ";" como separador.</span>';
+      if (!cabecalho.includes('tipo') && !cabecalho.includes('sku')) {
+        status.innerHTML = '<span class="log-err">❌ Cabeçalho inválido. Verifique o separador ";"</span>';
         return;
       }
 
       let sucesso = 0;
       let erros = 0;
-
-      // Itera sobre as linhas de dados
       const dados = linhas.slice(1);
       
       for (const [index, linha] of dados.entries()) {
         const linhaLimpa = linha.trim();
-        if (!linhaLimpa) continue; // Pula linhas vazias
+        if (!linhaLimpa) continue;
 
         const col = linhaLimpa.split(';');
-
-        // Validação mínima de colunas
-        if (col.length < 6) {
-          log.innerHTML += `<div class="log-err">Linha ${index + 2}: Colunas insuficientes (esperado 8, obtido ${col.length})</div>`;
+        if (col.length < 5) {
+          log.innerHTML += `<div class="log-err">Linha ${index + 2}: Colunas insuficientes</div>`;
           erros++;
           continue;
         }
 
-        // Tratamento de Preço e Peso (substitui vírgula por ponto para o JavaScript entender)
-        const precoNum = parseFloat(col[4].replace(',', '.').trim()) || 0;
-        const pesoNum = parseFloat(col[5].replace(',', '.').trim()) || 0;
+        const precoNum = parseFloat(col[4]?.replace(',', '.').trim()) || 0;
+        const pesoNum = parseFloat(col[5]?.replace(',', '.').trim()) || 0;
 
         const produto = {
-          tipo: col[0].trim(),
-          nome: col[1].trim(),
-          sku: col[2].trim(),
-          categoria: col[3].trim(),
+          tipo: col[0]?.trim() || 'simple',
+          nome: col[1]?.trim(),
+          sku: col[2]?.trim(),
+          categoria: col[3]?.trim(),
           preco: precoNum,
           peso: pesoNum,
           imagem: col[6] ? col[6].trim() : "",
@@ -151,40 +305,24 @@ async function importarCSV() {
         };
 
         try {
-          // Envia para o nó 'products' no Realtime Database
           await db.ref('products').push(produto);
           sucesso++;
-          log.innerHTML += `<div class="log-ok">✔ [${produto.sku}] ${produto.nome} - Salvo com sucesso</div>`;
+          log.innerHTML += `<div class="log-ok">✔ [${produto.sku}] ${produto.nome} salvo.</div>`;
         } catch (dbError) {
           erros++;
           log.innerHTML += `<div class="log-err">❌ Erro no SKU ${produto.sku}: ${dbError.message}</div>`;
         }
       }
 
-      status.innerHTML = `
-        <div class="p-4 bg-white border-l-4 border-green-500 shadow-sm">
-          <b class="text-green-700 text-lg">✅ Importação Finalizada!</b><br>
-          <span class="text-gray-700">Produtos no banco: <b>${sucesso}</b></span><br>
-          <span class="text-red-600">Falhas ignoradas: <b>${erros}</b></span>
-        </div>
-      `;
-      
-      // Limpa o input de arquivo para permitir nova importação
+      status.innerHTML = `<b>✅ Importação Finalizada!</b><br>Sucesso: ${sucesso} | Erros: ${erros}`;
       fileInput.value = '';
-
-    } catch (processError) {
-      status.innerHTML = `<span class="log-err">❌ Erro no processamento: ${processError.message}</span>`;
+    } catch (err) {
+      status.innerHTML = `<span class="log-err">❌ Erro: ${err.message}</span>`;
     }
   };
-
-  reader.onerror = () => {
-    status.innerHTML = '<span class="log-err">❌ Erro ao ler o arquivo físico</span>';
-  };
-
   reader.readAsText(file, 'UTF-8');
 }
 </script>
 
 </body>
 </html>
-
