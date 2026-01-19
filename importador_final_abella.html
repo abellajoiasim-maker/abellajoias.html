@@ -4,7 +4,114 @@
         const status = document.getElementById('status');
         const log = document.getElementById('log');
 
-        if (input.files.length === 0) return alert("Selecione o arquivo!");
+        if (input.files.length === 0) return alert("Selecione o arquivo!");<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Importador Master - Abella Joias</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #F8F6F2; text-align: center; }
+        .card { max-width: 550px; margin: auto; background: white; padding: 30px; border-radius: 15px; border: 2px solid #A68966; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .btn-import { background: #000; color: white; padding: 15px; border: none; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; margin-top: 20px; }
+        .btn-import:hover { background: #333; }
+        #status { margin: 20px 0; font-weight: bold; padding: 10px; border-radius: 5px; }
+        #log { font-size: 11px; height: 200px; overflow-y: auto; background: #222; color: #0f0; padding: 15px; text-align: left; border-radius: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 style="color:#A68966; font-family: serif;">Importação Master</h2>
+    <p style="font-size: 14px; color: #666;">Selecione os arquivos CSV da Abella Joias</p>
+    
+    <input type="file" id="csvFiles" multiple accept=".csv">
+    <button onclick="importarTudo()" class="btn-import">LIMPAR BANCO E IMPORTAR PRODUTOS</button>
+    
+    <div id="status" style="background: #eee;">Aguardando seleção...</div>
+    <div id="log">Console de importação pronto...</div>
+</div>
+
+<script>
+    // Configurações exatas do seu projeto
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        authDomain: "catalogo-abella-joias.firebaseapp.com",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+        projectId: "catalogo-abella-joias"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function importarTudo() {
+        const input = document.getElementById('csvFiles');
+        const status = document.getElementById('status');
+        const log = document.getElementById('log');
+
+        if (input.files.length === 0) return alert("Por favor, selecione os arquivos CSV!");
+
+        if (!confirm("Isso apagará os produtos antigos. Deseja continuar?")) return;
+
+        try {
+            status.style.color = "blue";
+            status.innerText = "Conectando ao Firebase...";
+            
+            // Limpa o banco antes de começar
+            await db.ref('products').remove();
+            log.innerHTML = "> Banco de dados limpo com sucesso.<br>";
+
+            let totalGeral = 0;
+            const arquivos = Array.from(input.files);
+
+            for (const file of arquivos) {
+                log.innerHTML += `> Lendo: ${file.name}...<br>`;
+                const texto = await file.text();
+                const linhas = texto.split(/\r?\n/);
+                const batch = {};
+
+                for (let i = 1; i < linhas.length; i++) {
+                    const colunas = linhas[i].split(';'); // Separador ponto e vírgula
+                    if (colunas.length < 5) continue;
+
+                    const sku = colunas[2]?.trim();
+                    if (!sku || sku.toLowerCase() === "sku") continue;
+
+                    // Chave segura para o Firebase
+                    const skuChave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
+
+                    batch[skuChave] = {
+                        nome: colunas[1]?.trim() || "Sem nome",
+                        sku: sku,
+                        categoria: colunas[3]?.trim() || "Geral",
+                        preco: parseFloat(colunas[4]?.replace(',', '.') || 0),
+                        peso: parseFloat(colunas[5]?.replace(',', '.') || 0),
+                        imagem: "" 
+                    };
+                    totalGeral++;
+                }
+
+                await db.ref('products').update(batch);
+                log.innerHTML += `<span style="color: #00ff00;">> OK: ${file.name} (${Object.keys(batch).length} itens)</span><br>`;
+                log.scrollTop = log.scrollHeight;
+            }
+
+            status.style.color = "green";
+            status.innerText = `SUCESSO! ${totalGeral} PRODUTOS IMPORTADOS.`;
+            alert("Processo finalizado com sucesso!");
+
+        } catch (error) {
+            console.error(error);
+            status.style.color = "red";
+            status.innerText = "ERRO NA IMPORTAÇÃO";
+            log.innerHTML += `<span style="color: red;">> ERRO: ${error.message}</span><br>`;
+        }
+    }
+</script>
+
+</body>
+</html>
         
         status.innerHTML = "<span style='color:blue'>Tentando conectar ao Firebase...</span>";
         
