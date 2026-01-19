@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sincronizador de Fotos - Abella Joias</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 40px; background: #F8F6F2; }
+        .card { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 15px; border: 2px solid #A68966; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn { background: #A68966; color: white; border: none; padding: 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; }
+        #log { text-align: left; background: #1e1e1e; color: #33ff33; padding: 15px; margin-top: 20px; font-size: 11px; height: 250px; overflow-y: auto; font-family: monospace; border-radius: 5px; }
+        .status-txt { margin: 15px 0; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 style="color:#A68966">Sincronizador de Fotos</h2>
+    <p>Vinculando imagens aos 1.396 produtos</p>
+    
+    <button class="btn" onclick="iniciarSincronizacao()">VINCULAR FOTOS AGORA</button>
+    
+    <div class="status-txt" id="status">Aguardando início...</div>
+    <div id="log">Pronto para processar 1.396 itens.</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        authDomain: "catalogo-abella-joias.firebaseapp.com",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+        projectId: "catalogo-abella-joias",
+        storageBucket: "catalogo-abella-joias.appspot.com"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+
+    async function iniciarSincronizacao() {
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        
+        status.innerText = "Buscando produtos no banco...";
+        const snapshot = await db.ref('products').once('value');
+        const produtos = snapshot.val();
+        
+        if (!produtos) return alert("Nenhum produto encontrado!");
+
+        const chaves = Object.keys(produtos);
+        let encontrados = 0;
+        let total = chaves.length;
+
+        log.innerHTML = "Iniciando varredura no Storage...<br>";
+
+        for (let i = 0; i < chaves.length; i++) {
+            const id = chaves[i];
+            const sku = produtos[id].sku;
+            
+            // Tenta extensões comuns
+            const extensoes = ['.jpg', '.png', '.jpeg', '.webp'];
+            let urlFinal = null;
+
+            for (const ext of extensoes) {
+                try {
+                    const refFoto = storage.ref(`images/produtos/${sku}${ext}`);
+                    urlFinal = await refFoto.getDownloadURL();
+                    if (urlFinal) break;
+                } catch (e) { }
+            }
+
+            if (urlFinal) {
+                await db.ref(`products/${id}`).update({ imagem: urlFinal });
+                encontrados++;
+                log.innerHTML += `✅ SKU: ${sku} -> Foto vinculada.<br>`;
+            } else {
+                log.innerHTML += `<span style="color:#888">⚪ SKU: ${sku} -> Sem foto.</span><br>`;
+            }
+
+            if (i % 10 === 0) {
+                status.innerText = `Processando: ${i} de ${total}...`;
+                log.scrollTop = log.scrollHeight;
+            }
+        }
+
+        status.innerHTML = `<span style="color:green">CONCLUÍDO! ${encontrados} fotos vinculadas.</span>`;
+        alert("Sincronização finalizada!");
+    }
+</script>
+
+</body>
+</html>
