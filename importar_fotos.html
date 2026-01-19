@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sincronizador de Fotos - Abella Joias</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background: #F8F6F2; color: #333; }
+        .box { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #A68966; }
+        h2 { color: #A68966; font-family: serif; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .btn { background: #000; color: white; padding: 12px 24px; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn:hover { background: #A68966; }
+        .progress-container { width: 100%; background: #eee; margin-top: 25px; border-radius: 10px; height: 12px; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: #A68966; transition: 0.2s; }
+        #log { margin-top: 20px; font-family: monospace; font-size: 11px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; background: #fafafa; }
+        .success { color: #047857; } .error { color: #b91c1c; } .info { color: #2563eb; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Vincular Fotos ao Catálogo</h2>
+    <p style="font-size: 0.9em; color: #666;">Selecione as fotos que você já subiu para o Storage. O sistema irá gerar os links e atualizar os produtos automaticamente pelo SKU.</p>
+    
+    <input type="file" id="fotoInput" multiple accept="image/*" class="btn" style="background: #fff; color: #000; border: 1px dashed #A68966; margin-bottom: 20px;">
+    
+    <button onclick="sincronizarFotos()" class="btn">VINCULAR FOTOS AGORA</button>
+    
+    <div class="progress-container">
+        <div id="barraProgresso" class="progress-bar"></div>
+    </div>
+    <p id="contador" style="text-align: center; font-weight: bold; margin-top: 10px;">Aguardando seleção...</p>
+    
+    <div id="log"></div>
+</div>
+
+<script>
+    // Configurações do seu Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        authDomain: "catalogo-abella-joias.firebaseapp.com",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+        projectId: "catalogo-abella-joias",
+        storageBucket: "catalogo-abella-joias.appspot.com"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const db = firebase.database();
+
+    async function sincronizarFotos() {
+        const input = document.getElementById('fotoInput');
+        const log = document.getElementById('log');
+        const barra = document.getElementById('barraProgresso');
+        const contador = document.getElementById('contador');
+
+        if (input.files.length === 0) return alert("Por favor, selecione os arquivos de imagem do seu computador!");
+
+        const total = input.files.length;
+        log.innerHTML = "Iniciando sincronização...<br>";
+
+        for (let i = 0; i < total; i++) {
+            const arquivo = input.files[i];
+            // Remove a extensão para pegar o SKU (ex: B-60.jpg vira B-60)
+            const sku = arquivo.name.split('.').slice(0, -1).join('.').trim();
+
+            try {
+                // 1. Obtém a URL de download (Como a foto já está lá, ele só pega o link)
+                // Se você colocou em uma pasta, use: storage.ref(`NOME_DA_PASTA/${arquivo.name}`)
+                const storageRef = storage.ref(`produtos/${arquivo.name}`); 
+                const url = await storageRef.getDownloadURL();
+
+                // 2. Busca no Database o produto com esse SKU
+                const snapshot = await db.ref('products').orderByChild('sku').equalTo(sku).once('value');
+
+                if (snapshot.exists()) {
+                    const updates = {};
+                    snapshot.forEach(child => {
+                        updates[`products/${child.key}/imagem`] = url;
+                    });
+                    await db.ref().update(updates);
+                    log.innerHTML += `<span class="success">✔ SKU ${sku}: Vinculado com sucesso!</span><br>`;
+                } else {
+                    log.innerHTML += `<span class="error">✖ SKU ${sku}: Foto existe, mas SKU não está no banco.</span><br>`;
+                }
+
+            } catch (err) {
+                log.innerHTML += `<span class="error">❌ Erro no SKU ${sku}: Verifique se a foto está na pasta 'produtos' do Storage.</span><br>`;
+            }
+
+            // Atualiza interface
+            const perc = ((i + 1) / total) * 100;
+            barra.style.width = perc + "%";
+            contador.innerText = `Processando: ${i + 1} de ${total}`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        alert("Sincronização concluída! Verifique o seu painel de produtos.");
+    }
+</script>
+</body>
+</html>
