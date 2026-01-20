@@ -15,271 +15,167 @@
     .gold{color:#A68966}
     .tab{display:none}
     .tab.active{display:block}
-    .log-ok{color:#047857}
-    .log-err{color:#b91c1c}
-
-    /* ✨ AJUSTE DE DESIGN 1:1 */
-    .image-container {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        overflow: hidden;
-        background-color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-bottom: 1px solid #eee;
-    }
-    .image-container img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-    .categoria-titulo {
-        width: 100%;
-        grid-column: 1 / -1;
-        background: #fdfcfb;
-        padding: 12px;
-        margin-top: 20px;
-        border-left: 4px solid #A68966;
-        font-family: 'Cinzel', serif;
-        font-size: 1.1rem;
-        color: #A68966;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+    .btn-tab { border-bottom: 3px solid transparent; transition: 0.3s; }
+    .btn-tab.active { border-color: #A68966; color: #A68966; font-weight: bold; }
 </style>
 </head>
 
-<body>
+<body class="p-4 md:p-8">
 
-<header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
-  </div>
+<div class="max-w-6xl mx-auto">
+    <h1 class="font-serif text-3xl gold mb-8 text-center uppercase tracking-widest">Painel Administrativo</h1>
 
-  <nav class="flex gap-8 text-xs tracking-widest uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
-    <button onclick="openTab('categorias')">Categorias</button>
-    <button onclick="openTab('produtos')">Produtos</button>
-    <button onclick="openTab('pedidos')">Pedidos</button>
-  </nav>
-</header>
-
-<main class="max-w-7xl mx-auto p-8 space-y-16">
-
-<section id="empresa" class="tab active space-y-6">
-    <h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
-    <div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-      <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-      <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
-      <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-      <input id="empParcelas" type="number" placeholder="Parcelas cartão sem acréscimo" class="border p-3">
+    <div class="flex justify-center gap-6 mb-10 border-b border-gray-200">
+        <button onclick="mudarTab('produtos')" id="btn-produtos" class="btn-tab pb-2 active uppercase text-xs">📦 Produtos</button>
+        <button onclick="mudarTab('pedidos')" id="btn-pedidos" class="btn-tab pb-2 uppercase text-xs">🛒 Pedidos Recebidos</button>
     </div>
-    <button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR EMPRESA</button>
-</section>
 
-<section id="categorias" class="tab space-y-6">
-    <h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
-    <div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-      <input id="catNome" placeholder="Nome da categoria" class="border p-3">
-      <input id="catImagem" placeholder="Imagem (Firebase Storage)" class="border p-3">
-      <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">SALVAR</button>
+    <div id="tab-produtos" class="tab active">
+        <div class="bg-white p-6 rounded-xl shadow-sm border mb-8">
+            <h2 class="font-bold mb-4 uppercase text-sm">Controle de Estoque</h2>
+            <p class="text-xs text-gray-400 mb-4 italic">Use o Importador Mestre para grandes quantidades.</p>
+            <div id="lista-produtos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+        </div>
     </div>
-    <div id="listaCategorias" class="grid md:grid-cols-3 gap-4"></div>
-</section>
 
-<section id="produtos" class="tab space-y-8">
-    <h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
-    <div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
-      <input id="pNome" placeholder="Nome do produto" class="border p-3">
-      <input id="pSku" placeholder="SKU" class="border p-3">
-      <input id="pPreco" type="number" step="0.01" placeholder="Preço" class="border p-3">
-      <input id="pPeso" type="number" step="0.01" placeholder="Peso (g)" class="border p-3">
-      <select id="pCategoria" class="border p-3"><option value="">Selecione a categoria</option></select>
-      <input id="pImagemUrl" placeholder="Imagem (Firebase Storage)" class="border p-3 md:col-span-3">
+    <div id="tab-pedidos" class="tab">
+        <div class="bg-white p-6 rounded-xl shadow-sm border">
+            <h2 class="font-bold mb-6 uppercase text-sm">Pedidos do Catálogo</h2>
+            <div id="lista-pedidos" class="space-y-4">
+                </div>
+        </div>
     </div>
-    <button onclick="salvarProduto()" id="btnSalvarProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
+</div>
 
-    <hr class="my-8">
-    <h3 class="font-serif gold text-lg">Importação em Massa (CSV)</h3>
-    <input type="file" id="csvFile" accept=".csv" class="border p-3 w-full max-w-md">
-    <button onclick="importarCSV()" class="bg-black text-white px-6 py-2 text-xs mt-2 block">IMPORTAR PRODUTOS</button>
-    <div id="importStatus" class="text-sm mt-4"></div>
-    <div id="importLog" class="text-xs mt-4 space-y-1 max-h-60 overflow-y-auto border p-2 bg-gray-50 hidden"></div>
-
-    <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"></div>
-</section>
-
-<section id="pedidos" class="tab space-y-4">
-    <h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
-    <div id="listaPedidos"></div>
-</section>
-
-</main>
+<div id="modalPedido" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white p-8 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-serif gold text-xl">Itens do Pedido</h2>
+            <button onclick="fecharModal()" class="text-2xl">&times;</button>
+        </div>
+        <div id="detalhes-itens" class="space-y-3"></div>
+        <button onclick="fecharModal()" class="w-full bg-black text-white p-4 mt-8 rounded font-bold uppercase">Fechar</button>
+    </div>
+</div>
 
 <script>
-/* 🔥 CONFIGURAÇÃO FIREBASE */
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
+// Configuração Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    authDomain: "catalogo-abella-joias.firebaseapp.com",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+    projectId: "catalogo-abella-joias",
+    storageBucket: "catalogo-abella-joias.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-function openTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+function mudarTab(nome) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + nome).classList.add('active');
+    document.getElementById('btn-' + nome).classList.add('active');
+    if(nome === 'pedidos') carregarPedidos();
 }
 
-/* ===== FUNÇÕES EMPRESA ===== */
-function salvarEmpresa(){
-  db.ref('settings').set({
-    name: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value || 0),
-    parcelas: Number(empParcelas.value || 1)
-  }).then(() => alert("Configurações salvas!"));
-}
-
-db.ref('settings').on('value', s => {
-  const v = s.val(); if(!v) return;
-  document.getElementById('empNome').value = v.name || '';
-  document.getElementById('empWhatsapp').value = v.whatsapp || '';
-  document.getElementById('empPix').value = v.pix || 0;
-  document.getElementById('empParcelas').value = v.parcelas || 1;
-});
-
-/* ===== FUNÇÕES CATEGORIAS ===== */
-let catEdit = null;
-function salvarCategoria(){
-  const dados = { name: catNome.value, image: catImagem.value };
-  if(catEdit){ db.ref('categories/' + catEdit).set(dados); catEdit = null; }
-  else { db.ref('categories').push(dados); }
-  catNome.value = ''; catImagem.value = '';
-}
-
-db.ref('categories').on('value', snap => {
-  const lista = document.getElementById('listaCategorias');
-  const select = document.getElementById('pCategoria');
-  lista.innerHTML = '';
-  select.innerHTML = '<option value="">Selecione a categoria</option>';
-  snap.forEach(s => {
-    const c = s.val();
-    lista.innerHTML += `<div class="bg-white border p-4"><img src="${c.image}" class="w-full h-40 object-cover"><p class="mt-2 font-semibold">${c.name}</p>
-    <div class="flex gap-2 mt-2 text-xs"><button onclick="editarCategoria('${s.key}','${c.name}','${c.image}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
-    <button onclick="if(confirm('Excluir?')) db.ref('categories/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button></div></div>`;
-    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-  });
-});
-
-function editarCategoria(id, n, i){ catNome.value = n; catImagem.value = i; catEdit = id; }
-
-/* ===== 🚀 LÓGICA DE ORDENAÇÃO E CATEGORIAS (JavaScript) ===== */
-db.ref('products').on('value', snap => {
-    const lista = document.getElementById('listaProdutos');
-    const data = snap.val();
-    if(!data) { lista.innerHTML = ''; return; }
-
-    // 1. Transformar em Array
-    let listaProdutos = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-
-    // 2. Ordenar por SKU crescente
-    listaProdutos.sort((a, b) => a.sku.localeCompare(b.sku, undefined, {numeric: true}));
-
-    // 3. Agrupar por Categorias
-    const categorias = {};
-    listaProdutos.forEach(p => {
-        const cat = p.categoria || "Outros";
-        if (!categorias[cat]) categorias[cat] = [];
-        categorias[cat].push(p);
+// --- GESTÃO DE PRODUTOS ---
+function carregarProdutos() {
+    db.ref('products').limitToLast(50).on('value', snapshot => {
+        const data = snapshot.val();
+        const container = document.getElementById('lista-produtos');
+        container.innerHTML = "";
+        if (data) {
+            Object.keys(data).forEach(id => {
+                const p = data[id];
+                container.innerHTML += `
+                    <div class="border p-3 rounded flex gap-3 items-center bg-gray-50">
+                        <img src="${p.imagem || ''}" class="w-12 h-12 object-cover bg-white">
+                        <div class="flex-1">
+                            <p class="text-[10px] font-bold uppercase truncate">${p.nome}</p>
+                            <p class="text-[9px] text-gray-400">${p.sku}</p>
+                        </div>
+                        <button onclick="excluirProduto('${id}')" class="text-red-400 text-xs">Excluir</button>
+                    </div>
+                `;
+            });
+        }
     });
+}
 
-    // 4. Ordenar Categorias Alfabeticamente e Renderizar
-    const nomesCategorias = Object.keys(categorias).sort();
-    lista.innerHTML = '';
+function excluirProduto(id) {
+    if(confirm("Deseja apagar este produto?")) db.ref('products/' + id).remove();
+}
 
-    nomesCategorias.forEach(cat => {
-        // Adiciona título da categoria
-        lista.innerHTML += `<div class="categoria-titulo">${cat}</div>`;
+// --- GESTÃO DE PEDIDOS (NOVO) ---
+function carregarPedidos() {
+    db.ref('orders').orderByChild('data').on('value', snapshot => {
+        const data = snapshot.val();
+        const container = document.getElementById('lista-pedidos');
+        container.innerHTML = "";
+        
+        if (!data) {
+            container.innerHTML = "<p class='text-gray-400 text-center'>Nenhum pedido recebido ainda.</p>";
+            return;
+        }
 
-        // Adiciona produtos daquela categoria
-        categorias[cat].forEach(p => {
-            lista.innerHTML += `
-            <div class="bg-white border flex flex-col">
-                <div class="image-container">
-                    <img src="${p.imagem || 'https://via.placeholder.com/200?text=Sem+Imagem'}">
-                </div>
-                <div class="p-3 flex flex-col flex-grow">
-                    <p class="font-semibold text-sm truncate uppercase">${p.nome}</p>
-                    <p class="text-[10px] text-gray-400 tracking-wider">${p.sku}</p>
-                    <p class="gold font-bold mt-1">R$ ${(p.preco || 0).toFixed(2)}</p>
-                    <p class="text-[9px] text-gray-500">Peso: ${p.peso || 0}g</p>
-                    <div class="flex gap-2 mt-auto pt-3 text-[10px] uppercase font-bold">
-                        <button onclick="editarProduto('${p.id}')" class="text-blue-600">Editar</button>
-                        <button onclick="if(confirm('Excluir?')) db.ref('products/${p.id}').remove()" class="text-red-600">Excluir</button>
+        const keys = Object.keys(data).reverse(); // Mais novos primeiro
+        keys.forEach(id => {
+            const pedido = data[id];
+            container.innerHTML += `
+                <div class="border-l-4 border-amber-500 bg-white p-4 shadow-sm flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <p class="text-xs text-gray-400">${pedido.data}</p>
+                        <p class="font-bold uppercase text-sm">${pedido.cliente || 'Cliente s/ nome'}</p>
+                        <p class="text-xs gold">Pagamento: ${pedido.pagamento} | <b>Total: R$ ${pedido.total}</b></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="verItens('${id}')" class="bg-black text-white px-4 py-2 rounded text-[10px] font-bold uppercase">Ver Itens</button>
+                        <button onclick="excluirPedido('${id}')" class="bg-red-50 text-red-500 px-4 py-2 rounded text-[10px] font-bold uppercase border border-red-100">Excluir</button>
                     </div>
                 </div>
-            </div>`;
+            `;
         });
     });
-});
-
-/* ===== SALVAR E EDITAR PRODUTO ===== */
-let produtoEdit = null;
-function salvarProduto(){
-  const p = {
-    nome: pNome.value, sku: pSku.value, preco: parseFloat(pPreco.value) || 0,
-    peso: parseFloat(pPeso.value) || 0, categoria: pCategoria.value,
-    imagem: pImagemUrl.value, dataImportacao: new Date().toISOString()
-  };
-  if(produtoEdit){ db.ref('products/' + produtoEdit).set(p); produtoEdit = null; }
-  else { db.ref('products').push(p); }
-  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value=pCategoria.value='';
 }
 
-function editarProduto(id){
-  db.ref('products/' + id).once('value').then(s => {
-    const p = s.val();
-    pNome.value = p.nome; pSku.value = p.sku; pPreco.value = p.preco;
-    pPeso.value = p.peso; pCategoria.value = p.categoria; pImagemUrl.value = p.imagem;
-    produtoEdit = id; window.scrollTo(0,0);
-  });
+function verItens(id) {
+    db.ref('orders/' + id).once('value', snapshot => {
+        const p = snapshot.val();
+        const container = document.getElementById('detalhes-itens');
+        container.innerHTML = "";
+        
+        p.itens.forEach(item => {
+            container.innerHTML += `
+                <div class="flex items-center gap-4 border-b pb-2">
+                    <img src="${item.imagem}" class="w-12 h-12 object-contain bg-gray-50">
+                    <div class="flex-1">
+                        <p class="text-xs font-bold uppercase">${item.nome}</p>
+                        <p class="text-[10px] text-gray-400">SKU: ${item.sku} | Peso: ${item.peso}g</p>
+                        ${item.variacao ? `<p class="text-[10px] text-amber-600 font-bold">OPÇÃO: ${item.variacao}</p>` : ''}
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold gold">Qtd: ${item.qty}</p>
+                        <p class="text-[10px]">R$ ${item.preco}</p>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('modalPedido').style.display = 'flex';
+    });
 }
 
-/* ===== IMPORTAÇÃO CSV ===== */
-async function importarCSV() {
-  const fileInput = document.getElementById('csvFile');
-  const file = fileInput.files[0];
-  const status = document.getElementById('importStatus');
-  const log = document.getElementById('importLog');
-  if (!file) { status.innerHTML = '<span class="log-err">❌ Selecione um arquivo</span>'; return; }
-  
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const texto = e.target.result.replace(/\r/g, '').trim();
-    const linhas = texto.split('\n');
-    let sucesso = 0;
-    log.innerHTML = ''; log.classList.remove('hidden');
-
-    for (let i = 1; i < linhas.length; i++) {
-        const col = linhas[i].split(';');
-        if(col.length < 5) continue;
-        const p = {
-            tipo: col[0]?.trim(), nome: col[1]?.trim(), sku: col[2]?.trim(),
-            categoria: col[3]?.trim(), preco: parseFloat(col[4]?.replace(',','.')) || 0,
-            peso: parseFloat(col[5]?.replace(',','.')) || 0, imagem: col[6]?.trim(),
-            variacoes: col[7]?.trim(), dataImportacao: new Date().toISOString()
-        };
-        await db.ref('products').push(p);
-        sucesso++;
-        log.innerHTML += `<div class="log-ok">✔ [${p.sku}] Importado</div>`;
-    }
-    status.innerHTML = `✅ Importados: ${sucesso}`;
-  };
-  reader.readAsText(file, 'UTF-8');
+function fecharModal() {
+    document.getElementById('modalPedido').style.display = 'none';
 }
+
+function excluirPedido(id) {
+    if(confirm("Deseja apagar este registro de pedido?")) db.ref('orders/' + id).remove();
+}
+
+// Inicializa
+carregarProdutos();
 </script>
+
 </body>
 </html>
