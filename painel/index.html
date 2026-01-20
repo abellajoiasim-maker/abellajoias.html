@@ -34,155 +34,235 @@
         max-height: 100%;
         object-fit: contain;
     }
+    .categoria-titulo {
+        width: 100%;
+        grid-column: 1 / -1;
+        background: #fdfcfb;
+        padding: 12px;
+        margin-top: 20px;
+        border-left: 4px solid #A68966;
+        font-family: 'Cinzel', serif;
+        font-size: 1.1rem;
+        color: #A68966;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 </style>
 </head>
 
-<body class="p-4 md:p-8">
+<body>
 
-<div class="max-w-6xl mx-auto">
-    <h1 class="font-serif text-3xl gold mb-8 text-center uppercase tracking-widest">Painel Administrativo</h1>
+<header class="bg-white border-b px-10 py-6 flex justify-between">
+  <div>
+    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
+    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
+  </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-[#A68966]/20 mb-8">
-        <h2 class="font-bold mb-4 uppercase text-sm gold">Gerenciar Produto</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" id="pNome" placeholder="Nome do Produto" class="border p-3 rounded text-sm focus:border-black outline-none">
-            <input type="text" id="pSku" placeholder="SKU" class="border p-3 rounded text-sm focus:border-black outline-none">
-            <input type="text" id="pCategoria" placeholder="Categoria" class="border p-3 rounded text-sm focus:border-black outline-none">
-            <input type="number" id="pPreco" placeholder="Preço" class="border p-3 rounded text-sm focus:border-black outline-none">
-            <input type="number" id="pPeso" placeholder="Peso (g)" class="border p-3 rounded text-sm focus:border-black outline-none">
-            <input type="text" id="pImagemUrl" placeholder="URL da Imagem" class="border p-3 rounded text-sm focus:border-black outline-none">
-        </div>
-        <button onclick="salvarProduto()" class="mt-6 bg-black text-white px-8 py-3 rounded font-bold uppercase text-xs tracking-widest hover:bg-zinc-800 transition">
-            Salvar Produto
-        </button>
+  <nav class="flex gap-8 text-xs tracking-widest uppercase">
+    <button onclick="openTab('empresa')" class="gold">Empresa</button>
+    <button onclick="openTab('categorias')">Categorias</button>
+    <button onclick="openTab('produtos')">Produtos</button>
+    <button onclick="openTab('pedidos')">Pedidos</button>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto p-8 space-y-16">
+
+<section id="empresa" class="tab active space-y-6">
+    <h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+    <div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
+      <input id="empNome" placeholder="Nome da empresa" class="border p-3">
+      <input id="empWhatsapp" placeholder="WhatsApp" class="border p-3">
+      <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
+      <input id="empParcelas" type="number" placeholder="Parcelas cartão sem acréscimo" class="border p-3">
     </div>
+    <button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR EMPRESA</button>
+</section>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border mb-8">
-        <h2 class="font-bold mb-2 uppercase text-sm">Importar CSV</h2>
-        <div class="flex flex-wrap items-center gap-4">
-            <input type="file" id="csvFile" accept=".csv" class="text-xs">
-            <button onclick="importarCSV()" class="bg-gray-100 hover:bg-gray-200 px-6 py-2 rounded text-[10px] font-bold uppercase transition">Processar Arquivo</button>
-        </div>
-        <div id="importStatus" class="mt-4 text-xs"></div>
-        <div id="importLog" class="mt-2 p-4 bg-gray-50 border rounded text-[10px] font-mono hidden max-h-40 overflow-y-auto"></div>
+<section id="categorias" class="tab space-y-6">
+    <h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
+    <div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
+      <input id="catNome" placeholder="Nome da categoria" class="border p-3">
+      <input id="catImagem" placeholder="Imagem (Firebase Storage)" class="border p-3">
+      <button onclick="salvarCategoria()" class="bg-black text-white px-6 text-xs">SALVAR</button>
     </div>
+    <div id="listaCategorias" class="grid md:grid-cols-3 gap-4"></div>
+</section>
 
-    <div class="mb-12">
-        <h2 class="font-serif gold text-2xl mb-6 uppercase tracking-widest text-center">Pedidos do Catálogo</h2>
-        <div id="lista-pedidos" class="grid grid-cols-1 gap-4">
-            </div>
+<section id="produtos" class="tab space-y-8">
+    <h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+    <div class="bg-white border p-6 grid md:grid-cols-3 gap-4">
+      <input id="pNome" placeholder="Nome do produto" class="border p-3">
+      <input id="pSku" placeholder="SKU" class="border p-3">
+      <input id="pPreco" type="number" step="0.01" placeholder="Preço" class="border p-3">
+      <input id="pPeso" type="number" step="0.01" placeholder="Peso (g)" class="border p-3">
+      <select id="pCategoria" class="border p-3"><option value="">Selecione a categoria</option></select>
+      <input id="pImagemUrl" placeholder="Imagem (Firebase Storage)" class="border p-3 md:col-span-3">
     </div>
+    <button onclick="salvarProduto()" id="btnSalvarProduto" class="bg-black text-white px-8 py-3 text-xs">SALVAR PRODUTO</button>
 
-    <h2 class="font-serif gold text-2xl mb-8 uppercase tracking-widest text-center">Produtos em Linha</h2>
-    <div id="lista-produtos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6"></div>
-</div>
+    <hr class="my-8">
+    <h3 class="font-serif gold text-lg">Importação em Massa (CSV)</h3>
+    <input type="file" id="csvFile" accept=".csv" class="border p-3 w-full max-w-md">
+    <button onclick="importarCSV()" class="bg-black text-white px-6 py-2 text-xs mt-2 block">IMPORTAR PRODUTOS</button>
+    <div id="importStatus" class="text-sm mt-4"></div>
+    <div id="importLog" class="text-xs mt-4 space-y-1 max-h-60 overflow-y-auto border p-2 bg-gray-50 hidden"></div>
 
-<div id="modalPedido" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white p-6 rounded-xl max-w-lg w-full max-h-[85vh] overflow-y-auto border-2 border-gold">
-        <h3 class="font-serif gold text-lg mb-4 uppercase text-center border-b pb-2">Detalhes do Romaneio</h3>
-        <div id="detalhes-itens" class="space-y-4"></div>
-        <button onclick="document.getElementById('modalPedido').classList.add('hidden')" class="w-full mt-8 bg-black text-white p-3 rounded font-bold uppercase text-xs">Fechar Detalhes</button>
-    </div>
-</div>
+    <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"></div>
+</section>
+
+<section id="pedidos" class="tab space-y-4">
+    <h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
+    <div id="listaPedidos"></div>
+</section>
+
+</main>
 
 <script>
-// Firebase Config (Mantida a sua)
-const firebaseConfig = {
+/* 🔥 CONFIGURAÇÃO FIREBASE */
+firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com"
-};
-firebase.initializeApp(firebaseConfig);
+  projectId: "catalogo-abella-joias"
+});
 const db = firebase.database();
 
+function openTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ===== FUNÇÕES EMPRESA ===== */
+function salvarEmpresa(){
+  db.ref('settings').set({
+    name: empNome.value,
+    whatsapp: empWhatsapp.value,
+    pix: Number(empPix.value || 0),
+    parcelas: Number(empParcelas.value || 1)
+  }).then(() => alert("Configurações salvas!"));
+}
+
+db.ref('settings').on('value', s => {
+  const v = s.val(); if(!v) return;
+  document.getElementById('empNome').value = v.name || '';
+  document.getElementById('empWhatsapp').value = v.whatsapp || '';
+  document.getElementById('empPix').value = v.pix || 0;
+  document.getElementById('empParcelas').value = v.parcelas || 1;
+});
+
+/* ===== FUNÇÕES CATEGORIAS ===== */
+let catEdit = null;
+function salvarCategoria(){
+  const dados = { name: catNome.value, image: catImagem.value };
+  if(catEdit){ db.ref('categories/' + catEdit).set(dados); catEdit = null; }
+  else { db.ref('categories').push(dados); }
+  catNome.value = ''; catImagem.value = '';
+}
+
+db.ref('categories').on('value', snap => {
+  const lista = document.getElementById('listaCategorias');
+  const select = document.getElementById('pCategoria');
+  lista.innerHTML = '';
+  select.innerHTML = '<option value="">Selecione a categoria</option>';
+  snap.forEach(s => {
+    const c = s.val();
+    lista.innerHTML += `<div class="bg-white border p-4"><img src="${c.image}" class="w-full h-40 object-cover"><p class="mt-2 font-semibold">${c.name}</p>
+    <div class="flex gap-2 mt-2 text-xs"><button onclick="editarCategoria('${s.key}','${c.name}','${c.image}')" class="bg-blue-500 text-white px-2 py-1">Editar</button>
+    <button onclick="if(confirm('Excluir?')) db.ref('categories/${s.key}').remove()" class="bg-red-500 text-white px-2 py-1">Excluir</button></div></div>`;
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+});
+
+function editarCategoria(id, n, i){ catNome.value = n; catImagem.value = i; catEdit = id; }
+
+/* ===== 🚀 LÓGICA DE ORDENAÇÃO E CATEGORIAS (JavaScript) ===== */
+db.ref('products').on('value', snap => {
+    const lista = document.getElementById('listaProdutos');
+    const data = snap.val();
+    if(!data) { lista.innerHTML = ''; return; }
+
+    // 1. Transformar em Array
+    let listaProdutos = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+
+    // 2. Ordenar por SKU crescente
+    listaProdutos.sort((a, b) => a.sku.localeCompare(b.sku, undefined, {numeric: true}));
+
+    // 3. Agrupar por Categorias
+    const categorias = {};
+    listaProdutos.forEach(p => {
+        const cat = p.categoria || "Outros";
+        if (!categorias[cat]) categorias[cat] = [];
+        categorias[cat].push(p);
+    });
+
+    // 4. Ordenar Categorias Alfabeticamente e Renderizar
+    const nomesCategorias = Object.keys(categorias).sort();
+    lista.innerHTML = '';
+
+    nomesCategorias.forEach(cat => {
+        // Adiciona título da categoria
+        lista.innerHTML += `<div class="categoria-titulo">${cat}</div>`;
+
+        // Adiciona produtos daquela categoria
+        categorias[cat].forEach(p => {
+            lista.innerHTML += `
+            <div class="bg-white border flex flex-col">
+                <div class="image-container">
+                    <img src="${p.imagem || 'https://via.placeholder.com/200?text=Sem+Imagem'}">
+                </div>
+                <div class="p-3 flex flex-col flex-grow">
+                    <p class="font-semibold text-sm truncate uppercase">${p.nome}</p>
+                    <p class="text-[10px] text-gray-400 tracking-wider">${p.sku}</p>
+                    <p class="gold font-bold mt-1">R$ ${(p.preco || 0).toFixed(2)}</p>
+                    <p class="text-[9px] text-gray-500">Peso: ${p.peso || 0}g</p>
+                    <div class="flex gap-2 mt-auto pt-3 text-[10px] uppercase font-bold">
+                        <button onclick="editarProduto('${p.id}')" class="text-blue-600">Editar</button>
+                        <button onclick="if(confirm('Excluir?')) db.ref('products/${p.id}').remove()" class="text-red-600">Excluir</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+    });
+});
+
+/* ===== SALVAR E EDITAR PRODUTO ===== */
 let produtoEdit = null;
-
-// === FUNÇÕES ORIGINAIS DE PRODUTO (SEM ALTERAÇÃO) ===
-function salvarProduto() {
+function salvarProduto(){
   const p = {
-    nome: document.getElementById('pNome').value,
-    sku: document.getElementById('pSku').value,
-    categoria: document.getElementById('pCategoria').value,
-    preco: parseFloat(document.getElementById('pPreco').value),
-    peso: parseFloat(document.getElementById('pPeso').value),
-    imagem: document.getElementById('pImagemUrl').value,
-    dataAlteracao: new Date().toISOString()
+    nome: pNome.value, sku: pSku.value, preco: parseFloat(pPreco.value) || 0,
+    peso: parseFloat(pPeso.value) || 0, categoria: pCategoria.value,
+    imagem: pImagemUrl.value, dataImportacao: new Date().toISOString()
   };
-  if (produtoEdit) {
-    db.ref('products/' + produtoEdit).update(p);
-    produtoEdit = null;
-  } else {
-    db.ref('products').push(p);
-  }
-  limparCampos();
+  if(produtoEdit){ db.ref('products/' + produtoEdit).set(p); produtoEdit = null; }
+  else { db.ref('products').push(p); }
+  pNome.value=pSku.value=pPreco.value=pPeso.value=pImagemUrl.value=pCategoria.value='';
 }
 
-function limparCampos() {
-  document.querySelectorAll('input').forEach(i => i.value = "");
-}
-
-function carregarDados() {
-  db.ref('products').on('value', snapshot => {
-    const data = snapshot.val();
-    const container = document.getElementById('lista-produtos');
-    container.innerHTML = "";
-    if (data) {
-      Object.keys(data).forEach(id => {
-        const p = data[id];
-        container.innerHTML += `
-          <div class="bg-white border rounded-lg shadow-sm overflow-hidden flex flex-col hover:shadow-md transition">
-            <div class="image-container"><img src="${p.imagem || ''}"></div>
-            <div class="p-3 flex-1">
-              <h4 class="text-[9px] font-bold uppercase mb-1 truncate">${p.nome}</h4>
-              <p class="text-[8px] text-gray-400 mb-2">${p.sku}</p>
-              <p class="gold font-bold text-xs">R$ ${p.preco}</p>
-            </div>
-            <div class="p-2 border-t flex gap-1 bg-gray-50">
-              <button onclick="prepararEdicao('${id}')" class="flex-1 text-[8px] bg-white border py-1 rounded font-bold uppercase">Editar</button>
-              <button onclick="excluirProduto('${id}')" class="flex-1 text-[8px] bg-red-50 text-red-500 py-1 rounded font-bold uppercase">Apagar</button>
-            </div>
-          </div>
-        `;
-      });
-    }
-  });
-  // Inicia carregamento de pedidos
-  carregarPedidos();
-}
-
-function excluirProduto(id) {
-  if (confirm("Deseja remover permanentemente este produto?")) db.ref('products/' + id).remove();
-}
-
-function prepararEdicao(id) {
-  db.ref('products/' + id).once('value', s => {
+function editarProduto(id){
+  db.ref('products/' + id).once('value').then(s => {
     const p = s.val();
-    document.getElementById('pNome').value = p.nome;
-    document.getElementById('pSku').value = p.sku;
-    document.getElementById('pPreco').value = p.preco;
-    document.getElementById('pPeso').value = p.peso;
-    document.getElementById('pCategoria').value = p.categoria;
-    document.getElementById('pImagemUrl').value = p.imagem;
-    produtoEdit = id;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    pNome.value = p.nome; pSku.value = p.sku; pPreco.value = p.preco;
+    pPeso.value = p.peso; pCategoria.value = p.categoria; pImagemUrl.value = p.imagem;
+    produtoEdit = id; window.scrollTo(0,0);
   });
 }
 
-// === FUNÇÕES ORIGINAIS DE IMPORTAÇÃO (MANTIDAS) ===
+/* ===== IMPORTAÇÃO CSV ===== */
 async function importarCSV() {
   const fileInput = document.getElementById('csvFile');
   const file = fileInput.files[0];
   const status = document.getElementById('importStatus');
   const log = document.getElementById('importLog');
   if (!file) { status.innerHTML = '<span class="log-err">❌ Selecione um arquivo</span>'; return; }
+  
   const reader = new FileReader();
   reader.onload = async (e) => {
     const texto = e.target.result.replace(/\r/g, '').trim();
     const linhas = texto.split('\n');
     let sucesso = 0;
     log.innerHTML = ''; log.classList.remove('hidden');
+
     for (let i = 1; i < linhas.length; i++) {
         const col = linhas[i].split(';');
         if(col.length < 5) continue;
@@ -194,70 +274,12 @@ async function importarCSV() {
         };
         await db.ref('products').push(p);
         sucesso++;
-        log.innerHTML += `<div>✅ ${p.sku} - ${p.nome}</div>`;
+        log.innerHTML += `<div class="log-ok">✔ [${p.sku}] Importado</div>`;
     }
-    status.innerHTML = `<span class="log-ok">🚀 Importados ${sucesso} produtos!</span>`;
+    status.innerHTML = `✅ Importados: ${sucesso}`;
   };
-  reader.readAsText(file);
+  reader.readAsText(file, 'UTF-8');
 }
-
-// === 🟢 NOVA FUNÇÃO: GESTÃO DE PEDIDOS (ACRESCENTADA) ===
-function carregarPedidos() {
-    db.ref('orders').on('value', snapshot => {
-        const data = snapshot.val();
-        const container = document.getElementById('lista-pedidos');
-        container.innerHTML = "";
-        if(data) {
-            Object.keys(data).reverse().forEach(id => {
-                const ped = data[id];
-                container.innerHTML += `
-                    <div class="bg-white border-l-4 border-gold p-4 shadow-sm flex justify-between items-center rounded-r-lg">
-                        <div>
-                            <p class="text-[10px] text-gray-400 font-bold uppercase">${ped.data}</p>
-                            <p class="font-bold text-sm gold">${ped.cliente || 'CLIENTE S/ NOME'}</p>
-                            <p class="text-[10px] uppercase font-bold text-gray-500">Valor: R$ ${ped.total} | Pgto: ${ped.pagamento}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="verDetalhesPedido('${id}')" class="bg-black text-white px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest">Ver Itens</button>
-                            <button onclick="db.ref('orders/${id}').remove()" class="text-red-400 hover:text-red-600 transition text-xs">Apagar</button>
-                        </div>
-                    </div>
-                `;
-            });
-        } else {
-            container.innerHTML = "<p class='text-center text-gray-400 text-xs italic'>Nenhum pedido registrado no momento.</p>";
-        }
-    });
-}
-
-function verDetalhesPedido(id) {
-    db.ref('orders/' + id).once('value', snapshot => {
-        const p = snapshot.val();
-        const container = document.getElementById('detalhes-itens');
-        container.innerHTML = "";
-        p.itens.forEach(item => {
-            container.innerHTML += `
-                <div class="flex gap-3 border-b border-gray-100 pb-3 items-center">
-                    <img src="${item.imagem || ''}" class="w-12 h-12 object-contain bg-gray-50 rounded">
-                    <div class="flex-1">
-                        <p class="text-[10px] font-bold uppercase leading-tight">${item.nome}</p>
-                        ${item.variacao ? `<p class="text-[9px] text-amber-600 font-bold uppercase">OPÇÃO: ${item.variacao}</p>` : ''}
-                        <p class="text-[9px] text-gray-400 font-bold">SKU: ${item.sku} | Qtd: ${item.qty}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] font-bold">R$ ${parseFloat(item.preco).toFixed(2)}</p>
-                    </div>
-                </div>
-            `;
-        });
-        document.getElementById('modalPedido').classList.remove('hidden');
-        document.getElementById('modalPedido').classList.add('flex');
-    });
-}
-
-// Iniciar
-carregarDados();
 </script>
-
 </body>
 </html>
