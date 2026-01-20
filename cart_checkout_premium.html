@@ -13,157 +13,165 @@
 body{background:#F8F6F2}
 .gold{color:#A68966}
 .font-serif{font-family:'Cinzel',serif}
-.floating{position:fixed;bottom:20px;right:20px;z-index:50}
 </style>
 </head>
 
-<body class="p-6">
+<body class="p-4 md:p-10">
 
 <h1 class="text-center font-serif text-2xl gold mb-2">Abella Joias</h1>
-<p class="text-center text-sm tracking-widest mb-6">
-ATACADO DE JOIAS NO BRUTO<br>
-<strong>Carrinho de Compras</strong>
-</p>
+<p class="text-center text-sm tracking-widest mb-8 uppercase font-bold">Carrinho de Compras</p>
 
 <div id="lista" class="max-w-4xl mx-auto space-y-4"></div>
 
-<div class="max-w-4xl mx-auto bg-white border p-4 mt-6 shadow-sm">
-  <p id="peso" class="text-gray-500 text-sm"></p>
-  <p id="valorCheio"></p>
-  <p id="valorPix" class="text-green-700 font-semibold"></p>
-  <p id="parcelas"></p>
+<div class="max-w-4xl mx-auto bg-white border p-6 mt-8 shadow-sm rounded-xl">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    
+    <div>
+      <h3 class="font-serif gold mb-4 uppercase text-sm font-bold border-b pb-2">Resumo Financeiro</h3>
+      <div class="space-y-2">
+        <p id="peso" class="text-gray-500 text-sm"></p>
+        <p id="valorCheio" class="text-gray-800 font-bold text-base"></p>
+        <p id="valorPix" class="text-green-600 font-bold text-xl"></p>
+        <p id="parcelas" class="text-gray-500 text-sm"></p>
+      </div>
+    </div>
+    
+    <div class="space-y-4">
+      <h3 class="font-serif gold mb-4 uppercase text-sm font-bold border-b pb-2">Identificação</h3>
+      
+      <div>
+        <label class="block text-[10px] font-bold uppercase mb-1">Seu Nome Completo:</label>
+        <input type="text" id="clienteNome" placeholder="Ex: Maria Oliveira" class="w-full border p-2 rounded text-sm focus:border-black outline-none">
+      </div>
 
-  <div class="mt-4 border-t pt-4">
-    <label class="block mb-2 font-semibold text-xs uppercase gold">Forma de pagamento:</label>
-    <select id="pagamento" class="w-full border p-3 bg-gray-50" onchange="render()">
-      <option value="Pix">Pix</option>
-      <option value="Cartão">Cartão</option>
-    </select>
+      <div>
+        <label class="block text-[10px] font-bold uppercase mb-1">Forma de Pagamento:</label>
+        <select id="pagamento" onchange="render()" class="w-full border p-2 rounded text-sm">
+          <option value="Pix">Pix (5% de desconto)</option>
+          <option value="Cartão">Cartão de Crédito</option>
+        </select>
+      </div>
+      
+      <button onclick="finalizar()" class="w-full bg-black text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-zinc-800 transition shadow-lg">
+        ENVIAR PEDIDO
+      </button>
+      
+      <a href="index.html" class="block text-center mt-4 text-[10px] text-gray-400 uppercase tracking-widest hover:text-black transition">
+        ← Voltar para o Catálogo
+      </a>
+    </div>
   </div>
-
-  <button onclick="finalizar()" class="mt-4 bg-black text-white w-full py-4 font-bold text-xs tracking-widest uppercase">
-    FINALIZAR COMPRA
-  </button>
-</div>
-
-<div class="floating">
-  <a href="index.html" class="bg-gray-800 text-white px-5 py-3 rounded-full text-xs font-bold shadow-lg uppercase">🔙 Voltar</a>
 </div>
 
 <script>
-firebase.initializeApp({
+const firebaseConfig = {
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
-});
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+const pixDesc = 5;
+const parcelasCfg = 3;
 let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-let pixDesc = 0, parcelasCfg = 1;
-
-db.ref('settings').once('value').then(s => {
-  const v = s.val();
-  pixDesc = v?.pix || 0;
-  parcelasCfg = v?.parcelas || 1;
-  render();
-});
 
 function render() {
-  const listaDiv = document.getElementById('lista');
-  let pesoT = 0, total = 0;
-  listaDiv.innerHTML = '';
-
-  if (cart.length === 0) {
-    listaDiv.innerHTML = '<p class="text-center py-10 text-gray-400">Seu carrinho está vazio.</p>';
+  const container = document.getElementById('lista');
+  
+  if (!cart.length) {
+    container.innerHTML = `<div class="text-center py-20 bg-white border rounded-xl"><p class="text-gray-400">Seu carrinho está vazio.</p></div>`;
     return;
   }
 
-  cart.forEach((p, i) => {
-    // Compatibilidade de campos preco/price e imagem/image
-    const precoUnit = parseFloat(p.preco || p.price || 0);
-    const pesoUnit = parseFloat(p.peso || p.weight || 0);
-    const imgUrl = p.imagem || p.image || 'https://via.placeholder.com/100';
+  let total = 0;
+  let pesoT = 0;
 
-    pesoT += pesoUnit * p.qty;
-    total += precoUnit * p.qty;
+  container.innerHTML = cart.map((p, i) => {
+    const subtotal = (parseFloat(p.preco) || 0) * p.qty;
+    total += subtotal;
+    pesoT += (parseFloat(p.peso) || 0) * p.qty;
 
-    listaDiv.innerHTML += `
-    <div class="bg-white border p-3 flex gap-4 items-center">
-      <img src="${imgUrl}" class="w-16 h-16 object-contain">
-      <div class="flex-1">
-        <p class="font-semibold text-sm uppercase">${p.nome || p.name}</p>
-        <p class="text-[10px] text-gray-400 font-bold">SKU ${p.sku}</p>
-
-        <div class="flex items-center gap-2 mt-2">
-          <button onclick="alterar(${i},-1)" class="px-2 border bg-gray-100 font-bold">-</button>
-          <input type="number" readonly value="${p.qty}" class="w-10 text-center text-sm border-0">
-          <button onclick="alterar(${i},1)" class="px-2 border bg-gray-100 font-bold">+</button>
-
-          <button onclick="excluir(${i})" class="ml-auto text-red-600 text-[10px] font-bold uppercase">
-            Remover
-          </button>
+    return `
+      <div class="bg-white border p-4 flex gap-4 items-center shadow-sm rounded-lg">
+        <img src="${p.imagem || 'https://via.placeholder.com/100'}" class="w-16 h-16 object-contain">
+        <div class="flex-1">
+          <h4 class="text-xs font-bold uppercase">${p.nome}</h4>
+          ${p.variacao ? `<p class="text-[9px] text-amber-600 font-bold uppercase">Opção: ${p.variacao}</p>` : ''}
+          <p class="text-[10px] text-gray-400">SKU: ${p.sku}</p>
+          <p class="gold font-bold text-sm">R$ ${parseFloat(p.preco).toFixed(2)} x ${p.qty}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="alterar(${i},-1)" class="w-7 h-7 bg-gray-100 rounded">-</button>
+          <span class="font-bold text-xs">${p.qty}</span>
+          <button onclick="alterar(${i},1)" class="w-7 h-7 bg-gray-100 rounded">+</button>
+          <button onclick="excluir(${i})" class="ml-2 text-red-300 hover:text-red-500">&times;</button>
         </div>
       </div>
-    </div>`;
-  });
+    `;
+  }).join('');
 
   const pixVal = total * (1 - pixDesc / 100);
-  const parcelaVal = (total / parcelasCfg);
+  const parcelaVal = total / parcelasCfg;
 
-  document.getElementById('peso').innerText = `Peso total: ${pesoT.toFixed(2).replace('.', ',')} g`;
-  document.getElementById('valorCheio').innerText = `Valor Cheio: R$ ${total.toFixed(2)}`;
-  document.getElementById('valorPix').innerText = `Valor Pix: R$ ${pixVal.toFixed(2)}`;
-  document.getElementById('parcelas').innerText = `${parcelasCfg}x de R$ ${parcelaVal.toFixed(2)} sem acréscimo`;
+  document.getElementById('peso').innerText = `Peso: ${pesoT.toFixed(2)}g`;
+  document.getElementById('valorCheio').innerText = `Subtotal: R$ ${total.toFixed(2)}`;
+  document.getElementById('valorPix').innerText = `Total no Pix: R$ ${pixVal.toFixed(2)}`;
+  document.getElementById('parcelas').innerText = `No cartão em até ${parcelasCfg}x de R$ ${parcelaVal.toFixed(2)}`;
 }
 
 function alterar(i, v) {
   cart[i].qty = Math.max(1, cart[i].qty + v);
-  salvar();
-}
-
-function excluir(i) {
-  cart.splice(i, 1);
-  salvar();
-}
-
-function salvar() {
   localStorage.setItem('cart', JSON.stringify(cart));
   render();
 }
 
+function excluir(i) {
+  if(confirm("Remover item?")) {
+    cart.splice(i, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    render();
+  }
+}
+
 function finalizar() {
-  if (!cart.length) return alert('Carrinho vazio');
-
+  const nomeCliente = document.getElementById('clienteNome').value;
   const forma = document.getElementById('pagamento').value;
-  let subtotal = 0;
-  cart.forEach(p => {
-    subtotal += parseFloat(p.preco || p.price || 0) * p.qty;
-  });
 
-  const final = forma === 'Pix' ? subtotal * (1 - pixDesc / 100) : subtotal;
+  if (!cart.length) return alert('Carrinho vazio');
+  if (!nomeCliente) return alert('Por favor, informe seu nome.');
 
-  // Salva no Banco de Dados
-  const pedido = db.ref('orders').push();
-  pedido.set({
-    data: new Date().toLocaleString(),
+  let totalVenda = 0;
+  cart.forEach(p => { totalVenda += (parseFloat(p.preco) || 0) * p.qty; });
+  const valorFinal = forma === 'Pix' ? totalVenda * (1 - pixDesc / 100) : totalVenda;
+
+  // 1. Salva no Firebase para você ver o romaneio depois
+  db.ref('orders').push({
+    cliente: nomeCliente,
+    data: new Date().toLocaleString('pt-BR'),
     pagamento: forma,
-    total: final.toFixed(2),
+    total: valorFinal.toFixed(2),
     itens: cart
   });
 
-  // MENSAGEM CURTA (Mantida conforme solicitado)
-  const msg = `Olá, fiz um pedido na Abella Joias.
-Valor: R$ ${final.toFixed(2)}
-Pagamento: ${forma}
-Status: aguardando contato para confirmação.`;
+  // 2. Mensagem Curta para o WhatsApp
+  const msg = `Olá, fiz um pedido na Abella Joias.\n` +
+              `Nome: ${nomeCliente}\n` +
+              `Valor: R$ ${valorFinal.toFixed(2)}\n` +
+              `Pagamento: ${forma}\n` +
+              `Status: aguardando contato para confirmação.`;
 
-  window.open(`https://wa.me/5519988207658?text=${encodeURIComponent(msg)}`, '_blank');
-
-  alert('Pedido enviado com sucesso! Em instantes a Abella Joias entrará em contato.');
+  const fone = "5519992686861"; 
+  const url = `https://api.whatsapp.com/send?phone=${fone}&text=${encodeURIComponent(msg)}`;
+  
   localStorage.removeItem('cart');
-  location.href = 'index.html';
+  window.open(url, '_blank');
+  window.location.href = "index.html";
 }
+
+render();
 </script>
 
 </body>
