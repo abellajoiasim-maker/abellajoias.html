@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Romaneio Completo | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+<div class="max-w-5xl mx-auto bg-white p-8 border">
+
+<h1 class="text-2xl font-bold mb-6">Romaneio Completo</h1>
+
+<h2 class="font-bold mb-2">Dados do Cliente</h2>
+<div class="grid grid-cols-2 gap-4 text-sm mb-6">
+<input id="nome" class="border p-2" placeholder="Nome do cliente">
+<input id="fone" class="border p-2" placeholder="Telefone / WhatsApp">
+<input id="local" class="border p-2" placeholder="Local de entrega">
+<input id="cidade" class="border p-2" placeholder="Cidade">
+<input id="endereco" class="border p-2 col-span-2" placeholder="Endereço completo">
+</div>
+
+<h2 class="font-bold mb-2">Itens do Pedido</h2>
+<label class="text-xs flex items-center gap-2 mb-2">
+<input type="checkbox" id="mostrarFotos" checked> Mostrar fotos
+</label>
+
+<table class="w-full text-sm border mb-6">
+<thead class="bg-gray-200">
+<tr>
+<th class="border p-2">Produto</th>
+<th class="border p-2">Qtd</th>
+<th class="border p-2">Unit.</th>
+<th class="border p-2">Total</th>
+</tr>
+</thead>
+<tbody id="lista"></tbody>
+</table>
+
+<div id="resumo" class="text-sm mb-6"></div>
+
+<button onclick="window.print()" class="bg-black text-white px-6 py-2 text-sm">
+IMPRIMIR / SALVAR PDF
+</button>
+
+</div>
+
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
+const id=new URLSearchParams(window.location.search).get('id');
+
+db.ref('orders/'+id).once('value').then(s=>{
+const o=s.val();
+let total=0,peso=0;
+
+o.itens.forEach(i=>{
+const v=i.preco*i.qtd;
+total+=v;
+peso+=i.peso*i.qtd;
+
+lista.innerHTML+=`
+<tr>
+<td class="border p-2">
+${i.nome}
+<div class="foto mt-2"><img src="${i.imagem}" class="h-16"></div>
+</td>
+<td class="border p-2 text-center">
+<input value="${i.qtd}" class="border w-16 text-center">
+</td>
+<td class="border p-2 text-right">R$ ${i.preco.toFixed(2)}</td>
+<td class="border p-2 text-right">R$ ${v.toFixed(2)}</td>
+</tr>`;
+});
+
+resumo.innerHTML=`
+<b>Peso total:</b> ${peso.toFixed(2)} g<br>
+<b>Valor total:</b> R$ ${total.toFixed(2)}<br>
+<b>Pagamento:</b> ${o.pagamento}
+`;
+
+mostrarFotos.onchange=()=>{
+document.querySelectorAll('.foto').forEach(f=>{
+f.style.display=mostrarFotos.checked?'block':'none';
+});
+};
+});
+</script>
+
+</body>
+</html>
