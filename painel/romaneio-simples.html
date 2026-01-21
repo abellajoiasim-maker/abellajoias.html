@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Romaneio Simples | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+</head>
+
+<body class="bg-gray-100 p-8">
+<div class="max-w-4xl mx-auto bg-white p-8 border">
+
+<h1 class="text-2xl font-bold mb-6">Romaneio de Separação</h1>
+
+<div id="cabecalho" class="mb-6 text-sm"></div>
+
+<table class="w-full text-sm border">
+<thead class="bg-gray-200">
+<tr>
+<th class="border p-2">SKU</th>
+<th class="border p-2">Produto</th>
+<th class="border p-2">Qtd</th>
+<th class="border p-2">Peso (g)</th>
+</tr>
+</thead>
+<tbody id="itens"></tbody>
+</table>
+
+<div id="totais" class="mt-6 text-sm"></div>
+
+<button onclick="window.print()" class="mt-6 bg-black text-white px-6 py-2 text-sm">
+IMPRIMIR
+</button>
+
+</div>
+
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
+
+const id=new URLSearchParams(window.location.search).get('id');
+
+db.ref('orders/'+id).once('value').then(s=>{
+const o=s.val();
+let pesoTotal=0;
+
+cabecalho.innerHTML=`
+<b>Cliente:</b> ${o.cliente}<br>
+<b>Telefone:</b> ${o.whatsapp}<br>
+<b>Pedido:</b> ${id}
+`;
+
+o.itens.forEach(i=>{
+pesoTotal+=i.peso*i.qtd;
+itens.innerHTML+=`
+<tr>
+<td class="border p-2">${i.sku}</td>
+<td class="border p-2">${i.nome}</td>
+<td class="border p-2 text-center">${i.qtd}</td>
+<td class="border p-2 text-center">${(i.peso*i.qtd).toFixed(2)}</td>
+</tr>`;
+});
+
+totais.innerHTML=`<b>Peso total:</b> ${pesoTotal.toFixed(2)} g`;
+});
+</script>
+
+</body>
+</html>
