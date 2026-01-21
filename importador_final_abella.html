@@ -2,18 +2,19 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Importador Oficial | Abella Joias</title>
+<title>Importador Oficial – Abella Joias</title>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body{
+body {
   font-family: Arial, sans-serif;
   background:#fdfaf5;
   padding:40px;
+  text-align:center;
 }
-.box{
+.box {
   max-width:650px;
   margin:auto;
   background:#fff;
@@ -21,43 +22,36 @@ body{
   border-radius:16px;
   padding:30px;
 }
-h1{color:#A68966;margin-bottom:10px}
-button{
+button {
   width:100%;
-  padding:15px;
-  font-weight:bold;
-  border:none;
+  padding:14px;
   background:#1a1a1a;
   color:#fff;
-  cursor:pointer;
+  border:none;
+  font-weight:bold;
   margin-top:15px;
+  cursor:pointer;
 }
-#log{
-  background:#f4f4f4;
-  padding:15px;
+#log {
   margin-top:20px;
-  height:240px;
+  background:#f4f4f4;
+  height:220px;
   overflow:auto;
-  font-family:monospace;
+  text-align:left;
+  padding:15px;
   font-size:12px;
+  font-family:monospace;
 }
-.ok{color:green}
-.err{color:red}
 </style>
 </head>
 
 <body>
-
 <div class="box">
-  <h1>Importador Oficial Abella</h1>
-  <p>Selecione o arquivo <b>CSV UTF-8</b> exportado da planilha</p>
-
-  <input type="file" id="csvFile" accept=".csv">
-
-  <button onclick="importar()">LIMPAR PRODUTOS E IMPORTAR</button>
-
-  <div id="status" style="margin-top:15px;font-weight:bold"></div>
-  <div id="log">Aguardando arquivo…</div>
+  <h2 style="color:#A68966">Importador Final de Produtos</h2>
+  <input type="file" id="file" accept=".csv">
+  <button onclick="importar()">IMPORTAR PRODUTOS</button>
+  <div id="status">Aguardando arquivo…</div>
+  <div id="log">Logs:</div>
 </div>
 
 <script>
@@ -69,73 +63,63 @@ firebase.initializeApp({
 });
 
 const db = firebase.database();
-const log = msg => {
-  document.getElementById('log').innerHTML += msg + "<br>";
-  document.getElementById('log').scrollTop = 99999;
-};
 
-async function importar(){
-  const file = document.getElementById('csvFile').files[0];
-  if(!file) return alert("Selecione o CSV");
+function importar() {
+  const file = document.getElementById("file").files[0];
+  const log = document.getElementById("log");
+  const status = document.getElementById("status");
 
-  document.getElementById('status').innerHTML = "⏳ Processando…";
-  document.getElementById('log').innerHTML = "";
+  if (!file) return alert("Selecione o CSV");
 
-  const texto = await file.text();
-  const linhas = texto.replace(/\r/g,'').split('\n');
+  status.innerHTML = "Processando...";
+  log.innerHTML = "Iniciando importação…<br>";
 
-  if(linhas.length < 2){
-    alert("Arquivo inválido");
-    return;
-  }
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const linhas = e.target.result.split("\n").map(l => l.trim()).filter(Boolean);
+    const headers = linhas.shift().split(",").map(h => h.trim());
 
-  // Cabeçalhos
-  const headers = linhas[0].split(',').map(h=>h.trim().toLowerCase());
+    let total = 0;
+    let batch = {};
 
-  const idx = nome => headers.indexOf(nome);
+    for (const linha of linhas) {
+      const cols = linha.split(",").map(c => c.replace(/"/g,"").trim());
+      let item = {};
 
-  if(idx('sku') === -1){
-    alert("Coluna SKU não encontrada");
-    return;
-  }
+      headers.forEach((h,i)=> item[h] = cols[i] ?? "");
 
-  await db.ref('products').remove();
-  log("✔ Banco de produtos limpo");
+      if (!item.sku || !item.nome) continue;
 
-  let total = 0;
+      const key = item.sku.replace(/[.#$/\[\]]/g,"_");
 
-  for(let i=1;i<linhas.length;i++){
-    const linha = linhas[i].trim();
-    if(!linha) continue;
+      batch[key] = {
+        nome: item.nome,
+        sku: item.sku,
+        categoria: item.categoria || "Geral",
+        preco: parseFloat(item.preco) || 0,
+        peso: parseFloat(item.peso) || 0,
+        imagem: item.imagem || "",
+        promo: 0
+      };
 
-    const cols = linha.split(',');
+      total++;
 
-    const produto = {
-      nome: cols[idx('nome')]?.replace(/"/g,'').trim() || '',
-      sku: cols[idx('sku')]?.replace(/"/g,'').trim(),
-      categoria: cols[idx('categoria')]?.replace(/"/g,'').trim() || 'Geral',
-      preco: parseFloat(cols[idx('preco')]?.replace(',','.')) || 0,
-      peso: parseFloat(cols[idx('peso')]?.replace(',','.')) || 0,
-      imagem: cols[idx('imagem')]?.replace(/"/g,'') || '',
-      promo: 0,
-      variacoes: cols[idx('variacoes')] === 'TRUE',
-      ativo: true,
-      dataImportacao: new Date().toISOString()
-    };
+      if (total % 100 === 0) {
+        await db.ref("products").update(batch);
+        batch = {};
+        log.innerHTML += `✔ ${total} produtos<br>`;
+      }
+    }
 
-    if(!produto.sku) continue;
+    if (Object.keys(batch).length)
+      await db.ref("products").update(batch);
 
-    const key = produto.sku.replace(/[.#$/\[\]]/g,'_');
-    await db.ref('products/'+key).set(produto);
+    status.innerHTML = "<b style='color:green'>Importação concluída!</b>";
+    log.innerHTML += `<br><b>Total importado: ${total}</b>`;
+  };
 
-    total++;
-    log(`<span class="ok">✔ ${produto.sku} importado</span>`);
-  }
-
-  document.getElementById('status').innerHTML =
-    `<span class="ok">✅ Importação concluída (${total} produtos)</span>`;
+  reader.readAsText(file);
 }
 </script>
-
 </body>
 </html>
