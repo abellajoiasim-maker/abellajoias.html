@@ -8,128 +8,154 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 
 <style>
-@media print {.no-print{display:none}}
-body{background:#f8f6f2}
-.box{border:1px solid #ddd;border-radius:12px}
+  body { background:#f8f6f2; }
+  .gold { color:#A68966 }
+  .print-hidden { display:none }
+  @media print {
+    .no-print { display:none }
+    body { background:#fff }
+  }
 </style>
 </head>
 
-<body class="p-6">
+<body class="p-8">
 
-<!-- CONTROLES -->
-<div class="no-print flex gap-4 mb-6">
-  <select id="tipo" class="border p-2 rounded">
-    <option value="simples">Romaneio Simples</option>
-    <option value="completo">Romaneio Completo</option>
-  </select>
+<!-- TOPO -->
+<div class="flex justify-between items-center border-b pb-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-serif gold">Romaneio de Pedido</h1>
+    <p class="text-xs text-gray-500">Abella Joias</p>
+  </div>
 
-  <label class="flex items-center gap-2">
-    <input type="checkbox" id="fotos"> Com fotos
-  </label>
+  <div class="flex gap-3 no-print">
+    <button onclick="toggleFotos()"
+      class="border px-4 py-2 text-xs rounded">
+      📸 Fotos
+    </button>
 
-  <button onclick="gerarPDF()" class="bg-black text-white px-6 py-2 rounded">
-    📄 Gerar PDF
-  </button>
-
-  <button onclick="window.print()" class="border px-6 py-2 rounded">
-    🖨️ Imprimir
-  </button>
+    <button onclick="window.print()"
+      class="bg-black text-white px-5 py-2 text-xs rounded">
+      🖨 Gerar PDF
+    </button>
+  </div>
 </div>
 
-<!-- ROMANEIO -->
-<div id="romaneio" class="bg-white p-6 box max-w-4xl mx-auto">
+<!-- DADOS CLIENTE -->
+<section class="mb-8">
+  <h2 class="font-bold gold mb-2">Dados do Cliente</h2>
+  <div class="grid md:grid-cols-3 gap-4 bg-white p-4 border rounded">
+    <input id="cNome" placeholder="Nome do cliente" class="border p-2">
+    <input id="cTelefone" placeholder="Telefone / WhatsApp" class="border p-2">
+    <input id="cPagamento" placeholder="Forma de pagamento" class="border p-2">
 
-  <h1 class="text-2xl font-extrabold mb-4">ROMANEIO</h1>
-
-  <!-- DADOS CLIENTE -->
-  <div id="dadosCliente" class="grid grid-cols-2 gap-4 mb-6">
-    <input id="cliente" placeholder="Nome do cliente" class="border p-2 rounded">
-    <input id="telefone" placeholder="Telefone" class="border p-2 rounded">
-    <input id="local" placeholder="Local de entrega" class="border p-2 rounded">
-    <input id="cidade" placeholder="Cidade" class="border p-2 rounded">
-    <textarea id="endereco" placeholder="Endereço completo" class="border p-2 rounded col-span-2"></textarea>
+    <input id="cLocal" placeholder="Local de entrega" class="border p-2 md:col-span-3">
+    <input id="cEndereco" placeholder="Endereço completo" class="border p-2 md:col-span-3">
+    <input id="cCidade" placeholder="Cidade" class="border p-2">
   </div>
+</section>
 
-  <!-- ITENS -->
-  <table class="w-full text-sm border">
-    <thead class="bg-gray-100">
+<!-- LISTA DE ITENS -->
+<section>
+  <h2 class="font-bold gold mb-2">Itens do Pedido</h2>
+
+  <table class="w-full bg-white border text-xs">
+    <thead class="bg-gray-100 text-left">
       <tr>
-        <th class="border p-2">SKU</th>
-        <th class="border p-2">Produto</th>
-        <th class="border p-2 foto">Foto</th>
-        <th class="border p-2">Qtd</th>
-        <th class="border p-2">Valor</th>
+        <th class="p-2">SKU</th>
+        <th class="p-2">Produto</th>
+        <th class="p-2">Peso (g)</th>
+        <th class="p-2">Valor</th>
+        <th class="p-2">Qtd</th>
+        <th class="p-2">Total</th>
       </tr>
     </thead>
-    <tbody id="itens"></tbody>
+    <tbody id="listaItens"></tbody>
   </table>
+</section>
 
-  <!-- TOTAIS -->
-  <div class="mt-6 text-right space-y-1 text-sm">
-    <div>Peso total: <strong id="peso">0</strong> g</div>
-    <div>Valor total: <strong>R$ <span id="valor">0</span></strong></div>
-    <div class="font-bold text-lg">Valor final: R$ <span id="final">0</span></div>
+<!-- TOTAIS -->
+<section class="mt-6 max-w-md ml-auto">
+  <div class="bg-white border p-4 text-sm space-y-1">
+    <p>Peso total: <strong><span id="pesoTotal">0</span> g</strong></p>
+    <p>Valor bruto: <strong>R$ <span id="valorBruto">0.00</span></strong></p>
+    <p class="text-green-700">Desconto PIX: <strong>R$ <span id="valorPix">0.00</span></strong></p>
+    <hr>
+    <p class="text-lg">Valor final: 
+      <strong class="gold">R$ <span id="valorFinal">0.00</span></strong>
+    </p>
   </div>
+</section>
 
+<!-- RODAPÉ -->
+<div class="mt-10 text-center text-[10px] text-gray-400">
+  Documento interno • Abella Joias • Uso administrativo
 </div>
 
 <script>
+/* FIREBASE */
 firebase.initializeApp({
- apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain:"catalogo-abella-joias.firebaseapp.com",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-const id=new URLSearchParams(window.location.search).get('id');
-let pedido;
+/* UTIL */
+const params = new URLSearchParams(location.search);
+const pedidoId = params.get("id");
 
-db.ref('pedidos/'+id).once('value').then(s=>{
- pedido=s.val();
- if(!pedido) return;
+let mostrarFotos = false;
+function toggleFotos(){
+  mostrarFotos = !mostrarFotos;
+  document.querySelectorAll(".foto").forEach(f => {
+    f.style.display = mostrarFotos ? "block" : "none";
+  });
+}
 
- cliente.value=pedido.cliente||'';
- telefone.value=pedido.telefone||'';
+/* CARREGAR PEDIDO */
+db.ref("pedidos/" + pedidoId).once("value").then(snap => {
+  const p = snap.val();
+  if(!p) return;
 
- let peso=0,valor=0;
+  cNome.value = p.cliente?.nome || "";
+  cTelefone.value = p.cliente?.telefone || "";
+  cPagamento.value = p.pagamento || "";
+  cEndereco.value = p.entrega?.endereco || "";
+  cCidade.value = p.entrega?.cidade || "";
+  cLocal.value = p.entrega?.local || "";
 
- pedido.itens.forEach(i=>{
-   peso+=i.peso*i.qtd;
-   valor+=i.preco*i.qtd;
+  let peso = 0, bruto = 0;
 
-   itens.innerHTML+=`
-   <tr>
-     <td class="border p-2">${i.sku}</td>
-     <td class="border p-2">${i.nome}</td>
-     <td class="border p-2 foto">
-       <img src="${i.imagem}" class="h-16 mx-auto">
-     </td>
-     <td class="border p-2">
-       <input type="number" value="${i.qtd}" class="w-16 border">
-     </td>
-     <td class="border p-2">R$ ${(i.preco*i.qtd).toFixed(2)}</td>
-   </tr>`;
- });
+  p.itens.forEach(i => {
+    const total = i.preco * i.qtd;
+    peso += (i.peso||0) * i.qtd;
+    bruto += total;
 
- document.getElementById('peso').innerText=peso;
- document.getElementById('valor').innerText=valor.toFixed(2);
- document.getElementById('final').innerText=valor.toFixed(2);
+    listaItens.innerHTML += `
+      <tr class="border-t">
+        <td class="p-2">${i.sku}</td>
+        <td class="p-2">
+          ${i.nome}
+          <img src="${i.imagem||''}" class="foto mt-2 w-16 hidden">
+        </td>
+        <td class="p-2">${i.peso||0}</td>
+        <td class="p-2">R$ ${i.preco.toFixed(2)}</td>
+        <td class="p-2">${i.qtd}</td>
+        <td class="p-2">R$ ${total.toFixed(2)}</td>
+      </tr>`;
+  });
+
+  const descontoPix = bruto * ((p.descontoPix||0)/100);
+  const final = bruto - descontoPix;
+
+  pesoTotal.innerText = peso.toFixed(2);
+  valorBruto.innerText = bruto.toFixed(2);
+  valorPix.innerText = descontoPix.toFixed(2);
+  valorFinal.innerText = final.toFixed(2);
 });
-
-/* CONTROLES */
-document.getElementById('tipo').onchange=e=>{
- dadosCliente.style.display=e.target.value==='simples'?'none':'grid';
-}
-document.getElementById('fotos').onchange=e=>{
- document.querySelectorAll('.foto').forEach(f=>f.style.display=e.target.checked?'table-cell':'none');
-}
-
-function gerarPDF(){
- html2pdf().from(romaneio).save(`romaneio_${id}.pdf`);
-}
 </script>
 
 </body>
