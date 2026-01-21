@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Importador Final Abella</title>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<style>
+body{font-family:sans-serif;background:#fdfaf5;padding:40px}
+.box{max-width:700px;margin:auto;background:#fff;padding:30px;border:2px solid #A68966;border-radius:12px}
+button{background:#111;color:#fff;padding:14px;width:100%;margin-top:15px;font-weight:bold}
+#log{margin-top:20px;background:#eee;padding:10px;font-size:12px;height:220px;overflow:auto}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2 style="color:#A68966">Importador Final Blindado</h2>
+<input type="file" id="csv" accept=".csv">
+<button onclick="importar()">IMPORTAR PRODUTOS</button>
+<div id="log"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db = firebase.database();
+
+function slug(txt){
+  return txt.toLowerCase().normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"")
+  .replace(/[^a-z0-9]+/g,"-")
+  .replace(/(^-|-$)/g,"");
+}
+
+async function importar(){
+  const file = document.getElementById('csv').files[0];
+  if(!file) return alert("Selecione o arquivo");
+
+  const text = await file.text();
+  const linhas = text.replace(/\r/g,'').split('\n');
+  let count = 0;
+  document.getElementById('log').innerHTML = "";
+
+  for(let i=1;i<linhas.length;i++){
+    const c = linhas[i].split(';');
+    if(!c[0] || !c[1]) continue;
+
+    const nome = c[0].trim();
+    const sku  = c[1].trim();
+    const catNome = c[2].trim();
+    const preco = parseFloat(c[3]) || 0;
+    const peso  = parseFloat(c[4]) || 0;
+
+    if(!sku || !catNome) continue;
+
+    const catSlug = slug(catNome);
+
+    // cria categoria se não existir
+    await db.ref('categories/' + catSlug).update({
+      name: catNome
+    });
+
+    await db.ref('products/' + sku).set({
+      nome,
+      sku,
+      categoria: catSlug,
+      preco,
+      peso,
+      promo: 0,
+      imagem: ""
+    });
+
+    document.getElementById('log').innerHTML += `✔ ${sku} importado<br>`;
+    count++;
+  }
+
+  alert(count + " produtos importados com sucesso!");
+}
+</script>
+</body>
+</html>
