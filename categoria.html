@@ -2,129 +2,83 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Categoria | Abella Joias</title>
+<title>Produtos | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
 
 <style>
-body{background:#F8F6F2}
+body{font-family:Poppins;background:#f8f6f2}
+.serif{font-family:Cinzel}
 .gold{color:#A68966}
-.font-serif{font-family:'Cinzel',serif}
-.floating{position:fixed;bottom:20px;right:20px;z-index:50}
-
-/* Força a imagem a ser um quadrado perfeito 1:1 */
-.img-container {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 4px;
-}
-.img-container img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
+.card{background:white;border-radius:16px}
 </style>
 </head>
 
-<body class="p-6">
+<body>
 
-<h1 id="titulo" class="font-serif text-2xl gold text-center mb-6 uppercase tracking-widest"></h1>
+<header class="p-6 flex justify-between items-center border-b bg-white">
+  <a href="index.html" class="text-sm text-gray-500">← VOLTAR</a>
+  <h1 class="serif gold text-lg" id="tituloCat"></h1>
+  <button onclick="abrirCarrinho()" class="bg-black text-white px-4 py-2 rounded-full text-xs">CARRINHO</button>
+</header>
 
-<div id="produtos-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
+<main class="max-w-6xl mx-auto p-6 grid grid-cols-2 md:grid-cols-4 gap-6" id="produtos"></main>
 
-<div class="floating flex flex-col gap-3">
-  <button onclick="history.back()" class="bg-gray-800 text-white px-5 py-3 rounded-full text-xs font-bold shadow-lg">🔙 VOLTAR</button>
-  <a href="cart_checkout_premium.html" class="bg-black text-white px-5 py-3 rounded-full text-xs font-bold shadow-lg">🛒 CARRINHO</a>
+<!-- CARRINHO -->
+<div id="carrinho" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+  <div class="bg-white w-full max-w-lg rounded-xl p-6">
+    <h2 class="font-bold mb-4">Carrinho</h2>
+    <div id="itens"></div>
+    <div class="mt-4 flex justify-between">
+      <button onclick="fecharCarrinho()" class="text-gray-500">Voltar às compras</button>
+      <a href="checkout.html" class="bg-black text-white px-4 py-2 rounded-full">Finalizar</a>
+    </div>
+  </div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
-const db = firebase.database();
+const db=firebase.database();
+const cat=new URLSearchParams(location.search).get('cat');
+tituloCat.innerText=cat;
 
-// Pega a categoria da URL
-const urlParams = new URLSearchParams(location.search);
-const catSelecionada = urlParams.get('cat');
-document.getElementById('titulo').textContent = catSelecionada;
+let cart=[];
 
-const grid = document.getElementById('produtos-grid');
-
-db.ref('settings').once('value').then(cfg => {
-  const settings = cfg.val() || {};
-  const descPix = settings.pix || 0;
-  const numParcelas = settings.parcelas || 1;
-
-  // Busca produtos e ordena por SKU
-  db.ref('products').orderByChild('sku').on('value', snap => {
-    grid.innerHTML = '';
-    
-    if (!snap.exists()) {
-        grid.innerHTML = '<p class="col-span-full text-center text-gray-400">Nenhum produto nesta categoria.</p>';
-        return;
-    }
-
-    snap.forEach(s => {
-      const p = s.val();
-      
-      // Filtro de Categoria (Atenção ao nome do campo no banco)
-      if (p.categoria !== catSelecionada && p.category !== catSelecionada) return;
-
-      // Ajuste de nomes de campos (banco vs código)
-      const nome = p.nome || p.name || "Produto sem nome";
-      const sku = p.sku || "---";
-      const precoBase = parseFloat(p.preco || p.price || 0);
-      const imagemUrl = p.imagem || p.image || 'https://via.placeholder.com/400?text=Sem+Foto';
-      
-      const valorPix = (precoBase * (1 - descPix / 100)).toFixed(2);
-
-      grid.innerHTML += `
-      <div class="bg-white border p-3 flex flex-col shadow-sm">
-        <div class="img-container mb-3">
-            <img src="${imagemUrl}" loading="lazy" alt="${nome}">
-        </div>
-        
-        <p class="text-[11px] text-gray-400 tracking-tighter">SKU ${sku}</p>
-        <p class="text-xs font-bold uppercase truncate mb-2">${nome}</p>
-
-        <div class="mt-auto">
-            <p class="text-xs text-gray-500">No bruto:</p>
-            <p class="text-sm"><strong>R$ ${precoBase.toFixed(2)}</strong></p>
-            <p class="text-green-700 text-[11px] font-bold">R$ ${valorPix} no PIX</p>
-            <p class="text-[10px] text-gray-400">${numParcelas}x sem acréscimo</p>
-
-            <button onclick='addCart(${JSON.stringify({sku, nome, preco: precoBase, imagem: imagemUrl})})'
-              class="mt-3 bg-black text-white w-full py-2 text-[10px] font-bold hover:bg-gray-800 transition uppercase">
-              Adicionar ao Carrinho
-            </button>
-        </div>
-      </div>`;
-    });
-  });
+db.ref('produtos').orderByChild('categoria').equalTo(cat).on('value',snap=>{
+produtos.innerHTML='';
+snap.forEach(s=>{
+const p=s.val();
+const promo=p.preco*(1-(p.promo||0)/100);
+produtos.innerHTML+=`
+<div class="card p-3 shadow">
+<img src="${p.img}" class="w-full aspect-square object-contain">
+<h3 class="text-sm font-semibold mt-2">${p.nome}</h3>
+<p class="text-xs line-through text-gray-400">R$ ${p.preco.toFixed(2)}</p>
+<p class="gold font-bold">R$ ${promo.toFixed(2)}</p>
+<button onclick="add('${p.nome}',${promo})" class="mt-2 w-full bg-black text-white py-2 text-xs rounded-full">ADICIONAR</button>
+</div>`;
+});
 });
 
-function addCart(p) {
-  let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-  const i = cart.find(item => item.sku === p.sku);
-  if (i) {
-    i.qty++;
-  } else {
-    cart.push({...p, qty: 1});
-  }
-  localStorage.setItem('cart', JSON.stringify(cart));
-  alert(`${p.nome} adicionado ao carrinho!`);
+function add(nome,preco){
+const q=Number(prompt('Quantidade'));
+if(q>0) cart.push({nome,preco,q});
 }
+
+function abrirCarrinho(){
+itens.innerHTML='';
+cart.forEach(i=>{
+itens.innerHTML+=`<p>${i.q}x ${i.nome}</p>`;
+});
+carrinho.classList.remove('hidden');carrinho.classList.add('flex');
+}
+function fecharCarrinho(){carrinho.classList.add('hidden')}
 </script>
 
 </body>
