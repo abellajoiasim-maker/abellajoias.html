@@ -6,181 +6,166 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
 <style>
-body { background:#F8F6F2 }
-.font-serif{font-family:'Cinzel',serif}
+body{font-family:Poppins;background:#f8f6f2}
+.serif{font-family:Cinzel}
 .gold{color:#A68966}
 .tab{display:none}
 .tab.active{display:block}
-
-.badge {
-  display:inline-block;
-  padding:2px 8px;
-  font-size:10px;
-  font-weight:700;
-  border-radius:999px;
-}
-
-.badge-new { background:#fde68a; color:#92400e }
-.badge-separated { background:#bfdbfe; color:#1e3a8a }
-.badge-invoiced { background:#bbf7d0; color:#065f46 }
-
-.price-old { text-decoration: line-through; color:#999; font-size:11px }
-.price-main { font-weight:700; color:#A68966 }
+.menu button{padding:14px 20px;text-align:left}
+.menu button:hover{background:#f1eee8}
+.image-1x1{aspect-ratio:1/1;object-fit:contain;background:white}
+.card{background:white;border:1px solid #e5e5e5;border-radius:10px}
 </style>
 </head>
 
-<body>
+<body class="flex">
 
-<header class="bg-white border-b px-10 py-6 flex justify-between">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Abella Joias</h1>
-    <p class="text-xs tracking-widest text-gray-400 uppercase">Painel Administrativo</p>
-  </div>
+<!-- MENU -->
+<aside class="w-64 bg-white border-r min-h-screen menu">
+  <h1 class="serif text-xl gold p-6 border-b">Abella Joias</h1>
+  <button onclick="openTab('empresa')">🏢 Empresa</button>
+  <button onclick="openTab('categorias')">📂 Categorias</button>
+  <button onclick="openTab('produtos')">💎 Produtos</button>
+  <button onclick="openTab('galvanicas')">🏭 Galvânicas</button>
+  <button onclick="openTab('pedidos')">📦 Pedidos</button>
+</aside>
 
-  <nav class="flex gap-8 text-xs tracking-widest uppercase">
-    <button onclick="openTab('empresa')" class="gold">Empresa</button>
-    <button onclick="openTab('selos')">Selos</button>
-    <button onclick="openTab('pedidos')">Pedidos</button>
-  </nav>
-</header>
+<main class="flex-1 p-8 space-y-16">
 
-<main class="max-w-7xl mx-auto p-8 space-y-16">
-
-<!-- ================= EMPRESA ================= -->
-<section id="empresa" class="tab active space-y-6">
-<h2 class="font-serif text-2xl gold">Empresa</h2>
-<div class="bg-white border p-6 grid md:grid-cols-2 gap-4">
-  <input id="empNome" placeholder="Nome da empresa" class="border p-3">
-  <input id="empWhatsapp" placeholder="WhatsApp que recebe pedidos" class="border p-3">
-  <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="border p-3">
-  <input id="empParcelas" type="number" placeholder="Parcelas no cartão sem acréscimo" class="border p-3">
+<!-- EMPRESA -->
+<section id="empresa" class="tab active space-y-4">
+<h2 class="serif text-2xl gold">Empresa</h2>
+<div class="card p-6 grid md:grid-cols-2 gap-4">
+<input id="empNome" placeholder="Nome da empresa" class="border p-3">
+<input id="empWhats" placeholder="WhatsApp pedidos" class="border p-3">
+<input id="empPix" type="number" placeholder="Desconto PIX %" class="border p-3">
+<input id="empParcelas" type="number" placeholder="Parcelas cartão sem juros" class="border p-3">
 </div>
-<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs">SALVAR</button>
+<button onclick="salvarEmpresa()" class="bg-black text-white px-6 py-2">Salvar</button>
 </section>
 
-<!-- ================= SELLOS ================= -->
-<section id="selos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Selos Promocionais</h2>
-
-<div class="bg-white border p-6 grid md:grid-cols-4 gap-4">
-  <input id="seloNome" placeholder="Nome do selo (ex: Black Friday)" class="border p-3">
-  <input id="seloDesc" type="number" placeholder="Desconto % (ex: 30)" class="border p-3">
-  <input id="seloCor" placeholder="Cor (ex: #000000)" class="border p-3">
-  <button onclick="salvarSelo()" class="bg-black text-white text-xs">SALVAR SELO</button>
+<!-- CATEGORIAS -->
+<section id="categorias" class="tab space-y-4">
+<h2 class="serif text-2xl gold">Categorias</h2>
+<div class="card p-4 grid md:grid-cols-3 gap-3">
+<input id="catNome" placeholder="Nome" class="border p-3">
+<input id="catImg" placeholder="URL imagem" class="border p-3">
+<button onclick="salvarCategoria()" class="bg-black text-white">Salvar</button>
 </div>
-
-<div id="listaSelos" class="grid md:grid-cols-3 gap-4"></div>
+<div id="listaCategorias" class="grid md:grid-cols-4 gap-4"></div>
 </section>
 
-<!-- ================= PEDIDOS ================= -->
-<section id="pedidos" class="tab space-y-6">
-<h2 class="font-serif text-2xl gold">Pedidos</h2>
+<!-- PRODUTOS -->
+<section id="produtos" class="tab space-y-4">
+<h2 class="serif text-2xl gold">Produtos</h2>
+<div class="card p-4 grid md:grid-cols-3 gap-3">
+<input id="pNome" placeholder="Nome" class="border p-3">
+<input id="pSku" placeholder="SKU" class="border p-3">
+<input id="pPreco" type="number" placeholder="Preço cheio" class="border p-3">
+<input id="pPromo" type="number" placeholder="Desconto promoção %" class="border p-3">
+<select id="pCategoria" class="border p-3"></select>
+<input id="pImg" placeholder="URL imagem" class="border p-3 md:col-span-3">
+</div>
+<button onclick="salvarProduto()" class="bg-black text-white px-6 py-2">Salvar produto</button>
+<div id="listaProdutos" class="grid md:grid-cols-4 gap-4"></div>
+</section>
+
+<!-- GALVÂNICAS -->
+<section id="galvanicas" class="tab space-y-4">
+<h2 class="serif text-2xl gold">Galvânicas</h2>
+<div class="card p-4 grid md:grid-cols-3 gap-3">
+<input id="gNome" placeholder="Nome" class="border p-3">
+<input id="gSelo" placeholder="Texto do selo" class="border p-3">
+<input id="gImg" placeholder="Logo" class="border p-3">
+<input id="gWhats" placeholder="WhatsApp" class="border p-3">
+<textarea id="gDesc" placeholder="Descrição" class="border p-3 md:col-span-3"></textarea>
+</div>
+<button onclick="salvarGalvanica()" class="bg-black text-white px-6 py-2">Salvar galvânica</button>
+<div id="listaGalvanicas" class="grid md:grid-cols-3 gap-6"></div>
+</section>
+
+<!-- PEDIDOS -->
+<section id="pedidos" class="tab space-y-4">
+<h2 class="serif text-2xl gold">Pedidos</h2>
 <div id="listaPedidos" class="space-y-4"></div>
 </section>
 
 </main>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
-const db = firebase.database();
+const db=firebase.database();
 
-/* ================= NAVEGAÇÃO ================= */
 function openTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById(id).classList.add('active');
 }
 
-/* ================= EMPRESA ================= */
+/* EMPRESA */
 function salvarEmpresa(){
-  db.ref('settings').set({
-    nome: empNome.value,
-    whatsapp: empWhatsapp.value,
-    pix: Number(empPix.value || 0),
-    parcelas: Number(empParcelas.value || 1)
-  });
-}
-db.ref('settings').on('value', s=>{
-  if(!s.val()) return;
-  empNome.value=s.val().nome||'';
-  empWhatsapp.value=s.val().whatsapp||'';
-  empPix.value=s.val().pix||0;
-  empParcelas.value=s.val().parcelas||1;
+db.ref('empresa').set({
+nome:empNome.value,
+whats:empWhats.value,
+pix:Number(empPix.value),
+parcelas:Number(empParcelas.value)
 });
-
-/* ================= SELLOS ================= */
-let seloEdit=null;
-function salvarSelo(){
-  const s={nome:seloNome.value,desconto:Number(seloDesc.value||0),cor:seloCor.value};
-  if(seloEdit){db.ref('selos/'+seloEdit).set(s);seloEdit=null;}
-  else db.ref('selos').push(s);
-  seloNome.value=seloDesc.value=seloCor.value='';
 }
-db.ref('selos').on('value',snap=>{
-  const l=document.getElementById('listaSelos'); l.innerHTML='';
-  snap.forEach(s=>{
-    const v=s.val();
-    l.innerHTML+=`
-    <div class="bg-white border p-4">
-      <span class="badge" style="background:${v.cor};color:#fff">${v.nome} - ${v.desconto}%</span>
-      <div class="mt-2 flex gap-2 text-xs">
-        <button onclick="editarSelo('${s.key}','${v.nome}','${v.desconto}','${v.cor}')" class="text-blue-600">Editar</button>
-        <button onclick="db.ref('selos/${s.key}').remove()" class="text-red-600">Excluir</button>
-      </div>
-    </div>`;
-  });
+
+/* CATEGORIAS */
+function salvarCategoria(){
+db.ref('categorias').push({nome:catNome.value,img:catImg.value});
+}
+
+/* PRODUTOS */
+function salvarProduto(){
+db.ref('produtos').push({
+nome:pNome.value,
+sku:pSku.value,
+preco:Number(pPreco.value),
+promo:Number(pPromo.value),
+categoria:pCategoria.value,
+img:pImg.value
 });
-function editarSelo(id,n,d,c){
-  seloNome.value=n; seloDesc.value=d; seloCor.value=c; seloEdit=id;
 }
 
-/* ================= PEDIDOS ================= */
-db.ref('pedidos').on('value',snap=>{
-  const l=document.getElementById('listaPedidos'); l.innerHTML='';
-  snap.forEach(s=>{
-    const p=s.val();
-    const badge = p.status==='separado'?'badge-separated':p.status==='faturado'?'badge-invoiced':'badge-new';
-    l.innerHTML+=`
-    <div class="bg-white border p-4">
-      <div class="flex justify-between">
-        <div>
-          <p class="font-bold">${p.cliente}</p>
-          <p class="text-xs text-gray-500">${p.whatsapp}</p>
-        </div>
-        <span class="badge ${badge}">${p.status||'novo'}</span>
-      </div>
-
-      <p class="mt-2 text-sm">Total: <strong>R$ ${p.total}</strong></p>
-
-      <div class="mt-3 flex gap-3 text-xs">
-        <select onchange="atualizarStatus('${s.key}',this.value)" class="border p-1">
-          <option value="novo">Novo</option>
-          <option value="separado">Separado</option>
-          <option value="faturado">Faturado</option>
-        </select>
-        <a href="romaneio.html?id=${s.key}"
-   target="_blank"
-   class="bg-black text-white px-4 py-2 rounded-full text-xs font-semibold hover:opacity-90 transition">
-   🧾 Gerar Romaneio
-</a>
-
-      </div>
-    </div>`;
-  });
+/* GALVÂNICAS */
+function salvarGalvanica(){
+db.ref('galvanicas').push({
+nome:gNome.value,
+selo:gSelo.value,
+img:gImg.value,
+whats:gWhats.value,
+desc:gDesc.value
 });
-
-function atualizarStatus(id,st){ db.ref('pedidos/'+id+'/status').set(st); }
-
 }
+
+/* PEDIDOS */
+db.ref('pedidos').on('value',s=>{
+listaPedidos.innerHTML='';
+s.forEach(p=>{
+listaPedidos.innerHTML+=`
+<div class="card p-4 flex justify-between">
+<div>
+<p class="font-bold">${p.val().cliente}</p>
+<p class="text-xs">R$ ${p.val().total}</p>
+<select onchange="db.ref('pedidos/${p.key}/status').set(this.value)">
+<option>Novo</option><option>Separado</option><option>Faturado</option>
+</select>
+</div>
+<a href="romaneio.html?id=${p.key}" target="_blank" class="text-blue-600">🧾 Gerar Romaneio</a>
+</div>`;
+});
+});
 </script>
 
 </body>
