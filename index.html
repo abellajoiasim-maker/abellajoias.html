@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias | Catálogo</title>
+<title>Abella Joias | Atacado Premium</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -10,198 +10,96 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#F8F6F2}
-.gold{color:#A68966}
-.font-serif{font-family:'Cinzel',serif}
-.floating{position:fixed;bottom:20px;right:20px;z-index:50}
-
-/* Estilos do Modal de Quantidade */
-#modalAdd { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-.modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; text-align: center; border: 2px solid #A68966; }
-.input-qty { border: 2px solid #A68966; padding: 12px; border-radius: 8px; width: 100px; text-align: center; font-size: 20px; font-weight: bold; margin: 10px 0; }
-.btn-confirm { background: #000; color: #fff; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; }
-.btn-cancel { color: #999; font-size: 12px; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; background: #fff; }
+body{background:#fcfaf7}
+.gold{color:#b8860b}
+.card{border:1px solid #e5e3dd;border-radius:18px}
+.selo{
+ position:absolute;top:-10px;right:-10px;
+ background:linear-gradient(135deg,#ffd700,#ffec8b);
+ color:#6b4f00;font-size:10px;font-weight:800;
+ padding:10px;border-radius:50%;
+ border:2px solid white;
+}
+.old{font-size:12px;text-decoration:line-through;color:#999}
 </style>
 </head>
 
-<body class="p-6">
+<body>
 
-<h1 class="font-serif text-3xl gold text-center mb-8">
-Abella Joias<br>
-<span class="text-sm tracking-widest">ATACADO DE JOIAS NO BRUTO</span>
-</h1>
-
-<div id="categorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
-
-<div id="lista-produtos" class="hidden max-w-6xl mx-auto">
-  <button onclick="voltarCategorias()" class="mb-6 text-gray-500 font-bold flex items-center gap-2">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-    Voltar para Categorias
+<!-- HEADER -->
+<header class="bg-white border-b p-6 flex justify-between items-center">
+  <h1 class="font-extrabold gold text-xl">ABELLA JOIAS</h1>
+  <button onclick="irCheckout()" class="bg-black text-white px-6 py-2 rounded-full">
+    🛒 Carrinho (<span id="qtdCarrinho">0</span>)
   </button>
-  <h2 id="titulo-categoria" class="font-serif text-2xl gold mb-6 uppercase tracking-wider"></h2>
-  <div id="grid-produtos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
-</div>
+</header>
 
-<div id="modalAdd">
-    <div class="modal-content shadow-2xl">
-        <h3 id="m-nome" class="font-serif gold text-xl mb-1">Nome do Produto</h3>
-        <p id="m-sku" class="text-[10px] text-gray-400 mb-6 uppercase tracking-widest"></p>
-        
-        <div id="area-variacao" class="hidden text-left mb-4">
-            <label id="label-var" class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Selecione a Opção:</label>
-            <select id="m-variacao"></select>
-        </div>
-
-        <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Quantidade Atacado:</label>
-            <input type="number" id="m-qty" value="1" min="1" class="input-qty">
-        </div>
-
-        <button onclick="confirmarAdicao()" class="btn-confirm shadow-lg">Adicionar ao Carrinho</button>
-        <div onclick="fecharModal()" class="btn-cancel">Cancelar</div>
-    </div>
-</div>
-
-<div class="floating flex flex-col gap-3">
-  <a href="cart_checkout_premium.html" class="bg-black text-white px-6 py-4 rounded-full text-sm shadow-xl flex items-center gap-2">
-    <span>🛒</span> <b>Carrinho</b>
-  </a>
-</div>
+<!-- PRODUTOS -->
+<main class="max-w-6xl mx-auto p-6">
+  <div id="produtos" class="grid grid-cols-1 md:grid-cols-4 gap-8"></div>
+</main>
 
 <script>
-// Firebase Config
+/* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ authDomain: "catalogo-abella-joias.firebaseapp.com",
+ databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId: "catalogo-abella-joias"
 });
-const db = firebase.database();
+const db=firebase.database();
 
-let todosProdutos = [];
-let itemSelecionado = null;
+/* CARRINHO */
+let carrinho=JSON.parse(localStorage.getItem('carrinho'))||[];
+qtdCarrinho.innerText=carrinho.length;
 
-// Listas de Variações
-const LISTA_INICIAIS = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z".split(",");
-const LISTA_DIZERES = ["Deus", "Jesus", "Fé", "Gratidão", "Abençoada", "Paz", "Amor", "Família", "Força"];
+/* SELLOS */
+let selos={};
+db.ref('selos').once('value').then(s=>selos=s.val()||{});
 
-// Carrega os 1.396 produtos do banco
-db.ref('products').once('value', snapshot => {
-  const data = snapshot.val();
-  if (data) {
-    todosProdutos = Object.values(data);
-    renderCategorias();
-  }
+/* PRODUTOS */
+db.ref('produtos').once('value').then(s=>{
+ const dados=s.val();
+ if(!dados) return;
+ Object.keys(dados).forEach(id=>{
+   const p=dados[id];
+   let desconto=0, seloTxt='';
+   if(p.selo && selos[p.selo]){
+     desconto=selos[p.selo].desconto;
+     seloTxt=`<div class="selo">${selos[p.selo].nome}</div>`;
+   }
+   const precoDesc = desconto ? (p.preco*(1-desconto/100)) : p.preco;
+
+   produtos.innerHTML+=`
+   <div class="card bg-white p-4 relative">
+     ${seloTxt}
+     <img src="${p.imagem}" class="h-40 mx-auto object-contain mb-4">
+     <h2 class="font-bold text-sm">${p.nome}</h2>
+
+     ${desconto?`<div class="old">R$ ${p.preco.toFixed(2)}</div>`:''}
+     <div class="font-bold gold text-lg">
+       R$ ${precoDesc.toFixed(2)}
+     </div>
+
+     <button onclick='addCarrinho(${JSON.stringify({...p,preco:precoDesc,id})})'
+       class="mt-4 w-full bg-black text-white py-2 rounded-full text-sm">
+       ADICIONAR
+     </button>
+   </div>`;
+ });
 });
 
-function renderCategorias() {
-  const cats = [...new Set(todosProdutos.map(p => p.categoria))].sort();
-  const container = document.getElementById('categorias');
-  container.innerHTML = cats.map(cat => `
-    <div onclick="filtrar('${cat}')" class="bg-white p-6 border-b-4 border-[#A68966] text-center cursor-pointer shadow-sm hover:shadow-md transition group">
-      <h3 class="font-serif gold uppercase tracking-wider group-hover:scale-110 transition duration-300 text-sm">${cat}</h3>
-    </div>
-  `).join('');
+/* FUNÇÕES */
+function addCarrinho(p){
+ let item=carrinho.find(i=>i.id===p.id);
+ if(item) item.qtd++;
+ else carrinho.push({...p,qtd:1});
+ localStorage.setItem('carrinho',JSON.stringify(carrinho));
+ qtdCarrinho.innerText=carrinho.length;
 }
 
-function filtrar(cat) {
-  document.getElementById('categorias').classList.add('hidden');
-  document.getElementById('lista-produtos').classList.remove('hidden');
-  document.getElementById('titulo-categoria').innerText = cat;
-  
-  const filtrados = todosProdutos.filter(p => p.categoria === cat);
-  const grid = document.getElementById('grid-produtos');
-  
-  grid.innerHTML = filtrados.map(p => `
-    <div class="bg-white border p-3 shadow-sm flex flex-col rounded-lg">
-      <div class="aspect-square bg-white flex items-center justify-center overflow-hidden mb-3">
-        <img src="${p.imagem || 'https://via.placeholder.com/300'}" class="max-w-full max-h-full object-contain">
-      </div>
-      <h4 class="text-[11px] font-bold uppercase flex-1 leading-tight mb-1">${p.nome}</h4>
-      <p class="text-[9px] text-gray-400 mb-2">${p.sku}</p>
-      <p class="gold font-bold text-sm mb-3">R$ ${parseFloat(p.preco).toFixed(2)}</p>
-      <button onclick='abrirModal(${JSON.stringify(p)})' class="bg-black text-white text-[10px] py-2 uppercase font-bold tracking-widest hover:bg-[#A68966] transition">
-        Adicionar
-      </button>
-    </div>
-  `).join('');
-  window.scrollTo(0,0);
-}
-
-function voltarCategorias() {
-  document.getElementById('categorias').classList.remove('hidden');
-  document.getElementById('lista-produtos').classList.add('hidden');
-}
-
-// LÓGICA DO MODAL
-function abrirModal(p) {
-    itemSelecionado = p;
-    document.getElementById('m-nome').innerText = p.nome;
-    document.getElementById('m-sku').innerText = p.sku;
-    document.getElementById('m-qty').value = 1;
-    
-    const areaVar = document.getElementById('area-variacao');
-    const selectVar = document.getElementById('m-variacao');
-    const labelVar = document.getElementById('label-var');
-    
-    areaVar.classList.add('hidden');
-    selectVar.innerHTML = "";
-
-    const nomeL = p.nome.toLowerCase();
-    
-    // Se for um produto de iniciais (A-Z)
-    if (nomeL.includes("inicial") || nomeL.includes("letra")) {
-        areaVar.classList.remove('hidden');
-        labelVar.innerText = "Escolha a Letra:";
-        LISTA_INICIAIS.forEach(l => {
-            selectVar.innerHTML += `<option value="${l}">${l}</option>`;
-        });
-    } 
-    // Se for um produto de frases (Dizeres)
-    else if (nomeL.includes("dizeres") || nomeL.includes("frase") || nomeL.includes("escrito")) {
-        areaVar.classList.remove('hidden');
-        labelVar.innerText = "Escolha o Dizer:";
-        LISTA_DIZERES.forEach(d => {
-            selectVar.innerHTML += `<option value="${d}">${d}</option>`;
-        });
-    }
-
-    document.getElementById('modalAdd').style.display = 'flex';
-}
-
-function fecharModal() {
-    document.getElementById('modalAdd').style.display = 'none';
-}
-
-function confirmarAdicao() {
-    const qty = parseInt(document.getElementById('m-qty').value);
-    const variacao = document.getElementById('m-variacao').value;
-    
-    if (qty < 1 || isNaN(qty)) return alert("Digite uma quantidade válida.");
-
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
-    // Verifica se já existe o mesmo produto com a mesma variação no carrinho
-    const index = cart.findIndex(i => i.sku === itemSelecionado.sku && i.variacao === (variacao || ""));
-
-    if (index > -1) {
-        cart[index].qty += qty;
-    } else {
-        cart.push({
-            ...itemSelecionado,
-            qty: qty,
-            variacao: variacao || ""
-        });
-    }
-
-    localStorage.setItem('cart', JSON.stringify(cart));
-    fecharModal();
-    
-    // Feedback suave ao usuário
-    const btnCart = document.querySelector('.floating b');
-    btnCart.innerText = "Adicionado!";
-    setTimeout(() => { btnCart.innerText = "Carrinho"; }, 2000);
+function irCheckout(){
+ window.location.href='checkout_premium.html';
 }
 </script>
 
