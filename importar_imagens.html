@@ -1,116 +1,122 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Vincular Imagens | Abella Joias</title>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
-
-<style>
-body{
-  font-family:Arial, sans-serif;
-  background:#fdfaf5;
-  padding:40px;
-}
-.box{
-  max-width:650px;
-  margin:auto;
-  background:#fff;
-  border:2px solid #A68966;
-  border-radius:16px;
-  padding:30px;
-}
-h1{color:#A68966}
-button{
-  width:100%;
-  padding:14px;
-  background:#1a1a1a;
-  color:#fff;
-  border:none;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:15px;
-}
-#log{
-  background:#f4f4f4;
-  padding:15px;
-  margin-top:20px;
-  height:260px;
-  overflow:auto;
-  font-family:monospace;
-  font-size:12px;
-}
-.ok{color:green}
-.warn{color:#b45309}
-</style>
+    <meta charset="UTF-8">
+    <title>Importador com Storage | Abella Joias</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #fdfaf5; padding: 40px; }
+        .box { max-width: 700px; margin: auto; background: #fff; padding: 30px; border: 2px solid #A68966; border-radius: 12px; }
+        button { background: #111; color: #fff; padding: 14px; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; border: none; }
+        button:disabled { background: #ccc; }
+        #log { margin-top: 20px; background: #eee; padding: 10px; font-size: 11px; height: 300px; overflow: auto; border: 1px solid #ccc; }
+        .success { color: green; } .warn { color: orange; } .error { color: red; }
+    </style>
 </head>
-
 <body>
 
 <div class="box">
-  <h1>Vincular Imagens do Storage</h1>
-  <p>Este script conecta imagens do <b>Firebase Storage</b> aos produtos pelo <b>SKU</b>.</p>
-
-  <button onclick="processar()">BUSCAR IMAGENS E VINCULAR</button>
-
-  <div id="log">Aguardando ação…</div>
+    <h2 style="color:#A68966">Importador com Firebase Storage</h2>
+    <p>O script buscará no Storage arquivos com o nome do <strong>SKU.jpg</strong></p>
+    <input type="file" id="csv" accept=".csv">
+    <button id="btn" onclick="importar()">GERAR PRODUTOS COM IMAGENS DO STORAGE</button>
+    <div id="log">Aguardando arquivo...</div>
 </div>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.appspot.com"
-});
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+    storageBucket: "catalogo-abella-joias.appspot.com" // Verifique se este é o seu bucket
+};
 
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const storage = firebase.storage();
-const logBox = document.getElementById('log');
 
-function log(txt){
-  logBox.innerHTML += txt + "<br>";
-  logBox.scrollTop = 99999;
+function slug(txt) {
+    return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
 }
 
-async function processar(){
-  logBox.innerHTML = "";
-  log("🔎 Buscando produtos…");
-
-  const produtosSnap = await db.ref('products').once('value');
-  const produtos = produtosSnap.val();
-  if(!produtos){
-    log("❌ Nenhum produto encontrado");
-    return;
-  }
-
-  log("📂 Listando imagens do Storage…");
-
-  const pasta = storage.ref('produtos');
-  const lista = await pasta.listAll();
-
-  let vinculados = 0;
-
-  for(const item of lista.items){
-    const nomeArquivo = item.name;
-    const skuExtraido = nomeArquivo.split('.')[0];
-
-    if(produtos[skuExtraido]){
-      const url = await item.getDownloadURL();
-      await db.ref('products/'+skuExtraido+'/imagem').set(url);
-      vinculados++;
-      log(`<span class="ok">✔ ${skuExtraido} → imagem vinculada</span>`);
-    }else{
-      log(`<span class="warn">⚠ ${skuExtraido} não encontrado no banco</span>`);
+async function buscarURLImagem(sku) {
+    // Tenta extensões comuns .jpg e .png
+    const extensoes = ['.jpg', '.png', '.jpeg', '.JPG'];
+    for (const ext of extensoes) {
+        try {
+            // Ajuste o caminho 'produtos/' se suas fotos estiverem em outra pasta no Storage
+            const ref = storage.ref().child('produtos/' + sku + ext);
+            return await ref.getDownloadURL();
+        } catch (e) {
+            continue; // Tenta a próxima extensão
+        }
     }
-  }
+    return ""; // Retorna vazio se não achar nenhuma
+}
 
-  log(`✅ Processo finalizado — ${vinculados} imagens vinculadas`);
+async function importar() {
+    const file = document.getElementById('csv').files[0];
+    const log = document.getElementById('log');
+    const btn = document.getElementById('btn');
+    if(!file) return alert("Selecione o CSV");
+
+    btn.disabled = true;
+    log.innerHTML = "Iniciando importação e busca de imagens...<br>";
+
+    const text = await file.text();
+    const linhas = text.trim().replace(/^\uFEFF/, '').split(/\r?\n/);
+    
+    let count = 0;
+
+    for(let i = 1; i < linhas.length; i++) {
+        let col = linhas[i].split(';');
+        if (col.length < 2) col = linhas[i].split(',');
+        if (!col[0] || !col[1]) continue;
+
+        const nome = col[0].replace(/"/g, '').trim();
+        const skuOriginal = col[1].trim();
+        const skuID = skuOriginal.replace(/[\.\$#\[\]\/]/g, "-");
+        const categoria = col[2] ? col[2].trim() : "Geral";
+        const preco = parseFloat(col[3]) || 0;
+        const peso = col[4] || "0";
+        const catSlug = slug(categoria);
+
+        log.innerHTML += `Processando ${skuOriginal}... `;
+
+        // BUSCA A IMAGEM NO STORAGE
+        const urlImagem = await buscarURLImagem(skuOriginal);
+
+        try {
+            // Salva Categoria
+            await db.ref('categories/' + catSlug).update({ name: categoria, slug: catSlug });
+
+            // Salva Produto com a URL do Storage
+            await db.ref('products/' + skuID).set({
+                name: nome,
+                sku: skuOriginal,
+                category: catSlug,
+                price: preco,
+                weight: peso,
+                image: urlImagem, // URL pública do Firebase Storage
+                promo: 0
+            });
+
+            if(urlImagem) {
+                log.innerHTML += `<span class="success">OK (com imagem)</span><br>`;
+            } else {
+                log.innerHTML += `<span class="warn">OK (sem imagem no storage)</span><br>`;
+            }
+            count++;
+        } catch (e) {
+            log.innerHTML += `<span class="error">ERRO: ${e.message}</span><br>`;
+        }
+        log.scrollTop = log.scrollHeight;
+    }
+
+    btn.disabled = false;
+    alert("Processo concluído para " + count + " produtos!");
 }
 </script>
-
 </body>
 </html>
