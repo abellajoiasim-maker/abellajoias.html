@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Painel Administrativo | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{background:#F8F6F2}
+.font-serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.tab{display:none}
+.tab.active{display:block}
+.image-box{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #eee}
+.image-box img{max-width:100%;max-height:100%;object-fit:contain}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:14px}
+.badge{background:linear-gradient(135deg,#FFD700,#FFF3B0);color:#6b4f00;font-size:10px;font-weight:800;padding:6px 10px;border-radius:999px}
+</style>
+</head>
+
+<body>
+
+<header class="bg-white border-b px-10 py-6 flex justify-between items-center">
+  <div>
+    <h1 class="font-serif text-xl gold">Abella Joias</h1>
+    <p class="text-xs uppercase tracking-widest text-gray-400">Painel Administrativo</p>
+  </div>
+  <nav class="flex gap-6 text-xs uppercase tracking-widest">
+    <button onclick="openTab('empresa')" class="gold">Empresa</button>
+    <button onclick="openTab('categorias')">Categorias</button>
+    <button onclick="openTab('produtos')">Produtos</button>
+    <button onclick="openTab('galvanicas')">Galvânicas</button>
+    <button onclick="openTab('pedidos')">Pedidos</button>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto p-8 space-y-20">
+
+<!-- EMPRESA -->
+<section id="empresa" class="tab active space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Empresa</h2>
+<div class="grid md:grid-cols-2 gap-4 bg-white p-6 border rounded-xl">
+<input id="empNome" class="border p-3" placeholder="Nome da empresa">
+<input id="empWhatsapp" class="border p-3" placeholder="WhatsApp que recebe pedidos">
+<input id="empPix" type="number" class="border p-3" placeholder="Desconto PIX (%)">
+<input id="empParcelas" type="number" class="border p-3" placeholder="Parcelas no cartão">
+</div>
+<button onclick="salvarEmpresa()" class="bg-black text-white px-8 py-3 text-xs rounded">SALVAR</button>
+</section>
+
+<!-- CATEGORIAS -->
+<section id="categorias" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Categorias</h2>
+<div class="grid md:grid-cols-3 gap-4 bg-white p-6 border rounded-xl">
+<input id="catNome" class="border p-3" placeholder="Nome da categoria">
+<input id="catImagem" class="border p-3" placeholder="URL da imagem (1:1)">
+<button onclick="salvarCategoria()" class="bg-black text-white text-xs rounded">SALVAR</button>
+</div>
+<div id="listaCategorias" class="grid md:grid-cols-4 gap-6"></div>
+</section>
+
+<!-- PRODUTOS -->
+<section id="produtos" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Produtos</h2>
+<div class="grid md:grid-cols-3 gap-4 bg-white p-6 border rounded-xl">
+<input id="pNome" class="border p-3" placeholder="Nome">
+<input id="pSku" class="border p-3" placeholder="SKU">
+<input id="pPreco" type="number" step="0.01" class="border p-3" placeholder="Preço">
+<input id="pPeso" type="number" step="0.01" class="border p-3" placeholder="Peso (g)">
+<select id="pCategoria" class="border p-3"></select>
+<input id="pImagem" class="border p-3 md:col-span-3" placeholder="Imagem">
+</div>
+<button onclick="salvarProduto()" class="bg-black text-white px-8 py-3 text-xs rounded">SALVAR PRODUTO</button>
+<div id="listaProdutos" class="grid md:grid-cols-4 gap-6"></div>
+</section>
+
+<!-- GALVÂNICAS -->
+<section id="galvanicas" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Galvânicas</h2>
+
+<div class="grid md:grid-cols-3 gap-4 bg-white p-6 border rounded-xl">
+<input id="gNome" class="border p-3" placeholder="Nome">
+<input id="gImagem" class="border p-3" placeholder="Logo">
+<input id="gSelo" class="border p-3" placeholder="Texto do selo">
+<input id="gDesc" class="border p-3 md:col-span-2" placeholder="Descrição">
+<input id="gEndereco" class="border p-3" placeholder="Endereço">
+<input id="gWhats" class="border p-3" placeholder="WhatsApp">
+<button onclick="salvarGalvanica()" class="bg-black text-white text-xs rounded md:col-span-3">SALVAR</button>
+</div>
+
+<div id="listaGalvanicas" class="grid md:grid-cols-3 gap-8"></div>
+</section>
+
+<!-- PEDIDOS -->
+<section id="pedidos" class="tab space-y-6">
+<h2 class="font-serif text-2xl gold border-b pb-2">Pedidos</h2>
+<div id="listaPedidos" class="space-y-4"></div>
+</section>
+
+</main>
+
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
+
+function openTab(id){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+/* EMPRESA */
+function salvarEmpresa(){
+db.ref('settings').set({
+nome:empNome.value,whatsapp:empWhatsapp.value,
+pix:+empPix.value||0,parcelas:+empParcelas.value||1
+});
+}
+db.ref('settings').on('value',s=>{
+if(!s.val())return;
+empNome.value=s.val().nome||'';
+empWhatsapp.value=s.val().whatsapp||'';
+empPix.value=s.val().pix||0;
+empParcelas.value=s.val().parcelas||1;
+});
+
+/* CATEGORIAS */
+let catEdit=null;
+function salvarCategoria(){
+const d={nome:catNome.value,imagem:catImagem.value};
+catEdit?db.ref('categories/'+catEdit).set(d):db.ref('categories').push(d);
+catNome.value=catImagem.value='';catEdit=null;
+}
+db.ref('categories').on('value',s=>{
+listaCategorias.innerHTML='';
+pCategoria.innerHTML='';
+s.forEach(c=>{
+const v=c.val();
+listaCategorias.innerHTML+=`
+<div class="card p-4">
+<div class="image-box mb-2"><img src="${v.imagem}"></div>
+<b>${v.nome}</b>
+</div>`;
+pCategoria.innerHTML+=`<option>${v.nome}</option>`;
+});
+});
+
+/* PRODUTOS */
+function salvarProduto(){
+db.ref('products').push({
+nome:pNome.value,sku:pSku.value,preco:+pPreco.value||0,
+peso:+pPeso.value||0,categoria:pCategoria.value,imagem:pImagem.value
+});
+}
+db.ref('products').on('value',s=>{
+listaProdutos.innerHTML='';
+let arr=[];
+s.forEach(p=>arr.push({...p.val(),id:p.key}));
+arr.sort((a,b)=>a.sku.localeCompare(b.sku,undefined,{numeric:true}));
+arr.forEach(p=>{
+listaProdutos.innerHTML+=`
+<div class="card p-3">
+<div class="image-box mb-2"><img src="${p.imagem}"></div>
+<b>${p.nome}</b>
+<p class="text-xs text-gray-400">${p.sku}</p>
+<p class="gold font-bold">R$ ${p.preco.toFixed(2)}</p>
+</div>`;
+});
+});
+
+/* GALVÂNICAS */
+function salvarGalvanica(){
+db.ref('galvanicas').push({
+nome:gNome.value,imagem:gImagem.value,selo:gSelo.value,
+descricao:gDesc.value,endereco:gEndereco.value,whatsapp:gWhats.value
+});
+}
+db.ref('galvanicas').on('value',s=>{
+listaGalvanicas.innerHTML='';
+s.forEach(g=>{
+const v=g.val();
+listaGalvanicas.innerHTML+=`
+<div class="card p-6 text-center relative">
+<span class="badge absolute top-3 right-3">${v.selo||'PARCEIRA'}</span>
+<img src="${v.imagem}" class="h-20 mx-auto mb-4 object-contain">
+<b>${v.nome}</b>
+<p class="text-xs text-gray-500 mb-3">${v.descricao}</p>
+<p class="text-xs">${v.endereco}</p>
+<a href="https://wa.me/${v.whatsapp}" target="_blank"
+class="mt-4 block bg-green-500 text-white py-2 rounded-full text-xs">WHATSAPP</a>
+</div>`;
+});
+});
+
+/* PEDIDOS */
+db.ref('orders').on('value',s=>{
+listaPedidos.innerHTML='';
+s.forEach(o=>{
+const v=o.val();
+listaPedidos.innerHTML+=`
+<div class="card p-4">
+<b>${v.cliente}</b> — R$ ${v.total}
+<p class="text-xs text-gray-500">${v.data}</p>
+</div>`;
+});
+});
+</script>
+</body>
+</html>
