@@ -2,113 +2,161 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias | Atacado Premium</title>
+<title>Abella Joias | Catálogo Oficial</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="manifest" href="manifest.json">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#fcfaf7}
-.gold{color:#b8860b}
-.card{border:1px solid #e5e3dd;border-radius:18px}
-.selo{
- position:absolute;top:-10px;right:-10px;
- background:linear-gradient(135deg,#ffd700,#ffec8b);
- color:#6b4f00;font-size:10px;font-weight:800;
- padding:10px;border-radius:50%;
- border:2px solid white;
-}
-.old{font-size:12px;text-decoration:line-through;color:#999}
+body{background:#f7f5f2}
+.gold{color:#A68966}
+.card:hover{transform:translateY(-4px);transition:.3s}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="bg-white border-b p-6 flex justify-between items-center">
-  <h1 class="font-extrabold gold text-xl">ABELLA JOIAS</h1>
-
-  <div class="flex items-center gap-3">
-    <a href="galvanicas.html"
-       class="border border-[#d4af37] text-[#b8860b] px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#fff6d9] transition">
-       ✨ Galvânicas Parceiras
-    </a>
-
-    <button onclick="irCheckout()" class="bg-black text-white px-6 py-2 rounded-full">
-      🛒 Carrinho (<span id="qtdCarrinho">0</span>)
-    </button>
-  </div>
+<!-- TOPO -->
+<header class="bg-white border-b p-4 sticky top-0 z-50 flex justify-between items-center">
+  <h1 class="font-serif text-xl gold">Abella Joias</h1>
+  <button onclick="abrirCarrinho()" class="text-sm">
+    🛒 Carrinho (<span id="qtdCarrinho">0</span>)
+  </button>
 </header>
- 
+
+<!-- FILTROS -->
+<section class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3 bg-white border-b text-sm">
+  <select id="filtroCategoria" onchange="filtrar()" class="border p-2">
+    <option value="">Todas categorias</option>
+  </select>
+  <select id="filtroGalvanica" onchange="filtrar()" class="border p-2">
+    <option value="">Todas galvânicas</option>
+  </select>
+</section>
+
 <!-- PRODUTOS -->
-<main class="max-w-6xl mx-auto p-6">
-  <div id="produtos" class="grid grid-cols-1 md:grid-cols-4 gap-8"></div>
-</main>
+<main id="produtos" class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4"></main>
+
+<!-- CARRINHO -->
+<div id="carrinho" class="fixed inset-0 bg-black/60 hidden z-50">
+  <div class="bg-white max-w-md ml-auto h-full p-5 flex flex-col">
+    <div class="flex justify-between mb-4">
+      <h2 class="gold font-serif">Carrinho</h2>
+      <button onclick="fecharCarrinho()">✖</button>
+    </div>
+
+    <div id="listaCarrinho" class="flex-1 overflow-auto space-y-3 text-sm"></div>
+
+    <a href="checkout_premium.html"
+       class="bg-black text-white text-center py-3 mt-4 rounded-full text-sm">
+      Finalizar Pedido
+    </a>
+  </div>
+</div>
 
 <script>
 /* FIREBASE */
 firebase.initializeApp({
- apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain: "catalogo-abella-joias.firebaseapp.com",
- databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
- projectId: "catalogo-abella-joias"
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
 });
-const db=firebase.database();
+const db = firebase.database();
+
+/* ESTADO */
+let produtosDB=[], carrinho = JSON.parse(localStorage.getItem("carrinho")||"[]");
+
+/* LOAD */
+db.ref("produtos").on("value",snap=>{
+  produtosDB=[];
+  produtos.innerHTML='';
+  filtroCategoria.innerHTML='<option value="">Todas categorias</option>';
+  filtroGalvanica.innerHTML='<option value="">Todas galvânicas</option>';
+
+  snap.forEach(s=>{
+    const p={id:s.key,...s.val()};
+    produtosDB.push(p);
+
+    if(p.categoria){
+      filtroCategoria.innerHTML+=`<option>${p.categoria}</option>`;
+    }
+    if(p.galvanica){
+      filtroGalvanica.innerHTML+=`<option>${p.galvanica}</option>`;
+    }
+  });
+
+  render(produtosDB);
+});
+
+/* RENDER */
+function render(lista){
+  produtos.innerHTML='';
+  lista.forEach(p=>{
+    produtos.innerHTML+=`
+    <div class="bg-white border p-3 card">
+      <img src="${p.imagem}" class="w-full aspect-square object-cover mb-2">
+      <h3 class="text-sm font-semibold">${p.nome}</h3>
+      <p class="text-xs text-gray-500">${p.codigo||''}</p>
+      <p class="gold font-bold text-sm mt-1">R$ ${p.preco}</p>
+      <button onclick='addCarrinho(${JSON.stringify(p)})'
+        class="mt-2 w-full border py-2 text-xs hover:bg-black hover:text-white">
+        Adicionar
+      </button>
+    </div>`;
+  });
+}
+
+/* FILTRO */
+function filtrar(){
+  const c=filtroCategoria.value, g=filtroGalvanica.value;
+  render(produtosDB.filter(p=>
+    (!c||p.categoria==c)&&(!g||p.galvanica==g)
+  ));
+}
 
 /* CARRINHO */
-let carrinho=JSON.parse(localStorage.getItem('carrinho'))||[];
-qtdCarrinho.innerText=carrinho.length;
-
-/* SELLOS */
-let selos={};
-db.ref('selos').once('value').then(s=>selos=s.val()||{});
-
-/* PRODUTOS */
-db.ref('produtos').once('value').then(s=>{
- const dados=s.val();
- if(!dados) return;
- Object.keys(dados).forEach(id=>{
-   const p=dados[id];
-   let desconto=0, seloTxt='';
-   if(p.selo && selos[p.selo]){
-     desconto=selos[p.selo].desconto;
-     seloTxt=`<div class="selo">${selos[p.selo].nome}</div>`;
-   }
-   const precoDesc = desconto ? (p.preco*(1-desconto/100)) : p.preco;
-
-   produtos.innerHTML+=`
-   <div class="card bg-white p-4 relative">
-     ${seloTxt}
-     <img src="${p.imagem}" class="h-40 mx-auto object-contain mb-4">
-     <h2 class="font-bold text-sm">${p.nome}</h2>
-
-     ${desconto?`<div class="old">R$ ${p.preco.toFixed(2)}</div>`:''}
-     <div class="font-bold gold text-lg">
-       R$ ${precoDesc.toFixed(2)}
-     </div>
-
-     <button onclick='addCarrinho(${JSON.stringify({...p,preco:precoDesc,id})})'
-       class="mt-4 w-full bg-black text-white py-2 rounded-full text-sm">
-       ADICIONAR
-     </button>
-   </div>`;
- });
-});
-
-/* FUNÇÕES */
 function addCarrinho(p){
- let item=carrinho.find(i=>i.id===p.id);
- if(item) item.qtd++;
- else carrinho.push({...p,qtd:1});
- localStorage.setItem('carrinho',JSON.stringify(carrinho));
- qtdCarrinho.innerText=carrinho.length;
+  const i=carrinho.find(x=>x.id==p.id);
+  if(i) i.qtd++; 
+  else carrinho.push({...p,qtd:1});
+  salvarCarrinho();
 }
 
-function irCheckout(){
- window.location.href='checkout_premium.html';
+function salvarCarrinho(){
+  localStorage.setItem("carrinho",JSON.stringify(carrinho));
+  atualizarCarrinho();
 }
+
+function atualizarCarrinho(){
+  listaCarrinho.innerHTML='';
+  let qtd=0;
+  carrinho.forEach((i,idx)=>{
+    qtd+=i.qtd;
+    listaCarrinho.innerHTML+=`
+    <div class="flex justify-between border-b pb-2">
+      <span>${i.nome} x${i.qtd}</span>
+      <button onclick="remover(${idx})" class="text-red-500">✖</button>
+    </div>`;
+  });
+  qtdCarrinho.innerText=qtd;
+}
+
+function remover(i){
+  carrinho.splice(i,1);
+  salvarCarrinho();
+}
+
+/* UI */
+function abrirCarrinho(){ carrinhoDiv().classList.remove("hidden"); }
+function fecharCarrinho(){ carrinhoDiv().classList.add("hidden"); }
+function carrinhoDiv(){ return document.getElementById("carrinho"); }
+
+atualizarCarrinho();
 </script>
 
 </body>
