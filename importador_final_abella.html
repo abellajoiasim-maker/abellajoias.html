@@ -1,110 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Importador Blindado - Abella</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 40px; background: #fdfaf5; }
-        .container { background: white; max-width: 600px; margin: auto; padding: 30px; border: 2px solid #A68966; border-radius: 15px; }
-        button { background: #1a1a1a; color: white; padding: 15px; width: 100%; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
-        #log { text-align: left; background: #f4f4f4; padding: 15px; margin-top: 20px; font-size: 12px; height: 200px; overflow-y: auto; font-family: monospace; }
-    </style>
+<meta charset="UTF-8">
+<title>Importador Oficial | Abella Joias</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#fdfaf5;
+  padding:40px;
+}
+.box{
+  max-width:650px;
+  margin:auto;
+  background:#fff;
+  border:2px solid #A68966;
+  border-radius:16px;
+  padding:30px;
+}
+h1{color:#A68966;margin-bottom:10px}
+button{
+  width:100%;
+  padding:15px;
+  font-weight:bold;
+  border:none;
+  background:#1a1a1a;
+  color:#fff;
+  cursor:pointer;
+  margin-top:15px;
+}
+#log{
+  background:#f4f4f4;
+  padding:15px;
+  margin-top:20px;
+  height:240px;
+  overflow:auto;
+  font-family:monospace;
+  font-size:12px;
+}
+.ok{color:green}
+.err{color:red}
+</style>
 </head>
+
 <body>
 
-<div class="container">
-    <h2 style="color:#A68966">Importador Inteligente</h2>
-    <p>Selecione o arquivo <b>abella-produtos-importacao.csv</b></p>
-    <input type="file" id="csvFile" accept=".csv">
-    <button onclick="processarArquivo()">LIMPAR BANCO E IMPORTAR AGORA</button>
-    <div id="status" style="margin-top:15px; font-weight:bold;">Aguardando arquivo...</div>
-    <div id="log">Logs de importação...</div>
+<div class="box">
+  <h1>Importador Oficial Abella</h1>
+  <p>Selecione o arquivo <b>CSV UTF-8</b> exportado da planilha</p>
+
+  <input type="file" id="csvFile" accept=".csv">
+
+  <button onclick="importar()">LIMPAR PRODUTOS E IMPORTAR</button>
+
+  <div id="status" style="margin-top:15px;font-weight:bold"></div>
+  <div id="log">Aguardando arquivo…</div>
 </div>
 
 <script>
-    var firebaseConfig = {
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        authDomain: "catalogo-abella-joias.firebaseapp.com",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-        projectId: "catalogo-abella-joias"
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  authDomain: "catalogo-abella-joias.firebaseapp.com",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
+});
+
+const db = firebase.database();
+const log = msg => {
+  document.getElementById('log').innerHTML += msg + "<br>";
+  document.getElementById('log').scrollTop = 99999;
+};
+
+async function importar(){
+  const file = document.getElementById('csvFile').files[0];
+  if(!file) return alert("Selecione o CSV");
+
+  document.getElementById('status').innerHTML = "⏳ Processando…";
+  document.getElementById('log').innerHTML = "";
+
+  const texto = await file.text();
+  const linhas = texto.replace(/\r/g,'').split('\n');
+
+  if(linhas.length < 2){
+    alert("Arquivo inválido");
+    return;
+  }
+
+  // Cabeçalhos
+  const headers = linhas[0].split(',').map(h=>h.trim().toLowerCase());
+
+  const idx = nome => headers.indexOf(nome);
+
+  if(idx('sku') === -1){
+    alert("Coluna SKU não encontrada");
+    return;
+  }
+
+  await db.ref('products').remove();
+  log("✔ Banco de produtos limpo");
+
+  let total = 0;
+
+  for(let i=1;i<linhas.length;i++){
+    const linha = linhas[i].trim();
+    if(!linha) continue;
+
+    const cols = linha.split(',');
+
+    const produto = {
+      nome: cols[idx('nome')]?.replace(/"/g,'').trim() || '',
+      sku: cols[idx('sku')]?.replace(/"/g,'').trim(),
+      categoria: cols[idx('categoria')]?.replace(/"/g,'').trim() || 'Geral',
+      preco: parseFloat(cols[idx('preco')]?.replace(',','.')) || 0,
+      peso: parseFloat(cols[idx('peso')]?.replace(',','.')) || 0,
+      imagem: cols[idx('imagem')]?.replace(/"/g,'') || '',
+      promo: 0,
+      variacoes: cols[idx('variacoes')] === 'TRUE',
+      ativo: true,
+      dataImportacao: new Date().toISOString()
     };
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.database();
 
-    async function processarArquivo() {
-        const fileInput = document.getElementById('csvFile');
-        const log = document.getElementById('log');
-        const status = document.getElementById('status');
+    if(!produto.sku) continue;
 
-        if (!fileInput.files[0]) return alert("Selecione o arquivo!");
+    const key = produto.sku.replace(/[.#$/\[\]]/g,'_');
+    await db.ref('products/'+key).set(produto);
 
-        status.innerText = "Limpando e Processando...";
-        log.innerHTML = "Iniciando análise técnica da planilha...<br>";
+    total++;
+    log(`<span class="ok">✔ ${produto.sku} importado</span>`);
+  }
 
-        try {
-            const text = await fileInput.files[0].text();
-            await db.ref('products').remove(); // Limpa banco antigo
-
-            const linhas = text.replace(/\r/g, "").split("\n");
-            let batch = {};
-            let contador = 0;
-
-            for (let i = 1; i < linhas.length; i++) {
-                let linha = linhas[i].trim();
-                if (!linha) continue;
-
-                // Lógica especial: Divide pela última vírgula para achar Peso, Preço e Categoria
-                // Isso ignora as vírgulas problemáticas no nome do produto
-                let colunas = linha.split(",");
-                
-                // Pegamos o SKU que costuma ser a segunda coluna ou estar após o primeiro nome
-                // Mas vamos usar uma busca inteligente:
-                let sku = colunas[1] ? colunas[1].trim().replace(/"/g, "") : "";
-                if (!sku || sku.toLowerCase() === 'sku' || sku.length < 3) continue;
-
-                // Captura de preço e peso garantindo que não sejam NaN
-                // Buscamos os valores numéricos no final da linha
-                let precoStr = colunas[3] || "0";
-                let pesoStr = colunas[4] || "0";
-                
-                let preco = parseFloat(precoStr.replace(/"/g, "")) || 0;
-                let peso = parseFloat(pesoStr.replace(/"/g, "")) || 0;
-
-                let chave = sku.replace(/[\.\#\$\/\[\]]/g, "_");
-
-                batch[chave] = {
-                    nome: colunas[0].replace(/"/g, "").trim(),
-                    sku: sku,
-                    categoria: colunas[2] ? colunas[2].replace(/"/g, "").trim() : "Geral",
-                    preco: preco,
-                    peso: peso,
-                    imagem: ""
-                };
-
-                contador++;
-
-                if (contador % 100 === 0) {
-                    await db.ref('products').update(batch);
-                    log.innerHTML += `> ${contador} produtos processados...<br>`;
-                    batch = {};
-                    log.scrollTop = log.scrollHeight;
-                }
-            }
-
-            if (Object.keys(batch).length > 0) {
-                await db.ref('products').update(batch);
-            }
-
-            status.innerHTML = "<span style='color:green'>SUCESSO TOTAL!</span>";
-            log.innerHTML += `<br><b>Importação finalizada: ${contador} itens.</b>`;
-            alert("Foram importados " + contador + " produtos com sucesso!");
-
-        } catch (e) {
-            log.innerHTML += `<br><span style='color:red'>Erro: ${e.message}</span>`;
-        }
-    }
+  document.getElementById('status').innerHTML =
+    `<span class="ok">✅ Importação concluída (${total} produtos)</span>`;
+}
 </script>
+
 </body>
 </html>
