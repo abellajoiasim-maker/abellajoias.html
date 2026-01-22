@@ -161,29 +161,49 @@ function saveProduto() {
     });
 }
 
+// PRODUTOS (LISTAGEM COMPLETA E AGRUPADA)
 db.ref('products').on('value', s => {
     const grid = document.getElementById('gridProds');
-    grid.innerHTML = '';
-    let prods = [];
-    s.forEach(p => prods.push({id: p.key, ...p.val()}));
+    grid.innerHTML = ''; // Limpa a tela antes de carregar
     
+    if (!s.exists()) {
+        grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400">Nenhum produto cadastrado.</div>';
+        return;
+    }
+
+    let prods = [];
+    s.forEach(p => {
+        prods.push({ id: p.key, ...p.val() });
+    });
+
+    // 1. Agrupar produtos por Categoria
     let grouped = prods.reduce((r, a) => {
-        r[a.category] = [...r[a.category] || [], a];
+        const catNome = a.category || "Sem Categoria";
+        r[catNome] = [...r[catNome] || [], a];
         return r;
     }, {});
 
+    // 2. Ordenar as categorias alfabeticamente e listar
     Object.keys(grouped).sort().forEach(cat => {
-        grid.innerHTML += `<div class="cat-group-title">Categoria: ${cat.toUpperCase()}</div>`;
-        grouped[cat].sort((a,b) => a.sku.localeCompare(b.sku)).forEach(p => {
+        // Inserir o título da Categoria (ocupa a linha toda)
+        grid.innerHTML += `<div class="cat-group-title col-span-full">CATEGORIA: ${cat.toUpperCase().replace(/-/g, ' ')}</div>`;
+        
+        // Ordenar produtos por SKU dentro da categoria
+        grouped[cat].sort((a, b) => (a.sku || "").localeCompare(b.sku || "")).forEach(p => {
             grid.innerHTML += `
                 <div class="bg-white border rounded p-2 flex flex-col shadow-sm ${p.paused ? 'paused' : ''}">
-                    <img src="${p.image}" class="w-full aspect-square object-contain" onerror="this.src='https://via.placeholder.com/100'">
-                    <p class="text-[10px] font-bold truncate mt-1">${p.name}</p>
-                    <p class="text-[9px] text-gray-400">SKU: ${p.sku}</p>
-                    <div class="flex justify-between mt-2 border-t pt-2 gap-1">
-                        <button onclick="editProd('${p.id}')" class="text-blue-600 text-[8px] font-bold bg-blue-50 p-1 rounded flex-1">EDITAR</button>
-                        <button onclick="togglePauseProd('${p.id}', ${p.paused || false})" class="text-orange-600 text-[8px] font-bold bg-orange-50 p-1 rounded flex-1">${p.paused ? 'ATIVAR' : 'PAUSAR'}</button>
-                        <button onclick="delProd('${p.id}')" class="text-red-500 text-[8px] font-bold bg-red-50 p-1 rounded">X</button>
+                    <div class="relative">
+                        <img src="${p.image}" class="w-full aspect-square object-contain" onerror="this.src='https://via.placeholder.com/150?text=Sem+Foto'">
+                        ${p.paused ? '<span class="absolute top-1 left-1 bg-red-600 text-white text-[8px] px-1 rounded">PAUSADO</span>' : ''}
+                    </div>
+                    <p class="text-[10px] font-bold truncate mt-2">${p.name || 'Sem Nome'}</p>
+                    <p class="text-[9px] text-gray-400 font-mono">SKU: ${p.sku}</p>
+                    <p class="text-[10px] gold font-bold">R$ ${Number(p.price).toFixed(2)}</p>
+                    
+                    <div class="flex justify-between mt-3 border-t pt-2 gap-1">
+                        <button onclick="editProd('${p.id}')" class="text-blue-600 text-[9px] font-bold bg-blue-50 p-1 rounded flex-1">EDITAR</button>
+                        <button onclick="togglePauseProd('${p.id}', ${p.paused || false})" class="text-orange-600 text-[9px] font-bold bg-orange-50 p-1 rounded flex-1">${p.paused ? 'ATIVAR' : 'PAUSAR'}</button>
+                        <button onclick="delProd('${p.id}')" class="text-red-500 text-[9px] font-bold bg-red-50 p-1 rounded">X</button>
                     </div>
                 </div>`;
         });
