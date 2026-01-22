@@ -1,207 +1,129 @@
+<!-- === PAINEL ABELLA | VERSÃO OTIMIZADA COM VARIAÇÕES === -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel Gestão | Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        body { background:#F8F9FA; font-family: 'Poppins', sans-serif; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-        .nav-btn { flex:1; text-align:center; padding:15px 5px; cursor:pointer; font-weight:600; font-size:10px; color:#666; border-bottom:3px solid transparent; transition: 0.3s; }
-        .nav-btn.active-btn { color:#A68966; border-bottom-color:#A68966; background:#fff; }
-        #modalDetail { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; padding:15px; }
-        .modal-content { background:#fff; width:100%; max-width:500px; border-radius:20px; max-height:90vh; overflow-y:auto; position:relative; }
-        input, select { border: 1px solid #ddd; padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 8px; font-size: 14px; color: #333; }
-        .card-sku { background:#fff; border-radius:12px; padding:12px; border:1px solid #eee; cursor:pointer; position:relative; }
-        .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
-        .cat-section { margin-bottom: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
-        .cat-title { background: #A68966; color: white; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
-    </style>
+<meta charset="UTF-8">
+<title>Painel Abella | Gestão Inteligente</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Poppins,system-ui;background:#f8f9fa}
+.card{background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;cursor:pointer}
+.card:hover{border-color:#A68966}
+.paused{opacity:.5}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:center;justify-content:center}
+.modal-box{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:520px;max-height:90vh;overflow:auto}
+input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-bottom:8px}
+</style>
 </head>
 <body>
 
-<nav class="flex bg-white shadow-sm sticky top-0 z-50">
-    <div onclick="switchTab('aba-empresa', this)" class="nav-btn active-btn">EMPRESA</div>
-    <div onclick="switchTab('aba-categorias', this)" class="nav-btn">CATEGORIAS</div>
-    <div onclick="switchTab('aba-produtos', this)" class="nav-btn">PRODUTOS</div>
-</nav>
-
-<main class="p-4 max-w-6xl mx-auto">
-    <div id="aba-empresa" class="tab-panel active">
-        <div class="bg-white p-6 rounded-2xl shadow-sm">
-            <h2 class="font-bold mb-4 uppercase text-sm">Dados da Loja</h2>
-            <input id="empNome" placeholder="Nome da Loja">
-            <input id="empWhats" placeholder="WhatsApp">
-            <div class="grid grid-cols-2 gap-4">
-                <input id="empPix" type="number" placeholder="Desc. Pix (%)">
-                <input id="empParc" type="number" placeholder="Máx. Parcelas">
-            </div>
-            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-4">SALVAR</button>
-        </div>
+<!-- MODAL -->
+<div id="modal" class="modal" onclick="if(event.target==this)fecharModal()">
+  <div class="modal-box">
+    <h3 id="modalTitle" class="font-bold mb-4"></h3>
+    <div id="modalBody"></div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="salvarProduto()" class="flex-1 bg-green-600 text-white py-3 rounded-xl">SALVAR</button>
+      <button onclick="excluirProduto()" class="bg-red-100 text-red-600 px-6 rounded-xl">EXCLUIR</button>
     </div>
-
-    <div id="aba-categorias" class="tab-panel">
-        <button onclick="abrirNovo('categoria')" class="w-full border-2 border-dashed p-4 rounded-xl text-gray-400 font-bold mb-4">+ NOVA CATEGORIA</button>
-        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-    </div>
-
-    <div id="aba-produtos" class="tab-panel">
-        <div class="flex gap-2 mb-6">
-            <input type="text" id="busca" onkeyup="filtrar()" placeholder="🔍 Filtrar produtos..." class="!mb-0 shadow-sm">
-            <button onclick="abrirNovo('produto')" class="bg-black text-white px-6 rounded-xl font-bold">+</button>
-        </div>
-        <div id="containerProdutos">
-            </div>
-    </div>
-</main>
-
-<div id="modalDetail">
-    <div class="modal-content p-6 shadow-2xl">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold uppercase text-gray-700">Editar Item</h3>
-            <button onclick="fecharModal()" class="text-2xl text-gray-400">&times;</button>
-        </div>
-        <div id="formContainer"></div>
-        <div class="flex gap-2 mt-6">
-            <button id="btnSalvar" class="flex-1 bg-green-600 text-white py-4 rounded-xl font-bold">SALVAR</button>
-            <button id="btnExcluir" class="bg-red-50 text-red-600 px-6 rounded-xl font-bold">EXCLUIR</button>
-        </div>
-    </div>
+  </div>
 </div>
 
+<main class="max-w-6xl mx-auto p-4">
+<h2 class="font-bold mb-4">PRODUTOS (ORDENADOS POR SKU)</h2>
+<div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+</main>
+
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+const firebaseConfig = {
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-function switchTab(id, el) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
-    document.getElementById(id).classList.add('active');
-    el.classList.add('active-btn');
-}
-function fecharModal() { document.getElementById('modalDetail').style.display = 'none'; }
+let produtoAtual = null;
 
-// EMPRESA
-db.ref('settings').on('value', s => {
-    const v = s.val() || {};
-    document.getElementById('empNome').value = v.nome || '';
-    document.getElementById('empWhats').value = v.whatsapp || '';
-    document.getElementById('empPix').value = v.pix || 0;
-    document.getElementById('empParc').value = v.parcelas || 1;
+// === LISTAR PRODUTOS ===
+db.ref('products').on('value', snap => {
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '';
+  let arr = [];
+  snap.forEach(p => arr.push({id:p.key,...p.val()}));
+  arr.sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));
+
+  arr.forEach(p=>{
+    lista.innerHTML += `
+      <div class="card ${p.paused?'paused':''}" onclick="abrirProduto('${p.id}')">
+        <div class="text-xs font-mono text-gray-400">${p.sku}</div>
+        <div class="font-bold text-sm truncate">${p.name}</div>
+        <div class="text-[#A68966] text-xs font-bold">R$ ${Number(p.price).toFixed(2)}</div>
+        <div class="text-[10px] text-gray-400">${p.weight || 0}g</div>
+      </div>`;
+  });
 });
-function saveEmpresa() {
-    db.ref('settings').update({
-        nome: document.getElementById('empNome').value, whatsapp: document.getElementById('empWhats').value,
-        pix: Number(document.getElementById('empPix').value), parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert("Atualizado!"));
-}
 
-// LOGICA DE PRODUTOS ORGANIZADOS
-function renderizarPainel() {
-    const container = document.getElementById('containerProdutos');
-    
-    Promise.all([
-        db.ref('categories').once('value'),
-        db.ref('products').once('value')
-    ]).then(([catSnap, prodSnap]) => {
-        container.innerHTML = '';
-        const cats = [];
-        catSnap.forEach(c => cats.push(c.val()));
-        
-        const prods = [];
-        prodSnap.forEach(p => prods.push({...p.val(), id: p.key}));
+// === ABRIR MODAL ===
+async function abrirProduto(id){
+  const s = await db.ref('products/'+id).once('value');
+  const p = s.val();
+  produtoAtual = id;
 
-        // Para cada categoria
-        cats.forEach(cat => {
-            const produtosDaCat = prods
-                .filter(p => p.category === cat.slug)
-                .sort((a, b) => (a.sku || "").localeCompare(b.sku || "", undefined, {numeric: true}));
-
-            if(produtosDaCat.length > 0) {
-                let html = `<section class="cat-section">
-                    <span class="cat-title">${cat.name.toUpperCase()}</span>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">`;
-                
-                produtosDaCat.forEach(v => {
-                    html += `
-                        <div onclick="abrirEdicao('products', '${v.id}')" class="card-sku item-prod">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[8px] font-mono text-gray-400">${v.sku || v.id}</span>
-                                <span class="dot ${v.image ? 'bg-green-500' : 'bg-red-500'}"></span>
-                            </div>
-                            <p class="text-[9px] font-bold uppercase truncate">${v.name}</p>
-                            <p class="text-[9px] text-gray-400">Peso: ${v.weight || '0'}g</p>
-                            <p class="text-[10px] text-[#A68966] font-bold mt-1">R$ ${Number(v.price).toFixed(2)}</p>
-                        </div>`;
-                });
-                
-                html += `</div></section>`;
-                container.innerHTML += html;
-            }
-        });
+  let variacoesHTML = '';
+  if(p.variations){
+    p.variations.forEach((v,i)=>{
+      variacoesHTML += `
+        <div class="flex gap-2">
+          <input value="${v.label}" disabled>
+          <input type="number" id="q-${i}" value="${v.qty}">
+        </div>`;
     });
+  }
+
+  document.getElementById('modalTitle').innerText = "Editar Produto";
+  document.getElementById('modalBody').innerHTML = `
+    <label>NOME</label><input id="pNome" value="${p.name}">
+    <div class="grid grid-cols-2 gap-2">
+      <div><label>SKU</label><input id="pSku" value="${p.sku}"></div>
+      <div><label>PESO (g)</label><input id="pPeso" type="number" value="${p.weight||0}"></div>
+    </div>
+    <label>PREÇO</label><input id="pPreco" type="number" value="${p.price}">
+    ${variacoesHTML ? `<h4 class="font-bold mt-3 text-sm">VARIAÇÕES</h4>${variacoesHTML}` : ''}
+    <label class="flex gap-2 items-center mt-3">
+      <input type="checkbox" id="pPause" ${p.paused?'checked':''}> Pausar produto
+    </label>
+  `;
+  document.getElementById('modal').style.display='flex';
 }
 
-// EDITAR PRODUTO (Com campo Peso)
-async function abrirEdicao(path, id) {
-    const snap = await db.ref(path + '/' + id).once('value');
-    const v = snap.val();
-    const container = document.getElementById('formContainer');
-    
-    if(path === 'products') {
-        const catSnap = await db.ref('categories').once('value');
-        let options = '';
-        catSnap.forEach(c => options += `<option value="${c.val().slug}" ${v.category === c.val().slug ? 'selected' : ''}>${c.val().name}</option>`);
-
-        container.innerHTML = `
-            <img src="${v.image || ''}" class="w-full h-40 object-contain bg-gray-50 rounded-xl mb-4 border">
-            <input id="mNome" value="${v.name || ''}" placeholder="Nome">
-            <div class="grid grid-cols-2 gap-2">
-                <input id="mSku" value="${v.sku || ''}" placeholder="SKU">
-                <input id="mPreco" type="number" step="0.01" value="${v.price || ''}" placeholder="Preço">
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input id="mPeso" value="${v.weight || ''}" placeholder="Peso (ex: 2.50)">
-                <select id="mCat">${options}</select>
-            </div>
-            <input id="mImg" value="${v.image || ''}" placeholder="URL Imagem">
-            <label class="flex items-center gap-2 p-2"><input type="checkbox" id="mPause" ${v.paused ? 'checked' : ''}> Pausar na Loja</label>
-        `;
-    }
-    
-    document.getElementById('modalDetail').style.display = 'flex';
-    document.getElementById('btnSalvar').onclick = () => salvar(path, id);
-    document.getElementById('btnExcluir').onclick = () => { if(confirm("Excluir?")) db.ref(path+'/'+id).remove().then(()=>location.reload()); };
+// === SALVAR ===
+function salvarProduto(){
+  const updates = {
+    name: pNome.value,
+    sku: pSku.value,
+    price: Number(pPreco.value),
+    weight: Number(pPeso.value),
+    paused: pPause.checked
+  };
+  db.ref('products/'+produtoAtual).update(updates);
+  fecharModal();
 }
 
-async function salvar(path, id) {
-    const dados = {
-        name: document.getElementById('mNome').value,
-        image: document.getElementById('mImg').value
-    };
-    if(path === 'products') {
-        dados.sku = document.getElementById('mSku').value;
-        dados.price = Number(document.getElementById('mPreco').value);
-        dados.weight = document.getElementById('mPeso').value;
-        dados.category = document.getElementById('mCat').value;
-        dados.paused = document.getElementById('mPause').checked;
-    }
-    await db.ref(path + '/' + id).update(dados);
-    location.reload();
+// === EXCLUIR ===
+function excluirProduto(){
+  if(confirm("Excluir produto?")){
+    db.ref('products/'+produtoAtual).remove();
+    fecharModal();
+  }
 }
 
-function filtrar() {
-    const t = document.getElementById('busca').value.toLowerCase();
-    document.querySelectorAll('.item-prod').forEach(el => el.style.display = el.innerText.toLowerCase().includes(t) ? 'block' : 'none');
+function fecharModal(){
+  document.getElementById('modal').style.display='none';
 }
-
-renderizarPainel();
 </script>
 </body>
 </html>
