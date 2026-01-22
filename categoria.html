@@ -173,18 +173,39 @@ function remover(index) {
 function finalizarWhatsApp() {
     if (cart.length === 0) return alert("Carrinho vazio!");
     
-    let msg = `*Novo Pedido - Abella Joias*\n\n`;
+    const pedidoId = "PED-" + Math.floor(1000 + Math.random() * 9000);
+    const data = new Date().toLocaleString('pt-BR');
+    
     let total = 0;
-    
-    cart.forEach(i => {
-        msg += `• ${i.qtd}x ${i.nome} (${i.sku}) - R$ ${(i.preco * i.qtd).toFixed(2)}\n`;
-        total += i.preco * i.qtd;
+    cart.forEach(i => total += (i.preco * i.qtd));
+
+    // Salvar no Firebase para o Painel ver
+    const pedidoDados = {
+        id: pedidoId,
+        data: data,
+        itens: cart,
+        total: total,
+        status: "Pendente"
+    };
+
+    db.ref('orders/' + pedidoId).set(pedidoDados).then(() => {
+        // Formatar mensagem para o WhatsApp
+        let msg = `*Pedido ${pedidoId} - Abella Joias*\n`;
+        msg += `Data: ${data}\n\n`;
+        cart.forEach(i => {
+            msg += `• ${i.qtd}x ${i.nome} (${i.sku}) - R$ ${(i.preco * i.qtd).toFixed(2)}\n`;
+        });
+        msg += `\n*Total Estimado: R$ ${total.toFixed(2)}*`;
+
+        const fone = configLoja.whatsapp.replace(/\D/g, '');
+        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
+        
+        // Limpa carrinho após sucesso
+        cart = [];
+        localStorage.removeItem('cartAbella');
+        atualizarContador();
+        fecharCarrinho();
     });
-    
-    msg += `\n*Total Estimado: R$ ${total.toFixed(2)}*`;
-    
-    const fone = configLoja.whatsapp.replace(/\D/g, '');
-    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
 }
 </script>
 
