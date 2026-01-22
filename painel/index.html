@@ -18,18 +18,7 @@
         .nav-btn.active { color: #A68966; border-bottom-color: #A68966; background: #fff; }
         input, select { border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 5px; font-size: 14px; }
         label { font-size: 10px; font-weight: bold; color: #999; text-transform: uppercase; }
-       .cat-group-title { 
-    grid-column: 1 / -1; /* Isso obriga o título a ocupar a largura total do grid */
-    background: #eee; 
-    padding: 8px 15px; 
-    font-weight: bold; 
-    font-size: 12px; 
-    border-radius: 4px; 
-    margin-top: 20px; 
-    color: #666; 
-}  
-        
-        /* ESTILO PARA ITENS PAUSADOS */
+        .cat-group-title { grid-column: 1 / -1; background: #eee; padding: 8px 15px; font-weight: bold; font-size: 12px; border-radius: 4px; margin-top: 20px; color: #666; }
         .paused { opacity: 0.5; filter: grayscale(1); border: 2px dashed red !important; }
     </style>
 </head>
@@ -51,7 +40,6 @@
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
-
     <div id="aba-empresa" class="tab-panel active">
         <h2 class="serif text-xl gold mb-4">Configurações</h2>
         <div class="bg-white p-6 rounded-xl border grid md:grid-cols-2 gap-4">
@@ -84,15 +72,24 @@
                 <div><label>Categoria</label><select id="pCat"></select></div>
                 <div><label>Preço (R$)</label><input id="pPreco" type="number" step="0.01"></div>
                 <div><label>Peso (G)</label><input id="pPeso" type="number" step="0.01"></div>
-                <div class="md:col-span-2"><label>URL Imagem</label><input id="pImg"></div>
+                <div><label>Etiqueta</label>
+                    <select id="pTag">
+                        <option value="">Nenhuma</option>
+                        <option value="PROMO">PROMOÇÃO</option>
+                        <option value="LANÇ">LANÇAMENTO</option>
+                        <option value="OFF">OFERTA</option>
+                    </select>
+                </div>
+                <div><label>URL Imagem</label><input id="pImg"></div>
             </div>
             <button onclick="saveProduto()" class="w-full bg-black text-white py-3 rounded-lg font-bold mt-4 text-sm uppercase">Salvar Produto</button>
         </div>
-        <div class="mb-4">
-    <label>Buscar por SKU ou Nome</label>
-    <input type="text" id="buscaProduto" onkeyup="filtrarProdutos()" placeholder="Digite o SKU ou parte do nome..." class="bg-white border-gold/30 focus:border-gold outline-none">
-</div>
         
+        <div class="mb-6">
+            <label>Buscar por SKU ou Nome</label>
+            <input type="text" id="buscaProduto" onkeyup="filtrarProdutos()" placeholder="Digite o SKU ou nome..." class="bg-white border-gold/30">
+        </div>
+
         <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-4 pb-20"></div>
     </div>
 
@@ -100,14 +97,10 @@
         <h2 class="serif text-xl gold mb-4">Pedidos Recentes</h2>
         <div id="listaPedidos" class="grid gap-4"></div>
     </div>
-
 </main>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
+const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -127,18 +120,16 @@ db.ref('settings').on('value', s => {
 });
 function saveEmpresa() {
     db.ref('settings').update({ nome: empNome.value, whatsapp: empWhats.value, pix: Number(empPix.value), parcelas: Number(empParc.value) });
-    alert("Dados da empresa atualizados!");
+    alert("Configurações salvas!");
 }
 
 // CATEGORIAS
 function saveCategoria() {
-    const nome = catNome.value;
-    if(!nome) return;
+    const nome = catNome.value; if(!nome) return;
     const id = document.getElementById('editCatId').value || nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
     db.ref('categories/' + id).update({ name: nome, image: catImg.value, slug: id });
     catNome.value = catImg.value = document.getElementById('editCatId').value = '';
 }
-
 db.ref('categories').on('value', s => {
     const grid = document.getElementById('gridCats');
     const select = document.getElementById('pCat');
@@ -153,72 +144,53 @@ db.ref('categories').on('value', s => {
                 <div class="flex flex-wrap justify-between mt-1 gap-1">
                     <button onclick="editCat('${v.slug}','${v.name}','${v.image}')" class="text-blue-500 text-[8px] font-bold flex-1 bg-blue-50 py-1 rounded">EDITAR</button>
                     <button onclick="togglePauseCat('${v.slug}', ${v.paused || false})" class="text-orange-600 text-[8px] font-bold flex-1 bg-orange-50 py-1 rounded">${v.paused ? 'ATIVAR' : 'PAUSAR'}</button>
-                    <button onclick="delCat('${v.slug}')" class="text-red-500 text-[8px] font-bold px-2 bg-red-50 py-1 rounded">X</button>
                 </div>
             </div>`;
     });
 });
 function editCat(id, n, i) { document.getElementById('editCatId').value = id; catNome.value = n; catImg.value = i; window.scrollTo(0,0); }
-function togglePauseCat(id, currentStatus) { db.ref('categories/' + id).update({ paused: !currentStatus }); }
-function delCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/'+id).remove(); }
+function togglePauseCat(id, status) { db.ref('categories/' + id).update({ paused: !status }); }
 
 // PRODUTOS
 function saveProduto() {
-    const sku = pSku.value.trim();
-    if(!sku) return;
+    const sku = pSku.value.trim(); if(!sku) return alert("SKU obrigatório");
     const id = sku.replace(/[\.\$#\[\]\/]/g, "-");
     db.ref('products/' + id).update({
         name: pNome.value, sku: sku, category: pCat.value,
-        price: Number(pPreco.value), weight: pPeso.value, image: pImg.value
+        price: Number(pPreco.value), weight: pPeso.value, image: pImg.value, tag: pTag.value
     }).then(() => { 
-        alert("Produto Atualizado!"); 
-        pNome.value=pSku.value=pPreco.value=pPeso.value=pImg.value=document.getElementById('editProdId').value='';
+        alert("Produto salvo!"); 
+        pNome.value=pSku.value=pPreco.value=pPeso.value=pImg.value=pTag.value=document.getElementById('editProdId').value='';
     });
 }
 
-// PRODUTOS (LISTAGEM COMPLETA E AGRUPADA)
 db.ref('products').on('value', s => {
-    const grid = document.getElementById('gridProds');
-    grid.innerHTML = ''; // Limpa a tela antes de carregar
-    
-    if (!s.exists()) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400">Nenhum produto cadastrado.</div>';
-        return;
-    }
-
+    const grid = document.getElementById('gridProds'); grid.innerHTML = '';
+    if (!s.exists()) return;
     let prods = [];
-    s.forEach(p => {
-        prods.push({ id: p.key, ...p.val() });
-    });
+    s.forEach(p => { prods.push({ id: p.key, ...p.val() }); });
 
-    // 1. Agrupar produtos por Categoria
     let grouped = prods.reduce((r, a) => {
         const catNome = a.category || "Sem Categoria";
         r[catNome] = [...r[catNome] || [], a];
         return r;
     }, {});
 
-    // 2. Ordenar as categorias alfabeticamente e listar
     Object.keys(grouped).sort().forEach(cat => {
-        // Inserir o título da Categoria (ocupa a linha toda)
-        grid.innerHTML += `<div class="cat-group-title col-span-full">CATEGORIA: ${cat.toUpperCase().replace(/-/g, ' ')}</div>`;
-        
-        // Ordenar produtos por SKU dentro da categoria
-        grouped[cat].sort((a, b) => (a.sku || "").localeCompare(b.sku || "")).forEach(p => {
+        grid.innerHTML += `<div class="cat-group-title col-span-full">CATEGORIA: ${cat.toUpperCase()}</div>`;
+        grouped[cat].sort((a, b) => a.sku.localeCompare(b.sku)).forEach(p => {
             grid.innerHTML += `
                 <div class="bg-white border rounded p-2 flex flex-col shadow-sm ${p.paused ? 'paused' : ''}">
                     <div class="relative">
-                        <img src="${p.image}" class="w-full aspect-square object-contain" onerror="this.src='https://via.placeholder.com/150?text=Sem+Foto'">
-                        ${p.paused ? '<span class="absolute top-1 left-1 bg-red-600 text-white text-[8px] px-1 rounded">PAUSADO</span>' : ''}
+                        <img src="${p.image}" class="w-full aspect-square object-contain" onerror="this.src='https://via.placeholder.com/150'">
+                        ${p.tag ? `<span class="absolute top-0 right-0 bg-black text-white text-[7px] px-1 font-bold">${p.tag}</span>` : ''}
                     </div>
-                    <p class="text-[10px] font-bold truncate mt-2">${p.name || 'Sem Nome'}</p>
-                    <p class="text-[9px] text-gray-400 font-mono">SKU: ${p.sku}</p>
+                    <p class="text-[10px] font-bold truncate mt-1">${p.name}</p>
+                    <p class="text-[9px] text-gray-400">SKU: ${p.sku}</p>
                     <p class="text-[10px] gold font-bold">R$ ${Number(p.price).toFixed(2)}</p>
-                    
-                    <div class="flex justify-between mt-3 border-t pt-2 gap-1">
-                        <button onclick="editProd('${p.id}')" class="text-blue-600 text-[9px] font-bold bg-blue-50 p-1 rounded flex-1">EDITAR</button>
-                        <button onclick="togglePauseProd('${p.id}', ${p.paused || false})" class="text-orange-600 text-[9px] font-bold bg-orange-50 p-1 rounded flex-1">${p.paused ? 'ATIVAR' : 'PAUSAR'}</button>
-                        <button onclick="delProd('${p.id}')" class="text-red-500 text-[9px] font-bold bg-red-50 p-1 rounded">X</button>
+                    <div class="flex justify-between mt-2 gap-1">
+                        <button onclick="editProd('${p.id}')" class="text-blue-600 text-[8px] font-bold bg-blue-50 p-1 rounded flex-1">EDITAR</button>
+                        <button onclick="togglePauseProd('${p.id}', ${p.paused || false})" class="text-orange-600 text-[8px] font-bold bg-orange-50 p-1 rounded flex-1">${p.paused ? 'ATIVAR' : 'PAUSAR'}</button>
                     </div>
                 </div>`;
         });
@@ -229,69 +201,36 @@ function editProd(id) {
     db.ref('products/'+id).once('value', s => {
         const p = s.val();
         pNome.value=p.name; pSku.value=p.sku; pCat.value=p.category;
-        pPreco.value=p.price; pPeso.value=p.weight; pImg.value=p.image;
-        document.getElementById('editProdId').value=id; 
-        window.scrollTo(0,0);
+        pPreco.value=p.price; pPeso.value=p.weight; pImg.value=p.image; pTag.value=p.tag || "";
+        document.getElementById('editProdId').value=id; window.scrollTo(0,0);
     });
 }
-function togglePauseProd(id, currentStatus) { db.ref('products/' + id).update({ paused: !currentStatus }); }
-function delProd(id) { if(confirm("Excluir produto?")) db.ref('products/'+id).remove(); }
+function togglePauseProd(id, status) { db.ref('products/' + id).update({ paused: !status }); }
+
+function filtrarProdutos() {
+    const termo = document.getElementById('buscaProduto').value.toLowerCase();
+    const cards = document.querySelectorAll('#gridProds > div:not(.cat-group-title)');
+    cards.forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(termo) ? 'flex' : 'none';
+    });
+}
 
 // PEDIDOS
 db.ref('orders').on('value', s => {
-    const container = document.getElementById('listaPedidos');
-    container.innerHTML = '';
-    if(!s.exists()) {
-        container.innerHTML = '<div class="bg-white p-10 border text-center text-gray-400">Nenhum pedido registrado.</div>';
-        return;
-    }
+    const container = document.getElementById('listaPedidos'); container.innerHTML = '';
+    if(!s.exists()) return;
     let pedidos = [];
     s.forEach(child => { pedidos.push(child.val()); });
-    pedidos.reverse();
-    pedidos.forEach(p => {
+    pedidos.reverse().forEach(p => {
         let itensHtml = '';
-        p.itens.forEach(i => {
-            itensHtml += `<div class="text-[10px] text-gray-600 border-b border-gray-50 py-1">
-                ${i.qtd}x ${i.nome} <span class="float-right font-bold">R$ ${(i.preco * i.qtd).toFixed(2)}</span>
-            </div>`;
-        });
-        container.innerHTML += `
-            <div class="bg-white p-5 border rounded-xl shadow-sm">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <span class="bg-gold/10 text-[#A68966] text-[10px] font-bold px-2 py-1 rounded-full">${p.id}</span>
-                        <p class="text-[10px] text-gray-400 mt-1">${p.data}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] uppercase font-bold text-gray-400">Total do Pedido</p>
-                        <p class="gold font-bold text-lg">R$ ${p.total.toFixed(2)}</p>
-                    </div>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg mb-3">${itensHtml}</div>
-                <div class="flex justify-end gap-2">
-                    <button onclick="marcarVendido('${p.id}')" class="text-[10px] bg-green-50 text-green-600 px-3 py-1 rounded font-bold">MARCAR COMO ATENDIDO</button>
-                    <button onclick="excluirPedido('${p.id}')" class="text-[10px] bg-red-50 text-red-600 px-3 py-1 rounded font-bold">EXCLUIR</button>
-                </div>
-            </div>`;
+        p.itens.forEach(i => { itensHtml += `<div class="text-[10px] py-1 border-b">${i.qtd}x ${i.nome} <span class="float-right font-bold">R$ ${(i.preco * i.qtd).toFixed(2)}</span></div>`; });
+        container.innerHTML += `<div class="bg-white p-4 border rounded-xl shadow-sm mb-2">
+            <div class="flex justify-between font-bold text-xs mb-2"><span>${p.id}</span><span class="gold">R$ ${p.total.toFixed(2)}</span></div>
+            <div class="bg-gray-50 p-2 rounded text-[10px]">${itensHtml}</div>
+            <button onclick="if(confirm('Apagar?')) db.ref('orders/${p.id}').remove()" class="mt-2 text-red-500 text-[9px] font-bold uppercase">Excluir Pedido</button>
+        </div>`;
     });
 });
-function marcarVendido(id) { db.ref('orders/' + id).update({ status: "Atendido" }); alert("Pedido atendido!"); }
-function excluirPedido(id) { if(confirm("Apagar pedido?")) db.ref('orders/' + id).remove(); }
-
-    function filtrarProdutos() {
-    const termo = document.getElementById('buscaProduto').value.toLowerCase();
-    const cards = document.querySelectorAll('#gridProds > div:not(.cat-group-title)');
-    const titulos = document.querySelectorAll('.cat-group-title');
-
-    cards.forEach(card => {
-        const texto = card.innerText.toLowerCase();
-        // Se o termo estiver no texto do card, mostra, senão esconde
-        card.style.display = texto.includes(termo) ? 'flex' : 'none';
-    });
-
-    // Esconde os títulos de categoria se não houver produtos visíveis nela (opcional)
-    if(termo === "") titulos.forEach(t => t.style.display = 'block');
-}
 </script>
 </body>
 </html>
