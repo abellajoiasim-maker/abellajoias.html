@@ -18,7 +18,17 @@
         .nav-btn.active { color: #A68966; border-bottom-color: #A68966; background: #fff; }
         input, select { border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 5px; font-size: 14px; }
         label { font-size: 10px; font-weight: bold; color: #999; text-transform: uppercase; }
-        .cat-group-title { grid-column: 1 / -1; background: #eee; padding: 8px 15px; font-weight: bold; font-size: 12px; border-radius: 4px; margin-top: 20px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+       .cat-group-title { 
+    grid-column: 1 / -1; /* Isso obriga o título a ocupar a largura total do grid */
+    background: #eee; 
+    padding: 8px 15px; 
+    font-weight: bold; 
+    font-size: 12px; 
+    border-radius: 4px; 
+    margin-top: 20px; 
+    color: #666; 
+}  
+        
         /* ESTILO PARA ITENS PAUSADOS */
         .paused { opacity: 0.5; filter: grayscale(1); border: 2px dashed red !important; }
     </style>
