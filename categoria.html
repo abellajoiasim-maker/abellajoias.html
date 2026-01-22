@@ -7,17 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background: #f8f6f2; }
         .serif { font-family: 'Cinzel', serif; }
         .gold { color: #A68966; }
         .card-prod { background: white; border-radius: 15px; border: 1px solid #eee; transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
         .card-prod:hover { border-color: #A68966; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        
-        /* Modal Customizado */
-        #customModal { backdrop-filter: blur(4px); }
-        #modalQtyInput:focus { border-color: #A68966; outline: none; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
@@ -29,9 +25,7 @@
     <div class="flex justify-center gap-2 mt-4 px-4 text-center">
         <a href="index.html" class="bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-[10px] font-bold tracking-widest hover:bg-gray-200 transition uppercase">Categorias</a>
         <a href="galvanicas.html" class="bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-[10px] font-bold tracking-widest hover:bg-gray-200 transition uppercase">Galvânicas</a>
-        <button class="bg-black text-white px-5 py-2 rounded-full text-[10px] font-bold tracking-widest shadow-lg uppercase">
-            Itens (<span id="cartCount">0</span>)
-        </button>
+        <button class="bg-black text-white px-5 py-2 rounded-full text-[10px] font-bold tracking-widest shadow-lg uppercase">Carrinho (<span id="cartCount">0</span>)</button>
     </div>
 </header>
 
@@ -40,111 +34,113 @@
     <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-8"></div>
 </main>
 
-<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:30px; border-radius:20px; width:90%; max-width:360px; text-align:center; shadow: 0 25px 50px rgba(0,0,0,0.4);">
-        <h3 id="modalProductName" class="serif" style="color:#000; margin-bottom:5px; font-size:16px; font-weight:700;">-</h3>
-        <p id="modalSKU" style="font-size:10px; color:#A68966; margin-bottom:20px; font-weight:bold;"></p>
-        
-        <label style="display:block; font-size:11px; color:#999; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Quantidade Atacado</label>
-        <input type="number" id="modalQtyInput" value="1" min="1" 
-               style="width:100px; padding:12px; border:2px solid #A68966; border-radius:12px; text-align:center; font-size:22px; font-weight:700; margin-bottom:25px;">
-        
+<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div style="background:#fff; padding:30px; border-radius:20px; width:90%; max-width:360px; text-align:center;">
+        <h3 id="modalProductName" class="serif gold" style="margin-bottom:5px; font-size:16px; font-weight:700;">-</h3>
+        <p id="modalSKU" style="font-size:10px; color:#999; margin-bottom:20px; font-weight:bold;"></p>
+        <label style="display:block; font-size:11px; color:#999; margin-bottom:10px; text-transform:uppercase;">Quantidade Atacado</label>
+        <input type="number" id="modalQtyInput" value="1" min="1" style="width:100px; padding:12px; border:2px solid #A68966; border-radius:12px; text-align:center; font-size:22px; font-weight:700; margin-bottom:25px;">
         <div style="display:flex; gap:10px;">
-            <button onclick="closeAbellaModal()" style="flex:1; padding:12px; background:#f5f5f5; color:#777; border-radius:10px; font-weight:700; font-size:11px; text-transform:uppercase;">Cancelar</button>
-            <button id="confirmBtn" style="flex:2; padding:12px; background:#000; color:#fff; border-radius:10px; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:1px;">Confirmar</button>
+            <button onclick="closeModal()" style="flex:1; padding:12px; background:#f5f5f5; color:#777; border-radius:10px; font-weight:700; font-size:11px; text-transform:uppercase;">Voltar</button>
+            <button id="confirmBtn" style="flex:2; padding:12px; background:#000; color:#fff; border-radius:10px; font-weight:700; font-size:11px; text-transform:uppercase;">Adicionar</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Config Firebase
-    const firebaseConfig = { 
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
-    };
+    const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     const urlParams = new URLSearchParams(window.location.search);
     const catSlug = urlParams.get('cat');
-    let productInModal = null;
 
-    if (catSlug) {
-        db.ref('categories').orderByChild('slug').equalTo(catSlug).on('value', snap => {
-            snap.forEach(s => { document.getElementById('categoryTitle').innerText = s.val().name; });
+    // 1. Carregar Regras Globais (Promoções e Settings)
+    let promoRules = {};
+    let settings = {};
+
+    db.ref('settings').once('value', s => { settings = s.val() || {}; });
+    db.ref('promoRules').on('value', s => { 
+        promoRules = s.val() || {}; 
+        if(catSlug) carregarProdutos(); // Carrega produtos só depois de ter as regras
+    });
+
+    function carregarProdutos() {
+        // Título da Categoria
+        db.ref('categories/' + catSlug).once('value', s => {
+            if(s.exists()) document.getElementById('categoryTitle').innerText = s.val().name;
         });
 
+        // Grid de Produtos
         db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
             const grid = document.getElementById('gridProdutos');
             grid.innerHTML = '';
             
+            const regraCat = promoRules[catSlug] || { percent: 0 };
+            const descPercent = regraCat.percent || 0;
+
             snap.forEach(s => {
                 const p = s.val();
                 if(p.paused) return;
 
-                const precoCheio = parseFloat(p.price) || 0;
-                const precoPix = (precoCheio * 0.95).toFixed(2);
-                const parcela = (precoCheio / 5).toFixed(2);
-                const peso = p.weight ? p.weight + "g" : "N/A"; // Captura o peso do Firebase
+                const precoBase = parseFloat(p.price) || 0;
+                let precoFinal = precoBase;
+                let etiquetaHtml = '';
+
+                if (descPercent > 0) {
+                    precoFinal = precoBase * (1 - (descPercent / 100));
+                    etiquetaHtml = `<div class="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-lg z-10 animate-pulse">${descPercent}% OFF</div>`;
+                }
+
+                const pixPerc = settings.pix || 5;
+                const precoPix = (precoFinal * (1 - (pixPerc/100))).toFixed(2);
+                const parcNum = settings.parcelas || 5;
+                const parcVal = (precoFinal / parcNum).toFixed(2);
 
                 grid.innerHTML += `
-                <div class="card-prod p-4">
+                <div class="card-prod p-4 relative">
+                    ${etiquetaHtml}
                     <div class="flex-grow">
                         <div class="aspect-square mb-4 bg-white flex items-center justify-center overflow-hidden rounded-lg">
                             <img src="${p.image}" class="max-h-full object-contain p-2 transition hover:scale-105">
                         </div>
                         <div class="flex justify-between items-start mb-1">
                             <p class="text-[9px] text-gray-400 font-bold uppercase">SKU: ${p.sku}</p>
-                            <p class="text-[9px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-bold uppercase">Peso: ${peso}</p>
+                            <p class="text-[9px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-bold">${p.weight}g</p>
                         </div>
                         <h4 class="text-[11px] font-semibold text-gray-800 leading-snug mb-3 h-8 overflow-hidden uppercase">${p.name}</h4>
-                        
                         <div class="space-y-1 mb-4">
-                            <p class="text-[10px] text-gray-400 line-through">De: R$ ${(precoCheio * 1.10).toFixed(2)}</p>
-                            <p class="text-sm font-extrabold text-black">R$ ${precoCheio.toFixed(2)}</p>
-                            <p class="text-[11px] text-green-600 font-bold">R$ ${precoPix} no PIX <span class="text-[9px]">(5% OFF)</span></p>
-                            <p class="text-[10px] text-gray-500 font-medium italic">Ou 5x de R$ ${parcela} sem juros</p>
+                            ${descPercent > 0 ? `<p class="text-[10px] text-gray-400 line-through">De: R$ ${precoBase.toFixed(2)}</p>` : ''}
+                            <p class="text-sm font-extrabold text-black">R$ ${precoFinal.toFixed(2)}</p>
+                            <p class="text-[11px] text-green-600 font-bold">R$ ${precoPix} no PIX <span class="text-[9px]">(${pixPerc}% OFF)</span></p>
+                            <p class="text-[10px] text-gray-500 italic">Ou ${parcNum}x de R$ ${parcVal}</p>
                         </div>
                     </div>
-                    <button onclick="abrirModalQuantidade('${p.sku}', '${p.name.replace(/'/g, "\\'")}')" 
-                            class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold tracking-widest hover:bg-[#A68966] transition uppercase shadow-md active:scale-95">
-                        ADICIONAR
-                    </button>
+                    <button onclick="openModal('${p.sku}', '${p.name.replace(/'/g, "\\'")}')" class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold uppercase hover:bg-[#A68966] transition shadow-md active:scale-95">ADICIONAR</button>
                 </div>`;
             });
         });
     }
 
-    function abrirModalQuantidade(sku, nome) {
-        productInModal = { sku, nome };
+    // Modal
+    function openModal(sku, nome) {
         document.getElementById('modalProductName').innerText = nome;
         document.getElementById('modalSKU').innerText = "SKU: " + sku;
         document.getElementById('modalQtyInput').value = 1;
         document.getElementById('customModal').style.display = 'flex';
-        
-        setTimeout(() => {
-            const input = document.getElementById('modalQtyInput');
-            input.focus();
-            input.select();
-        }, 100);
+        setTimeout(() => { document.getElementById('modalQtyInput').focus(); }, 100);
     }
+    function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+    window.onclick = e => { if(e.target == document.getElementById('customModal')) closeModal(); }
 
-    function closeAbellaModal() {
-        document.getElementById('customModal').style.display = 'none';
-    }
-
-    document.getElementById('confirmBtn').onclick = function() {
-        const qtd = parseInt(document.getElementById('modalQtyInput').value);
-        if (qtd > 0) {
-            // Lógica do carrinho (Exemplo)
-            let count = parseInt(document.getElementById('cartCount').innerText);
-            document.getElementById('cartCount').innerText = count + qtd;
-            closeAbellaModal();
+    document.getElementById('confirmBtn').onclick = () => {
+        const q = parseInt(document.getElementById('modalQtyInput').value);
+        if(q > 0) {
+            let c = document.getElementById('cartCount');
+            c.innerText = parseInt(c.innerText) + q;
+            closeModal();
         }
     };
-
-    window.onclick = function(e) { if (e.target == document.getElementById('customModal')) closeAbellaModal(); }
 </script>
-
 </body>
 </html>
