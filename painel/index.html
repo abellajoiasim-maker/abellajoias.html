@@ -14,12 +14,13 @@
         .gold { color: #A68966; }
         .tab-panel { display: none; } 
         .tab-panel.active { display: block !important; }
-        .nav-btn { padding: 12px 15px; font-size: 10px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
+        .nav-btn { padding: 12px 15px; font-size: 10px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; color: #999; }
         .nav-btn.active { color: #A68966; border-bottom-color: #A68966; background: #fff; }
-        input, select { border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 5px; font-size: 14px; outline: none; }
+        input, select { border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 5px; font-size: 14px; outline: none; background: white; }
         input:focus { border-color: #A68966; }
         label { font-size: 9px; font-weight: bold; color: #999; text-transform: uppercase; margin-top: 8px; display: block; }
         .paused { opacity: 0.5; filter: grayscale(1); border: 2px dashed red !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -44,10 +45,10 @@
     <div id="aba-empresa" class="tab-panel active">
         <h2 class="serif text-xl gold mb-4 uppercase italic">Configurações Gerais</h2>
         <div class="bg-white p-6 rounded-2xl border grid md:grid-cols-2 gap-4 shadow-sm">
-            <div><label>Nome da Loja</label><input id="empNome"></div>
-            <div><label>WhatsApp (Link Direto)</label><input id="empWhats"></div>
-            <div><label>Desconto Global PIX (%)</label><input id="empPix" type="number"></div>
-            <div><label>Parcelas Máx.</label><input id="empParc" type="number"></div>
+            <div><label>Nome da Loja</label><input id="empNome" type="text" placeholder="Nome da Loja"></div>
+            <div><label>WhatsApp (Ex: 5511999999999)</label><input id="empWhats" type="text" placeholder="Link WhatsApp"></div>
+            <div><label>Desconto Global PIX (%)</label><input id="empPix" type="number" value="0"></div>
+            <div><label>Parcelas Máx.</label><input id="empParc" type="number" value="1"></div>
             <button onclick="saveEmpresa()" class="md:col-span-2 bg-[#A68966] text-white py-4 rounded-xl font-bold text-xs uppercase hover:bg-black transition">Salvar Configurações</button>
         </div>
     </div>
@@ -66,14 +67,9 @@
     <div id="aba-promos" class="tab-panel">
         <div class="bg-red-50 p-6 rounded-2xl border border-red-100 mb-6">
             <h2 class="serif text-xl text-red-800 mb-2 uppercase font-bold">Motor de Promoções B2B</h2>
-            <p class="text-[10px] text-red-600 font-medium mb-6">Defina descontos por categoria. Isso alterará os preços e adicionará etiquetas automaticamente no site.</p>
-            
-            <div id="listaPromoCats" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                </div>
-
-            <button onclick="salvarPromocoes()" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold mt-8 text-xs uppercase shadow-lg hover:bg-red-700 transition">
-                Aplicar Descontos em Massa Agora
-            </button>
+            <p class="text-[10px] text-red-600 font-medium mb-6 uppercase tracking-wider">Defina descontos por categoria (Só digite o número).</p>
+            <div id="listaPromoCats" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <button onclick="salvarPromocoes()" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold mt-8 text-xs uppercase shadow-lg hover:bg-red-700 transition">Aplicar Descontos Agora</button>
         </div>
     </div>
 
@@ -87,7 +83,7 @@
                 <div><label>Categoria</label><select id="pCat"></select></div>
                 <div><label>Preço Base (R$)</label><input id="pPreco" type="number" step="0.01"></div>
                 <div><label>Peso (G)</label><input id="pPeso" type="number" step="0.01"></div>
-                <div><label>Tag Manual</label>
+                <div><label>Etiqueta Manual</label>
                     <select id="pTag">
                         <option value="">Nenhuma</option>
                         <option value="PROMO">PROMOÇÃO</option>
@@ -99,7 +95,7 @@
             </div>
             <button onclick="saveProduto()" class="w-full bg-black text-white py-4 rounded-xl font-bold mt-4 text-xs uppercase">Salvar Produto</button>
         </div>
-        <input type="text" id="buscaProduto" onkeyup="filtrarProdutos()" placeholder="Filtrar por SKU ou Nome..." class="mb-6">
+        <input type="text" id="buscaProduto" onkeyup="filtrarProdutos()" placeholder="Filtrar por SKU ou Nome..." class="mb-6 bg-white border border-gray-200 p-4 rounded-xl">
         <div id="gridProds" class="grid grid-cols-2 md:grid-cols-5 gap-4 pb-20"></div>
     </div>
 
@@ -111,11 +107,12 @@
 </main>
 
 <script>
+// CONFIGURAÇÃO FIREBASE
 const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Navegação
+// NAVEGAÇÃO ENTRE ABAS
 function switchTab(id, el) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -123,18 +120,25 @@ function switchTab(id, el) {
     el.classList.add('active');
 }
 
-// LÓGICA EMPRESA
+// CARREGAR DADOS DA EMPRESA
 db.ref('settings').on('value', s => {
     const d = s.val() || {};
-    empNome.value = d.nome || ''; empWhats.value = d.whatsapp || '';
-    empPix.value = d.pix || 0; empParc.value = d.parcelas || 1;
+    document.getElementById('empNome').value = d.nome || '';
+    document.getElementById('empWhats').value = d.whatsapp || '';
+    document.getElementById('empPix').value = d.pix || 0;
+    document.getElementById('empParc').value = d.parcelas || 1;
 });
+
 function saveEmpresa() {
-    db.ref('settings').update({ nome: empNome.value, whatsapp: empWhats.value, pix: Number(empPix.value), parcelas: Number(empParc.value) })
-    .then(() => alert("Dados atualizados!"));
+    db.ref('settings').update({
+        nome: document.getElementById('empNome').value,
+        whatsapp: document.getElementById('empWhats').value,
+        pix: Number(document.getElementById('empPix').value),
+        parcelas: Number(document.getElementById('empParc').value)
+    }).then(() => alert("Configurações salvas!"));
 }
 
-// LÓGICA CATEGORIAS
+// CATEGORIAS E PROMOÇÕES
 db.ref('categories').on('value', s => {
     const grid = document.getElementById('gridCats');
     const select = document.getElementById('pCat');
@@ -148,7 +152,7 @@ db.ref('categories').on('value', s => {
         const v = c.val();
         select.innerHTML += `<option value="${v.slug}">${v.name}</option>`;
         
-        // Grid de Gestão
+        // Renderizar Grid de Gestão
         grid.innerHTML += `
             <div class="bg-white p-2 border rounded-xl shadow-sm ${v.paused ? 'paused' : ''}">
                 <img src="${v.image}" class="w-full aspect-square object-cover rounded-lg mb-2">
@@ -159,18 +163,17 @@ db.ref('categories').on('value', s => {
                 </div>
             </div>`;
 
-        // Motor de Promoções (Lista)
+        // Renderizar Motor de Promoções
         db.ref('promoRules/' + v.slug).once('value', pSnap => {
             const pData = pSnap.val() || { percent: 0 };
             promoContainer.innerHTML += `
                 <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
                     <div>
-                        <p class="text-xs font-bold uppercase">${v.name}</p>
-                        <p class="text-[9px] text-gray-400">Slug: ${v.slug}</p>
+                        <p class="text-[10px] font-bold uppercase">${v.name}</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="number" id="promo-${v.slug}" value="${pData.percent}" class="w-16 p-2 border rounded-lg text-center font-bold text-red-600">
-                        <span class="font-bold text-red-600">% OFF</span>
+                        <input type="number" id="promo-${v.slug}" value="${pData.percent}" class="w-16 p-2 border rounded-lg text-center font-bold text-red-600 mb-0">
+                        <span class="font-bold text-red-600 text-xs">% OFF</span>
                     </div>
                 </div>`;
         });
@@ -178,36 +181,44 @@ db.ref('categories').on('value', s => {
 });
 
 function saveCategoria() {
-    const nome = catNome.value; if(!nome) return;
+    const nome = document.getElementById('catNome').value; if(!nome) return;
     const id = document.getElementById('editCatId').value || nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
-    db.ref('categories/' + id).update({ name: nome, image: catImg.value, slug: id });
-    catNome.value = catImg.value = document.getElementById('editCatId').value = '';
+    db.ref('categories/' + id).update({ name: nome, image: document.getElementById('catImg').value, slug: id });
+    document.getElementById('catNome').value = ''; document.getElementById('catImg').value = ''; document.getElementById('editCatId').value = '';
 }
-function editCat(id, n, i) { document.getElementById('editCatId').value = id; catNome.value = n; catImg.value = i; window.scrollTo(0,0); }
+
+function editCat(id, n, i) { 
+    document.getElementById('editCatId').value = id; 
+    document.getElementById('catNome').value = n; 
+    document.getElementById('catImg').value = i; 
+    switchTab('aba-categorias', document.querySelector('[onclick*="aba-categorias"]'));
+}
+
 function togglePauseCat(id, status) { db.ref('categories/' + id).update({ paused: !status }); }
 
-// LÓGICA PROMOÇÕES
+// SALVAR PROMOÇÕES
 function salvarPromocoes() {
     const inputs = document.querySelectorAll('[id^="promo-"]');
     inputs.forEach(input => {
         const slug = input.id.replace('promo-', '');
         const val = Number(input.value);
-        db.ref('promoRules/' + slug).set({
-            percent: val,
-            active: val > 0
-        });
+        db.ref('promoRules/' + slug).set({ percent: val, active: val > 0 });
     });
-    alert("Todas as promoções foram aplicadas e já estão visíveis no site!");
+    alert("Promoções atualizadas com sucesso!");
 }
 
-// LÓGICA PRODUTOS
+// PRODUTOS
 function saveProduto() {
-    const sku = pSku.value.trim(); if(!sku) return alert("SKU?");
+    const sku = document.getElementById('pSku').value.trim(); if(!sku) return alert("SKU obrigatório!");
     const id = sku.replace(/[\.\$#\[\]\/]/g, "-");
     db.ref('products/' + id).update({
-        name: pNome.value, sku: sku, category: pCat.value,
-        price: Number(pPreco.value), weight: Number(pPeso.value), 
-        image: pImg.value, tag: pTag.value
+        name: document.getElementById('pNome').value, 
+        sku: sku, 
+        category: document.getElementById('pCat').value,
+        price: Number(document.getElementById('pPreco').value), 
+        weight: Number(document.getElementById('pPeso').value), 
+        image: document.getElementById('pImg').value, 
+        tag: document.getElementById('pTag').value
     }).then(() => {
         alert("Produto salvo!");
         ['pNome','pSku','pPreco','pPeso','pImg','pTag','editProdId'].forEach(f => document.getElementById(f).value='');
@@ -222,11 +233,11 @@ db.ref('products').on('value', s => {
             <div class="bg-white p-2 border rounded-xl shadow-sm ${v.paused?'paused':''}">
                 <img src="${v.image}" class="w-full aspect-square object-contain bg-gray-50 rounded-lg">
                 <p class="text-[9px] font-bold truncate mt-2 uppercase">${v.name}</p>
-                <p class="text-[8px] text-gray-400">SKU: ${v.sku} | ${v.weight}g</p>
+                <p class="text-[8px] text-gray-400">SKU: ${v.sku}</p>
                 <p class="text-[10px] gold font-bold">R$ ${v.price.toFixed(2)}</p>
                 <div class="flex gap-1 mt-2">
-                    <button onclick="editProd('${p.key}')" class="bg-blue-50 text-blue-600 text-[8px] p-2 rounded flex-1">EDITAR</button>
-                    <button onclick="togglePauseProd('${p.key}', ${v.paused || false})" class="bg-gray-100 text-gray-600 text-[8px] p-2 rounded flex-1">${v.paused?'ATIVAR':'PAUSAR'}</button>
+                    <button onclick="editProd('${p.key}')" class="bg-blue-50 text-blue-600 text-[8px] p-2 rounded flex-1 uppercase">Editar</button>
+                    <button onclick="togglePauseProd('${p.key}', ${v.paused || false})" class="bg-gray-100 text-gray-600 text-[8px] p-2 rounded flex-1 uppercase">${v.paused?'Ativar':'Pausar'}</button>
                 </div>
             </div>`;
     });
@@ -235,15 +246,21 @@ db.ref('products').on('value', s => {
 function editProd(id) {
     db.ref('products/'+id).once('value', s => {
         const v = s.val();
-        pNome.value=v.name; pSku.value=v.sku; pCat.value=v.category;
-        pPreco.value=v.price; pPeso.value=v.weight; pImg.value=v.image; pTag.value=v.tag || "";
-        document.getElementById('editProdId').value=id; window.scrollTo(0,0);
+        document.getElementById('pNome').value=v.name; 
+        document.getElementById('pSku').value=v.sku; 
+        document.getElementById('pCat').value=v.category;
+        document.getElementById('pPreco').value=v.price; 
+        document.getElementById('pPeso').value=v.weight; 
+        document.getElementById('pImg').value=v.image; 
+        document.getElementById('pTag').value=v.tag || "";
+        document.getElementById('editProdId').value=id; 
+        switchTab('aba-produtos', document.querySelector('[onclick*="aba-produtos"]'));
     });
 }
 function togglePauseProd(id, status) { db.ref('products/' + id).update({ paused: !status }); }
 
 function filtrarProdutos() {
-    const t = buscaProduto.value.toLowerCase();
+    const t = document.getElementById('buscaProduto').value.toLowerCase();
     document.querySelectorAll('#gridProds > div').forEach(c => {
         c.style.display = c.innerText.toLowerCase().includes(t) ? 'block' : 'none';
     });
@@ -255,15 +272,15 @@ db.ref('orders').on('value', s => {
     s.forEach(o => {
         const v = o.val();
         let itens = '';
-        v.itens.forEach(i => itens += `<div class="text-[9px] border-b py-1">${i.qtd}x ${i.nome}</div>`);
+        v.itens.forEach(i => itens += `<div class="text-[10px] border-b py-2">${i.qtd}x ${i.nome}</div>`);
         list.innerHTML += `
-            <div class="bg-white p-4 border rounded-2xl shadow-sm">
-                <div class="flex justify-between font-bold text-xs gold mb-2">
+            <div class="bg-white p-6 border rounded-2xl shadow-sm">
+                <div class="flex justify-between font-bold text-xs gold mb-4">
                     <span>PEDIDO: ${o.key}</span>
-                    <span>R$ ${v.total.toFixed(2)}</span>
+                    <span>TOTAL: R$ ${v.total.toFixed(2)}</span>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg">${itens}</div>
-                <button onclick="db.ref('orders/${o.key}').remove()" class="text-red-500 text-[9px] mt-2 font-bold uppercase">Remover Registro</button>
+                <div class="bg-gray-50 p-4 rounded-xl space-y-1">${itens}</div>
+                <button onclick="db.ref('orders/${o.key}').remove()" class="text-red-500 text-[9px] mt-4 font-bold uppercase tracking-widest">Remover Registro</button>
             </div>`;
     });
 });
