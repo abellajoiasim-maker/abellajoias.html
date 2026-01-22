@@ -15,17 +15,17 @@
         .nav-btn { flex:1; text-align:center; padding:15px 5px; cursor:pointer; font-weight:600; font-size:10px; color:#666; border-bottom:3px solid transparent; transition: 0.3s; }
         .nav-btn.active-btn { color:#A68966; border-bottom-color:#A68966; background:#fff; }
         
-        /* Modal */
         #modalDetail { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; padding:15px; }
         .modal-content { background:#fff; width:100%; max-width:500px; border-radius:20px; max-height:90vh; overflow-y:auto; position:relative; }
         
         input, select { border: 1px solid #ddd; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 10px; font-size: 14px; }
-        .card-sku { background:#fff; border-radius:12px; padding:12px; border:1px solid #eee; cursor:pointer; transition: 0.2s; position:relative; }
-        .card-sku:hover { border-color:#A68966; transform: translateY(-2px); }
+        .card-sku { background:#fff; border-radius:12px; padding:12px; border:1px solid #eee; cursor:pointer; position:relative; }
         .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
         .paused { opacity: 0.6; background: #fef2f2; border-color: #fecaca; }
-        .cat-section { margin-bottom: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
-        .cat-title { background: #A68966; color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
+        
+        .cat-section { margin-bottom: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; width: 100%; }
+        .cat-title { background: #A68966; color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; display: inline-block; margin-bottom: 15px; text-transform: uppercase; }
+        .order-card { background: white; padding: 15px; border-radius: 15px; border-left: 5px solid #A68966; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -35,26 +35,26 @@
     <div onclick="switchTab('aba-categorias', this)" class="nav-btn">CATEGORIAS</div>
     <div onclick="switchTab('aba-produtos', this)" class="nav-btn">PRODUTOS</div>
     <div onclick="switchTab('aba-promos', this)" class="nav-btn">PROMOS</div>
+    <div onclick="switchTab('aba-pedidos', this)" class="nav-btn">PEDIDOS</div>
 </nav>
 
 <main class="p-4 max-w-5xl mx-auto">
-
     <div id="aba-empresa" class="tab-panel active">
         <div class="bg-white p-6 rounded-2xl shadow-sm">
             <h2 class="font-bold mb-4 text-gray-800 uppercase text-sm">Configuração da Loja</h2>
-            <label class="text-[10px] font-bold text-gray-400">NOME DA LOJA</label><input id="empNome">
-            <label class="text-[10px] font-bold text-gray-400">WHATSAPP</label><input id="empWhats">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Nome da Loja</label><input id="empNome">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp</label><input id="empWhats">
             <div class="grid grid-cols-2 gap-4">
-                <div><label class="text-[10px] font-bold text-gray-400">DESC. PIX (%)</label><input id="empPix" type="number"></div>
-                <div><label class="text-[10px] font-bold text-gray-400">MÁX. PARCELAS</label><input id="empParc" type="number"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Desc. Pix (%)</label><input id="empPix" type="number"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Máx. Parcelas</label><input id="empParc" type="number"></div>
             </div>
-            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-4">SALVAR ALTERAÇÕES</button>
+            <button onclick="saveEmpresa()" class="w-full bg-[#A68966] text-white p-4 rounded-xl font-bold mt-4 shadow-md">SALVAR ALTERAÇÕES</button>
         </div>
     </div>
 
     <div id="aba-categorias" class="tab-panel">
         <div class="bg-white p-4 rounded-xl mb-4 border-2 border-dashed border-gray-200 text-center">
-            <button onclick="novoItem('categoria')" class="w-full py-2 font-bold text-gray-500">+ NOVA CATEGORIA</button>
+            <button onclick="novoItem('categoria')" class="w-full py-2 font-bold text-gray-500 uppercase">+ Nova Categoria</button>
         </div>
         <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
     </div>
@@ -71,10 +71,14 @@
         <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
             <h2 class="font-bold text-red-800 mb-4 uppercase text-xs">Promoções por Categoria</h2>
             <div id="listaPromos" class="space-y-3"></div>
-            <button onclick="salvarPromos()" class="w-full bg-red-600 text-white p-4 rounded-xl font-bold mt-6 shadow-lg">APLICAR DESCONTOS</button>
+            <button onclick="salvarPromos()" class="w-full bg-red-600 text-white p-4 rounded-xl font-bold mt-6">APLICAR DESCONTOS</button>
         </div>
     </div>
 
+    <div id="aba-pedidos" class="tab-panel">
+        <h2 class="font-bold mb-4 text-gray-800 uppercase text-xs">Pedidos Recentes</h2>
+        <div id="listaPedidos" class="space-y-3"></div>
+    </div>
 </main>
 
 <div id="modalDetail" onclick="if(event.target == this) fecharModal()">
@@ -85,7 +89,7 @@
         </div>
         <div id="formContainer"></div>
         <div id="modalFooter" class="flex gap-2 mt-6">
-            <button id="btnSalvar" class="flex-1 bg-green-600 text-white py-4 rounded-xl font-bold shadow-md">SALVAR</button>
+            <button id="btnSalvar" class="flex-1 bg-green-600 text-white py-4 rounded-xl font-bold">SALVAR</button>
             <button id="btnExcluir" class="bg-red-50 text-red-600 px-6 rounded-xl font-bold">EXCLUIR</button>
         </div>
     </div>
@@ -104,11 +108,12 @@ function switchTab(id, el) {
     document.getElementById(id).classList.add('active');
     el.classList.add('active-btn');
     if(id === 'aba-produtos') renderProdutos();
+    if(id === 'aba-pedidos') carregarPedidos();
 }
 
 function fecharModal() { document.getElementById('modalDetail').style.display = 'none'; }
 
-// --- LOGICA EMPRESA ---
+// CARREGAR DADOS INICIAIS
 db.ref('settings').on('value', s => {
     const v = s.val() || {};
     document.getElementById('empNome').value = v.nome || '';
@@ -123,10 +128,10 @@ function saveEmpresa() {
         whatsapp: document.getElementById('empWhats').value,
         pix: Number(document.getElementById('empPix').value),
         parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert("Configurações atualizadas!"));
+    }).then(() => alert("Loja Atualizada!"));
 }
 
-// --- LOGICA CATEGORIAS ---
+// CARREGAR CATEGORIAS
 db.ref('categories').on('value', s => {
     const grid = document.getElementById('gridCats');
     const lp = document.getElementById('listaPromos');
@@ -141,30 +146,27 @@ db.ref('categories').on('value', s => {
         lp.innerHTML += `
             <div class="bg-white p-3 rounded-xl flex justify-between items-center shadow-sm">
                 <span class="text-[10px] font-bold uppercase text-gray-500">${v.name}</span>
-                <input type="number" id="pr-${v.slug}" class="w-20 !mb-0 text-center font-bold text-red-600" placeholder="0%">
+                <input type="number" id="pr-${v.slug}" class="w-16 !mb-0 text-center font-bold text-red-600" placeholder="0%">
             </div>`;
     });
     db.ref('promoRules').once('value', pr => {
         const r = pr.val() || {};
         Object.keys(r).forEach(k => { if(document.getElementById('pr-'+k)) document.getElementById('pr-'+k).value = r[k].percent || 0; });
     });
-    renderProdutos();
 });
 
-// --- LOGICA PRODUTOS (AGRUPADOS E ORDENADOS) ---
+// RENDERIZAR PRODUTOS AGRUPADOS
 async function renderProdutos() {
     const catsSnap = await db.ref('categories').once('value');
     const prodsSnap = await db.ref('products').once('value');
     const grid = document.getElementById('gridProds');
-    grid.innerHTML = '';
+    grid.innerHTML = '<p class="text-center text-xs text-gray-400">Carregando estoque...</p>';
 
-    const cats = [];
-    catsSnap.forEach(c => cats.push(c.val()));
-    
-    const prods = [];
-    prodsSnap.forEach(p => prods.push({...p.val(), key: p.key}));
+    const cats = []; catsSnap.forEach(c => cats.push(c.val()));
+    const prods = []; prodsSnap.forEach(p => prods.push({...p.val(), key: p.key}));
 
-    cats.forEach(cat => {
+    grid.innerHTML = ''; // Limpa o carregando
+    cats.sort((a,b) => a.name.localeCompare(b.name)).forEach(cat => {
         const itens = prods.filter(p => p.category === cat.slug)
                            .sort((a,b) => String(a.sku).localeCompare(String(b.sku), undefined, {numeric: true}));
         
@@ -174,7 +176,7 @@ async function renderProdutos() {
                 catHtml += `
                     <div onclick="abrirEdicao('products', '${v.key}')" class="card-sku item-prod ${v.paused ? 'paused' : ''}">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-[8px] font-mono text-gray-400">${v.sku || v.key}</span>
+                            <span class="text-[8px] font-mono text-gray-400">${v.sku || 'S/SKU'}</span>
                             <span class="dot ${v.image ? 'bg-green-500' : 'bg-red-500'}"></span>
                         </div>
                         <p class="text-[9px] font-bold uppercase truncate text-gray-700">${v.name}</p>
@@ -187,156 +189,88 @@ async function renderProdutos() {
     });
 }
 
-// --- MODAL DE EDIÇÃO DINÂMICO ---
+// EDIÇÃO E VARIAÇÕES
 async function abrirEdicao(path, id) {
     const snap = await db.ref(path + '/' + id).once('value');
-    const v = snap.val();
+    const v = snap.val() || {};
     const container = document.getElementById('formContainer');
     document.getElementById('modalTitle').innerText = path === 'products' ? 'Editar Produto' : 'Editar Categoria';
     document.getElementById('btnExcluir').style.display = 'block';
     
     if(path === 'products') {
         const cats = await db.ref('categories').once('value');
-        let options = '';
+        let options = '<option value="">Selecionar Categoria...</option>';
         cats.forEach(c => options += `<option value="${c.val().slug}" ${v.category === c.val().slug ? 'selected' : ''}>${c.val().name}</option>`);
         listaDizeresMemoria = v.variations || [];
 
         container.innerHTML = `
-            <img src="${v.image || ''}" class="w-full h-40 object-contain bg-gray-50 rounded-xl mb-4 border">
-            <label class="text-[10px] font-bold text-gray-400">NOME DO PRODUTO</label><input id="mNome" value="${v.name || ''}">
+            <img src="${v.image || ''}" class="w-full h-32 object-contain bg-gray-50 rounded-xl mb-4 border">
+            <input id="mNome" value="${v.name || ''}" placeholder="Nome do Produto">
             <div class="grid grid-cols-2 gap-2">
-                <div><label class="text-[10px] font-bold text-gray-400">SKU</label><input id="mSku" value="${v.sku || ''}"></div>
-                <div><label class="text-[10px] font-bold text-gray-400">PESO (g)</label><input id="mPeso" type="number" step="0.01" value="${v.weight || 0}"></div>
+                <input id="mSku" value="${v.sku || ''}" placeholder="SKU">
+                <input id="mPeso" type="number" step="0.01" value="${v.weight || 0}" placeholder="Peso (g)">
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <div><label class="text-[10px] font-bold text-gray-400">PREÇO (R$)</label><input id="mPreco" type="number" step="0.01" value="${v.price || ''}"></div>
-                <div><label class="text-[10px] font-bold text-gray-400">CATEGORIA</label><select id="mCat" onchange="alternarCamposVariacao(this.value)">${options}</select></div>
+                <input id="mPreco" type="number" step="0.01" value="${v.price || ''}" placeholder="Preço (R$)">
+                <select id="mCat" onchange="alternarCamposVariacao(this.value)">${options}</select>
             </div>
-            <label class="text-[10px] font-bold text-gray-400">LINK DA FOTO</label><input id="mImg" value="${v.image || ''}">
+            <input id="mImg" value="${v.image || ''}" placeholder="URL da Foto">
             <div id="areaVariacoes" class="mt-2 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300"></div>
-            <label class="flex items-center gap-2 mt-2 bg-gray-50 p-3 rounded-lg cursor-pointer">
-                <input type="checkbox" id="mPause" class="!w-5 !mb-0" ${v.paused ? 'checked' : ''}>
-                <span class="text-xs font-bold text-gray-600 uppercase">Pausar na Loja</span>
-            </label>
+            <label class="flex items-center gap-2 mt-2 bg-gray-50 p-3 rounded-lg"><input type="checkbox" id="mPause" class="!w-5 !mb-0" ${v.paused ? 'checked' : ''}> <span class="text-xs font-bold uppercase">Pausado</span></label>
         `;
         if(v.category) alternarCamposVariacao(v.category, v.variations);
     } else {
         container.innerHTML = `
-            <img src="${v.image || ''}" class="w-full h-40 object-cover rounded-xl mb-4 border">
-            <label class="text-[10px] font-bold text-gray-400">NOME DA CATEGORIA</label><input id="mNome" value="${v.name || ''}">
-            <label class="text-[10px] font-bold text-gray-400">ID (SLUG)</label><input id="mSlug" value="${v.slug || id}" disabled>
-            <label class="text-[10px] font-bold text-gray-400">LINK DA CAPA</label><input id="mImg" value="${v.image || ''}">
+            <input id="mNome" value="${v.name || ''}" placeholder="Nome Categoria">
+            <input id="mSlug" value="${v.slug || id}" disabled placeholder="ID da Categoria">
+            <input id="mImg" value="${v.image || ''}" placeholder="URL da Capa">
         `;
     }
-
     document.getElementById('modalDetail').style.display = 'flex';
     document.getElementById('btnSalvar').onclick = () => salvarItem(path, id);
     document.getElementById('btnExcluir').onclick = () => excluirItem(path, id);
 }
 
-// --- LOGICA DE VARIACOES ---
 function alternarCamposVariacao(slug, varsExistentes = null) {
     const area = document.getElementById('areaVariacoes');
     const s = slug.toLowerCase();
     const vars = varsExistentes || listaDizeresMemoria;
-
     if (s.includes('pingente') || s.includes('inicial')) {
         const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
         if(vars.length === 0) listaDizeresMemoria = letras.map(l => ({ label: l, active: true }));
         else listaDizeresMemoria = vars;
-
-        let html = `<h4 class="text-[10px] font-bold mb-2 text-blue-600 text-center uppercase">Letras Disponíveis</h4><div class="grid grid-cols-6 gap-1">`;
+        let html = `<div class="grid grid-cols-6 gap-1">`;
         listaDizeresMemoria.forEach((item, i) => {
-            html += `<div class="flex flex-col items-center bg-white p-1 rounded border ${item.active?'':'opacity-40'}">
-                        <span class="text-[10px] font-bold">${item.label}</span>
-                        <input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!mb-0 !w-3">
-                     </div>`;
+            html += `<div class="flex flex-col items-center bg-white p-1 rounded border ${item.active?'':'opacity-40'}"><span class="text-[10px] font-bold">${item.label}</span><input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!mb-0 !w-3"></div>`;
         });
         area.innerHTML = html + `</div>`;
     } else if (s.includes('bracelete') || s.includes('anel') || s.includes('aneis')) {
         listaDizeresMemoria = vars;
-        let html = `<h4 class="text-[10px] font-bold mb-2 text-blue-600 uppercase text-center">Dizeres Personalizados</h4><div id="listaDizeresCont" class="space-y-1">`;
+        let html = `<div id="listaDizeresCont" class="space-y-1">`;
         listaDizeresMemoria.forEach((item, i) => {
-            html += `<div class="flex gap-1 items-center bg-white p-1 rounded border">
-                        <input value="${item.label}" onchange="listaDizeresMemoria[${i}].label=this.value" class="!mb-0 text-xs flex-1 border-none bg-transparent">
-                        <input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!w-4 !mb-0">
-                        <button onclick="removerVar(${i},'${slug}')" class="text-red-500 px-2 font-bold">✕</button>
-                    </div>`;
+            html += `<div class="flex gap-1 items-center bg-white p-1 rounded border"><input value="${item.label}" onchange="listaDizeresMemoria[${i}].label=this.value" class="!mb-0 text-xs flex-1 border-none bg-transparent"><input type="checkbox" onchange="listaDizeresMemoria[${i}].active=this.checked" ${item.active?'checked':''} class="!w-4 !mb-0"><button onclick="removerVar(${i},'${slug}')" class="text-red-500 px-2">✕</button></div>`;
         });
-        area.innerHTML = html + `</div><button onclick="addVar('${slug}')" class="w-full bg-blue-50 text-blue-600 text-[10px] font-bold p-2 rounded mt-2 border border-blue-100">+ ADICIONAR FRASE</button>`;
-    } else {
-        area.innerHTML = `<p class="text-[10px] text-gray-400 text-center uppercase">Sem variações para esta categoria.</p>`;
-        listaDizeresMemoria = [];
-    }
+        area.innerHTML = html + `</div><button onclick="addVar('${slug}')" class="w-full bg-blue-50 text-blue-600 text-[10px] font-bold p-2 mt-2 rounded border border-blue-100">+ ADICIONAR FRASE</button>`;
+    } else { area.innerHTML = `<p class="text-[10px] text-gray-400 text-center uppercase">Sem variações.</p>`; listaDizeresMemoria = []; }
 }
 function addVar(slug) { listaDizeresMemoria.push({ label: 'NOVA', active: true }); alternarCamposVariacao(slug); }
 function removerVar(i, slug) { listaDizeresMemoria.splice(i, 1); alternarCamposVariacao(slug); }
 
-function novoItem(tipo) {
-    const container = document.getElementById('formContainer');
-    document.getElementById('modalTitle').innerText = tipo === 'produto' ? 'Novo Produto' : 'Nova Categoria';
-    document.getElementById('btnExcluir').style.display = 'none';
-    listaDizeresMemoria = [];
-    
-    if(tipo === 'produto') {
-        container.innerHTML = `
-            <label class="text-[10px] font-bold">NOME</label><input id="mNome">
-            <div class="grid grid-cols-2 gap-2">
-                <input id="mSku" placeholder="SKU">
-                <input id="mPeso" type="number" placeholder="Peso (g)">
-            </div>
-            <input id="mPreco" type="number" placeholder="Preço">
-            <input id="mImg" placeholder="Link Foto">
-        `;
-    } else {
-        container.innerHTML = `
-            <label class="text-[10px] font-bold">NOME</label><input id="mNome">
-            <label class="text-[10px] font-bold">LINK CAPA</label><input id="mImg">
-        `;
-    }
-    document.getElementById('modalDetail').style.display = 'flex';
-    document.getElementById('btnSalvar').onclick = () => salvarItem(tipo === 'produto' ? 'products' : 'categories', null);
-}
-
 async function salvarItem(path, id) {
     const nome = document.getElementById('mNome').value;
-    if(!nome) return alert("Preencha o nome!");
+    if(!nome) return;
     const finalId = id || (path === 'products' ? document.getElementById('mSku').value.replace(/[^a-zA-Z0-9]/g, "-") : nome.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
     const dados = { name: nome, image: document.getElementById('mImg').value };
-
     if(path === 'products') {
-        dados.sku = document.getElementById('mSku').value;
-        dados.price = Number(document.getElementById('mPreco').value);
-        dados.weight = Number(document.getElementById('mPeso').value || 0);
-        dados.category = document.getElementById('mCat') ? document.getElementById('mCat').value : '';
-        dados.paused = document.getElementById('mPause')?.checked || false;
-        dados.variations = listaDizeresMemoria;
-    } else {
-        dados.slug = finalId;
-    }
-
+        dados.sku = document.getElementById('mSku').value; dados.price = Number(document.getElementById('mPreco').value);
+        dados.weight = Number(document.getElementById('mPeso').value || 0); dados.category = document.getElementById('mCat').value;
+        dados.paused = document.getElementById('mPause').checked; dados.variations = listaDizeresMemoria;
+    } else { dados.slug = finalId; }
     await db.ref(path + '/' + finalId).update(dados);
-    fecharModal();
-    alert("Salvo!");
+    fecharModal(); renderProdutos();
 }
 
-function excluirItem(path, id) { if(confirm("Deseja excluir?")) { db.ref(path+'/'+id).remove(); fecharModal(); } }
-
-function salvarPromos() {
-    const inputs = document.querySelectorAll('[id^="pr-"]');
-    inputs.forEach(i => {
-        const slug = i.id.replace('pr-', '');
-        db.ref('promoRules/' + slug).set({ percent: Number(i.value), active: Number(i.value) > 0 });
-    });
-    alert("Promos aplicadas!");
-}
-
-function filtrar() {
-    const t = document.getElementById('busca').value.toLowerCase();
-    document.querySelectorAll('.item-prod').forEach(el => {
-        el.style.display = el.innerText.toLowerCase().includes(t) ? 'block' : 'none';
-    });
-}
-</script>
-</body>
-</html>
+// PEDIDOS
+function carregarPedidos() {
+    db.ref('orders').on('value', s => {
+        const lista
