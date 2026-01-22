@@ -26,35 +26,25 @@
 
 <main class="max-w-6xl mx-auto p-6">
     <h2 class="serif text-xl text-center mb-10 text-gray-700">Categorias</h2>
-    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8">
-        </div>
+    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
 <script>
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
+    firebase.initializeApp({ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
     const db = firebase.database();
 
     db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('gridCategorias');
-        grid.innerHTML = '';
-        
+        const grid = document.getElementById('gridCategorias'); grid.innerHTML = '';
         let lista = [];
         snap.forEach(s => { lista.push(s.val()); });
-
-        // Ordem Alfabética
         lista.sort((a,b) => a.name.localeCompare(b.name));
 
         lista.forEach(c => {
-            // FILTRO DE PAUSA
             if(c.paused) return; 
-
             grid.innerHTML += `
             <a href="categoria.html?cat=${c.slug}" class="card-cat shadow-sm block group">
                 <div class="aspect-square bg-white flex items-center justify-center p-6">
-                    <img src="${c.image || 'assets/img/sem-foto.jpg'}" class="max-h-full object-contain transition group-hover:scale-110" onerror="this.src='https://via.placeholder.com/400?text=${c.name}'">
+                    <img src="${c.image || 'https://via.placeholder.com/400'}" class="max-h-full object-contain transition group-hover:scale-110">
                 </div>
                 <div class="p-5 text-center border-t border-gray-50">
                     <span class="text-xs font-bold tracking-widest text-gray-800 uppercase">${c.name}</span>
