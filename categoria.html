@@ -12,17 +12,20 @@
     body{font-family:'Poppins',sans-serif;background:#f8f6f2}
     .serif{font-family:'Cinzel',serif}
     .gold{color:#A68966}
-    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; }
+    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; height: 100%; display: flex; flex-direction: column; }
     #modalCompra { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center; padding:20px; }
 </style>
 </head>
 <body>
 
-<header class="bg-white border-b sticky top-0 z-40">
-  <div class="text-center py-8">
-    <h1 class="serif text-3xl gold">Abella Joias</h1>
-    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Catálogo Atacado</p>
-  </div>
+<header class="bg-white border-b sticky top-0 z-40 text-center py-6">
+    <h1 class="serif text-2xl gold">Abella Joias</h1>
+    <div class="flex justify-center flex-wrap gap-2 mt-4 px-4">
+        <a href="index.html" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-full text-[9px] font-bold uppercase">← Voltar</a>
+        <a href="index.html" class="bg-black text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Categorias</a>
+        <a href="galvanicas.html" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-full text-[9px] font-bold uppercase">Galvânicas</a>
+        <a href="carrinho.html" class="bg-[#A68966] text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Carrinho (<span id="cartCount">0</span>)</a>
+    </div>
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
@@ -31,24 +34,26 @@
 </main>
 
 <div id="modalCompra">
-    <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center relative">
-        <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-400 text-xl">&times;</button>
-        <div class="aspect-square w-32 mx-auto mb-4 border rounded-xl overflow-hidden bg-gray-50">
-            <img id="mImg" src="" class="w-full h-full object-contain">
+    <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center relative shadow-2xl">
+        <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-400 text-2xl font-light hover:text-black">&times;</button>
+        <div class="aspect-square w-40 mx-auto mb-4 border rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
+            <img id="mImg" src="" class="max-h-full max-w-full object-contain">
         </div>
-        <h3 id="mNome" class="font-bold gold text-sm uppercase"></h3>
-        <p id="mSku" class="text-[10px] text-gray-400 mb-4 font-bold"></p>
+        <h3 id="mNome" class="font-bold gold text-sm uppercase px-4"></h3>
+        <p id="mSku" class="text-[10px] text-gray-400 mb-6 font-bold"></p>
         
-        <div class="mb-6">
-            <label class="text-[10px] block mb-2 font-bold text-gray-500 uppercase">Quantidade</label>
-            <div class="flex items-center justify-center gap-4">
-                <button onclick="mQtd.value = Math.max(1, parseInt(mQtd.value)-1)" class="w-10 h-10 border rounded-full font-bold">-</button>
-                <input type="number" id="mQtd" value="1" min="1" class="w-16 text-center text-xl font-bold bg-transparent">
-                <button onclick="mQtd.value = parseInt(mQtd.value)+1" class="w-10 h-10 border rounded-full font-bold">+</button>
+        <div class="mb-8">
+            <label class="text-[10px] block mb-3 font-bold text-gray-400 uppercase tracking-widest">Quantidade</label>
+            <div class="flex items-center justify-center gap-6">
+                <button onclick="diminuir()" class="w-12 h-12 border border-gray-200 rounded-full text-xl flex items-center justify-center hover:bg-gray-50">-</button>
+                <input type="number" id="mQtd" value="1" min="1" class="w-12 text-center text-2xl font-bold bg-transparent outline-none" readonly>
+                <button onclick="aumentar()" class="w-12 h-12 border border-gray-200 rounded-full text-xl flex items-center justify-center hover:bg-gray-50">+</button>
             </div>
         </div>
         
-        <button id="btnConfirmar" class="w-full bg-black text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest">Adicionar ao Carrinho</button>
+        <button id="btnConfirmar" class="w-full bg-black text-white py-4 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-[#A68966] transition-colors">
+            Adicionar ao Carrinho
+        </button>
     </div>
 </div>
 
@@ -61,8 +66,8 @@ const params = new URLSearchParams(window.location.search);
 const catSlug = params.get('cat');
 let itemSelecionado = null;
 
-// Configurações de exibição (ajuste conforme seu negócio)
-const DESC_PIX = 0.05; // 5% de desconto no PIX
+// Configurações (Podem ser movidas para o Firebase depois)
+const DESC_PIX = 0.05; 
 const MAX_PARCELAS = 6;
 
 if(!catSlug) location.href = 'index.html';
@@ -74,37 +79,43 @@ db.ref('categories/' + catSlug).once('value', s => {
 db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
     const grid = document.getElementById('gridProdutos');
     grid.innerHTML = '';
+    if(!snap.exists()) {
+        grid.innerHTML = '<p class="col-span-full text-center py-20 text-gray-400">Nenhum produto nesta categoria.</p>';
+        return;
+    }
 
     snap.forEach(p => {
         const prod = p.val();
         if(prod.paused) return;
-
         const preco = parseFloat(prod.price);
         const precoPix = preco * (1 - DESC_PIX);
         const valorParcela = preco / MAX_PARCELAS;
 
         grid.innerHTML += `
-            <div class="card p-4 shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="aspect-square flex items-center justify-center mb-4 bg-white rounded-lg">
-                        <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full">
+            <div class="card p-4 shadow-sm">
+                <div class="aspect-square flex items-center justify-center mb-4 bg-white rounded-lg">
+                    <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full hover:scale-105 transition-transform">
+                </div>
+                <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">SKU: ${prod.sku}</p>
+                <h3 class="text-[11px] font-bold uppercase mb-3 leading-tight text-gray-800 h-8 overflow-hidden">${prod.name}</h3>
+                
+                <div class="border-t pt-3 mt-auto space-y-1">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
+                        <span class="text-xs font-bold text-gray-900 text-right">R$ ${preco.toFixed(2)}</span>
                     </div>
-                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">SKU: ${prod.sku}</p>
-                    <h3 class="text-[11px] font-bold uppercase mb-2 leading-tight">${prod.name}</h3>
-                    
-                    <div class="border-t pt-2 mt-auto">
-                        <p class="text-xs font-bold text-gray-900">R$ ${preco.toFixed(2)}</p>
-                        <p class="text-[10px] text-green-600 font-medium">R$ ${precoPix.toFixed(2)} no PIX</p>
-                        <p class="text-[9px] text-gray-400">${MAX_PARCELAS}x de R$ ${valorParcela.toFixed(2)}</p>
-                        <p class="text-[9px] text-gray-400 italic">Peso: ${prod.weight}g</p>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[9px] text-green-600 font-bold uppercase">À vista PIX:</span>
+                        <span class="text-xs font-bold text-green-600">R$ ${precoPix.toFixed(2)}</span>
                     </div>
+                    <p class="text-[9px] text-gray-400 text-right">${MAX_PARCELAS}x de R$ ${valorParcela.toFixed(2)}</p>
+                    <p class="text-[9px] text-gray-500 font-medium italic mt-1">Peso: ${prod.weight}g</p>
                 </div>
                 
-                <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold mt-4 uppercase tracking-widest">
-                    Comprar
+                <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-2.5 rounded-full text-[10px] font-bold mt-4 uppercase tracking-widest active:scale-95 transition-all">
+                    Selecionar
                 </button>
-            </div>
-        `;
+            </div>`;
     });
 });
 
@@ -112,7 +123,6 @@ async function abrirModal(id) {
     const snap = await db.ref('products/' + id).once('value');
     const p = snap.val();
     itemSelecionado = { ...p, id: id };
-
     document.getElementById('mImg').src = p.image || 'https://via.placeholder.com/400';
     document.getElementById('mNome').innerText = p.name;
     document.getElementById('mSku').innerText = "SKU: " + p.sku;
@@ -121,25 +131,19 @@ async function abrirModal(id) {
 }
 
 function fecharModal() { document.getElementById('modalCompra').style.display = 'none'; }
+function aumentar() { document.getElementById('mQtd').value = parseInt(document.getElementById('mQtd').value) + 1; }
+function diminuir() { 
+    let v = parseInt(document.getElementById('mQtd').value);
+    if(v > 1) document.getElementById('mQtd').value = v - 1; 
+}
 
 document.getElementById('btnConfirmar').onclick = () => {
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     const qtd = parseInt(document.getElementById('mQtd').value);
-    
-    carrinho.push({
-        id: itemSelecionado.id,
-        nome: itemSelecionado.name,
-        sku: itemSelecionado.sku,
-        preco: parseFloat(itemSelecionado.price),
-        qtd: qtd,
-        image: itemSelecionado.image,
-        peso: itemSelecionado.weight
-    });
-
+    carrinho.push({ ...itemSelecionado, qtd: qtd });
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     fecharModal();
     atualizarContador();
-    alert("Adicionado ao carrinho!");
 };
 
 function atualizarContador() {
