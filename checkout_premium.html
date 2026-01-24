@@ -199,22 +199,37 @@ function enviarWhatsApp() {
     const nome = document.getElementById('nomeCliente').value;
     const contato = document.getElementById('contatoCliente').value;
     const totalTxt = document.getElementById('valorTotalFinal').innerText;
+    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 
     if (!nome || !contato || !formaPagamento) {
-        alert("Preencha Nome, WhatsApp e selecione o Pagamento.");
+        alert("Por favor, preencha Nome, WhatsApp e selecione o Pagamento.");
         return;
     }
 
-    let msg = `Olá *${configEmpresa.nome}*, acabei de escolher meus produtos no catálogo!\n\n`;
-    msg += `Estou passando para avisar que *finalizei minha compra*.\n\n`;
-    msg += `*DADOS DO CLIENTE:*\n`;
-    msg += `• Nome: ${nome}\n`;
-    msg += `• Contato: ${contato}\n`;
-    msg += `• Pagamento: ${formaPagamento}\n`;
-    msg += `• Valor Final: ${totalTxt}\n\n`;
-    msg += `_Aguardando seu retorno!_`;
+    // 1. SALVAR NO PAINEL ADMINISTRATIVO (INSTANTÂNEO)
+    const novoPedidoRef = db.ref('orders').push();
+    novoPedidoRef.set({
+        cliente: nome,
+        whatsapp: contato,
+        total: totalTxt,
+        pagamento: formaPagamento,
+        status: "Aguardando Contato",
+        data: new Date().toLocaleString('pt-BR'),
+        itens: carrinho // Salva os produtos para você ver no painel
+    });
+
+    // 2. FORMATAR MENSAGEM ELEGANTE PARA WHATSAPP
+    let msg = `Olá!!\n`;
+    msg += `Meu nome é *${nome}*\n`;
+    msg += `Fiz um pedido no catálogo da *${configEmpresa.nome}*.\n\n`;
+    msg += `*Valor:* ${totalTxt}\n`;
+    msg += `*Pagamento:* ${formaPagamento}\n`;
+    msg += `*Status:* Aguardando contato para confirmação.\n\n`;
+    msg += `_Enviado via Sistema Abella Joias_`;
 
     const encoded = encodeURIComponent(msg);
+    
+    // Limpa o carrinho e redireciona
     localStorage.removeItem('carrinho');
     window.location.href = `https://api.whatsapp.com/send?phone=${configEmpresa.whatsapp}&text=${encoded}`;
 }
