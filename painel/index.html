@@ -1,268 +1,257 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel Admin • Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Painel Admin | Categorias</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<style>
-body{margin:0;font-family:Inter,Arial;background:#0b0b0b;color:#eee}
-header{padding:20px;text-align:center;font-size:22px;font-weight:700;background:#000;border-bottom:1px solid #222}
-nav{display:flex;gap:10px;padding:10px;background:#111;flex-wrap:wrap}
-nav button{flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;padding:10px;border-radius:10px;cursor:pointer}
-nav button.active{border-color:#caa85c;color:#caa85c}
-section{display:none;padding:20px}
-section.active{display:block}
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#f6f6f6;
+      padding:20px;
+    }
+    h1{margin-bottom:20px}
 
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-@media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
-@media(min-width:1200px){.grid{grid-template-columns:repeat(6,1fr)}}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+    }
+    th,td{
+      padding:10px;
+      border-bottom:1px solid #ddd;
+      text-align:left;
+    }
 
-.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.tag{font-size:11px;padding:3px 8px;border-radius:999px}
-.ok{background:#1f3;color:#000}
-.no{background:#c33}
-.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
-.btn.pause{border-color:#caa85c;color:#caa85c}
-.btn.danger{border-color:#c33;color:#f77}
-input,select{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;margin-bottom:6px}
+    button{
+      padding:6px 10px;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+      margin-right:4px;
+    }
 
-#modalEdit{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center}
-.modal-content{background:#141414;border:1px solid #333;width:100%;max-width:540px;border-radius:20px;padding:20px;max-height:90vh;overflow:auto}
-.modal-img{width:100%;height:180px;object-fit:contain;background:#000;border-radius:10px;margin-bottom:10px}
-.cat-divider{margin:30px 0 10px;border-bottom:1px solid #222;color:#caa85c;font-weight:bold}
-</style>
+    .btn-primary{background:#000;color:#fff}
+    .btn-secondary{background:#666;color:#fff}
+    .btn-danger{background:#c0392b;color:#fff}
+
+    /* MODAL */
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.5);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .hidden{display:none}
+    .modal-box{
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      width:420px;
+      max-width:95%;
+    }
+    .modal-box h3{margin-top:0}
+    .modal-box input{
+      width:100%;
+      padding:8px;
+      margin-bottom:10px;
+    }
+    ul{padding-left:18px}
+    li{margin-bottom:6px}
+    img.preview{
+      max-width:80px;
+      margin-bottom:10px;
+      display:block;
+    }
+  </style>
 </head>
 
 <body>
 
-<header>Painel Administrativo • Abella Joias</header>
+<h1>Categorias</h1>
 
-<nav>
-<button class="active" onclick="show('empresa',this)">Empresa</button>
-<button onclick="show('categorias',this)">Categorias</button>
-<button onclick="show('produtos',this)">Produtos</button>
-<button onclick="show('promocoes',this)">Promoções</button>
-<button onclick="show('pedidos',this)">Pedidos</button>
-</nav>
+<button class="btn-primary" onclick="novaCategoria()">+ Nova Categoria</button>
 
-<section id="empresa" class="active">
-<h2 class="font-bold mb-3">Empresa</h2>
-<div class="card max-w-md">
-<input id="empNome" placeholder="Nome">
-<input id="empWhats" placeholder="WhatsApp">
-<input id="empPix" type="number" placeholder="Desconto PIX %">
-<input id="empParc" type="number" placeholder="Parcelas">
-<button class="btn mt-2" onclick="salvarEmpresa()">Salvar</button>
+<br><br>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Imagem</th>
+      <th>Variações</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="listaCategorias"></tbody>
+</table>
+
+<!-- MODAL CATEGORIA -->
+<div id="modalCategoria" class="modal hidden">
+  <div class="modal-box">
+    <h3>Categoria</h3>
+
+    <input id="catNome" placeholder="Nome da categoria">
+    <input id="catImagem" placeholder="URL da imagem">
+
+    <img id="previewCategoria" class="preview" />
+
+    <button class="btn-primary" onclick="salvarCategoria()">Salvar</button>
+    <button onclick="fecharCategoria()">Cancelar</button>
+  </div>
 </div>
-</section>
 
-<section id="categorias">
-<h2 class="font-bold mb-3">Categorias</h2>
-<div class="grid" id="listaCategorias"></div>
-</section>
+<!-- MODAL VARIAÇÕES -->
+<div id="modalVariacoes" class="modal hidden">
+  <div class="modal-box">
+    <h3>Variações da Categoria</h3>
 
-<section id="produtos">
-<h2 class="font-bold mb-3">Produtos</h2>
-<div id="produtosPorCategoria"></div>
-</section>
+    <input id="novaVariacao" placeholder="Ex: Aro 18">
 
-<section id="promocoes">
-<h2 class="font-bold mb-3">Promoções</h2>
-<div class="card max-w-lg" id="listaPromos"></div>
-</section>
+    <button class="btn-secondary" onclick="addVariacao()">Adicionar</button>
 
-<section id="pedidos">
-<h2 class="font-bold mb-3">Pedidos</h2>
-<div id="listaPedidos"></div>
-</section>
+    <ul id="listaVariacoes"></ul>
 
-<div id="modalEdit">
-<div class="modal-content">
-<div class="row mb-2">
-<h3 id="modalTitle" class="font-bold"></h3>
-<button class="btn" onclick="closeModal()">✕</button>
-</div>
-<div id="modalBody"></div>
-<button class="btn w-full mt-3 !bg-[#caa85c] !text-black font-bold" id="btnSalvarModal">SALVAR</button>
-</div>
+    <button class="btn-primary" onclick="salvarVariacoes()">Salvar</button>
+    <button onclick="fecharVariacoes()">Fechar</button>
+  </div>
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
- apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- authDomain:"catalogo-abella-joias.firebaseapp.com",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
- projectId:"catalogo-abella-joias"
-});
-const db=firebase.database();
-
-function show(id,btn){
- document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
- document.getElementById(id).classList.add('active');
- document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- btn.classList.add('active');
-}
-function closeModal(){modalEdit.style.display='none'}
-
-/* EMPRESA */
-db.ref('settings').on('value',s=>{
- const v=s.val()||{};
- empNome.value=v.nome||'';
- empWhats.value=v.whatsapp||'';
- empPix.value=v.pix||0;
- empParc.value=v.parcelas||1;
-});
-function salvarEmpresa(){
- db.ref('settings').update({
-  nome:empNome.value,
-  whatsapp:empWhats.value,
-  pix:+empPix.value,
-  parcelas:+empParc.value
- });
- alert('Salvo');
-}
-
-/* CATEGORIAS + VARIAÇÕES */
-db.ref('categories').on('value',s=>{
- listaCategorias.innerHTML='';
- listaPromos.innerHTML='';
- s.forEach(c=>{
-  const d=c.val();
-  listaCategorias.innerHTML+=`
-   <div class="card">
-    <div class="row">
-     <strong>${d.name}</strong>
-     <span class="tag ${d.image?'ok':'no'}">IMG</span>
-    </div>
-    <div class="text-xs opacity-60 mb-1">${Object.keys(d.variacoes||{}).length} variações</div>
-    <div class="row">
-     <button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
-     <button class="btn pause" onclick="togglePause('categories','${c.key}')">Pausar</button>
-     <button class="btn danger" onclick="if(confirm('Excluir?'))db.ref('categories/${c.key}').remove()">Excluir</button>
-    </div>
-   </div>`;
-
-  listaPromos.innerHTML+=`
-   <div class="row mb-2">
-    <span>${d.name}</span>
-    <input type="number" value="${d.discount||0}" onchange="db.ref('categories/${c.key}/discount').set(this.value)">
-   </div>`;
- });
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID"
 });
 
-/* PRODUTOS */
-db.ref('products').on('value',s=>{
- const map={};
- s.forEach(p=>{
-  const v=p.val();v.id=p.key;
-  if(!map[v.category]) map[v.category]=[];
-  map[v.category].push(v);
- });
- produtosPorCategoria.innerHTML='';
- Object.keys(map).sort().forEach(cat=>{
-  const wrap=document.createElement('div');
-  wrap.innerHTML=`<div class="cat-divider">${cat}</div><div class="grid"></div>`;
-  const g=wrap.querySelector('.grid');
-  map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'',undefined,{numeric:true}))
-  .forEach(p=>{
-   g.innerHTML+=`
-   <div class="card">
-    <div class="row"><strong>${p.sku||'S/SKU'}</strong><span class="tag ${p.image?'ok':'no'}">IMG</span></div>
-    <div class="text-sm">${p.name}</div>
-    <div class="row mt-2">
-     <button class="btn" onclick="editarProduto('${p.id}')">Editar</button>
-     <button class="btn pause" onclick="togglePause('products','${p.id}')">Pausar</button>
-     <button class="btn danger" onclick="if(confirm('Excluir?'))db.ref('products/${p.id}').remove()">Excluir</button>
-    </div>
-   </div>`;
+const db = firebase.database();
+
+/* ================= CATEGORIAS ================= */
+let categoriaEditando = null;
+
+function carregarCategorias(){
+  db.ref('categories').on('value', snap=>{
+    const tbody = document.getElementById('listaCategorias');
+    tbody.innerHTML = '';
+
+    snap.forEach(cat=>{
+      const d = cat.val();
+      tbody.innerHTML += `
+        <tr>
+          <td>${d.name || '-'}</td>
+          <td>${d.image ? 'Sim' : 'Não'}</td>
+          <td>${d.variations ? d.variations.length : 0}</td>
+          <td>
+            <button onclick="editarCategoria('${cat.key}')">Editar</button>
+            <button onclick="abrirVariacoes('${cat.key}')">Variações</button>
+            <button class="btn-danger" onclick="excluirCategoria('${cat.key}')">Excluir</button>
+          </td>
+        </tr>
+      `;
+    });
   });
-  produtosPorCategoria.appendChild(wrap);
- });
-});
-
-/* PAUSAR */
-function togglePause(path,id){
- db.ref(path+'/'+id+'/paused').once('value').then(s=>{
-  db.ref(path+'/'+id+'/paused').set(!s.val());
- });
 }
 
-/* MODAIS */
+function novaCategoria(){
+  categoriaEditando = null;
+  catNome.value = '';
+  catImagem.value = '';
+  previewCategoria.src = '';
+  modalCategoria.classList.remove('hidden');
+}
+
 function editarCategoria(id){
- db.ref('categories/'+id).once('value').then(s=>{
-  const d=s.val();
-  modalEdit.style.display='flex';
-  modalTitle.innerText='Editar Categoria';
-  let html=`<img class="modal-img" src="${d.image||''}">
-  <input id="eNome" value="${d.name}">
-  <input id="eImg" value="${d.image||''}">
-  <h4 class="mt-2 font-bold">Variações</h4>`;
-  Object.entries(d.variacoes||{}).forEach(([k,v])=>{
-   html+=`
-   <div class="row">
-    <input value="${v.label}">
-    <button class="btn danger" onclick="db.ref('categories/${id}/variacoes/${k}').remove()">✕</button>
-   </div>`;
+  categoriaEditando = id;
+  db.ref('categories/'+id).once('value').then(s=>{
+    catNome.value = s.val().name || '';
+    catImagem.value = s.val().image || '';
+    previewCategoria.src = s.val().image || '';
+    modalCategoria.classList.remove('hidden');
   });
-  modalBody.innerHTML=html;
-  btnSalvarModal.onclick=()=>{
-   db.ref('categories/'+id).update({name:eNome.value,image:eImg.value});
-   closeModal();
-  };
- });
 }
 
-function editarProduto(id){
- db.ref('products/'+id).once('value').then(s=>{
-  const p=s.val();
-  modalEdit.style.display='flex';
-  modalTitle.innerText='Editar Produto';
-  modalBody.innerHTML=`
-   <img class="modal-img" src="${p.image||''}">
-   <input id="eNome" value="${p.name}">
-   <input id="eSku" value="${p.sku}">
-   <input id="ePreco" value="${p.price||''}">
-   <input id="ePeso" value="${p.weight||''}">
-   <input id="eCat" value="${p.category||''}">
-   <input id="eImg" value="${p.image||''}">
-  `;
-  btnSalvarModal.onclick=()=>{
-   db.ref('products/'+id).update({
-    name:eNome.value,
-    sku:eSku.value,
-    price:ePreco.value,
-    weight:ePeso.value,
-    category:eCat.value,
-    image:eImg.value
-   });
-   closeModal();
+function salvarCategoria(){
+  const data = {
+    name: catNome.value,
+    image: catImagem.value
   };
- });
+
+  if(categoriaEditando){
+    db.ref('categories/'+categoriaEditando).update(data);
+  }else{
+    db.ref('categories').push({...data, variations: []});
+  }
+  fecharCategoria();
 }
 
-/* PEDIDOS */
-db.ref('orders').on('value',s=>{
- listaPedidos.innerHTML='';
- s.forEach(o=>{
-  listaPedidos.innerHTML+=`
-   <div class="card mb-2">
-    <div class="row">
-     <span>${o.key}</span>
-     <div>
-      <button class="btn">Ver</button>
-      <button class="btn">Editar</button>
-      <button class="btn danger" onclick="db.ref('orders/${o.key}').remove()">Excluir</button>
-     </div>
-    </div>
-   </div>`;
- });
-});
+function excluirCategoria(id){
+  if(confirm('Excluir categoria?')){
+    db.ref('categories/'+id).remove();
+  }
+}
+
+function fecharCategoria(){
+  modalCategoria.classList.add('hidden');
+}
+
+/* ================= VARIAÇÕES ================= */
+let CAT_ID = null;
+let VARIACOES = [];
+
+function abrirVariacoes(id){
+  CAT_ID = id;
+  modalVariacoes.classList.remove('hidden');
+
+  db.ref('categories/'+id+'/variations').once('value').then(s=>{
+    VARIACOES = s.val() || [];
+    renderVariacoes();
+  });
+}
+
+function renderVariacoes(){
+  listaVariacoes.innerHTML = '';
+  VARIACOES.forEach((v,i)=>{
+    listaVariacoes.innerHTML += `
+      <li>
+        ${v}
+        <button onclick="removerVariacao(${i})">✖</button>
+      </li>
+    `;
+  });
+}
+
+function addVariacao(){
+  if(!novaVariacao.value) return;
+  VARIACOES.push(novaVariacao.value);
+  novaVariacao.value = '';
+  renderVariacoes();
+}
+
+function removerVariacao(i){
+  VARIACOES.splice(i,1);
+  renderVariacoes();
+}
+
+function salvarVariacoes(){
+  db.ref('categories/'+CAT_ID).update({ variations: VARIACOES });
+  fecharVariacoes();
+}
+
+function fecharVariacoes(){
+  modalVariacoes.classList.add('hidden');
+}
+
+/* ================= INIT ================= */
+carregarCategorias();
 </script>
 
 </body>
