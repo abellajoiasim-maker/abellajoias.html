@@ -158,20 +158,43 @@ async function carregarProdutos() {
 }
 
 function sincronizarFotosComStorage() {
+    // Domínio atualizado conforme seu link 1
     const dominio = "catalogo-abella-joias.firebasestorage.app";
     const pasta = "produtos"; 
+    
     let syncCount = 0;
-    document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
+    const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
+
+    if (linhas.length === 0) return alert("Filtre os produtos primeiro!");
+
+    linhas.forEach(tr => {
         const sku = tr.querySelector('.font-mono').innerText.trim();
         const inputImg = tr.querySelector('.edit-img');
+        const preview = tr.querySelector('.img-preview');
+
         if (sku && (inputImg.value === "" || inputImg.value.includes("appspot.com") || inputImg.value.includes("placeholder"))) {
-            const url = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/${pasta}%2F${sku}.jpg?alt=media`;
-            inputImg.value = url;
-            tr.querySelector('.img-preview').src = url;
+            
+            // Tentamos primeiro com .png (que é o que você usa no PL-0001)
+            const urlFinal = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/${pasta}%2F${sku}.png?alt=media`;
+            
+            inputImg.value = urlFinal;
+            preview.src = urlFinal;
+
+            // Se o .png falhar (não existir), o navegador tentará o .jpg
+            preview.onerror = function() {
+                if (this.src.includes(".png")) {
+                    const novaUrl = this.src.replace(".png", ".jpg");
+                    this.src = novaUrl;
+                    inputImg.value = novaUrl;
+                } else {
+                    this.src = 'https://via.placeholder.com/45?text=OFF';
+                }
+            };
+            
             syncCount++;
         }
     });
-    alert(`${syncCount} links atualizados! Clique em Salvar.`);
+    alert(`✅ Links gerados! IMPORTANTE: Se a foto não aparecer, você PRECISA liberar o acesso nas Regras do Storage.`);
 }
 
 function salvarAlteracoes() {
