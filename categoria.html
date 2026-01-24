@@ -24,7 +24,7 @@
         <a href="index.html" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-full text-[9px] font-bold uppercase">← Voltar</a>
         <a href="index.html" class="bg-black text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Categorias</a>
         <a href="galvanicas.html" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-full text-[9px] font-bold uppercase">Galvânicas</a>
-        <a href="carrinho.html" class="bg-[#A68966] text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Carrinho (<span id="cartCount">0</span>)</a>
+        <a href="https://abellajoiasim-maker.github.io/abellajoias/checkout_premium.html" class="bg-[#A68966] text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Carrinho (<span id="cartCount">0</span>)</a>
     </div>
 </header>
 
@@ -66,9 +66,9 @@ const params = new URLSearchParams(window.location.search);
 const catSlug = params.get('cat');
 let itemSelecionado = null;
 
-// Configurações (Podem ser movidas para o Firebase depois)
 const DESC_PIX = 0.05; 
 const MAX_PARCELAS = 6;
+const URL_CARRINHO = "https://abellajoiasim-maker.github.io/abellajoias/checkout_premium.html";
 
 if(!catSlug) location.href = 'index.html';
 
@@ -94,7 +94,7 @@ db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap =>
         grid.innerHTML += `
             <div class="card p-4 shadow-sm">
                 <div class="aspect-square flex items-center justify-center mb-4 bg-white rounded-lg">
-                    <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full hover:scale-105 transition-transform">
+                    <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full">
                 </div>
                 <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">SKU: ${prod.sku}</p>
                 <h3 class="text-[11px] font-bold uppercase mb-3 leading-tight text-gray-800 h-8 overflow-hidden">${prod.name}</h3>
@@ -102,17 +102,17 @@ db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap =>
                 <div class="border-t pt-3 mt-auto space-y-1">
                     <div class="flex justify-between items-baseline">
                         <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
-                        <span class="text-xs font-bold text-gray-900 text-right">R$ ${preco.toFixed(2)}</span>
+                        <span class="text-xs font-bold text-gray-900">R$ ${preco.toFixed(2)}</span>
                     </div>
                     <div class="flex justify-between items-baseline">
                         <span class="text-[9px] text-green-600 font-bold uppercase">À vista PIX:</span>
                         <span class="text-xs font-bold text-green-600">R$ ${precoPix.toFixed(2)}</span>
                     </div>
                     <p class="text-[9px] text-gray-400 text-right">${MAX_PARCELAS}x de R$ ${valorParcela.toFixed(2)}</p>
-                    <p class="text-[9px] text-gray-500 font-medium italic mt-1">Peso: ${prod.weight}g</p>
+                    <p class="text-[9px] text-gray-500 font-medium italic mt-1 text-right">Peso: ${prod.weight}g</p>
                 </div>
                 
-                <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-2.5 rounded-full text-[10px] font-bold mt-4 uppercase tracking-widest active:scale-95 transition-all">
+                <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-2.5 rounded-full text-[10px] font-bold mt-4 uppercase tracking-widest transition-all">
                     Selecionar
                 </button>
             </div>`;
@@ -140,10 +140,25 @@ function diminuir() {
 document.getElementById('btnConfirmar').onclick = () => {
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     const qtd = parseInt(document.getElementById('mQtd').value);
-    carrinho.push({ ...itemSelecionado, qtd: qtd });
+    
+    // Alinhamento dos dados para o checkout_premium
+    carrinho.push({
+        id: itemSelecionado.id,
+        nome: itemSelecionado.name,
+        sku: itemSelecionado.sku,
+        preco: parseFloat(itemSelecionado.price),
+        qtd: qtd,
+        image: itemSelecionado.image,
+        peso: itemSelecionado.weight
+    });
+
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     fecharModal();
     atualizarContador();
+    
+    if(confirm("Produto adicionado! Deseja finalizar o pedido agora?")) {
+        location.href = URL_CARRINHO;
+    }
 };
 
 function atualizarContador() {
