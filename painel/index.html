@@ -10,10 +10,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
-body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;margin:0}
+body{margin:0;font-family:Inter,Arial;background:#0b0b0b;color:#eee}
 header{padding:20px;text-align:center;font-size:22px;font-weight:700;background:#000;border-bottom:1px solid #222}
 nav{display:flex;gap:10px;padding:10px;background:#111;flex-wrap:wrap}
-nav button{flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;padding:10px;border-radius:10px}
+nav button{flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;padding:10px;border-radius:10px;cursor:pointer}
 nav button.active{border-color:#caa85c;color:#caa85c}
 section{display:none;padding:20px}
 section.active{display:block}
@@ -22,21 +22,20 @@ section.active{display:block}
 @media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:1200px){.grid{grid-template-columns:repeat(6,1fr)}}
 
-.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px;opacity:1}
-.card.paused{opacity:.45}
+.card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .tag{font-size:11px;padding:3px 8px;border-radius:999px}
 .ok{background:#1f3;color:#000}
 .no{background:#c33}
-.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px}
+.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
 .btn.pause{border-color:#caa85c;color:#caa85c}
 .btn.danger{border-color:#c33;color:#f77}
 input,select{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;margin-bottom:6px}
 
-#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99;align-items:center;justify-content:center;padding:10px}
-.modal-box{background:#141414;border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+#modalEdit{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center}
+.modal-content{background:#141414;border:1px solid #333;width:100%;max-width:540px;border-radius:20px;padding:20px;max-height:90vh;overflow:auto}
 .modal-img{width:100%;height:180px;object-fit:contain;background:#000;border-radius:10px;margin-bottom:10px}
-.cat-divider{margin:30px 0 15px;border-bottom:1px solid #222;color:#caa85c;font-weight:bold}
+.cat-divider{margin:30px 0 10px;border-bottom:1px solid #222;color:#caa85c;font-weight:bold}
 </style>
 </head>
 
@@ -45,14 +44,15 @@ input,select{background:#111;border:1px solid #333;color:#fff;padding:8px;border
 <header>Painel Administrativo • Abella Joias</header>
 
 <nav>
-<button class="active" onclick="showTab('empresa',this)">Empresa</button>
-<button onclick="showTab('categorias',this)">Categorias</button>
-<button onclick="showTab('produtos',this)">Produtos</button>
-<button onclick="showTab('promocoes',this)">Promoções</button>
-<button onclick="showTab('pedidos',this)">Pedidos</button>
+<button class="active" onclick="show('empresa',this)">Empresa</button>
+<button onclick="show('categorias',this)">Categorias</button>
+<button onclick="show('produtos',this)">Produtos</button>
+<button onclick="show('promocoes',this)">Promoções</button>
+<button onclick="show('pedidos',this)">Pedidos</button>
 </nav>
 
 <section id="empresa" class="active">
+<h2 class="font-bold mb-3">Empresa</h2>
 <div class="card max-w-md">
 <input id="empNome" placeholder="Nome">
 <input id="empWhats" placeholder="WhatsApp">
@@ -62,134 +62,208 @@ input,select{background:#111;border:1px solid #333;color:#fff;padding:8px;border
 </div>
 </section>
 
-<section id="categorias"><div class="grid" id="listaCategorias"></div></section>
-<section id="produtos"><div id="produtosPorCategoria"></div></section>
-<section id="promocoes"><div id="listaPromos" class="card max-w-lg"></div></section>
-<section id="pedidos"><div id="listaPedidos"></div></section>
+<section id="categorias">
+<h2 class="font-bold mb-3">Categorias</h2>
+<div class="grid" id="listaCategorias"></div>
+</section>
 
-<div id="modal">
-<div class="modal-box">
-<h3 id="modalTitle" class="font-bold mb-2"></h3>
+<section id="produtos">
+<h2 class="font-bold mb-3">Produtos</h2>
+<div id="produtosPorCategoria"></div>
+</section>
+
+<section id="promocoes">
+<h2 class="font-bold mb-3">Promoções</h2>
+<div class="card max-w-lg" id="listaPromos"></div>
+</section>
+
+<section id="pedidos">
+<h2 class="font-bold mb-3">Pedidos</h2>
+<div id="listaPedidos"></div>
+</section>
+
+<div id="modalEdit">
+<div class="modal-content">
+<div class="row mb-2">
+<h3 id="modalTitle" class="font-bold"></h3>
+<button class="btn" onclick="closeModal()">✕</button>
+</div>
 <div id="modalBody"></div>
-<button class="btn w-full mt-2" onclick="salvarModal()">Salvar</button>
-<button class="btn w-full mt-2" onclick="closeModal()">Fechar</button>
+<button class="btn w-full mt-3 !bg-[#caa85c] !text-black font-bold" id="btnSalvarModal">SALVAR</button>
 </div>
 </div>
 
 <script>
 firebase.initializeApp({
  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+ authDomain:"catalogo-abella-joias.firebaseapp.com",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId:"catalogo-abella-joias"
 });
 const db=firebase.database();
-let MODAL={};
 
-function showTab(id,b){
+function show(id,btn){
  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
  document.getElementById(id).classList.add('active');
- document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
- b.classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
 }
-function closeModal(){modal.style.display='none'}
-function openModal(t,b,c){modalTitle.innerText=t;modalBody.innerHTML=b;MODAL=c;modal.style.display='flex'}
+function closeModal(){modalEdit.style.display='none'}
 
-function togglePause(path,id,current){
- db.ref(`${path}/${id}/active`).set(!current);
+/* EMPRESA */
+db.ref('settings').on('value',s=>{
+ const v=s.val()||{};
+ empNome.value=v.nome||'';
+ empWhats.value=v.whatsapp||'';
+ empPix.value=v.pix||0;
+ empParc.value=v.parcelas||1;
+});
+function salvarEmpresa(){
+ db.ref('settings').update({
+  nome:empNome.value,
+  whatsapp:empWhats.value,
+  pix:+empPix.value,
+  parcelas:+empParc.value
+ });
+ alert('Salvo');
 }
 
+/* CATEGORIAS + VARIAÇÕES */
 db.ref('categories').on('value',s=>{
  listaCategorias.innerHTML='';
+ listaPromos.innerHTML='';
  s.forEach(c=>{
   const d=c.val();
   listaCategorias.innerHTML+=`
-  <div class="card ${d.active===false?'paused':''}">
-   <div class="row">
-    <strong>${d.name}</strong>
-    <span class="tag ${d.image?'ok':'no'}">IMG</span>
-   </div>
-   <div class="row mt-2">
-    <button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
-    <button class="btn pause" onclick="togglePause('categories','${c.key}',${d.active!==false})">${d.active===false?'Ativar':'Pausar'}</button>
-    <button class="btn danger" onclick="db.ref('categories/${c.key}').remove()">Excluir</button>
-   </div>
-  </div>`;
+   <div class="card">
+    <div class="row">
+     <strong>${d.name}</strong>
+     <span class="tag ${d.image?'ok':'no'}">IMG</span>
+    </div>
+    <div class="text-xs opacity-60 mb-1">${Object.keys(d.variacoes||{}).length} variações</div>
+    <div class="row">
+     <button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
+     <button class="btn pause" onclick="togglePause('categories','${c.key}')">Pausar</button>
+     <button class="btn danger" onclick="if(confirm('Excluir?'))db.ref('categories/${c.key}').remove()">Excluir</button>
+    </div>
+   </div>`;
+
+  listaPromos.innerHTML+=`
+   <div class="row mb-2">
+    <span>${d.name}</span>
+    <input type="number" value="${d.discount||0}" onchange="db.ref('categories/${c.key}/discount').set(this.value)">
+   </div>`;
  });
 });
 
+/* PRODUTOS */
 db.ref('products').on('value',s=>{
  const map={};
- s.forEach(p=>{const v=p.val();v.id=p.key;if(!map[v.category])map[v.category]=[];map[v.category].push(v)});
+ s.forEach(p=>{
+  const v=p.val();v.id=p.key;
+  if(!map[v.category]) map[v.category]=[];
+  map[v.category].push(v);
+ });
  produtosPorCategoria.innerHTML='';
  Object.keys(map).sort().forEach(cat=>{
-  const box=document.createElement('div');
-  box.innerHTML=`<div class="cat-divider">${cat}</div><div class="grid"></div>`;
-  const g=box.querySelector('.grid');
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`<div class="cat-divider">${cat}</div><div class="grid"></div>`;
+  const g=wrap.querySelector('.grid');
   map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'',undefined,{numeric:true}))
   .forEach(p=>{
    g.innerHTML+=`
-   <div class="card ${p.active===false?'paused':''}">
-    <div class="row"><strong>${p.sku}</strong><span class="tag ${p.image?'ok':'no'}">IMG</span></div>
-    <div>${p.name}</div>
+   <div class="card">
+    <div class="row"><strong>${p.sku||'S/SKU'}</strong><span class="tag ${p.image?'ok':'no'}">IMG</span></div>
+    <div class="text-sm">${p.name}</div>
     <div class="row mt-2">
      <button class="btn" onclick="editarProduto('${p.id}')">Editar</button>
-     <button class="btn pause" onclick="togglePause('products','${p.id}',${p.active!==false})">${p.active===false?'Ativar':'Pausar'}</button>
-     <button class="btn danger" onclick="db.ref('products/${p.id}').remove()">Excluir</button>
+     <button class="btn pause" onclick="togglePause('products','${p.id}')">Pausar</button>
+     <button class="btn danger" onclick="if(confirm('Excluir?'))db.ref('products/${p.id}').remove()">Excluir</button>
     </div>
    </div>`;
   });
-  produtosPorCategoria.appendChild(box);
+  produtosPorCategoria.appendChild(wrap);
  });
 });
 
-function editarProduto(id){
- Promise.all([
-  db.ref('products/'+id).once('value'),
-  db.ref('categories').once('value')
- ]).then(([ps,cs])=>{
-  const p=ps.val();
-  let catOpts='',varOpts='';
-  cs.forEach(c=>{
-   catOpts+=`<option ${p.category===c.val().name?'selected':''}>${c.val().name}</option>`;
-   Object.values(c.val().variacoes||{}).forEach(v=>{
-    varOpts+=`<option ${p.variacao===v.label?'selected':''}>${v.label}</option>`;
-   });
-  });
-  openModal('Editar Produto',`
-   <img class="modal-img" src="${p.image||''}">
-   <input id="pSku" value="${p.sku}">
-   <input id="pNome" value="${p.name}">
-   <input id="pPreco" value="${p.price}">
-   <input id="pPeso" value="${p.weight}">
-   <select id="pCat">${catOpts}</select>
-   <select id="pVar">${varOpts}</select>
-   <input id="pImg" value="${p.image||''}">
-  `,{type:'prod',id});
+/* PAUSAR */
+function togglePause(path,id){
+ db.ref(path+'/'+id+'/paused').once('value').then(s=>{
+  db.ref(path+'/'+id+'/paused').set(!s.val());
  });
 }
 
+/* MODAIS */
 function editarCategoria(id){
  db.ref('categories/'+id).once('value').then(s=>{
-  const c=s.val();
-  openModal('Editar Categoria',`
-   <img class="modal-img" src="${c.image||''}">
-   <input id="cNome" value="${c.name}">
-   <input id="cImg" value="${c.image||''}">
-  `,{type:'cat',id});
+  const d=s.val();
+  modalEdit.style.display='flex';
+  modalTitle.innerText='Editar Categoria';
+  let html=`<img class="modal-img" src="${d.image||''}">
+  <input id="eNome" value="${d.name}">
+  <input id="eImg" value="${d.image||''}">
+  <h4 class="mt-2 font-bold">Variações</h4>`;
+  Object.entries(d.variacoes||{}).forEach(([k,v])=>{
+   html+=`
+   <div class="row">
+    <input value="${v.label}">
+    <button class="btn danger" onclick="db.ref('categories/${id}/variacoes/${k}').remove()">✕</button>
+   </div>`;
+  });
+  modalBody.innerHTML=html;
+  btnSalvarModal.onclick=()=>{
+   db.ref('categories/'+id).update({name:eNome.value,image:eImg.value});
+   closeModal();
+  };
  });
 }
 
-function salvarModal(){
- if(MODAL.type==='cat'){
-  db.ref('categories/'+MODAL.id).update({name:cNome.value,image:cImg.value});
- }
- if(MODAL.type==='prod'){
-  db.ref('products/'+MODAL.id).update({
-   sku:pSku.value,name:pNome.value,price:pPreco.value,weight:pPeso.value,
-   category:pCat.value,variacao:pVar.value,image:pImg.value
-  });
- }
- closeModal();
+function editarProduto(id){
+ db.ref('products/'+id).once('value').then(s=>{
+  const p=s.val();
+  modalEdit.style.display='flex';
+  modalTitle.innerText='Editar Produto';
+  modalBody.innerHTML=`
+   <img class="modal-img" src="${p.image||''}">
+   <input id="eNome" value="${p.name}">
+   <input id="eSku" value="${p.sku}">
+   <input id="ePreco" value="${p.price||''}">
+   <input id="ePeso" value="${p.weight||''}">
+   <input id="eCat" value="${p.category||''}">
+   <input id="eImg" value="${p.image||''}">
+  `;
+  btnSalvarModal.onclick=()=>{
+   db.ref('products/'+id).update({
+    name:eNome.value,
+    sku:eSku.value,
+    price:ePreco.value,
+    weight:ePeso.value,
+    category:eCat.value,
+    image:eImg.value
+   });
+   closeModal();
+  };
+ });
 }
+
+/* PEDIDOS */
+db.ref('orders').on('value',s=>{
+ listaPedidos.innerHTML='';
+ s.forEach(o=>{
+  listaPedidos.innerHTML+=`
+   <div class="card mb-2">
+    <div class="row">
+     <span>${o.key}</span>
+     <div>
+      <button class="btn">Ver</button>
+      <button class="btn">Editar</button>
+      <button class="btn danger" onclick="db.ref('orders/${o.key}').remove()">Excluir</button>
+     </div>
+    </div>
+   </div>`;
+ });
+});
 </script>
+
 </body>
 </html>
