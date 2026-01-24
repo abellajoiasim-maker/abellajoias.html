@@ -24,7 +24,6 @@ body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
 
 <body>
 
-<!-- NAV -->
 <nav class="flex sticky top-0 z-50 bg-black border-b border-[#222]">
   <button class="flex-1 p-4" onclick="showTab('empresa')">EMPRESA</button>
   <button class="flex-1 p-4" onclick="showTab('categorias')">CATEGORIAS</button>
@@ -35,7 +34,6 @@ body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
 
 <main class="max-w-7xl mx-auto p-6">
 
-<!-- EMPRESA -->
 <section id="empresa" class="tab active">
   <div class="card max-w-md">
     <h2 class="font-bold mb-4 text-[#caa85c]">Dados da Empresa</h2>
@@ -47,18 +45,15 @@ body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
   </div>
 </section>
 
-<!-- CATEGORIAS -->
 <section id="categorias" class="tab">
   <button class="btn-gold mb-4" onclick="novaCategoria()">+ Nova Categoria</button>
   <div id="listaCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
 </section>
 
-<!-- PRODUTOS -->
 <section id="produtos" class="tab">
   <div id="produtosPorCategoria"></div>
 </section>
 
-<!-- PROMOÇÕES -->
 <section id="promocoes" class="tab">
   <h2 class="mb-4 font-bold text-[#caa85c]">Promoções por Categoria</h2>
   <div class="card max-w-lg">
@@ -67,7 +62,6 @@ body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
   </div>
 </section>
 
-<!-- PEDIDOS -->
 <section id="pedidos" class="tab">
   <div id="containerPedidos" class="space-y-4"></div>
 </section>
@@ -85,7 +79,6 @@ body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
 </div>
 
 <script>
-/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
@@ -93,207 +86,42 @@ firebase.initializeApp({
   projectId: "catalogo-abella-joias",
 });
 const db = firebase.database();
+let MODAL_CTX={};
 
-let MODAL_CTX = {};
-
-/* NAV */
 function showTab(id){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-/* EMPRESA */
-db.ref('settings').on('value',s=>{
-  const v=s.val()||{};
-  empNome.value=v.nome||'';
-  empWhats.value=v.whatsapp||'';
-  empPix.value=v.pix||0;
-  empParc.value=v.parcelas||1;
-});
-function salvarEmpresa(){
-  db.ref('settings').update({
-    nome:empNome.value,
-    whatsapp:empWhats.value,
-    pix:Number(empPix.value),
-    parcelas:Number(empParc.value)
-  });
-  alert('Empresa salva');
-}
-
-/* CATEGORIAS */
-db.ref('categories').on('value',snap=>{
-  listaCategorias.innerHTML='';
-  listaPromos.innerHTML='';
-  snap.forEach(c=>{
-    const d=c.val();
-    listaCategorias.innerHTML+=`
-      <div class="card">
-        <div class="flex justify-between mb-2">
-          <b>${d.name}</b>
-          <span class="dot ${d.image?'bg-green-500':'bg-red-500'}"></span>
-        </div>
-        <div class="flex gap-2 text-[10px]">
-          <button class="btn-gold" onclick="editarCategoria('${c.key}')">EDITAR</button>
-          <button class="btn-gray" onclick="pausar('categories','${c.key}')">PAUSAR</button>
-          <button class="btn-red" onclick="excluir('categories','${c.key}')">EXCLUIR</button>
-        </div>
-      </div>`;
-    listaPromos.innerHTML+=`
-      <div class="flex justify-between items-center">
-        <span>${d.name}</span>
-        <input type="number" id="promo-${c.key}" value="${d.discount||0}" class="w-16 bg-black border p-1 text-center">
-      </div>`;
-  });
-});
-
-/* PRODUTOS */
-db.ref('products').on('value',snap=>{
-  produtosPorCategoria.innerHTML='';
-  const map={};
-  snap.forEach(p=>{
-    const v=p.val();
-    if(!map[v.category]) map[v.category]=[];
-    map[v.category].push({id:p.key,...v});
-  });
-  Object.keys(map).forEach(cat=>{
-    const bloco=document.createElement('div');
-    bloco.innerHTML=`<h3 class="text-[#caa85c] font-bold mt-6 mb-3">${cat}</h3>
-    <div class="grid grid-cols-2 md:grid-cols-6 gap-3"></div>`;
-    const grid=bloco.querySelector('div');
-    map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'')).forEach(p=>{
-      grid.innerHTML+=`
-        <div class="card">
-          <div class="flex justify-between">
-            <span class="text-[9px]">${p.sku||'-'}</span>
-            <span class="dot ${p.image?'bg-green-500':'bg-red-500'}"></span>
-          </div>
-          <div class="text-[10px] font-bold truncate">${p.name}</div>
-          <div class="flex gap-1 mt-2">
-            <button class="btn-gold">EDIT</button>
-            <button class="btn-gray">PAUSAR</button>
-            <button class="btn-red">EXCLUIR</button>
-          </div>
-        </div>`;
-    });
-    produtosPorCategoria.appendChild(bloco);
-  });
-});
-
-/* PROMOS */
-function salvarPromos(){
-  document.querySelectorAll('[id^="promo-"]').forEach(i=>{
-    db.ref('categories/'+i.id.replace('promo-','')).update({discount:Number(i.value)});
-  });
-  alert('Promoções atualizadas');
-}
-
-/* PEDIDOS */
-db.ref('orders').on('value',snap=>{
-  containerPedidos.innerHTML='';
-  snap.forEach(o=>{
-    const v=o.val();
-    containerPedidos.innerHTML+=`
-      <div class="card">
-        <b>${v.customer?.name||'Cliente'}</b>
-        <div>Status: ${v.status||'Pendente'}</div>
-        <div class="flex gap-2 mt-2">
-          <button class="btn-gold">ROMANEIO</button>
-          <button class="btn-gray" onclick="statusPedido('${o.key}')">STATUS</button>
-          <button class="btn-red" onclick="excluir('orders','${o.key}')">EXCLUIR</button>
-        </div>
-      </div>`;
-  });
-});
-function statusPedido(id){
-  const s=prompt('Novo status');
-  if(s) db.ref('orders/'+id).update({status:s});
-}
-
-/* MODAL (base) */
-function fecharModal(){modal.classList.add('hidden')}
-function abrirModal(){modal.classList.remove('hidden')}
-
 /* UTIL */
 function pausar(path,id){db.ref(path+'/'+id+'/paused').set(true)}
 function excluir(path,id){if(confirm('Excluir?')) db.ref(path+'/'+id).remove()}
 
-  /* =========================
-   MODAL CONTROLLER
-========================= */
-function abrirModal(titulo, bodyHTML, ctx){
-  MODAL_CTX = ctx || {};
-  modalTitulo.innerText = titulo;
-  modalBody.innerHTML = bodyHTML;
-  modal.classList.remove('hidden');
-}
-function fecharModal(){
-  modal.classList.add('hidden');
-  MODAL_CTX = {};
-}
-
-/* =========================
-   CATEGORIAS
-========================= */
-function novaCategoria(){
-  abrirModal(
-    'Nova Categoria',
-    `
-      <input id="catName" placeholder="Nome da categoria" class="w-full mb-2 p-2 bg-black border">
-      <input id="catImg" placeholder="URL da imagem" class="w-full p-2 bg-black border">
-    `,
-    { type:'novaCategoria' }
-  );
-}
+/* MODAL */
+function abrirModal(t,b,c){MODAL_CTX=c||{};modalTitulo.innerText=t;modalBody.innerHTML=b;modal.classList.remove('hidden')}
+function fecharModal(){modal.classList.add('hidden');MODAL_CTX={}}
 
 function editarCategoria(id){
   db.ref('categories/'+id).once('value').then(s=>{
-    const d = s.val() || {};
+    const d=s.val()||{};
     abrirModal(
       'Editar Categoria',
       `
+        ${d.image?`<img src="${d.image}" class="w-full h-32 object-cover rounded mb-3">`:''}
         <input id="catName" value="${d.name||''}" class="w-full mb-2 p-2 bg-black border">
         <input id="catImg" value="${d.image||''}" class="w-full mb-4 p-2 bg-black border">
-
-        <h4 class="font-bold mb-2 text-[#caa85c]">Variações</h4>
-        <div id="varsBox"></div>
-        <button class="btn-gold mt-3" onclick="addVariacao('${id}')">+ Nova Variação</button>
       `,
-      { type:'editarCategoria', id }
+      {type:'editarCategoria',id}
     );
-
-    const box = document.getElementById('varsBox');
-    Object.entries(d.variacoes||{}).forEach(([k,v])=>{
-      box.innerHTML += `
-        <div class="flex gap-2 mb-2 text-[10px]">
-          <input value="${v.label||k}" onchange="updVar('${id}','${k}','label',this.value)" class="bg-black border p-1 w-full">
-          <input type="number" value="${v.precoExtra||0}" onchange="updVar('${id}','${k}','precoExtra',this.value)" class="bg-black border p-1 w-20">
-          <input type="checkbox" ${v.ativo!==false?'checked':''} onchange="updVar('${id}','${k}','ativo',this.checked)">
-        </div>
-      `;
-    });
   });
 }
 
-function addVariacao(cat){
-  const key = prompt('Chave da variação (ex: P, G, DEUS)');
-  if(!key) return;
-  db.ref(`categories/${cat}/variacoes/${key}`).set({
-    label:key,
-    ativo:true,
-    precoExtra:0
-  });
-}
-
-function updVar(cat,key,field,val){
-  db.ref(`categories/${cat}/variacoes/${key}/${field}`).set(val);
-}
-
-/* =========================
-   SALVAR MODAL
-========================= */
+<script>
 function salvarModal(){
+
+  /* ===== NOVA CATEGORIA ===== */
   if(MODAL_CTX.type === 'novaCategoria'){
-    const id = document.getElementById('catName').value.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    const id = catName.value.toLowerCase().replace(/[^a-z0-9]/g,'-');
     db.ref('categories/'+id).set({
       name: catName.value,
       image: catImg.value || '',
@@ -301,6 +129,7 @@ function salvarModal(){
     });
   }
 
+  /* ===== EDITAR CATEGORIA ===== */
   if(MODAL_CTX.type === 'editarCategoria'){
     db.ref('categories/'+MODAL_CTX.id).update({
       name: catName.value,
@@ -308,21 +137,29 @@ function salvarModal(){
     });
   }
 
+  /* ===== EDITAR PRODUTO ===== */
+  if(MODAL_CTX.type === 'editarProduto'){
+    db.ref('products/'+MODAL_CTX.id).update({
+      name: pName.value,
+      sku: pSku.value,
+      image: pImg.value
+    });
+  }
+
   fecharModal();
 }
 
-/* =========================
-   PRODUTOS
-========================= */
+/* PRODUTOS */
 function editarProduto(id){
   db.ref('products/'+id).once('value').then(s=>{
     const p=s.val()||{};
     abrirModal(
       'Editar Produto',
       `
+        ${p.image?`<img src="${p.image}" class="w-full h-32 object-contain mb-3">`:''}
         <input id="pName" value="${p.name||''}" class="w-full mb-2 p-2 bg-black border">
         <input id="pSku" value="${p.sku||''}" class="w-full mb-2 p-2 bg-black border">
-        <input id="pImg" value="${p.image||''}" class="w-full mb-2 p-2 bg-black border">
+        <input id="pImg" value="${p.image||''}" class="w-full p-2 bg-black border">
       `,
       {type:'editarProduto',id}
     );
@@ -340,6 +177,17 @@ function salvarProduto(){
   fecharModal();
 }
 
+/* PEDIDOS */
+function abrirPedido(id){
+  db.ref('orders/'+id).once('value').then(s=>{
+    abrirModal('Romaneio', `<pre class="text-xs">${JSON.stringify(s.val(),null,2)}</pre>`);
+  });
+}
+
+function statusPedido(id){
+  const s=prompt('Novo status');
+  if(s) db.ref('orders/'+id).update({status:s});
+}
 </script>
 
 </body>
