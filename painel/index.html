@@ -3,58 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Abella Joias</title>
+    <title>Admin • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
     <style>
-        body { background: #0b0b0b; color: #eee; font-family: sans-serif; }
+        body { background: #0b0b0b; color: #eee; font-family: 'Inter', sans-serif; }
         section { display: none; }
         section.active { display: block; }
-        .gold-border { border-color: #caa85c; }
-        .gold-text { color: #caa85c; }
-        .gold-bg { background: #caa85c; }
-        
-        /* Grid de 6 colunas para telas grandes */
-        .grid-6 { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-        }
+        .grid-6 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         @media(min-width: 768px) { .grid-6 { grid-template-columns: repeat(4, 1fr); } }
         @media(min-width: 1200px) { .grid-6 { grid-template-columns: repeat(6, 1fr); } }
-
-        /* Estilo de Impressão para o Romaneio */
-        @media print {
-            body * { visibility: hidden; }
-            #modalEdit, #modalEdit * { visibility: visible; }
-            #modalEdit { position: absolute; left: 0; top: 0; width: 100%; background: white !important; color: black !important; }
-            .no-print { display: none !important; }
-        }
+        input, select { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; width: 100%; }
+        .nav-btn.active { border-color: #caa85c; color: #caa85c; background: #111; }
+        @media print { body * { visibility: hidden; } #modalEdit, #modalEdit * { visibility: visible; } #modalEdit { position: absolute; left: 0; top: 0; width: 100%; background: white !important; color: black !important; } .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
-<header class="p-5 text-center bg-black border-b border-zinc-800">
-    <h1 class="text-xl font-bold">Painel Administrativo • Abella Joias</h1>
+<header class="p-6 text-center bg-black border-b border-zinc-800">
+    <h1 class="text-xl font-bold tracking-widest uppercase">Painel Administrativo • Abella Joias</h1>
 </header>
 
-<nav class="flex flex-wrap gap-2 p-3 bg-zinc-900 sticky top-0 z-50">
-    <button onclick="show('empresa')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-xs font-bold active">EMPRESA</button>
-    <button onclick="show('categorias')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-xs font-bold">CATEGORIAS</button>
-    <button onclick="show('produtos')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-xs font-bold">PRODUTOS</button>
-    <button onclick="show('promocoes')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-xs font-bold">PROMOÇÕES</button>
-    <button onclick="show('pedidos')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-xs font-bold">PEDIDOS</button>
+<nav class="flex flex-wrap gap-2 p-3 bg-zinc-900 sticky top-0 z-50 border-b border-zinc-800">
+    <button onclick="show('empresa')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-[10px] font-bold active">EMPRESA</button>
+    <button onclick="show('categorias')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-[10px] font-bold">CATEGORIAS</button>
+    <button onclick="show('produtos')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-[10px] font-bold">PRODUTOS</button>
+    <button onclick="show('promocoes')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-[10px] font-bold">PROMOÇÕES</button>
+    <button onclick="show('pedidos')" class="nav-btn flex-1 bg-zinc-800 p-2 rounded-lg text-[10px] font-bold">PEDIDOS</button>
 </nav>
 
-<main class="p-5">
+<main class="p-4 md:p-8">
     <section id="empresa" class="active">
         <div class="max-w-md mx-auto bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
-            <h2 class="mb-4 font-bold gold-text">Configurações</h2>
-            <input id="empNome" class="w-full bg-black border border-zinc-700 p-2 rounded mb-3" placeholder="Nome da Loja">
-            <input id="empWhats" class="w-full bg-black border border-zinc-700 p-2 rounded mb-3" placeholder="WhatsApp Vendas">
-            <button onclick="salvarEmpresa()" class="w-full gold-bg text-black font-bold py-2 rounded">SALVAR</button>
+            <h2 class="mb-4 font-bold text-[#caa85c] uppercase text-sm">Configurações Gerais</h2>
+            <div class="space-y-4">
+                <div><label class="text-[10px] opacity-50 font-bold">NOME DA LOJA</label><input id="empNome"></div>
+                <div><label class="text-[10px] opacity-50 font-bold">WHATSAPP VENDAS</label><input id="empWhats"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] opacity-50 font-bold">DESC. PIX %</label><input id="empPix" type="number"></div>
+                    <div><label class="text-[10px] opacity-50 font-bold">PARCELAS</label><input id="empParc" type="number"></div>
+                </div>
+                <button onclick="salvarEmpresa()" class="w-full bg-[#caa85c] text-black font-bold py-3 rounded-xl mt-2">SALVAR ALTERAÇÕES</button>
+            </div>
         </div>
     </section>
 
@@ -63,13 +54,13 @@
     </section>
 
     <section id="produtos">
-        <input type="text" id="buscaProd" onkeyup="filtrar()" class="w-full mb-6 bg-zinc-900 border gold-border p-3 rounded-xl" placeholder="Buscar SKU ou Nome...">
+        <input type="text" id="buscaProd" onkeyup="filtrar()" class="w-full mb-6 border-[#caa85c] !bg-zinc-900" placeholder="Buscar por SKU ou Nome...">
         <div id="containerProdutos"></div>
     </section>
 
     <section id="promocoes">
-        <div id="listaPromos" class="max-w-xl mx-auto space-y-2"></div>
-        <button onclick="salvarPromos()" class="max-w-xl mx-auto block w-full mt-4 gold-bg text-black font-bold py-3 rounded">APLICAR PROMOÇÕES</button>
+        <div id="listaPromos" class="max-w-xl mx-auto space-y-3"></div>
+        <button onclick="salvarPromos()" class="max-w-xl mx-auto block w-full mt-6 bg-[#caa85c] text-black font-bold py-3 rounded-xl">APLICAR PROMOÇÕES</button>
     </section>
 
     <section id="pedidos">
@@ -78,91 +69,68 @@
 </main>
 
 <div id="modalEdit" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-zinc-900 border border-zinc-700 w-full max-w-2xl rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between mb-4 border-b border-zinc-800 pb-2 no-print">
-            <h3 id="modalTitle" class="font-bold gold-text uppercase">Detalhes</h3>
-            <button onclick="closeModal()" class="text-white bg-zinc-800 px-3 py-1 rounded">✕ FECHAR</button>
-        </div>
+    <div class="bg-zinc-900 border border-zinc-700 w-full max-w-lg rounded-2xl p-6 max-h-[90vh] overflow-y-auto relative">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-white no-print">✕</button>
+        <h3 id="modalTitle" class="font-bold text-[#caa85c] uppercase mb-4 pb-2 border-b border-zinc-800">Detalhes</h3>
         <div id="modalBody"></div>
         <div id="modalFooter" class="mt-6 flex gap-2 no-print"></div>
     </div>
 </div>
 
 <script>
-    // INICIALIZAÇÃO FIREBASE
     const config = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
     firebase.initializeApp(config);
     const db = firebase.database();
 
-    // NAVEGAÇÃO
     function show(id) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('gold-text', 'gold-border', 'border'));
-        event.target.classList.add('gold-text', 'gold-border', 'border');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
     }
 
     function closeModal() { document.getElementById('modalEdit').classList.replace('flex', 'hidden'); }
 
-    // LÓGICA DE PEDIDOS
-    db.ref('orders').on('value', snap => {
-        const container = document.getElementById('containerPedidos');
-        container.innerHTML = '';
-        snap.forEach(o => {
-            const v = o.val();
+    // --- LOGICA EMPRESA ---
+    function salvarEmpresa() {
+        db.ref('settings').update({
+            nome: document.getElementById('empNome').value,
+            whatsapp: document.getElementById('empWhats').value,
+            pix: document.getElementById('empPix').value,
+            parcelas: document.getElementById('empParc').value
+        }).then(() => alert("Configurações salvas!"));
+    }
+
+    // --- LOGICA CATEGORIAS ---
+    db.ref('categories').on('value', snap => {
+        const container = document.getElementById('listaCategorias');
+        const promoContainer = document.getElementById('listaPromos');
+        container.innerHTML = ''; promoContainer.innerHTML = '';
+        snap.forEach(c => {
+            const d = c.val();
+            // Grid Categorias
             container.innerHTML += `
-                <div class="bg-zinc-900 p-4 rounded-xl border-l-4 ${v.status === 'Enviado' ? 'border-green-500' : 'border-yellow-500'} flex justify-between items-center">
-                    <div>
-                        <div class="text-[10px] opacity-50 uppercase">PEDIDO #${o.key.slice(-5)}</div>
-                        <div class="font-bold">${v.customer?.name}</div>
-                        <div class="text-xs gold-text">${v.status || 'Pendente'}</div>
+                <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[9px] px-2 py-0.5 rounded-full ${d.image ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'} font-bold uppercase">${d.image ? 'IMG' : 'S/ IMG'}</span>
+                        <button onclick="excluirItem('categories','${c.key}')" class="text-red-500 text-xs">✕</button>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="abrirPedido('${o.key}')" class="bg-zinc-800 text-[10px] px-3 py-2 rounded font-bold">VISUALIZAR</button>
-                        <button onclick="mudarStatus('${o.key}')" class="bg-zinc-800 text-[10px] px-3 py-2 rounded font-bold">STATUS</button>
-                        <button onclick="excluirItem('orders','${o.key}')" class="text-red-500 text-xs px-2">✕</button>
+                    <div class="font-bold text-xs uppercase mb-4">${d.name}</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="abrirEdicaoCat('${c.key}')" class="bg-zinc-800 text-[10px] py-2 rounded font-bold">EDITAR</button>
+                        <button onclick="db.ref('categories/${c.key}').update({paused:!${d.paused}})" class="border border-zinc-700 text-[10px] py-2 rounded font-bold ${d.paused?'text-[#caa85c]':''}">PAUSAR</button>
                     </div>
+                </div>`;
+            // Lista Promos
+            promoContainer.innerHTML += `
+                <div class="flex justify-between items-center bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                    <span class="font-bold text-xs uppercase">${d.name}</span>
+                    <div class="flex items-center gap-2"><input type="number" id="prm-${c.key}" value="${d.discount||0}" class="w-16 text-center text-green-400 font-bold"><span class="text-xs">%</span></div>
                 </div>`;
         });
     });
 
-    async function abrirPedido(id) {
-        const snap = await db.ref('orders/' + id).once('value');
-        const v = snap.val();
-        const modal = document.getElementById('modalEdit');
-        modal.classList.replace('hidden', 'flex');
-        
-        document.getElementById('modalBody').innerHTML = `
-            <div class="p-4 bg-white text-black rounded shadow">
-                <h2 class="font-bold border-b pb-2 mb-2">ROMANEIO DE ENTREGA - #...${id.slice(-5)}</h2>
-                <p><b>Cliente:</b> ${v.customer?.name} | <b>Tel:</b> ${v.customer?.phone}</p>
-                <p><b>Endereço:</b> ${v.customer?.address || 'Retirada'}</p>
-                <div class="mt-4 border-t pt-2">
-                    <table class="w-full text-left text-sm">
-                        <thead><tr class="border-b"><th>SKU</th><th>Produto</th><th>Variação</th><th>Qtd</th></tr></thead>
-                        <tbody>
-                            ${v.items?.map(i => `<tr class="border-b"><td>${i.sku}</td><td>${i.name}</td><td>${i.variation||'-'}</td><td>${i.qty}</td></tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-4 text-right font-bold text-lg">Total: R$ ${v.total || '0,00'}</div>
-            </div>`;
-        
-        document.getElementById('modalFooter').innerHTML = `
-            <button onclick="window.print()" class="flex-1 bg-white text-black font-bold py-2 rounded">IMPRIMIR SIMPLES</button>
-            <button onclick="window.print()" class="flex-1 gold-bg text-black font-bold py-2 rounded">IMPRIMIR COMPLETO</button>`;
-    }
-
-    function mudarStatus(id) {
-        const s = prompt("Status: Pendente, Separado ou Enviado?");
-        if(s) db.ref('orders/'+id).update({status: s});
-    }
-
-    function excluirItem(path, id) {
-        if(confirm("Excluir definitivamente?")) db.ref(path+'/'+id).remove();
-    }
-
-    // LISTAGEM DE PRODUTOS AGRUPADOS (GRADE 6)
+    // --- LOGICA PRODUTOS (GRADE 6) ---
     db.ref('products').on('value', snap => {
         const container = document.getElementById('containerProdutos');
         container.innerHTML = '';
@@ -172,24 +140,107 @@
             if(!cats[d.category]) cats[d.category] = [];
             cats[d.category].push(d);
         });
-
-        Object.keys(cats).forEach(c => {
-            container.innerHTML += `<h3 class="gold-text font-bold uppercase text-sm mt-8 mb-3 border-b border-zinc-800 pb-2">${c}</h3>`;
+        Object.keys(cats).sort().forEach(c => {
+            container.innerHTML += `<h3 class="text-[#caa85c] font-bold uppercase text-[10px] mt-8 mb-3 border-b border-zinc-800 pb-2 tracking-widest">${c}</h3>`;
             const grid = document.createElement('div');
             grid.className = "grid-6";
             cats[c].forEach(p => {
                 grid.innerHTML += `
-                    <div class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 relative">
-                        <div class="text-[10px] gold-text font-bold mb-1">${p.sku}</div>
-                        <div class="text-xs truncate">${p.name}</div>
-                        <button onclick="excluirItem('products','${p.id}')" class="absolute top-1 right-1 text-red-900 text-[10px]">✕</button>
+                    <div class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 relative group">
+                        <div class="flex justify-between text-[9px] mb-1 font-bold">
+                            <span class="${p.image?'text-green-500':'text-red-500'}">● ${p.sku}</span>
+                            <span class="opacity-40">${p.weight}g</span>
+                        </div>
+                        <div class="text-[11px] truncate mb-3">${p.name}</div>
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="abrirEdicaoProd('${p.id}')" class="flex-1 bg-zinc-800 text-[9px] py-1 rounded">EDITAR</button>
+                            <button onclick="excluirItem('products','${p.id}')" class="flex-1 bg-red-900/20 text-red-500 text-[9px] py-1 rounded font-bold">✕</button>
+                        </div>
                     </div>`;
             });
             container.appendChild(grid);
         });
     });
 
-    // Funções de Empresa, Categoria e Promoção seguem a mesma lógica de salvamento simples (db.ref().update)
+    // --- LOGICA PEDIDOS (MANTIDA) ---
+    db.ref('orders').on('value', snap => {
+        const container = document.getElementById('containerPedidos');
+        container.innerHTML = '';
+        snap.forEach(o => {
+            const v = o.val();
+            container.innerHTML += `
+                <div class="bg-zinc-900 p-4 rounded-xl border-l-4 ${v.status === 'Enviado' ? 'border-green-500' : 'border-yellow-500'} flex justify-between items-center">
+                    <div>
+                        <div class="text-[9px] opacity-40 uppercase tracking-tighter">PEDIDO #${o.key.slice(-5)}</div>
+                        <div class="font-bold text-sm">${v.customer?.name}</div>
+                        <div class="text-[10px] text-[#caa85c] font-bold uppercase">${v.status || 'Pendente'}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="abrirPedidoDetalhe('${o.key}')" class="bg-zinc-800 text-[10px] px-4 py-2 rounded font-bold">VISUALIZAR</button>
+                        <button onclick="mudarStatus('${o.key}')" class="bg-zinc-800 text-[10px] px-4 py-2 rounded font-bold">STATUS</button>
+                        <button onclick="excluirItem('orders','${o.key}')" class="text-red-500 px-2">✕</button>
+                    </div>
+                </div>`;
+        });
+    });
+
+    // --- FUNÇÕES DE MODAL ---
+    async function abrirEdicaoProd(id) {
+        const snap = await db.ref('products/'+id).once('value'); const v = snap.val();
+        document.getElementById('modalTitle').innerText = "Editar Produto";
+        document.getElementById('modalBody').innerHTML = `
+            <div class="space-y-3">
+                <img src="${v.image}" class="w-full h-32 object-contain bg-black mb-2 border border-zinc-800">
+                <input id="edNome" value="${v.name}" placeholder="Nome">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="edSku" value="${v.sku}" placeholder="SKU">
+                    <input id="edPeso" value="${v.weight}" placeholder="Peso (g)">
+                </div>
+                <input id="edPreco" value="${v.price}" placeholder="Preço (R$)">
+                <input id="edImg" value="${v.image}" placeholder="URL da Imagem">
+            </div>`;
+        document.getElementById('modalFooter').innerHTML = `<button onclick="saveProd('${id}')" class="w-full bg-[#caa85c] text-black font-bold py-2 rounded">SALVAR ALTERAÇÕES</button>`;
+        document.getElementById('modalEdit').classList.replace('hidden', 'flex');
+    }
+
+    async function abrirPedidoDetalhe(id) {
+        const snap = await db.ref('orders/'+id).once('value'); const v = snap.val();
+        document.getElementById('modalTitle').innerText = "Detalhes do Pedido";
+        document.getElementById('modalBody').innerHTML = `
+            <div class="bg-white text-black p-4 rounded text-sm space-y-2">
+                <p><b>Cliente:</b> ${v.customer?.name}</p>
+                <p><b>WhatsApp:</b> ${v.customer?.phone}</p>
+                <p><b>Endereço:</b> ${v.customer?.address || 'Retirada'}</p>
+                <hr class="my-2">
+                ${v.items?.map(i => `<div>${i.qty}x ${i.name} (${i.variation||'Padrão'})</div>`).join('')}
+                <hr class="my-2">
+                <p class="text-right font-bold text-lg">Total: R$ ${v.total}</p>
+            </div>`;
+        document.getElementById('modalFooter').innerHTML = `<button onclick="window.print()" class="w-full bg-white text-black font-bold py-2 rounded">GERAR ROMANEIO</button>`;
+        document.getElementById('modalEdit').classList.replace('hidden', 'flex');
+    }
+
+    function saveProd(id) {
+        db.ref('products/'+id).update({
+            name: document.getElementById('edNome').value,
+            sku: document.getElementById('edSku').value,
+            weight: document.getElementById('edPeso').value,
+            price: document.getElementById('edPreco').value,
+            image: document.getElementById('edImg').value
+        }).then(() => { alert("Produto salvo!"); closeModal(); });
+    }
+
+    function salvarPromos() {
+        document.querySelectorAll('[id^="prm-"]').forEach(i => {
+            const id = i.id.replace('prm-', '');
+            db.ref('categories/'+id).update({ discount: i.value });
+        });
+        alert("Promoções aplicadas!");
+    }
+
+    function excluirItem(p, id) { if(confirm("Deseja excluir?")) db.ref(p+'/'+id).remove(); }
+    function mudarStatus(id) { const s = prompt("Pendente, Separado ou Enviado?"); if(s) db.ref('orders/'+id).update({status: s}); }
+    function filtrar() { const t = document.getElementById('buscaProd').value.toLowerCase(); document.querySelectorAll('.group').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'block' : 'none'); }
 </script>
 </body>
 </html>
