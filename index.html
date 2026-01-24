@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Abella Joias | Catálogo Atacado</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family:'Poppins',sans-serif; background:#f8f6f2; }
-        .serif { font-family:'Cinzel',serif; }
-        .gold { color:#A68966; }
-        .card-cat { background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; overflow:hidden; }
-        .card-cat:hover { transform:translateY(-5px); border-color:#A68966; }
-    </style>
+<meta charset="UTF-8">
+<title>Abella Joias | Catálogo Atacado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+<style>
+    body { font-family:'Poppins',sans-serif; background:#f8f6f2; }
+    .serif { font-family:'Cinzel',serif; }
+    .gold { color:#A68966; }
+    .card-cat { background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; overflow:hidden; }
+    .card-cat:hover { transform:translateY(-5px); border-color:#A68966; }
+</style>
 </head>
 <body>
 
@@ -27,7 +27,7 @@
         <div class="flex justify-center gap-2 mt-4 px-4">
             <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Categorias</a>
             <a href="galvanicas.html" class="bg-white border border-gray-200 text-gray-600 px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Galvânicas</a>
-            <a href="carrinho.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Carrinho</a>
+            <a href="https://abellajoiasim-maker.github.io/abellajoias/checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Carrinho</a>
         </div>
     </div>
 </header>
@@ -39,7 +39,7 @@
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
-firebase.initializeApp(firebaseConfig);
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 db.ref('categories').on('value', snap => {
