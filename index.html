@@ -6,141 +6,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Poppins',sans-serif;background:#f8f6f2}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.card-cat{background:#fff;border-radius:15px;border:1px solid #eee;transition:.3s}
-.card-cat:hover{transform:translateY(-5px);border-color:#A68966}
+body { font-family:'Poppins',sans-serif; background:#f8f6f2; }
+.serif { font-family:'Cinzel',serif; }
+.gold { color:#A68966; }
+
+.card-cat {
+    background:#fff;
+    border-radius:15px;
+    overflow:hidden;
+    border:1px solid #eee;
+    transition:.3s;
+}
+.card-cat:hover {
+    transform:translateY(-5px);
+    border-color:#A68966;
+}
 </style>
 </head>
 
 <body>
 
-<header class="text-center py-10 bg-white border-b sticky top-0 z-50">
-  <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
-  <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase mt-2">
-    Atacado de Joias no Bruto
-  </p>
+<!-- HEADER -->
+<header class="bg-white border-b sticky top-0 z-50">
+    <div class="text-center py-8 space-y-4">
+        <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
+        <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
+        <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">
+            Atacado de Joias no Bruto
+        </p>
+
+        <!-- BOTÕES RESTAURADOS -->
+        <div class="flex justify-center gap-2 mt-4 px-4">
+            <a href="index.html"
+               class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest">
+                CATEGORIAS
+            </a>
+
+            <a href="galvanicas.html"
+               class="bg-white border border-gray-200 text-gray-600 px-6 py-2 rounded-full text-[10px] font-bold tracking-widest">
+                GALVÂNICAS
+            </a>
+
+            <a href="carrinho.html"
+               class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold tracking-widest">
+                CARRINHO
+            </a>
+        </div>
+    </div>
 </header>
 
+<!-- CONTEÚDO -->
 <main class="max-w-6xl mx-auto p-6">
-  <h2 class="serif text-xl text-center mb-10 text-gray-700">
-    Escolha uma Categoria
-  </h2>
-  <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
+    <h2 class="serif text-xl text-center mb-10 text-gray-700">
+        Escolha uma Categoria
+    </h2>
+
+    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
-<!-- MODAL PRODUTO -->
-<div id="customModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
-  <div class="bg-white p-6 rounded-xl w-full max-w-sm text-center">
+<!-- MODAL DE QUANTIDADE -->
+<div id="customModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999; align-items:center; justify-content:center;">
 
-    <img id="mImg" class="w-full h-48 object-contain mb-4">
+    <div style="background:#fff; padding:30px; border-radius:15px; width:90%; max-width:350px; text-align:center;">
+        <h3 id="modalProductName" class="serif text-lg gold mb-4">Produto</h3>
 
-    <h3 id="mNome" class="serif text-lg gold mb-1"></h3>
-    <p id="mSku" class="text-xs text-gray-400 mb-2"></p>
+        <input id="modalQtyInput" type="number" value="1" min="1"
+               class="w-full border-2 border-gray-200 rounded-lg p-3 text-center text-xl font-bold mb-4">
 
-    <p class="text-sm">Preço: <strong>R$ <span id="mPreco"></span></strong></p>
-    <p class="text-sm">Peso: <span id="mPeso"></span> g</p>
-    <p class="text-sm text-green-700">
-      PIX: <span id="mPix"></span>% OFF
-    </p>
-
-    <p id="mParcelas" class="text-xs text-gray-500 mt-1"></p>
-
-    <input id="modalQtyInput" type="number" min="1" value="1"
-      class="border w-full p-3 mt-4 text-center font-bold">
-
-    <div class="flex gap-2 mt-4">
-      <button onclick="closeAbellaModal()" class="flex-1 border py-2">
-        Cancelar
-      </button>
-      <button id="confirmBtn" class="flex-1 bg-black text-white py-2">
-        Adicionar
-      </button>
+        <div class="flex gap-2">
+            <button onclick="fecharModal()"
+                    class="flex-1 bg-gray-200 py-2 rounded text-sm font-bold">
+                CANCELAR
+            </button>
+            <button onclick="confirmarQuantidade()"
+                    class="flex-1 bg-black text-white py-2 rounded text-sm font-bold">
+                CONFIRMAR
+            </button>
+        </div>
     </div>
-
-  </div>
 </div>
 
 <script>
 /* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-});
-const db=firebase.database();
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 /* CATEGORIAS */
-db.ref('categories').on('value',snap=>{
-  gridCategorias.innerHTML='';
-  let lista=[];
-  snap.forEach(s=>lista.push(s.val()));
-  lista.sort((a,b)=>a.name.localeCompare(b.name));
+db.ref('categories').on('value', snap => {
+    const grid = document.getElementById('gridCategorias');
+    grid.innerHTML = '';
 
-  lista.forEach(c=>{
-    if(c.paused) return;
-    gridCategorias.innerHTML+=`
-      <a href="categoria.html?cat=${c.slug}" class="card-cat block">
-        <div class="aspect-square flex items-center justify-center p-6">
-          <img src="${c.image}" class="max-h-full">
-        </div>
-        <div class="p-4 text-center">
-          <span class="text-xs font-bold tracking-widest uppercase">
-            ${c.name}
-          </span>
-        </div>
-      </a>`;
-  });
+    let categorias = [];
+    snap.forEach(s => categorias.push(s.val()));
+
+    categorias.sort((a,b) => a.name.localeCompare(b.name));
+
+    categorias.forEach(c => {
+        if(c.paused) return;
+
+        grid.innerHTML += `
+        <a href="categoria.html?cat=${c.slug}"
+           class="card-cat shadow-sm block">
+            <div class="aspect-square flex items-center justify-center p-6 bg-white">
+                <img src="${c.image || 'https://via.placeholder.com/400'}"
+                     class="max-h-full object-contain">
+            </div>
+            <div class="p-4 text-center border-t">
+                <span class="text-xs font-bold uppercase tracking-widest">
+                    ${c.name}
+                </span>
+            </div>
+        </a>`;
+    });
 });
 
 /* MODAL */
-let produtoAtual=null;
+let produtoAtual = null;
 
-function abrirModalQuantidade(produto){
-  produtoAtual=produto;
-
-  mImg.src=produto.image;
-  mNome.innerText=produto.name;
-  mSku.innerText=produto.sku;
-  mPreco.innerText=produto.price.toFixed(2);
-  mPeso.innerText=produto.weight || 0;
-  mPix.innerText=produto.pixDiscount || 0;
-
-  mParcelas.innerText =
-    `Até 6x de R$ ${(produto.price/6).toFixed(2)}`;
-
-  modalQtyInput.value=1;
-  customModal.classList.remove('hidden');
-  customModal.classList.add('flex');
+function abrirModal(nome, sku){
+    produtoAtual = { nome, sku };
+    document.getElementById('modalProductName').innerText = nome;
+    document.getElementById('modalQtyInput').value = 1;
+    document.getElementById('customModal').style.display = 'flex';
 }
 
-function closeAbellaModal(){
-  customModal.classList.add('hidden');
+function fecharModal(){
+    document.getElementById('customModal').style.display = 'none';
 }
 
-/* ADD CARRINHO */
-confirmBtn.onclick=function(){
-  const qtd=Number(modalQtyInput.value);
-  if(qtd<=0) return alert('Quantidade inválida');
+function confirmarQuantidade(){
+    const qtd = parseInt(document.getElementById('modalQtyInput').value);
+    if(qtd <= 0) return alert("Quantidade inválida");
 
-  let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
+    console.log("Adicionar ao carrinho:", produtoAtual, qtd);
+    fecharModal();
+}
 
-  carrinho.push({
-    sku:produtoAtual.sku,
-    nome:produtoAtual.name,
-    preco:produtoAtual.price,
-    peso:produtoAtual.weight||0,
-    qtd:qtd
-  });
-
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  closeAbellaModal();
+/* FECHAR AO CLICAR FORA */
+document.getElementById('customModal').onclick = e => {
+    if(e.target.id === 'customModal') fecharModal();
 };
 </script>
 
