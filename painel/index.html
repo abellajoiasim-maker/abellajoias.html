@@ -169,36 +169,59 @@ listaVariacoes.innerHTML+=`
 btnExcluir.onclick=()=>{excluir('categories',id)}
 }
 
-/* PRODUTOS POR CATEGORIA */
-db.ref('categories').on('value',snap=>{
-produtosPorCategoria.innerHTML=''
-snap.forEach(cat=>{
-const c=cat.val()
-produtosPorCategoria.innerHTML+=`
-<div>
-<h3 class="font-bold text-[#caa85c] mb-3">${c.name}</h3>
-<div id="cat-${cat.key}" class="grid grid-cols-2 md:grid-cols-6 gap-3"></div>
-</div>`
-db.ref('products').orderByChild('category').equalTo(cat.key).once('value',ps=>{
-const arr=[]
-ps.forEach(p=>arr.push({id:p.key,...p.val()}))
-arr.sort((a,b)=>a.sku.localeCompare(b.sku))
-arr.forEach(p=>{
-document.getElementById(`cat-${cat.key}`).innerHTML+=`
-<div class="card">
-<div class="dot ${p.image?'bg-green-500':'bg-red-500'}"></div>
-<p class="text-[9px] font-mono">${p.sku}</p>
-<p class="text-[10px] font-bold uppercase">${p.name}</p>
-<div class="flex gap-1 text-[9px] mt-1">
-<button onclick="editarProduto('${p.id}')" class="bg-[#caa85c] text-black px-1 rounded">E</button>
-<button onclick="pausar('products','${p.id}')" class="bg-gray-600 px-1 rounded">P</button>
-<button onclick="excluir('products','${p.id}')" class="bg-red-600 px-1 rounded">X</button>
-</div>
-</div>`
+<script>
+/* ========= PRODUTOS (FOCO REAL EM PRODUTOS) ========= */
+db.ref('products').on('value', snap => {
+
+  produtosPorCategoria.innerHTML = ''
+
+  const produtos = []
+  snap.forEach(p => produtos.push({ id: p.key, ...p.val() }))
+
+  // ordena por SKU
+  produtos.sort((a, b) => (a.sku || '').localeCompare(b.sku || ''))
+
+  // agrupa por categoria
+  const grupos = {}
+  produtos.forEach(p => {
+    const cat = p.category || 'sem-categoria'
+    if (!grupos[cat]) grupos[cat] = []
+    grupos[cat].push(p)
+  })
+
+  // renderização final
+  Object.keys(grupos).forEach(catId => {
+
+    const bloco = document.createElement('div')
+    bloco.innerHTML = `
+      <h3 class="font-bold text-[#caa85c] mb-3">
+        ${catId === 'sem-categoria' ? 'Sem Categoria' : catId}
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-3" id="grupo-${catId}"></div>
+    `
+    produtosPorCategoria.appendChild(bloco)
+
+    const container = bloco.querySelector(`#grupo-${catId}`)
+
+    grupos[catId].forEach(p => {
+      container.innerHTML += `
+        <div class="card">
+          <div class="dot ${p.image ? 'bg-green-500' : 'bg-red-500'}"></div>
+          <p class="text-[9px] font-mono">${p.sku || '-'}</p>
+          <p class="text-[10px] font-bold uppercase truncate">${p.name || ''}</p>
+
+          <div class="flex gap-1 text-[9px] mt-2">
+            <button onclick="editarProduto('${p.id}')" class="bg-[#caa85c] text-black px-1 rounded">EDIT</button>
+            <button onclick="pausar('products','${p.id}')" class="bg-gray-600 px-1 rounded">PAUSAR</button>
+            <button onclick="excluir('products','${p.id}')" class="bg-red-600 px-1 rounded">EXCLUIR</button>
+          </div>
+        </div>
+      `
+    })
+  })
 })
-})
-})
-})
+</script>
+
 
 /* PROMOÇÕES */
 db.ref('categories').on('value',snap=>{
