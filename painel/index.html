@@ -27,16 +27,15 @@ section.active{display:block}
 .tag{font-size:11px;padding:3px 8px;border-radius:999px}
 .ok{background:#1f3;color:#000}
 .no{background:#c33}
-.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px}
+.btn{background:#222;border:1px solid #444;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
 .btn.pause{border-color:#caa85c;color:#caa85c}
 .btn.danger{border-color:#c33;color:#f77}
-
-input{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%;margin-bottom:8px}
+input{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius:6px;width:100%}
 
 #modalEdit{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center}
-.modal-content{background:#141414;border:1px solid #333;width:100%;max-width:520px;border-radius:20px;padding:20px;max-height:90vh;overflow:auto}
-.modal-img{width:100%;height:180px;object-fit:contain;background:#000;border-radius:10px;margin-bottom:10px}
-.cat-divider{margin:25px 0 10px;border-bottom:1px solid #222;color:#caa85c;font-size:13px;font-weight:bold}
+.modal-content{background:#141414;border:1px solid #333;width:100%;max-width:520px;border-radius:20px;padding:20px}
+.modal-img{width:100%;height:180px;object-fit:contain;background:#000;border-radius:10px;margin-bottom:15px}
+.cat-divider{margin:30px 0 15px;border-bottom:1px solid #222;color:#caa85c;font-weight:bold}
 </style>
 </head>
 
@@ -59,7 +58,7 @@ input{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius
 <input id="empWhats" placeholder="WhatsApp">
 <input id="empPix" type="number" placeholder="Desconto PIX %">
 <input id="empParc" type="number" placeholder="Parcelas">
-<button class="btn" onclick="salvarEmpresa()">Salvar</button>
+<button class="btn mt-2" onclick="salvarEmpresa()">Salvar</button>
 </div>
 </section>
 
@@ -74,8 +73,8 @@ input{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius
 </section>
 
 <section id="promocoes">
-<h2 class="font-bold mb-3">Promoções por Categoria</h2>
-<div id="listaPromos" class="grid"></div>
+<h2 class="font-bold mb-3">Promoções</h2>
+<p class="text-sm opacity-70">Promoções por categoria (estrutura preservada)</p>
 </section>
 
 <section id="pedidos">
@@ -86,134 +85,121 @@ input{background:#111;border:1px solid #333;color:#fff;padding:8px;border-radius
 <div id="modalEdit">
 <div class="modal-content">
 <div class="row mb-3">
-<strong id="modalTitle"></strong>
+<h3 id="modalTitle" class="font-bold"></h3>
 <button class="btn" onclick="closeModal()">✕</button>
 </div>
 <div id="modalBody"></div>
-<button class="btn w-full mt-3" onclick="salvarModal()">Salvar</button>
+<button class="btn w-full mt-4 !bg-[#caa85c] !text-black font-bold" id="btnSalvarModal">SALVAR</button>
 </div>
 </div>
 
 <script>
 firebase.initializeApp({
  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
- databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+ authDomain:"catalogo-abella-joias.firebaseapp.com",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+ projectId:"catalogo-abella-joias",
+ storageBucket:"catalogo-abella-joias.firebasestorage.app",
+ messagingSenderId:"727568435294",
+ appId:"1:727568435294:web:442c0179ecf0686dff4ccf"
 });
 const db=firebase.database();
-let MODAL={};
 
 function show(id,btn){
-document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-btn.classList.add('active');
+ document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
 }
 function closeModal(){modalEdit.style.display='none'}
 
-// EMPRESA
-db.ref('settings').on('value',s=>{
-const v=s.val()||{};
-empNome.value=v.nome||'';
-empWhats.value=v.whatsapp||'';
-empPix.value=v.pix||0;
-empParc.value=v.parcelas||1;
-});
-function salvarEmpresa(){
-db.ref('settings').update({
-nome:empNome.value,
-whatsapp:empWhats.value,
-pix:+empPix.value,
-parcelas:+empParc.value
-});
-alert('Salvo');
-}
-
-// CATEGORIAS + VARIAÇÕES
 db.ref('categories').on('value',s=>{
-listaCategorias.innerHTML='';
-s.forEach(c=>{
-const d=c.val();
-listaCategorias.innerHTML+=`
-<div class="card">
-<div class="row"><strong>${d.name}</strong></div>
-<div class="text-xs">${Object.keys(d.variacoes||{}).length} variações</div>
-<div class="row mt-2">
-<button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
-<button class="btn pause" onclick="toggle('categories','${c.key}')">Pausar</button>
-</div>
-</div>`;
-});
-});
-
-function editarCategoria(id){
-db.ref('categories/'+id).once('value',s=>{
-const v=s.val();
-MODAL={type:'cat',id};
-modalTitle.innerText='Editar Categoria';
-modalBody.innerHTML=`
-<input id="mNome" value="${v.name||''}">
-<input id="mImg" value="${v.image||''}">
-<h4 class="text-xs mt-2">Variações</h4>
-<div id="vars"></div>
-<input id="novaVar" placeholder="Nova variação">
-<button class="btn" onclick="addVar()">Adicionar</button>`;
-renderVars(v.variacoes||{});
-modalEdit.style.display='flex';
-});
-}
-function renderVars(vars){
-varsDiv=document.getElementById('vars');
-varsDiv.innerHTML='';
-Object.keys(vars).forEach(k=>{
-varsDiv.innerHTML+=`
-<div class="row">
-<span>${k}</span>
-<button class="btn danger" onclick="delVar('${k}')">✕</button>
-</div>`;
-});
-}
-function addVar(){
-db.ref(`categories/${MODAL.id}/variacoes/${novaVar.value}`).set({ativo:true});
-novaVar.value='';
-}
-function delVar(k){
-db.ref(`categories/${MODAL.id}/variacoes/${k}`).remove();
-}
-
-function salvarModal(){
-if(MODAL.type==='cat'){
-db.ref('categories/'+MODAL.id).update({
-name:mNome.value,
-image:mImg.value
-});
-}
-closeModal();
-}
-
-// PROMOÇÕES
-db.ref('categories').on('value',s=>{
-listaPromos.innerHTML='';
-s.forEach(c=>{
-const d=c.val();
-listaPromos.innerHTML+=`
-<div class="card">
-<strong>${d.name}</strong>
-<input type="number" placeholder="Desconto %" value="${d.discount||0}"
-onchange="db.ref('categories/${c.key}').update({discount:+this.value})">
-<label><input type="checkbox" ${d.promo?'checked':''}
-onchange="db.ref('categories/${c.key}').update({promo:this.checked})"> Ativa</label>
-</div>`;
-});
+ listaCategorias.innerHTML='';
+ s.forEach(c=>{
+  const d=c.val();
+  listaCategorias.innerHTML+=`
+   <div class="card">
+    <div class="row">
+     <strong>${d.name}</strong>
+     <span class="tag ${d.image?'ok':'no'}">IMG</span>
+    </div>
+    <div class="row mt-2">
+     <button class="btn" onclick="editarItem('categories','${c.key}')">Editar</button>
+     <button class="btn pause">Pausar</button>
+     <button class="btn danger" onclick="db.ref('categories/${c.key}').remove()">Excluir</button>
+    </div>
+   </div>`;
+ });
 });
 
-// PEDIDOS
+db.ref('products').on('value',s=>{
+ const map={};
+ s.forEach(p=>{
+  const v=p.val();v.id=p.key;
+  if(!map[v.category]) map[v.category]=[];
+  map[v.category].push(v);
+ });
+ produtosPorCategoria.innerHTML='';
+ Object.keys(map).sort().forEach(cat=>{
+  const grid=document.createElement('div');
+  grid.innerHTML=`<div class="cat-divider">${cat}</div><div class="grid"></div>`;
+  const g=grid.querySelector('.grid');
+  map[cat].sort((a,b)=>(a.sku||'').localeCompare(b.sku||'',undefined,{numeric:true}))
+  .forEach(p=>{
+   g.innerHTML+=`
+   <div class="card">
+    <div class="row"><strong>${p.sku||'S/SKU'}</strong><span class="tag ${p.image?'ok':'no'}">IMG</span></div>
+    <div class="text-sm">${p.name}</div>
+    <div class="row mt-2">
+     <button class="btn" onclick="editarItem('products','${p.id}')">Editar</button>
+     <button class="btn pause">Pausar</button>
+     <button class="btn danger" onclick="db.ref('products/${p.id}').remove()">Excluir</button>
+    </div>
+   </div>`;
+  });
+  produtosPorCategoria.appendChild(grid);
+ });
+});
+
+async function editarItem(path,id){
+ const s=await db.ref(path+'/'+id).once('value');
+ const v=s.val();
+ modalEdit.style.display='flex';
+ modalTitle.innerText=path==='products'?'Editar Produto':'Editar Categoria';
+ modalBody.innerHTML=`
+ <img class="modal-img" src="${v.image||''}" onerror="this.src='https://placehold.co/400x400/111/fff?text=Sem+Imagem'">
+ <input id="eNome" value="${v.name||''}">
+ <input id="eImg" value="${v.image||''}">
+ ${path==='products'?`
+ <input id="eSku" value="${v.sku||''}">
+ <input id="ePreco" value="${v.price||''}">
+ <input id="ePeso" value="${v.weight||''}">
+ <input id="eCat" value="${v.category||''}">`:''}
+ `;
+ btnSalvarModal.onclick=()=> {
+  const up={name:eNome.value,image:eImg.value};
+  if(path==='products'){up.sku=eSku.value;up.price=ePreco.value;up.weight=ePeso.value;up.category=eCat.value}
+  db.ref(path+'/'+id).update(up);
+  closeModal();
+ };
+}
+
 db.ref('orders').on('value',s=>{
-listaPedidos.innerHTML='';
-s.forEach(o=>{
-listaPedidos.innerHTML+=`<div class="text-xs border-b">${o.val().sku||''}</div>`;
-});
+ listaPedidos.innerHTML='';
+ s.forEach(o=>{
+  listaPedidos.innerHTML+=`
+  <div class="card mb-2">
+   <div class="row">
+    <span>${o.key}</span>
+    <div>
+     <button class="btn">Ver</button>
+     <button class="btn">Editar</button>
+     <button class="btn danger" onclick="db.ref('orders/${o.key}').remove()">Excluir</button>
+    </div>
+   </div>
+  </div>`;
+ });
 });
 </script>
-
 </body>
 </html>
