@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor em Massa • Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0b0b0b; color: #eee; font-family: 'Inter', sans-serif; }
+        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 5px; border-radius: 4px; width: 100%; }
+        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; }
+        tr:hover { background: #141414; }
+        .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-[#caa85c]">Editor em Massa</h1>
+                <p class="text-xs text-gray-500 uppercase tracking-widest">Abella Joias • Gestão de Estoque</p>
+            </div>
+            
+            <div class="flex gap-2 w-full md:w-auto">
+                <input id="filtroSku" placeholder="Filtrar SKU (ex: BC-5)" class="bg-[#1a1a1a] border border-[#333] px-4 py-2 rounded-lg text-sm w-full" onkeyup="if(event.key === 'Enter') carregarProdutos()">
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-lg text-sm hover:bg-[#b8964d] transition-all">FILTRAR</button>
+            </div>
+        </header>
+
+        <div class="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto overflow-y-auto" style="max-height: 70vh;">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="sticky-header">
+                        <tr class="text-[#caa85c] uppercase text-[10px] tracking-wider">
+                            <th class="p-4">SKU</th>
+                            <th class="p-4">Nome do Produto</th>
+                            <th class="p-4 w-32">Preço (R$)</th>
+                            <th class="p-4 w-24">Peso (g)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaCorpo">
+                        <tr>
+                            <td colspan="4" class="p-10 text-center text-gray-500 italic">Digite um prefixo de SKU e clique em Filtrar para começar...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-between items-center">
+            <div id="statusInfo" class="text-xs text-gray-500"></div>
+            <button id="btnSalvar" onclick="salvarAlteracoes()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-10 py-4 rounded-xl shadow-lg transition-all hidden">
+                SALVAR TODAS AS ALTERAÇÕES
+            </button>
+        </div>
+    </div>
+
+<script>
+// CONFIGURAÇÃO DO SEU FIREBASE
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function carregarProdutos() {
+    const prefixo = document.getElementById('filtroSku').value.trim().toUpperCase();
+    const corpo = document.getElementById('tabelaCorpo');
+    const btn = document.getElementById('btnSalvar');
+    const info = document.getElementById('statusInfo');
+
+    corpo.innerHTML = '<tr><td colspan="4" class="p-10 text-center">Buscando no banco de dados...</td></tr>';
+
+    db.ref('products').once('value', snapshot => {
+        let html = '';
+        let contador = 0;
+
+        snapshot.forEach(child => {
+            const p = child.val();
+            const sku = String(p.sku || "").toUpperCase();
+
+            if (prefixo === "" || sku.startsWith(prefixo)) {
+                contador++;
+                html += `
+                <tr data-id="${child.key}" class="border-b border-[#222]">
+                    <td class="p-3 font-mono text-gray-500">${p.sku || '---'}</td>
+                    <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
+                    <td class="p-1"><input class="input-dark edit-price text-green-500 font-bold" type="number" step="0.01" value="${p.price || 0}"></td>
+                    <td class="p-1"><input class="input-dark edit-weight" value="${p.weight || 0}"></td>
+                </tr>`;
+            }
+        });
+
+        if (contador > 0) {
+            corpo.innerHTML = html;
+            btn.classList.remove('hidden');
+            info.innerText = `${contador} produtos encontrados para "${prefixo || 'TODOS'}"`;
+        } else {
+            corpo.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500">Nenhum produto encontrado.</td></tr>';
+            btn.classList.add('hidden');
+            info.innerText = '';
+        }
+    });
+}
+
+function salvarAlteracoes() {
+    const btn = document.getElementById('btnSalvar');
+    const linhas = document.querySelectorAll('#tabelaCorpo tr');
+    const updates = {};
+
+    btn.innerText = "PROCESSANDO...";
+    btn.disabled = true;
+
+    linhas.forEach(tr => {
+        const id = tr.dataset.id;
+        if(!id) return;
+        
+        updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
+        updates[`/products/${id}/price`] = tr.querySelector('.edit-price').value;
+        updates[`/products/${id}/weight`] = tr.querySelector('.edit-weight').value;
+    });
+
+    db.ref().update(updates)
+        .then(() => {
+            alert("Sucesso! " + Object.keys(updates).length/3 + " produtos atualizados.");
+            btn.innerText = "SALVAR TODAS AS ALTERAÇÕES";
+            btn.disabled = false;
+        })
+        .catch(err => {
+            alert("Erro ao salvar: " + err.message);
+            btn.disabled = false;
+        });
+}
+</script>
+</body>
+</html>
