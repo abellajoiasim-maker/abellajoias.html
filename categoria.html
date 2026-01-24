@@ -150,30 +150,40 @@ document.getElementById('btnConfirmar').onclick = () => {
     const qtd = parseInt(inputQtd.value);
     
     if(isNaN(qtd) || qtd < 1) {
-        alert("Digite uma quantidade válida.");
+        alert("Por favor, digite uma quantidade válida.");
+        inputQtd.focus();
         return;
     }
     
     carrinho.push({
-        id: itemSelecionado.id, nome: itemSelecionado.name, sku: itemSelecionado.sku,
-        preco: parseFloat(itemSelecionado.price), qtd: qtd,
-        image: itemSelecionado.image, peso: itemSelecionado.weight
+        id: itemSelecionado.id,
+        nome: itemSelecionado.name,
+        sku: itemSelecionado.sku,
+        preco: parseFloat(itemSelecionado.price),
+        qtd: qtd,
+        image: itemSelecionado.image,
+        peso: itemSelecionado.weight,
+        category: itemSelecionado.category
     });
 
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     
-    // Feedback visual e fechamento automático (Sem Alerta)
+    // ATUALIZAÇÃO PARA REMOVER O ALERTA:
     const btn = document.getElementById('btnConfirmar');
     const originalText = btn.innerText;
+    
+    // Feedback visual rápido no botão
     btn.innerText = "ADICIONADO!";
-    btn.style.backgroundColor = "#16a34a"; // Verde
+    btn.classList.replace('bg-black', 'bg-green-600'); 
 
     setTimeout(() => {
         fecharModal();
         atualizarContador();
+        
+        // Reseta o botão para a próxima vez que abrir o modal
         btn.innerText = originalText;
-        btn.style.backgroundColor = "#000";
-    }, 600);
+        btn.classList.replace('bg-green-600', 'bg-black');
+    }, 600); // Fecha o modal automaticamente após meio segundo
 };
 
 function atualizarContador() {
