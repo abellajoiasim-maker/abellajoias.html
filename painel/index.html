@@ -226,33 +226,53 @@ db.ref('products').on('value',s=>{
  });
 });
 
-/* PRODUTO MODAL COM VARIAÇÕES */
+/* PRODUTO MODAL COM VARIAÇÕES CORRIGIDO */
 function editarProduto(id){
- db.ref('products/'+id).once('value').then(s=>{
-  const p=s.val();
-  db.ref('categories/'+p.category+'/variacoes').once('value').then(vs=>{
-   let opts='';
-   vs.forEach(v=>opts+=`<option>${v.key}</option>`);
-   abrirModal('Editar Produto',`
-    <img src="${p.image||''}" class="modal-img">
-    <input id="pName" value="${p.name}">
-    <input id="pSku" value="${p.sku}">
-    <input id="pPrice" value="${p.price}">
-    <input id="pWeight" value="${p.weight}">
-    <select id="pVar">${opts}</select>
-    <input id="pImg" value="${p.image}">
-   `,()=>{
-    db.ref('products/'+id).update({
-     name:pName.value,
-     sku:pSku.value,
-     price:pPrice.value,
-     weight:pWeight.value,
-     variacao:pVar.value,
-     image:pImg.value
+  db.ref('products/'+id).once('value').then(s=>{
+    const p = s.val();
+    // Busca as variações da categoria correta deste produto
+    db.ref('categories/'+p.category+'/variacoes').once('value').then(vs=>{
+      let opts = '<option value="">Sem variação</option>'; // Opção padrão
+      
+      if(vs.exists()){
+        vs.forEach(child => {
+          const varData = child.val();
+          const varKey = child.key;
+          const varLabel = varData.label || varKey;
+          
+          // Verifica se esta é a variação que o produto já tem selecionada
+          const selected = (p.variacao === varKey) ? 'selected' : '';
+          
+          opts += `<option value="${varKey}" ${selected}>${varLabel}</option>`;
+        });
+      }
+
+      abrirModal('Editar Produto', `
+        <img src="${p.image || ''}" class="modal-img">
+        <label class="text-[10px] uppercase opacity-50">Nome do Produto</label>
+        <input id="pName" value="${p.name}">
+        <label class="text-[10px] uppercase opacity-50">SKU</label>
+        <input id="pSku" value="${p.sku}">
+        <label class="text-[10px] uppercase opacity-50">Preço</label>
+        <input id="pPrice" type="number" step="0.01" value="${p.price}">
+        <label class="text-[10px] uppercase opacity-50">Peso (g)</label>
+        <input id="pWeight" value="${p.weight}">
+        <label class="text-[10px] uppercase opacity-50">Variação da Categoria</label>
+        <select id="pVar">${opts}</select>
+        <label class="text-[10px] uppercase opacity-50">URL da Imagem</label>
+        <input id="pImg" value="${p.image}">
+      `, () => {
+        db.ref('products/' + id).update({
+          name: pName.value,
+          sku: pSku.value,
+          price: pPrice.value,
+          weight: pWeight.value,
+          variacao: pVar.value,
+          image: pImg.value
+        });
+      });
     });
-   });
   });
- });
 }
 
 /* PROMOS */
