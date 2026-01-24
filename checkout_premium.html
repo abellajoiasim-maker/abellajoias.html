@@ -103,18 +103,18 @@ const db = firebase.database();
 let configEmpresa = { whatsapp: "", nome: "", desconto_pix: 0, parcelas: 1 };
 let formaPagamento = "";
 
-// BUSCA DADOS DO PAINEL (USANDO .ON PARA MUDAR NA HORA QUE VOCÊ SALVAR NO PAINEL)
-db.ref('empresa').on('value', snap => {
+// BUSCA DADOS DO PAINEL (AJUSTADO PARA O SEU NÓ 'settings')
+db.ref('settings').on('value', snap => {
     if(snap.exists()){
         const d = snap.val();
-        configEmpresa.whatsapp = d.whatsapp?.replace(/\D/g, '') || "";
-        configEmpresa.nome = d.nome_fantasia || d.nome || "Abella Joias";
+        configEmpresa.whatsapp = String(d.whatsapp || "").replace(/\D/g, '');
+        configEmpresa.nome = d.nome || "Abella Joias";
         
-        // CORREÇÃO DOS CAMPOS: Garantindo que pegue os valores do seu painel
-        configEmpresa.desconto_pix = parseFloat(d.desconto_pix) || 0;
-        configEmpresa.parcelas = parseInt(d.parcelas_sem_juros) || 1;
+        // Aqui está o segredo: nomes idênticos aos do seu Painel
+        configEmpresa.desconto_pix = parseFloat(d.pix) || 0;
+        configEmpresa.parcelas = parseInt(d.parcelas) || 1;
         
-        // Atualiza UI
+        // Atualiza a tela do carrinho
         document.getElementById('nomeLojaHead').innerText = configEmpresa.nome;
         document.getElementById('labelDescontoPixResumo').innerText = `Desconto PIX (${configEmpresa.desconto_pix}%):`;
         document.getElementById('labelPixBotao').innerText = `${configEmpresa.desconto_pix}% de desconto`;
@@ -124,8 +124,8 @@ db.ref('empresa').on('value', snap => {
         
         const btn = document.getElementById('btnFinalizar');
         btn.innerText = "Enviar para WhatsApp";
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
         btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 });
 
