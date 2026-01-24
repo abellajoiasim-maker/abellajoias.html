@@ -1,184 +1,114 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Checkout | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body{background:#f8f6f2}
-.gold{color:#A68966}
-</style>
+    <meta charset="UTF-8">
+    <title>Checkout | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>body{background:#f8f6f2} .gold{color:#A68966}</style>
 </head>
+<body class="p-6 max-w-4xl mx-auto">
 
-<body class="p-6 max-w-6xl mx-auto">
+<h1 class="text-2xl font-serif gold mb-6 uppercase tracking-widest text-center">Finalizar Pedido</h1>
 
-<h1 class="text-2xl font-serif gold mb-6">Finalizar Pedido</h1>
-
-<!-- DADOS CLIENTE -->
-<div class="bg-white border p-6 mb-6 grid md:grid-cols-2 gap-4">
-  <input id="nome" placeholder="Nome completo" class="border p-3">
-  <input id="telefone" placeholder="WhatsApp" class="border p-3">
-  <input id="cidade" placeholder="Cidade" class="border p-3">
-  <input id="local" placeholder="Local de entrega" class="border p-3">
-  <input id="endereco" placeholder="Endereço de Entrega" class="border p-3 md:col-span-2">
+<div class="bg-white border p-6 mb-6 space-y-4 rounded-xl shadow-sm">
+    <input id="nome" placeholder="Nome completo" class="w-full border p-3 rounded-lg">
+    <input id="telefone" placeholder="WhatsApp (DDD+Número)" class="w-full border p-3 rounded-lg">
+    <input id="endereco" placeholder="Endereço de entrega" class="w-full border p-3 rounded-lg">
 </div>
 
-<!-- CARRINHO -->
-<div class="bg-white border p-6 mb-6">
-  <h2 class="font-bold gold mb-4">Carrinho</h2>
-  <div id="listaCarrinho" class="space-y-3 text-sm"></div>
+<div class="bg-white border p-6 mb-6 rounded-xl shadow-sm">
+    <h2 class="font-bold gold mb-4 uppercase text-sm">Itens Escolhidos</h2>
+    <div id="listaCarrinho" class="space-y-4"></div>
 </div>
 
-<!-- PAGAMENTO -->
-<div class="bg-white border p-6 mb-6 grid md:grid-cols-2 gap-4 text-sm">
-  <select id="pagamento" onchange="recalcular()" class="border p-3">
-    <option value="PIX">PIX</option>
-    <option value="Cartão">Cartão</option>
-  </select>
-  <select id="parcelas" class="border p-3"></select>
+<div class="bg-white border p-6 mb-6 rounded-xl shadow-sm">
+    <label class="block text-xs font-bold mb-2">FORMA DE PAGAMENTO</label>
+    <select id="pagamento" onchange="recalcular()" class="w-full border p-3 rounded-lg">
+        <option value="PIX">PIX</option>
+        <option value="Cartão">Cartão de Crédito</option>
+    </select>
 </div>
 
-<!-- RESUMO -->
-<div class="bg-white border p-6 text-sm space-y-2 max-w-md ml-auto">
-  <p>Peso total: <strong><span id="peso">0</span> g</strong></p>
-  <p>Valor bruto: <strong>R$ <span id="bruto">0.00</span></strong></p>
-  <p class="text-red-600">Desconto promocional: - R$ <span id="promo">0.00</span></p>
-  <p class="text-green-700">Desconto PIX: - R$ <span id="pix">0.00</span></p>
-  <hr>
-  <p class="text-lg gold">Total: <strong>R$ <span id="total">0.00</span></strong></p>
+<div class="bg-zinc-800 text-white p-6 rounded-xl space-y-2">
+    <div class="flex justify-between"><span>Bruto:</span><span>R$ <span id="bruto">0.00</span></span></div>
+    <div class="flex justify-between text-red-400"><span>Descontos Categoria:</span><span>- R$ <span id="descCat">0.00</span></span></div>
+    <div class="flex justify-between text-green-400"><span>Desconto PIX:</span><span>- R$ <span id="valPix">0.00</span></span></div>
+    <div class="flex justify-between font-bold text-xl border-t border-zinc-700 pt-2">
+        <span>TOTAL:</span><span>R$ <span id="total">0.00</span></span>
+    </div>
 </div>
 
-<!-- FINALIZAR -->
-<div class="mt-6 text-right">
-  <button onclick="finalizarPedido()"
-    class="bg-black text-white px-8 py-3 rounded-full text-sm">
-    Finalizar Pedido
-  </button>
-</div>
+<button onclick="finalizarPedido()" class="w-full bg-black text-white py-4 rounded-xl mt-6 font-bold uppercase tracking-widest shadow-lg">Enviar via WhatsApp</button>
 
 <script>
-/* FIREBASE */
-if(!firebase.apps.length){
-  firebase.initializeApp({
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-  });
-}
-const db = firebase.database();
+    firebase.initializeApp({ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
+    const db = firebase.database();
 
-/* CONFIG */
-let descontoPix = 0.05;
+    let carrinho = JSON.parse(localStorage.getItem("carrinho") || "[]");
+    let settings = {};
+    let catDiscounts = {};
 
-/* PROMOÇÃO GLOBAL (fallback) */
-let promocaoGlobal = 0;
-db.ref('promocoes/global').once('value',s=>{
-  if(s.exists()) promocaoGlobal = Number(s.val()) || 0;
-  recalcular();
-});
+    async function recalcular() {
+        const sSnap = await db.ref('settings').once('value');
+        settings = sSnap.val() || { pix: 5 };
+        
+        const cSnap = await db.ref('categories').once('value');
+        cSnap.forEach(c => { catDiscounts[c.val().name] = c.val().discount || 0; });
 
-/* CARRINHO */
-let carrinho = JSON.parse(localStorage.getItem("carrinho") || "[]");
+        let brutoT = 0, descCatT = 0;
+        
+        const container = document.getElementById('listaCarrinho');
+        container.innerHTML = '';
 
-function renderCarrinho(){
-  listaCarrinho.innerHTML = '';
-  if(carrinho.length===0){
-    listaCarrinho.innerHTML='<p class="text-gray-400">Carrinho vazio</p>';
-    recalcular();
-    return;
-  }
+        carrinho.forEach((item, idx) => {
+            const subtotal = item.preco * item.qtd;
+            const desconto = subtotal * (catDiscounts[item.category] / 100);
+            
+            brutoT += subtotal;
+            descCatT += desconto;
 
-  carrinho.forEach((i,idx)=>{
-    listaCarrinho.innerHTML += `
-    <div class="flex justify-between items-center border-b pb-2">
-      <div>
-        <strong>${i.nome}</strong><br>
-        <span class="text-xs">${i.sku} ${i.variacao||''}</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <input type="number" min="1" value="${i.qtd}"
-          onchange="alterarQtd(${idx},this.value)"
-          class="border w-16 p-1 text-xs">
-        <button onclick="remover(${idx})" class="text-red-600 text-xs">✖</button>
-      </div>
-    </div>`;
-  });
-  recalcular();
-}
+            container.innerHTML += `
+            <div class="flex justify-between text-sm border-b pb-2">
+                <div><b>${item.qtd}x</b> ${item.nome}<br><small class="text-gray-400">${item.variacao}</small></div>
+                <div>R$ ${subtotal.toFixed(2)}</div>
+            </div>`;
+        });
 
-function alterarQtd(i,v){ carrinho[i].qtd=Number(v); salvar(); }
-function remover(i){ carrinho.splice(i,1); salvar(); }
-function salvar(){
-  localStorage.setItem("carrinho",JSON.stringify(carrinho));
-  renderCarrinho();
-}
+        const posCat = brutoT - descCatT;
+        const descPix = document.getElementById('pagamento').value === "PIX" ? posCat * (settings.pix/100) : 0;
+        const total = posCat - descPix;
 
-/* TOTAIS */
-function recalcular(){
-  let pesoT=0, brutoT=0, descPromo=0;
-
-  carrinho.forEach(i=>{
-    pesoT += (i.peso||0)*i.qtd;
-    brutoT += i.preco*i.qtd;
-    if(i.promocao) descPromo += brutoT*(i.promocao/100);
-  });
-
-  if(descPromo===0) descPromo = brutoT*promocaoGlobal;
-
-  let base = brutoT - descPromo;
-  let descPix = pagamento.value==="PIX" ? base*descontoPix : 0;
-  let totalV = base-descPix;
-
-  peso.innerText=pesoT.toFixed(2);
-  bruto.innerText=brutoT.toFixed(2);
-  promo.innerText=descPromo.toFixed(2);
-  pix.innerText=descPix.toFixed(2);
-  total.innerText=totalV.toFixed(2);
-
-  parcelas.innerHTML='';
-  if(pagamento.value==="Cartão"){
-    for(let i=1;i<=6;i++){
-      parcelas.innerHTML+=`<option>${i}x de R$ ${(totalV/i).toFixed(2)}</option>`;
+        document.getElementById('bruto').innerText = brutoT.toFixed(2);
+        document.getElementById('descCat').innerText = descCatT.toFixed(2);
+        document.getElementById('valPix').innerText = descPix.toFixed(2);
+        document.getElementById('total').innerText = total.toFixed(2);
     }
-  }else{
-    parcelas.innerHTML='<option>À vista</option>';
-  }
-}
 
-/* FINALIZAR */
-function finalizarPedido(){
-  if(carrinho.length===0) return alert('Carrinho vazio');
+    function finalizarPedido() {
+        const nome = document.getElementById('nome').value;
+        const total = document.getElementById('total').innerText;
+        if(!nome || carrinho.length === 0) return alert("Preencha os dados!");
 
-  const pedido={
-    cliente:{nome:nome.value,telefone:telefone.value},
-    entrega:{endereco:endereco.value,cidade:cidade.value,local:local.value},
-    itens:carrinho,
-    totais:{peso:peso.innerText, total:total.innerText},
-    pagamento:pagamento.value,
-    status:"novo",
-    criadoEm:new Date().toISOString()
-  };
+        const pedido = {
+            cliente: nome,
+            tel: document.getElementById('telefone').value,
+            itens: carrinho,
+            total: total,
+            status: "Novo"
+        };
 
-  db.ref("pedidos").push(pedido).then(()=>{
-    const msg=`Olá 😊
-Pedido realizado no catálogo Abella Joias.
+        db.ref('orders').push(pedido).then(() => {
+            const msg = `Olá! Novo pedido de ${nome}\nTotal: R$ ${total}\nVeja os detalhes no painel.`;
+            window.open(`https://wa.me/${document.getElementById('telefone').value}?text=${encodeURIComponent(msg)}`);
+            localStorage.removeItem("carrinho");
+            location.href = "index.html";
+        });
+    }
 
-Nome: ${nome.value}
-WhatsApp: ${telefone.value}
-Valor: R$ ${total.innerText}
-Pagamento: ${pagamento.value}`;
-    window.open("https://wa.me/55SEU_NUMERO?text="+encodeURIComponent(msg));
-    localStorage.removeItem("carrinho");
-    alert("Pedido enviado com sucesso!");
-  });
-}
-
-renderCarrinho();
+    recalcular();
 </script>
-
 </body>
 </html>
