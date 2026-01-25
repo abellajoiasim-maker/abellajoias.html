@@ -662,37 +662,75 @@ function salvarPromos(){
     alert('Promoções atualizadas');
 }
     // Cole no final do arquivo, junto com as outras funções JS
+/* === 2. GERENCIADOR DE PROMOÇÕES (GERAL + CATEGORIAS) === */
 function abrirPainelPromocoes() {
-    db.ref('settings/promocao').once('value').then(s => {
-        const promo = s.val() || { ativa: false, porcentagem: 0 };
+    // Busca as configurações globais e as categorias ao mesmo tempo
+    Promise.all([
+        db.ref('settings/promocao').once('value'),
+        db.ref('categories').once('value')
+    ]).then(([snapPromo, snapCats]) => {
+        const promo = snapPromo.val() || { ativa: false, porcentagem: 0 };
         
+        // Gera a lista de categorias para desconto individual por grupo
+        let listaCatsHtml = '';
+        snapCats.forEach(cat => {
+            const d = cat.val();
+            listaCatsHtml += `
+                <div class="flex items-center justify-between p-2 bg-black border border-[#222] mb-1 rounded">
+                    <span class="text-[10px] text-white uppercase font-bold">${d.name || cat.key}</span>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="promo_cat_${cat.key}" value="${d.discount || 0}" 
+                            class="w-12 p-1 bg-[#111] border border-[#333] text-center text-xs text-white mb-0">
+                        <span class="text-[#caa85c] text-[10px] font-bold">%</span>
+                    </div>
+                </div>
+            `;
+        });
+
         abrirModal('Gerenciar Promoções', `
-            <div class="space-y-4 text-left p-2">
-                <div class="flex items-center justify-between p-4 bg-[#111] rounded border border-[#222]">
-                    <span class="text-white font-bold">Promoção na Loja</span>
-                    <button onclick="togglePromo()" id="btnStatusPromo" 
-                        class="px-4 py-2 rounded text-[10px] font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">
-                        ${promo.ativa ? 'ATIVA' : 'INATIVA'}
-                    </button>
-                </div>
-
-                <div class="p-4 bg-[#111] rounded border border-[#222]">
-                    <label class="text-[10px] text-[#caa85c] uppercase font-bold block mb-2">Desconto Geral (%)</label>
+            <div class="space-y-4 text-left p-1">
+                <div class="p-3 bg-[#111] rounded-xl border border-[#222]">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-white font-bold text-xs uppercase">Promoção Global</span>
+                        <button onclick="togglePromo()" id="btnStatusPromo" 
+                            class="px-3 py-1 rounded-lg text-[9px] font-bold transition-all ${promo.ativa ? 'bg-green-600 shadow-[0_0_10px_rgba(22,163,74,0.4)]' : 'bg-red-600'}">
+                            ${promo.ativa ? 'ATIVA' : 'INATIVA'}
+                        </button>
+                    </div>
+                    <label class="text-[9px] text-[#caa85c] uppercase font-bold block mb-1">Desconto Loja Toda (%)</label>
                     <input type="number" id="promoPorcentagem" value="${promo.porcentagem}" 
-                        class="w-full p-2 bg-black border border-[#333] text-white rounded outline-none focus:border-[#caa85c]">
+                        class="w-full p-2 bg-black border border-[#333] text-white rounded-lg outline-none focus:border-[#caa85c] mb-0">
                 </div>
 
-                <p class="text-[10px] text-gray-500 italic px-1">
-                    * Isso aplicará a etiqueta de "OFF" e calculará o preço automaticamente em todos os produtos.
+                <hr class="border-[#222] my-2">
+
+                <div>
+                    <label class="text-[9px] text-[#caa85c] uppercase font-bold block mb-2 px-1">Desconto por Categoria</label>
+                    <div class="max-h-48 overflow-y-auto pr-1 space-y-1">
+                        ${listaCatsHtml}
+                    </div>
+                </div>
+
+                <p class="text-[9px] text-gray-500 italic text-center">
+                    * O sistema aplicará automaticamente o maior desconto disponível para o cliente.
                 </p>
             </div>
         `, () => {
-            const novaPorcentagem = document.getElementById('promoPorcentagem').value;
+            // SALVAMENTO HÍBRIDO
+            const novaPorcentagem = parseInt(document.getElementById('promoPorcentagem').value || 0);
+            
+            // 1. Atualiza Promo Geral
             db.ref('settings/promocao').update({
-                porcentagem: parseInt(novaPorcentagem)
-            }).then(() => {
-                alert("Configurações atualizadas!");
+                porcentagem: novaPorcentagem
             });
+
+            // 2. Atualiza cada categoria
+            snapCats.forEach(cat => {
+                const valorCat = parseInt(document.getElementById(`promo_cat_${cat.key}`).value || 0);
+                db.ref('categories/' + cat.key).update({ discount: valorCat });
+            });
+
+            alert("Todas as promoções foram atualizadas!");
         });
     });
 }
@@ -701,9 +739,8 @@ function togglePromo() {
     db.ref('settings/promocao/ativa').once('value').then(s => {
         const statusAtual = s.val() || false;
         db.ref('settings/promocao').update({ ativa: !statusAtual }).then(() => {
-            alert("Status da promoção alterado!");
             fecharModal();
-            abrirPainelPromocoes(); // Recarrega o modal para atualizar a cor do botão
+            abrirPainelPromocoes(); // Recarrega para refletir o novo status
         });
     });
 }
