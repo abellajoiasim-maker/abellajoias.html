@@ -305,9 +305,10 @@ function gerarRomaneio(id, tipo) {
     db.ref('orders/'+id).once('value').then(s => {
         const p = s.val();
         if(!p) return;
+        
+        // Coleta o endereço detalhado ou define um objeto vazio para evitar erro
         const e = p.endereco_detalhado || {};
         const data = new Date().toLocaleString('pt-BR');
-        
         const telefoneLoja = "(11) 98765-4321"; // Edite aqui
 
         db.ref('settings').once('value').then(set => {
@@ -316,7 +317,6 @@ function gerarRomaneio(id, tipo) {
             const desconto = parseFloat(p.descontoPix) || 0;
             const subtotalGeral = valorTotal + desconto;
 
-            // Define se deve mostrar a foto (aceita os dois termos comuns)
             const mostrarFoto = (tipo === 'foto' || tipo === 'cliente');
 
             let html = `<html><head><title>Romaneio ${tipo.toUpperCase()}</title><style>
@@ -326,7 +326,7 @@ function gerarRomaneio(id, tipo) {
                 .logo-area h1 { margin: 0; color: #caa85c; font-size: 22px; letter-spacing: 1px; }
                 .logo-area span { font-size: 10px; color: #666; font-weight: bold; }
                 .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; font-size: 10px; }
-                .info-box { padding: 8px; border: 1px solid #eee; background: #fafafa; }
+                .info-box { padding: 8px; border: 1px solid #eee; background: #fafafa; line-height: 1.5; }
                 
                 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
                 th { background: #f2f2f2; padding: 7px 4px; border: 1px solid #ccc; font-size: 9px; text-transform: uppercase; }
@@ -353,8 +353,16 @@ function gerarRomaneio(id, tipo) {
             </div>
 
             <div class="info-grid">
-                <div class="info-box"><strong>CLIENTE:</strong> ${p.cliente}<br>Whats: ${p.whatsapp || 'N/A'}<br>Pagto: ${p.pagamento}</div>
-                <div class="info-box"><strong>ENTREGA:</strong> ${e.rua || 'Retirada'}, ${e.num || ''}<br>${e.bairro || ''} - ${e.cidade || ''}</div>
+                <div class="info-box">
+                    <strong>CLIENTE:</strong> ${p.cliente}<br>
+                    <strong>WHATSAPP:</strong> ${p.whatsapp || 'N/A'}<br>
+                    <strong>FORMA PAGTO:</strong> ${p.pagamento || 'A combinar'}
+                </div>
+                <div class="info-box">
+                    <strong>LOCAL:</strong> ${e.local || 'Não especificado'}<br>
+                    <strong>ENDEREÇO:</strong> ${e.rua || 'A retirar'}, ${e.num || 'S/N'}<br>
+                    <strong>BAIRRO:</strong> ${e.bairro || '---'} | <strong>CIDADE:</strong> ${e.cidade || '---'}
+                </div>
             </div>
 
             <table>
@@ -380,7 +388,6 @@ function gerarRomaneio(id, tipo) {
                 const vT = vU * qtd;
                 pesoTotalGeral += pT;
 
-                // Tenta pegar a imagem de diferentes campos possíveis (i.image ou i.foto ou i.thumb)
                 const urlImagem = i.image || i.foto || i.thumb || '';
 
                 html += `<tr>
