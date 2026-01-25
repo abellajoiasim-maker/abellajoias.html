@@ -280,11 +280,22 @@ function verDetalhesPedido(id) {
                 <span>R$ ${(i.preco * i.qtd).toFixed(2)}</span>
             </div>`;
         });
+
         abrirModal('Detalhes do Pedido', `
             <div class="text-[11px] space-y-2">
-                <p><b>Cliente:</b> ${p.cliente} (${p.whatsapp})</p>
+                <p><b>Cliente:</b> ${p.cliente} <br><b>Whats:</b> ${p.whatsapp || 'S/N'}</p>
                 <p><b>Endereço:</b> ${e.rua||'N/A'}, ${e.num||''}<br>${e.bairro||''} - ${e.cidade||''}</p>
-                <div class="py-2">${itensHtml}</div>
+                
+                <div class="py-2 max-h-40 overflow-y-auto">${itensHtml}</div>
+                
+                <div class="bg-[#0a0a0a] p-2 rounded border border-[#222] space-y-1">
+                    <div class="flex justify-between opacity-60"><span>Subtotal Itens:</span> <span>R$ ${subtotalItens.toFixed(2)}</span></div>
+                    ${descPromo > 0 ? `<div class="flex justify-between text-orange-400"><span>Desc. Promocional:</span> <span>- R$ ${descPromo.toFixed(2)}</span></div>` : ''}
+                    ${descPix > 0 ? `<div class="flex justify-between text-green-500"><span>Desc. Extra PIX:</span> <span>- R$ ${descPix.toFixed(2)}</span></div>` : ''}
+                    <div class="flex justify-between text-lg font-bold text-white border-t border-[#333] pt-1">
+                        <span>TOTAL FINAL:</span> <span>R$ ${totalFinal.toFixed(2)}</span>
+                    </div>
+                </div>
                 <div class="text-lg font-bold text-green-500 text-right">Total: R$ ${parseFloat(p.total).toFixed(2)}</div>
                 <div class="grid grid-cols-1 gap-2 mt-4 no-print">
                     <button onclick="gerarRomaneio('${id}','simples')" class="btn bg-gray-700">📄 Romaneio Simples</button>
