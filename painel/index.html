@@ -186,20 +186,69 @@ db.ref('categories').on('value',s=>{
     });
 });
 
-db.ref('products').on('value',s=>{
+db.ref('products').on('value', snapProdutos => {
     const container = document.getElementById('produtosPorCategoria');
-    container.innerHTML='';
-    const map={};
-    s.forEach(p=>{
-        const v=p.val(); v.id=p.key;
-        if(!map[v.category]) map[v.category]=[];
-        map[v.category].push(v);
-    });
-    Object.keys(map).forEach(cat=>{
-        container.innerHTML+=`<h3 class="text-[#caa85c] mt-6 mb-2 uppercase text-xs font-bold tracking-widest">${cat}</h3><div class="grid" id="grid-${cat}"></div>`;
-        const g = document.getElementById(`grid-${cat}`);
-        map[cat].forEach(p=>{
-            g.innerHTML+=`<div class="card"><div class="text-[10px] opacity-50">${p.sku||'---'}</div><div class="text-xs font-bold">${p.name}</div><div class="flex gap-1 mt-2"><button class="btn" onclick="editarProduto('${p.id}')">Editar</button><button class="btn btn-red" onclick="excluir('products','${p.id}')">Excluir</button></div></div>`;
+    container.innerHTML = '';
+    const map = {};
+
+    // 1. Buscamos as configurações de promoções primeiro
+    Promise.all([
+        db.ref('settings/promocao').once('value'),
+        db.ref('categories').once('value')
+    ]).then(([snapPromoGlobal, snapCats]) => {
+        
+        const promoGeral = snapPromoGlobal.val() || { ativa: false, porcentagem: 0 };
+        const categorias = snapCats.val() || {};
+
+        // 2. Agrupa produtos por categoria
+        snapProdutos.forEach(p => {
+            const v = p.val(); v.id = p.key;
+            if (!map[v.category]) map[v.category] = [];
+            map[v.category].push(v);
+        });
+
+        // 3. Renderiza cada categoria e seus produtos
+        Object.keys(map).forEach(catID => {
+            const nomeCat = categorias[catID]?.name || catID;
+            container.innerHTML += `<h3 class="text-[#caa85c] mt-6 mb-2 uppercase text-xs font-bold tracking-widest">${nomeCat}</h3><div class="grid" id="grid-${catID}"></div>`;
+            
+            const grid = document.getElementById(`grid-${catID}`);
+            
+            map[catID].forEach(p => {
+                // --- LÓGICA DO DESCONTO ---
+                const precoBase = parseFloat(p.price || 0);
+                const descIndividual = parseInt(p.discount || 0); // Desconto no produto
+                const descCategoria = parseInt(categorias[catID]?.discount || 0); // Desconto na categoria
+                const descGlobal = promoGeral.ativa ? parseInt(promoGeral.porcentagem || 0) : 0;
+
+                // Escolhe o maior desconto entre os três
+                const melhorDesconto = Math.max(descIndividual, descCategoria, descGlobal);
+
+                let precoHtml = `<div class="text-sm font-bold text-white">R$ ${precoBase.toFixed(2)}</div>`;
+                let badgeHtml = '';
+
+                if (melhorDesconto > 0) {
+                    const precoComDesconto = precoBase * (1 - (melhorDesconto / 100));
+                    badgeHtml = `<div class="badge-desconto">-${melhorDesconto}% OFF</div>`;
+                    precoHtml = `
+                        <div class="text-[10px] preco-riscado text-gray-500">R$ ${precoBase.toFixed(2)}</div>
+                        <div class="text-sm font-bold text-green-500">R$ ${precoComDesconto.toFixed(2)}</div>
+                    `;
+                }
+
+                grid.innerHTML += `
+                    <div class="card produto-container relative overflow-hidden">
+                        ${badgeHtml}
+                        <img src="${p.image}" class="w-full h-32 object-cover rounded-lg mb-2 bg-black" onerror="this.src='https://via.placeholder.com/150'">
+                        <div class="text-[9px] opacity-40 uppercase tracking-tighter">${p.sku || 'S/ SKU'}</div>
+                        <div class="text-[11px] font-medium truncate mb-1 text-gray-200">${p.name}</div>
+                        ${precoHtml}
+                        <div class="flex gap-1 mt-3">
+                            <button class="btn flex-1 py-1 text-[10px]" onclick="editarProduto('${p.id}')">Editar</button>
+                            <button class="btn btn-red px-2 py-1 text-[10px]" onclick="excluir('products','${p.id}')">✕</button>
+                        </div>
+                    </div>`;
+            });
         });
     });
 });
