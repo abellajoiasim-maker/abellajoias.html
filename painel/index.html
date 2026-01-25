@@ -283,20 +283,94 @@ function salvarPromos(){
  alert('Promoções atualizadas');
 }
 
-/* PEDIDOS */
-db.ref('orders').on('value',s=>{
- listaPedidos.innerHTML='';
- s.forEach(o=>{
-  listaPedidos.innerHTML+=`
-  <div class="card flex justify-between">
-   <span>${o.key}</span>
-   <div class="flex gap-1">
-    <button class="btn">Ver</button>
-    <button class="btn btn-red" onclick="excluir('orders','${o.key}')">Excluir</button>
-   </div>
-  </div>`;
- });
+/* PEDIDOS ATUALIZADO */
+db.ref('orders').on('value', s => {
+    const lista = document.getElementById('listaPedidos');
+    lista.innerHTML = '';
+    
+    if (!s.exists()) {
+        lista.innerHTML = '<div class="p-10 text-center opacity-50">Nenhum pedido recebido.</div>';
+        return;
+    }
+
+    s.forEach(o => {
+        const pedido = o.val();
+        const id = o.key;
+        
+        // Formatação de data simples (se existir no seu checkout)
+        const data = pedido.data ? new Date(pedido.data).toLocaleString('pt-BR') : 'Sem data';
+        
+        lista.innerHTML += `
+        <div class="card flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div>
+                <div class="text-[10px] opacity-40 font-mono">${id}</div>
+                <div class="font-bold text-[#caa85c]">${pedido.cliente || 'Cliente não identificado'}</div>
+                <div class="text-xs">Total: R$ ${parseFloat(pedido.total || 0).toFixed(2)}</div>
+            </div>
+            
+            <div class="flex gap-2 w-full md:w-auto">
+                <button class="btn flex-1 md:flex-none" onclick="verDetalhesPedido('${id}')">Ver Detalhes</button>
+                <button class="btn btn-red" onclick="excluir('orders','${id}')">Excluir</button>
+            </div>
+        </div>`;
+    });
 });
+
+// Função para abrir o modal com os itens do pedido
+function verDetalhesPedido(id) {
+    db.ref('orders/' + id).once('value').then(s => {
+        const p = s.val();
+        let itensHtml = '';
+        
+        // Monta a lista de itens
+        if(p.itens) {
+            Object.values(p.itens).forEach(item => {
+                itensHtml += `
+                <div class="flex justify-between border-b border-[#222] py-2 text-sm">
+                    <span>${item.qtd}x ${item.nome} ${item.variacao ? '('+item.variacao+')' : ''}</span>
+                    <span class="font-mono text-[#caa85c]">R$ ${(item.preco * item.qtd).toFixed(2)}</span>
+                </div>`;
+            });
+        }
+
+        abrirModal('Detalhes do Pedido', `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-[#caa85c] font-bold uppercase text-[10px]">Cliente</h4>
+                    <p class="text-lg">${p.cliente || 'N/A'}</p>
+                    <p class="text-xs opacity-60">WhatsApp: ${p.whatsapp || 'N/A'}</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-[#caa85c] font-bold uppercase text-[10px]">Endereço</h4>
+                    <p class="text-sm">${p.endereco || 'Retirada / Não informado'}</p>
+                </div>
+
+                <div>
+                    <h4 class="text-[#caa85c] font-bold uppercase text-[10px] mb-2">Itens</h4>
+                    ${itensHtml}
+                </div>
+
+                <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between">
+                    <span class="font-bold">TOTAL DO PEDIDO:</span>
+                    <span class="font-bold text-green-500">R$ ${parseFloat(p.total || 0).toFixed(2)}</span>
+                </div>
+                
+                <div class="text-[10px] opacity-40 italic">Forma de Pagamento: ${p.pagamento || 'Não informada'}</div>
+            </div>
+        `, () => { console.log('Pedido visualizado'); });
+        
+        // Oculta o botão "Salvar" do modal, pois é só visualização
+        document.getElementById('btnSalvar').style.display = 'none';
+    });
+}
+
+// Ajuste na função fecharModal para resetar o botão salvar
+const fecharOriginal = fecharModal;
+fecharModal = () => {
+    document.getElementById('btnSalvar').style.display = 'block';
+    fecharOriginal();
+}
 
 /* UTIL */
 function abrirModal(t,b,cb){
