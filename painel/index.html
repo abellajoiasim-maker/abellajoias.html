@@ -34,6 +34,32 @@
             body * { visibility: hidden; }
             #romaneio-print, #romaneio-print * { visibility: visible; }
             #romaneio-print { position: absolute; left: 0; top: 0; width: 100%; }
+            }
+            /* Cole dentro da tag <style> */
+.produto-container { 
+    position: relative; 
+    display: inline-block; 
+}
+
+.badge-desconto {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #27ae60; /* Verde */
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 20;
+}
+
+.preco-riscado {
+    text-decoration: line-through;
+    opacity: 0.5;
+    font-size: 0.8em;
+    margin-right: 5px;
         }
     </style>
 </head>
@@ -178,25 +204,113 @@ db.ref('products').on('value',s=>{
     });
 });
 
-/* FUNÇÃO EDITAR PRODUTO */
-function editarProduto(id){
-    db.ref('products/'+id).once('value').then(s=>{
+/* === 1. FUNÇÃO EDITAR PRODUTO (COM CAMPO DE DESCONTO) === */
+function editarProduto(id) {
+    db.ref('products/' + id).once('value').then(s => {
         const p = s.val();
-        db.ref('categories/'+p.category+'/variacoes').once('value').then(vs=>{
+        
+        // Busca variações da categoria para o select
+        db.ref('categories/' + p.category + '/variacoes').once('value').then(vs => {
             let opts = '<option value="">Sem variação</option>';
-            if(vs.exists()) vs.forEach(c => { opts += `<option value="${c.key}" ${p.variacao===c.key?'selected':''}>${c.val().label||c.key}</option>`; });
-            abrirModal('Editar Produto', `
-                <input id="pName" value="${p.name}" placeholder="Nome">
-                <input id="pSku" value="${p.sku}" placeholder="SKU">
-                <input id="pPrice" type="number" step="0.01" value="${p.price}" placeholder="Preço">
-                <input id="pWeight" value="${p.weight}" placeholder="Peso (g)">
-                <select id="pVar">${opts}</select>
-                <input id="pImg" value="${p.image}" placeholder="URL Imagem">
-            `, () => {
-                db.ref('products/'+id).update({
-                    name: pName.value, sku: pSku.value, price: pPrice.value, weight: pWeight.value, variacao: pVar.value, image: pImg.value
-                });
+            if (vs.exists()) vs.forEach(c => { 
+                opts += `<option value="${c.key}" ${p.variacao === c.key ? 'selected' : ''}>${c.val().label || c.key}</option>`; 
             });
+
+            abrirModal('Editar Produto', `
+                <div class="space-y-3 text-left">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="col-span-2">
+                            <label class="text-[10px] text-[#caa85c] font-bold">NOME DO PRODUTO</label>
+                            <input id="pName" value="${p.name}" class="w-full">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-[#caa85c] font-bold">SKU</label>
+                            <input id="pSku" value="${p.sku}" class="w-full">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-[#caa85c] font-bold">PESO (G)</label>
+                            <input id="pWeight" value="${p.weight}" class="w-full">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 p-2 bg-[#111] rounded border border-[#222]">
+                        <div>
+                            <label class="text-[10px] text-[#caa85c] font-bold">PREÇO BASE (R$)</label>
+                            <input id="pPrice" type="number" step="0.01" value="${p.price}" class="w-full bg-black border-[#333]">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-green-500 font-bold text-xs">PROMO INDIVIDUAL (%)</label>
+                            <input id="pDiscount" type="number" value="${p.discount || 0}" class="w-full bg-black border-[#333]" placeholder="Ex: 10">
+                        </div>
+                    </div>
+
+                    <label class="text-[10px] text-[#caa85c] font-bold uppercase">Variação de Categoria</label>
+                    <select id="pVar" class="w-full">${opts}</select>
+
+                    <label class="text-[10px] text-[#caa85c] font-bold uppercase">URL da Imagem</label>
+                    <input id="pImg" value="${p.image}" class="w-full">
+                    <div class="flex justify-center mt-2">
+                        <img src="${p.image}" class="w-20 h-20 object-cover rounded border border-[#333]" onerror="this.src='https://via.placeholder.com/100'">
+                    </div>
+                </div>
+            `, () => {
+                // Ação ao clicar em Salvar no Modal
+                const dadosAtualizados = {
+                    name: document.getElementById('pName').value,
+                    sku: document.getElementById('pSku').value,
+                    price: parseFloat(document.getElementById('pPrice').value || 0),
+                    discount: parseInt(document.getElementById('pDiscount').value || 0),
+                    weight: document.getElementById('pWeight').value,
+                    variacao: document.getElementById('pVar').value,
+                    image: document.getElementById('pImg').value
+                };
+
+                db.ref('products/' + id).update(dadosAtualizados)
+                    .then(() => console.log("Produto atualizado!"));
+            });
+        });
+    });
+}
+
+/* === 2. GERENCIADOR DE PROMOÇÕES POR CATEGORIA === */
+function abrirPainelPromocoes() {
+    Promise.all([
+        db.ref('categories').once('value'),
+        db.ref('settings/promocoes_categoria').once('value')
+    ]).then(([snapCats, snapPromo]) => {
+        const promosAtuais = snapPromo.val() || {};
+        let listaHtml = '';
+
+        snapCats.forEach(cat => {
+            const desc = promosAtuais[cat.key] || 0;
+            listaHtml += `
+                <div class="flex items-center justify-between p-3 border-b border-[#222] bg-[#0a0a0a] mb-1 rounded">
+                    <span class="text-white text-[11px] font-bold uppercase">${cat.key}</span>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="promo_cat_${cat.key}" value="${desc}" 
+                            class="w-14 p-1 bg-black border border-[#444] text-white text-center rounded text-xs">
+                        <span class="text-green-500 text-xs font-bold">%</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        abrirModal('Configurar Descontos por Categoria', `
+            <div class="space-y-3">
+                <p class="text-[10px] text-gray-500 italic">Defina a porcentagem de desconto para cada grupo de produtos.</p>
+                <div class="max-h-72 overflow-y-auto pr-2">
+                    ${listaHtml}
+                </div>
+            </div>
+        `, () => {
+            const novosDescontos = {};
+            snapCats.forEach(cat => {
+                const input = document.getElementById(`promo_cat_${cat.key}`);
+                novosDescontos[cat.key] = parseInt(input.value || 0);
+            });
+            
+            db.ref('settings/promocoes_categoria').set(novosDescontos)
+                .then(() => alert("Descontos salvos com sucesso!"));
         });
     });
 }
@@ -515,6 +629,52 @@ function salvarPromos(){
         db.ref('categories/'+i.id.replace('promo-','')).update({discount:+i.value});
     });
     alert('Promoções atualizadas');
+}
+    // Cole no final do arquivo, junto com as outras funções JS
+function abrirPainelPromocoes() {
+    db.ref('settings/promocao').once('value').then(s => {
+        const promo = s.val() || { ativa: false, porcentagem: 0 };
+        
+        abrirModal('Gerenciar Promoções', `
+            <div class="space-y-4 text-left p-2">
+                <div class="flex items-center justify-between p-4 bg-[#111] rounded border border-[#222]">
+                    <span class="text-white font-bold">Promoção na Loja</span>
+                    <button onclick="togglePromo()" id="btnStatusPromo" 
+                        class="px-4 py-2 rounded text-[10px] font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">
+                        ${promo.ativa ? 'ATIVA' : 'INATIVA'}
+                    </button>
+                </div>
+
+                <div class="p-4 bg-[#111] rounded border border-[#222]">
+                    <label class="text-[10px] text-[#caa85c] uppercase font-bold block mb-2">Desconto Geral (%)</label>
+                    <input type="number" id="promoPorcentagem" value="${promo.porcentagem}" 
+                        class="w-full p-2 bg-black border border-[#333] text-white rounded outline-none focus:border-[#caa85c]">
+                </div>
+
+                <p class="text-[10px] text-gray-500 italic px-1">
+                    * Isso aplicará a etiqueta de "OFF" e calculará o preço automaticamente em todos os produtos.
+                </p>
+            </div>
+        `, () => {
+            const novaPorcentagem = document.getElementById('promoPorcentagem').value;
+            db.ref('settings/promocao').update({
+                porcentagem: parseInt(novaPorcentagem)
+            }).then(() => {
+                alert("Configurações atualizadas!");
+            });
+        });
+    });
+}
+
+function togglePromo() {
+    db.ref('settings/promocao/ativa').once('value').then(s => {
+        const statusAtual = s.val() || false;
+        db.ref('settings/promocao').update({ ativa: !statusAtual }).then(() => {
+            alert("Status da promoção alterado!");
+            fecharModal();
+            abrirPainelPromocoes(); // Recarrega o modal para atualizar a cor do botão
+        });
+    });
 }
 </script>
 </body>
