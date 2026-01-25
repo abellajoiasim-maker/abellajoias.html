@@ -12,10 +12,27 @@
     body{font-family:'Poppins',sans-serif;background:#f8f6f2}
     .serif{font-family:'Cinzel',serif}
     .gold{color:#A68966}
-    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; height: 100%; display: flex; flex-direction: column; }
+    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; height: 100%; display: flex; flex-direction: column; position: relative; }
     #modalCompra { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+
+    /* ETIQUETA DE DESCONTO */
+    .badge-promo {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #16a34a;
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 8px;
+        z-index: 10;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        letter-spacing: 0.05em;
+    }
+    .preco-riscado { text-decoration: line-through; color: #a1a1aa; font-size: 10px; }
 </style>
 </head>
 <body>
@@ -38,14 +55,11 @@
 <div id="modalCompra">
     <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center relative shadow-2xl">
         <button onclick="fecharModal()" class="absolute top-5 right-5 text-gray-400 text-3xl font-light hover:text-black">&times;</button>
-        
         <div class="aspect-square w-40 mx-auto mb-4 border rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
             <img id="mImg" src="" class="max-h-full max-w-full object-contain">
         </div>
-        
         <h3 id="mNome" class="font-bold gold text-sm uppercase px-2 mb-1 leading-tight"></h3>
         <p id="mSku" class="text-[10px] text-gray-400 mb-8 font-bold tracking-widest"></p>
-        
         <div class="mb-10">
             <label class="text-[10px] block mb-4 font-bold text-gray-400 uppercase tracking-[0.2em]">Quantidade Desejada</label>
             <div class="flex items-center justify-center">
@@ -54,7 +68,6 @@
                        inputmode="numeric"> 
             </div>
         </div>
-        
         <button id="btnConfirmar" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg">
             Adicionar ao Pedido
         </button>
@@ -76,61 +89,106 @@ let configEmpresa = { desconto_pix: 5, parcelas: 6 };
 
 if(!catSlug) location.href = 'index.html';
 
-// BUSCAR REGRAS DA LOJA (AJUSTADO PARA 'settings')
-db.ref('settings').on('value', snap => {
-    if(snap.exists()){
-        const d = snap.val();
-        configEmpresa.desconto_pix = parseFloat(d.pix) || 0;
-        configEmpresa.parcelas = parseInt(d.parcelas) || 1;
+// 1. CARREGAR CONFIGURAÇÕES E PROMOÇÕES PRIMEIRO
+function inicializar() {
+    Promise.all([
+        db.ref('settings').once('value'),
+        db.ref('categories/' + catSlug).once('value')
+    ]).then(([snapSettings, snapCat]) => {
+        const settings = snapSettings.val() || {};
+        const categoria = snapCat.val() || { name: catSlug, discount: 0 };
         
-        // SÓ CARREGA OS PRODUTOS DEPOIS DE SABER O DESCONTO
-        carregarProdutos();
-    }
-});
+        // Configs Gerais
+        configEmpresa.desconto_pix = parseFloat(settings.pix) || 5;
+        configEmpresa.parcelas = parseInt(settings.parcelas) || 6;
+        
+        // Título da Página
+        document.getElementById('tituloCategoria').innerText = categoria.name;
 
-db.ref('categories/' + catSlug).once('value', s => { 
-    if(s.exists()) document.getElementById('tituloCategoria').innerText = s.val().name; 
-});
+        // Determinar a porcentagem de desconto para esta página
+        // Prioridade: Promoção Global Ativa > Desconto da Categoria
+        const promoGlobal = settings.promocao || { ativa: false, porcentagem: 0 };
+        let descAtivo = 0;
+        
+        if (promoGlobal.ativa) {
+            descAtivo = parseInt(promoGlobal.porcentagem);
+        } else {
+            descAtivo = parseInt(categoria.discount || 0);
+        }
 
-db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
-    const grid = document.getElementById('gridProdutos');
-    grid.innerHTML = '';
-    
-    snap.forEach(p => {
-        const prod = p.val();
-        if(prod.paused) return;
-
-        const preco = parseFloat(prod.price);
-        const precoPix = preco * (1 - (configEmpresa.desconto_pix / 100));
-        const valorParc = preco / configEmpresa.parcelas;
-
-        grid.innerHTML += `
-            <div class="card p-4 shadow-sm border border-gray-100">
-                <div class="aspect-square flex items-center justify-center mb-4 bg-white rounded-lg overflow-hidden">
-                    <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full w-full hover:scale-110 transition-transform duration-500">
-                </div>
-                <div class="flex-grow">
-                    <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">SKU: ${prod.sku}</p>
-                    <h3 class="text-[11px] font-bold uppercase mb-3 leading-tight text-gray-800 h-8 overflow-hidden">${prod.name}</h3>
-                    <div class="border-t border-gray-50 pt-3 space-y-1">
-                        <div class="flex justify-between items-baseline">
-                            <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
-                            <span class="text-xs font-bold text-gray-900">R$ ${preco.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between items-baseline text-green-600">
-                            <span class="text-[9px] font-bold uppercase tracking-tighter">PIX (-${configEmpresa.desconto_pix}%):</span>
-                            <span class="text-xs font-bold">R$ ${precoPix.toFixed(2)}</span>
-                        </div>
-                        <p class="text-[9px] text-gray-400 text-right">${configEmpresa.parcelas}x de R$ ${valorParc.toFixed(2)}</p>
-                        <p class="text-[9px] text-gray-400 font-medium italic mt-2 text-right">Peso: ${prod.weight}g</p>
-                    </div>
-                </div>
-                <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold mt-4 uppercase tracking-[0.15em] hover:bg-[#A68966] transition-all">
-                    Selecionar
-                </button>
-            </div>`;
+        renderizarProdutos(descAtivo);
     });
-});
+}
+
+// 2. RENDERIZAR PRODUTOS COM A LÓGICA DE ETIQUETA
+function renderizarProdutos(percentualDesconto) {
+    db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = '';
+        
+        snap.forEach(p => {
+            const prod = p.val();
+            if(prod.paused) return;
+
+            const precoOriginal = parseFloat(prod.price);
+            let precoComDesconto = precoOriginal;
+            let htmlPrecos = '';
+            let htmlEtiqueta = '';
+
+            // Aplicar desconto se houver
+            if (percentualDesconto > 0) {
+                precoComDesconto = precoOriginal * (1 - (percentualDesconto / 100));
+                htmlEtiqueta = `<div class="badge-promo">${percentualDesconto}% OFF</div>`;
+                htmlPrecos = `
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
+                        <div class="text-right">
+                            <p class="preco-riscado">R$ ${precoOriginal.toFixed(2)}</p>
+                            <p class="text-xs font-bold text-gray-900 leading-none">R$ ${precoComDesconto.toFixed(2)}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                htmlPrecos = `
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
+                        <span class="text-xs font-bold text-gray-900">R$ ${precoOriginal.toFixed(2)}</span>
+                    </div>
+                `;
+            }
+
+            const precoPix = precoComDesconto * (1 - (configEmpresa.desconto_pix / 100));
+            const valorParc = precoComDesconto / configEmpresa.parcelas;
+
+            grid.innerHTML += `
+                <div class="card p-4 shadow-sm border border-gray-100">
+                    ${htmlEtiqueta}
+                    <div class="aspect-square flex items-center justify-center mb-4 bg-white rounded-lg overflow-hidden">
+                        <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full w-full hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="flex-grow">
+                        <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">SKU: ${prod.sku}</p>
+                        <h3 class="text-[11px] font-bold uppercase mb-3 leading-tight text-gray-800 h-8 overflow-hidden">${prod.name}</h3>
+                        <div class="border-t border-gray-50 pt-3 space-y-1">
+                            ${htmlPrecos}
+                            <div class="flex justify-between items-baseline text-green-600">
+                                <span class="text-[9px] font-bold uppercase tracking-tighter">PIX (-${configEmpresa.desconto_pix}%):</span>
+                                <span class="text-xs font-bold">R$ ${precoPix.toFixed(2)}</span>
+                            </div>
+                            <p class="text-[9px] text-gray-400 text-right">${configEmpresa.parcelas}x de R$ ${valorParc.toFixed(2)}</p>
+                            <p class="text-[9px] text-gray-400 font-medium italic mt-2 text-right">Peso: ${prod.weight}g</p>
+                        </div>
+                    </div>
+                    <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold mt-4 uppercase tracking-[0.15em] hover:bg-[#A68966] transition-all">
+                        Selecionar
+                    </button>
+                </div>`;
+        });
+    });
+}
+
+// Inicializa o sistema
+inicializar();
 
 async function abrirModal(id) {
     const snap = await db.ref('products/' + id).once('value');
@@ -171,22 +229,18 @@ document.getElementById('btnConfirmar').onclick = () => {
 
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     
-    // ATUALIZAÇÃO PARA REMOVER O ALERTA:
     const btn = document.getElementById('btnConfirmar');
     const originalText = btn.innerText;
     
-    // Feedback visual rápido no botão
     btn.innerText = "ADICIONADO!";
     btn.classList.replace('bg-black', 'bg-green-600'); 
 
     setTimeout(() => {
         fecharModal();
         atualizarContador();
-        
-        // Reseta o botão para a próxima vez que abrir o modal
         btn.innerText = originalText;
         btn.classList.replace('bg-green-600', 'bg-black');
-    }, 600); // Fecha o modal automaticamente após meio segundo
+    }, 600);
 };
 
 function atualizarContador() {
