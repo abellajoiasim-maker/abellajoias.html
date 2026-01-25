@@ -272,8 +272,9 @@ function editarProduto(id) {
     });
 }
 
-/* === 2. GERENCIADOR DE PROMOÇÕES POR CATEGORIA === */
+/* === 2. GERENCIADOR DE PROMOÇÕES POR CATEGORIA (AJUSTADO) === */
 function abrirPainelPromocoes() {
+    // Mostra um feedback visual de carregamento se quiser, ou apenas inicia a busca
     Promise.all([
         db.ref('categories').once('value'),
         db.ref('settings/promocoes_categoria').once('value')
@@ -281,40 +282,70 @@ function abrirPainelPromocoes() {
         const promosAtuais = snapPromo.val() || {};
         let listaHtml = '';
 
-        snapCats.forEach(cat => {
-            const desc = promosAtuais[cat.key] || 0;
-            listaHtml += `
-                <div class="flex items-center justify-between p-3 border-b border-[#222] bg-[#0a0a0a] mb-1 rounded">
-                    <span class="text-white text-[11px] font-bold uppercase">${cat.key}</span>
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="promo_cat_${cat.key}" value="${desc}" 
-                            class="w-14 p-1 bg-black border border-[#444] text-white text-center rounded text-xs">
-                        <span class="text-green-500 text-xs font-bold">%</span>
+        if (!snapCats.exists()) {
+            listaHtml = '<p class="text-center text-gray-500 py-4">Nenhuma categoria encontrada.</p>';
+        } else {
+            snapCats.forEach(cat => {
+                // Usamos o nome da categoria ou a chave caso o nome não exista
+                const nomeCat = cat.val().name || cat.key;
+                const desc = promosAtuais[cat.key] || 0;
+                
+                listaHtml += `
+                    <div class="flex items-center justify-between p-3 border-b border-[#222] bg-[#0a0a0a] mb-1 rounded hover:border-[#444] transition-colors">
+                        <span class="text-white text-[11px] font-bold uppercase tracking-wider">${nomeCat}</span>
+                        <div class="flex items-center gap-2">
+                            <input type="number" 
+                                id="promo_cat_${cat.key}" 
+                                value="${desc}" 
+                                min="0" max="100"
+                                class="w-16 p-1 bg-black border border-[#444] text-white text-center rounded text-xs focus:border-[#caa85c] outline-none">
+                            <span class="text-[#caa85c] text-xs font-bold">%</span>
+                        </div>
                     </div>
-                </div>
-            `;
-        });
+                `;
+            });
+        }
 
-        abrirModal('Configurar Descontos por Categoria', `
+        abrirModal('🏷️ Descontos por Categoria', `
             <div class="space-y-3">
-                <p class="text-[10px] text-gray-500 italic">Defina a porcentagem de desconto para cada grupo de produtos.</p>
-                <div class="max-h-72 overflow-y-auto pr-2">
+                <div class="bg-orange-900/20 border border-orange-900/50 p-2 rounded">
+                    <p class="text-[10px] text-orange-200 leading-tight">
+                        <b>Dica:</b> O desconto aplicado aqui será visível automaticamente em todos os produtos desta categoria na vitrine.
+                    </p>
+                </div>
+                <div class="max-h-72 overflow-y-auto pr-2 custom-scroll">
                     ${listaHtml}
                 </div>
             </div>
         `, () => {
+            // LÓGICA DE SALVAMENTO
             const novosDescontos = {};
+            let categoriasProcessadas = 0;
+
             snapCats.forEach(cat => {
                 const input = document.getElementById(`promo_cat_${cat.key}`);
-                novosDescontos[cat.key] = parseInt(input.value || 0);
+                if (input) {
+                    let valor = parseInt(input.value);
+                    // Validação simples: se for menor que 0 ou não for número, vira 0
+                    if (isNaN(valor) || valor < 0) valor = 0;
+                    if (valor > 100) valor = 100;
+                    
+                    novosDescontos[cat.key] = valor;
+                }
             });
-            
+
+            // Salva no Firebase
             db.ref('settings/promocoes_categoria').set(novosDescontos)
-                .then(() => alert("Descontos salvos com sucesso!"));
+                .then(() => {
+                    alert("✅ Sucesso: Os descontos foram aplicados a todas as categorias selecionadas!");
+                })
+                .catch(erro => {
+                    console.error("Erro ao salvar promoções:", erro);
+                    alert("❌ Erro ao salvar. Verifique sua conexão.");
+                });
         });
     });
 }
-
 /* === GESTÃO DE PEDIDOS (SISTEMA COMPLETO) === */
 
 db.ref('orders').on('value', s => {
