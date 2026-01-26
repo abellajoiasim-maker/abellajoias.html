@@ -537,99 +537,56 @@ function editarProduto(id) {
 
 /* === 2. GERENCIADOR DE PROMOÇÕES POR CATEGORIA (AJUSTADO) === */
 function abrirPainelPromocoes() {
-    // Busca dados: Configurações Globais e a lista de Categorias
     Promise.all([
         db.ref('settings/promocao').once('value'),
         db.ref('categories').once('value')
     ]).then(([snapPromo, snapCats]) => {
-        const promoGlobal = snapPromo.val() || { ativa: false, porcentagem: 0 };
-        let listaHtml = '';
-
-        if (!snapCats.exists()) {
-            listaHtml = '<p class="text-center text-gray-500 py-4 italic text-xs">Nenhuma categoria encontrada.</p>';
-        } else {
-            snapCats.forEach(cat => {
-                const dados = cat.val();
-                const nomeCat = dados.name || cat.key;
-                // Busca o desconto gravado diretamente na categoria (campo 'discount')
-                const desc = dados.discount || 0;
-                
-                listaHtml += `
-                    <div class="flex items-center justify-between p-3 border-b border-[#222] bg-[#0a0a0a] mb-1 rounded hover:border-[#444] transition-colors">
-                        <span class="text-white text-[11px] font-bold uppercase tracking-wider">${nomeCat}</span>
-                        <div class="flex items-center gap-2">
-                            <input type="number" 
-                                id="promo_cat_${cat.key}" 
-                                value="${desc}" 
-                                min="0" max="100"
-                                class="w-16 p-1 bg-black border border-[#444] text-white text-center rounded text-xs focus:border-[#caa85c] outline-none">
-                            <span class="text-[#caa85c] text-xs font-bold">%</span>
-                        </div>
+        const promo = snapPromo.val() || { ativa: false, porcentagem: 0 };
+        let listaCats = '';
+        
+        snapCats.forEach(c => {
+            const cat = c.val();
+            // Mudamos o ID do input para "promo-ID" para bater com o seletor de salvamento
+            listaCats += `
+                <div class="flex justify-between items-center mb-2 bg-white/5 p-2 rounded border border-[#222]">
+                    <span class="text-[11px] font-bold">${cat.name}</span>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="promo-${c.key}" value="${cat.discount || 0}" 
+                               class="w-14 bg-black border border-[#444] text-center text-xs p-1 rounded">
+                        <span class="text-[#caa85c] text-[10px]">%</span>
                     </div>
-                `;
-            });
-        }
+                </div>`;
+        });
 
-        // HTML do Modal Unificado
-        const modalHtml = `
-            <div class="space-y-4">
-                <button onclick="togglePromo()" id="btnStatusPromo" class="w-full py-3 rounded-xl font-bold transition-all ${promoGlobal.ativa ? 'bg-green-600' : 'bg-red-600'}">
-                    PROMOÇÃO GLOBAL: ${promoGlobal.ativa ? 'ATIVA' : 'INATIVA'}
+        const html = `
+            <div class="flex flex-col gap-4">
+                <button onclick="togglePromo()" class="w-full py-3 rounded-xl font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">
+                    STATUS GLOBAL: ${promo.ativa ? 'ATIVA' : 'INATIVA'}
                 </button>
-
-                <div class="grid grid-cols-1 gap-4">
-                    <div class="bg-white/5 p-3 rounded-lg border border-[#333]">
-                        <label class="text-[10px] text-[#caa85c] font-bold uppercase tracking-widest block mb-2">Desconto Geral (Site Todo) %</label>
-                        <input type="number" id="pGeral" value="${promoGlobal.porcentagem || 0}" class="w-full p-2 bg-black border border-[#444] text-white rounded outline-none focus:border-[#caa85c]">
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] text-[#caa85c] font-bold uppercase tracking-widest block mb-2">Descontos Individuais por Categoria</label>
-                        <div class="max-h-60 overflow-y-auto pr-2 custom-scroll space-y-1">
-                            ${listaHtml}
-                        </div>
-                    </div>
+                <div>
+                    <label class="text-[10px] text-[#caa85c] font-bold uppercase">Desconto Geral (%)</label>
+                    <input type="number" id="promoPorcentagem" value="${promo.porcentagem || 0}" class="w-full bg-black border border-[#444] p-2 rounded">
                 </div>
+                <hr class="border-[#222]">
+                <label class="text-[10px] text-[#caa85c] font-bold uppercase">Por Categoria (%)</label>
+                <div class="max-h-48 overflow-y-auto pr-1">${listaCats}</div>
+            </div>`;
 
-                <div class="bg-orange-900/20 border border-orange-900/50 p-2 rounded">
-                    <p class="text-[9px] text-orange-200 leading-tight text-center italic">
-                        O sistema aplicará sempre o <b>maior</b> desconto entre o Geral e o da Categoria.
-                    </p>
-                </div>
-            </div>
-        `;
-
-        abrirModal('🏷️ Gestão de Promoções', modalHtml, () => {
-            // LÓGICA DE SALVAMENTO UNIFICADA
-            const novoGeral = parseInt(document.getElementById('pGeral').value) || 0;
+        abrirModal('Gerenciar Promoções', html, () => {
             const updates = {};
-
-            // 1. Prepara o update do Desconto Geral
-            updates['settings/promocao/porcentagem'] = novoGeral;
-
-            // 2. Prepara o update de cada Categoria individualmente
-            snapCats.forEach(cat => {
-                const input = document.getElementById(`promo_cat_${cat.key}`);
-                if (input) {
-                    let valor = parseInt(input.value);
-                    if (isNaN(valor) || valor < 0) valor = 0;
-                    if (valor > 100) valor = 100;
-                    
-                    // Salva o desconto dentro da pasta da categoria para a etiqueta ler
-                    updates['categories/' + cat.key + '/discount'] = valor;
-                }
+            const pGeral = parseInt(document.getElementById('promoPorcentagem').value) || 0;
+            
+            updates['settings/promocao/porcentagem'] = pGeral;
+            
+            document.querySelectorAll('[id^="promo-"]').forEach(i => {
+                const catID = i.id.replace('promo-', '');
+                updates['categories/' + catID + '/discount'] = parseInt(i.value || 0);
             });
-
-            // Executa todos os salvamentos de uma vez (Atomic Update)
-            db.ref().update(updates)
-                .then(() => {
-                    alert("✅ Sucesso: Descontos salvos e etiquetas atualizadas!");
-                    fecharModal();
-                })
-                .catch(erro => {
-                    console.error("Erro ao salvar:", erro);
-                    alert("❌ Erro ao salvar dados no Firebase.");
-                });
+            
+            db.ref().update(updates).then(() => {
+                alert('Descontos sincronizados com sucesso!');
+                fecharModal();
+            });
         });
     });
 }
