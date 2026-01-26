@@ -2,199 +2,178 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Produtos | Abella Joias</title>
+<title>Categoria | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
 <style>
-    body{font-family:'Poppins',sans-serif;background:#f8f6f2;color:#333}
-    .serif{font-family:'Cinzel',serif}
-    .gold{color:#A68966}
-    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; height: 100%; display: flex; flex-direction: column; position: relative; cursor: pointer; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    #modalCompra { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; }
-    .badge-promo { position: absolute; top: 12px; right: 12px; background: #16a34a; color: #fff; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 8px; z-index: 10; }
-    .preco-antigo { text-decoration: line-through; color: #999; font-size: 0.8rem; }
+body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+.serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.card{background:#fff;border-radius:16px;border:1px solid #eee;transition:.3s}
+.card:hover{transform:translateY(-4px);border-color:#A68966}
 </style>
 </head>
-<body class="pb-24">
 
-<header class="p-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-    <button onclick="history.back()" class="p-2 bg-gray-100 rounded-full">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <h1 id="catNome" class="serif text-xl gold uppercase tracking-widest">Carregando...</h1>
-    <a href="carrinho.html" class="relative p-2 bg-black text-white rounded-full">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
+<body>
+
+<!-- HEADER -->
+<header class="bg-white border-b sticky top-0 z-40">
+  <div class="text-center py-8">
+    <h1 class="serif text-3xl gold">Abella Joias</h1>
+    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">
+      Catálogo Atacado
+    </p>
+  </div>
+
+  <!-- BOTÕES RESTAURADOS -->
+  <div class="flex justify-center gap-2 pb-4">
+    <a href="index.html"
+       class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">
+       CATEGORIAS
     </a>
+
+    <a href="galvanicas.html"
+       class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">
+       GALVÂNICAS
+    </a>
+
+    <a href="checkout_premium.html"
+       class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">
+       CARRINHO
+    </a>
+  </div>
 </header>
 
-<main class="p-4">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        </div>
+<!-- CONTEÚDO -->
+<main class="max-w-7xl mx-auto p-6">
+  <h2 id="tituloCategoria"
+      class="serif text-xl text-center mb-10 text-gray-700"></h2>
+
+  <div id="gridProdutos"
+       class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
-<div id="modalCompra" onclick="if(event.target==this) fecharModal()">
-    <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden animate-slide-up">
-        <img id="mImg" src="" class="w-full h-72 object-cover">
-        <div class="p-6">
-            <h2 id="mNome" class="serif text-2xl mb-1 text-gray-800"></h2>
-            <div id="mPrecoContainer" class="mb-4">
-                <span id="mPreco" class="text-2xl font-bold gold"></span>
-            </div>
-            
-            <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Quantidade</label>
-            <div class="flex items-center gap-4 mb-6">
-                <input type="number" id="mQtd" value="1" min="1" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-center font-bold text-xl">
-            </div>
+<!-- MODAL DE QUANTIDADE -->
+<div id="modal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center">
 
-            <button id="btnConfirmar" class="w-full bg-black text-white py-5 rounded-2xl font-bold tracking-widest hover:bg-gray-900 transition-all">
-                ADICIONAR AO CARRINHO
-            </button>
-        </div>
+  <div class="bg-white p-6 rounded-xl w-full max-w-sm text-center">
+    <h3 id="modalNome" class="serif gold text-lg mb-2"></h3>
+    <p id="modalSku" class="text-xs text-gray-400 mb-3"></p>
+
+    <input id="modalQtd" type="number" min="1" value="1"
+      class="w-full border-2 p-3 text-center text-xl font-bold rounded-lg mb-4">
+
+    <div class="flex gap-2">
+      <button onclick="fecharModal()"
+        class="flex-1 bg-gray-200 py-2 rounded font-bold text-sm">
+        CANCELAR
+      </button>
+
+      <button onclick="confirmar()"
+        class="flex-1 bg-black text-white py-2 rounded font-bold text-sm">
+        ADICIONAR
+      </button>
     </div>
+  </div>
 </div>
 
 <script>
-// CONFIGURAÇÃO FIREBASE
-firebase.initializeApp({
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    authDomain: "catalogo-abella-joias.firebaseapp.com",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-    projectId: "catalogo-abella-joias"
-});
-const db = firebase.database();
+/* FIREBASE */
+const firebaseConfig={
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+}
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig)
+const db=firebase.database()
 
-let promoGlobal = { ativa: false, porcentagem: 0 };
-let categoriasDados = {};
-let itemSelecionado = null;
-
-// Captura ID da categoria na URL
-const params = new URLSearchParams(window.location.search);
-const catId = params.get('id');
-
-// SINCRONIZAÇÃO EM TEMPO REAL COM O PAINEL
-function inicializarApp() {
-    // 1. Pega Promoção Global
-    db.ref('settings/promocao').on('value', snap => {
-        promoGlobal = snap.val() || { ativa: false, porcentagem: 0 };
-        carregarDados();
-    });
-
-    // 2. Pega todas as Categorias (para o desconto da categoria atual)
-    db.ref('categories').on('value', snap => {
-        categoriasDados = snap.val() || {};
-        if(catId && categoriasDados[catId]) {
-            document.getElementById('catNome').innerText = categoriasDados[catId].name;
-        }
-        carregarDados();
-    });
+/* SLUG */
+const params=new URLSearchParams(window.location.search)
+const slug=params.get('cat')
+if(!slug){
+ document.body.innerHTML='<p style="padding:40px;text-align:center">Categoria inválida</p>'
+ throw 'slug ausente'
 }
 
-function carregarDados() {
-    if (!catId) return;
-    
-    db.ref('products').orderByChild('category').equalTo(catId).on('value', snap => {
-        const grid = document.getElementById('gridProdutos');
-        grid.innerHTML = '';
+/* BUSCA PRODUTOS — CORRETA */
+db.ref('products').once('value').then(snap=>{
+ const grid=document.getElementById('gridProdutos')
+ let tituloDefinido=false
+ grid.innerHTML=''
 
-        snap.forEach(prod => {
-            const p = prod.val();
-            p.id = prod.key;
+ snap.forEach(p=>{
+  const v=p.val()
+  if(v.paused) return
+  if(v.category!==slug) return
 
-            // LÓGICA DE DESCONTO EM CONFORMIDADE COM O PAINEL
-            const descProd = parseInt(p.discount || 0);
-            const descCat = parseInt(categoriasDados[catId]?.discount || 0);
-            const descGlobal = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem || 0) : 0;
-            
-            const melhorDesconto = Math.max(descProd, descCat, descGlobal);
-            const precoOriginal = parseFloat(p.price || 0);
-            const precoFinal = precoOriginal * (1 - melhorDesconto / 100);
+  if(!tituloDefinido){
+    tituloCategoria.innerText=v.category
+    tituloDefinido=true
+  }
 
-            let htmlPreco = `<span class="text-lg font-bold gold">R$ ${precoOriginal.toFixed(2)}</span>`;
-            let badgePromo = melhorDesconto > 0 ? `<div class="badge-promo">${melhorDesconto}% OFF</div>` : '';
+  grid.innerHTML+=`
+  <div class="card p-4 shadow-sm">
+    <div class="aspect-square flex items-center justify-center mb-4">
+      <img src="${v.image||'https://via.placeholder.com/400'}"
+           class="object-contain max-h-full">
+    </div>
 
-            if (melhorDesconto > 0) {
-                htmlPreco = `
-                    <div class="flex flex-col">
-                        <span class="preco-antigo">R$ ${precoOriginal.toFixed(2)}</span>
-                        <span class="text-lg font-bold text-green-600">R$ ${precoFinal.toFixed(2)}</span>
-                    </div>`;
-            }
+    <h3 class="text-xs font-bold uppercase tracking-widest mb-1">
+      ${v.name}
+    </h3>
 
-            grid.innerHTML += `
-                <div class="card p-3 flex flex-col" onclick='abrirCompra(${JSON.stringify({...p, precoFinal, melhorDesconto})})'>
-                    ${badgePromo}
-                    <img src="${p.image}" class="w-full h-40 object-cover rounded-xl mb-3" onerror="this.src='https://via.placeholder.com/200'">
-                    <h3 class="text-xs font-medium text-gray-700 leading-tight mb-2 h-8 overflow-hidden">${p.name}</h3>
-                    <div class="mt-auto flex justify-between items-end">
-                        ${htmlPreco}
-                        <div class="bg-black text-white p-1.5 rounded-full">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/></svg>
-                        </div>
-                    </div>
-                </div>`;
-        });
-    });
+    <p class="text-[11px] text-gray-500 mb-1">SKU: ${v.sku}</p>
+    <p class="text-sm font-semibold mb-1">R$ ${Number(v.price).toFixed(2)}</p>
+    <p class="text-[11px] text-gray-500 mb-3">${v.weight||''}</p>
+
+    <button onclick="abrirModal('${v.name}','${v.sku}',${v.price},${v.weight||0})"
+      class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
+      ADICIONAR
+    </button>
+  </div>`
+ })
+
+ if(!tituloDefinido)
+   tituloCategoria.innerText='Categoria sem produtos'
+})
+
+/* MODAL / CARRINHO */
+let produtoAtual=null
+
+function abrirModal(nome,sku,preco,peso){
+ produtoAtual={nome,sku,preco,peso}
+ modalNome.innerText=nome
+ modalSku.innerText='SKU: '+sku
+ modalQtd.value=1
+ modal.style.display='flex'
 }
 
-function abrirCompra(produto) {
-    itemSelecionado = produto;
-    document.getElementById('mImg').src = produto.image;
-    document.getElementById('mNome').innerText = produto.name;
-    document.getElementById('mPreco').innerText = `R$ ${produto.precoFinal.toFixed(2)}`;
-    document.getElementById('mQtd').value = 1;
-    document.getElementById('modalCompra').style.display = 'flex';
+function fecharModal(){
+ modal.style.display='none'
 }
 
-function fecharModal() {
-    document.getElementById('modalCompra').style.display = 'none';
+function confirmar(){
+ const qtd=Number(modalQtd.value)
+ if(qtd<=0) return alert('Quantidade inválida')
+
+ let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]')
+ carrinho.push({...produtoAtual,qtd})
+ localStorage.setItem('carrinho',JSON.stringify(carrinho))
+
+ fecharModal()
 }
 
-document.getElementById('btnConfirmar').onclick = () => {
-    let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const qtd = parseInt(document.getElementById('mQtd').value);
-    
-    if(isNaN(qtd) || qtd < 1) return;
-    
-    carrinho.push({
-        id: itemSelecionado.id,
-        nome: itemSelecionado.name,
-        sku: itemSelecionado.sku || 'S/N',
-        preco: itemSelecionado.precoFinal, // Salva o preço já com desconto
-        qtd: qtd,
-        image: itemSelecionado.image,
-        peso: itemSelecionado.weight || itemSelecionado.peso || 0,
-        category: itemSelecionado.category
-    });
-
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    
-    const btn = document.getElementById('btnConfirmar');
-    btn.innerText = "✓ ADICIONADO!";
-    btn.classList.replace('bg-black', 'bg-green-600'); 
-
-    setTimeout(() => {
-        fecharModal();
-        btn.innerText = "ADICIONAR AO CARRINHO";
-        btn.classList.replace('bg-green-600', 'bg-black');
-        atualizarContador();
-    }, 800);
-};
-
-function atualizarContador() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const total = carrinho.reduce((sum, item) => sum + item.qtd, 0);
-    document.getElementById('cartCount').innerText = total;
+/* FECHAR CLICANDO FORA */
+modal.onclick=e=>{
+ if(e.target.id==='modal') fecharModal()
 }
-
-// Inicia tudo
-inicializarApp();
-atualizarContador();
-
 </script>
+
 </body>
 </html>
