@@ -17,7 +17,9 @@
     .gold{color:#A68966}
     .card{ background:#fff; border-radius:20px; border:1px solid #eee; transition:0.3s; position:relative; overflow:hidden; display: flex; flex-direction: column; }
     .card:hover{ transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    .btn-nav{background:white;border:1px solid #eee;padding:8px 15px;border-radius:50px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;transition:0.3s}
+    .btn-nav{background:white; border:1px solid #eee; padding:8px 15px; border-radius:50px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; transition:0.3s}
+    /* Estilo para a etiqueta de peso ficar bem visível */
+    .peso-tag { background: #f3f4f6; color: #4b5563; font-weight: 700; font-size: 10px; padding: 4px 8px; border-radius: 6px; border: 1px solid #e5e7eb; }
 </style>
 </head>
 
@@ -27,7 +29,7 @@
     <div class="max-w-7xl mx-auto px-4 pt-4 flex justify-between items-center">
         <a href="index.html" class="btn-nav">← Voltar</a>
         <a href="checkout_premium.html" class="btn-nav flex items-center gap-2">
-            🛒 Pedido <span id="cartCount" class="bg-black text-white px-2 py-0.5 rounded-full text-[8px]">0</span>
+            🛒 Meu Pedido <span id="cartCount" class="bg-black text-white px-2 py-0.5 rounded-full text-[8px]">0</span>
         </a>
     </div>
 
@@ -42,25 +44,8 @@
     <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
 </main>
 
-<div id="modalCompra" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center">
-        <img id="mFoto" src="" class="w-48 h-48 mx-auto object-cover rounded-2xl mb-4 bg-gray-50">
-        <h2 id="mNome" class="serif text-lg text-gray-800 mb-1 leading-tight"></h2>
-        <p id="mSku" class="text-[10px] text-gray-400 mb-4 font-bold tracking-widest uppercase"></p>
-        
-        <div class="flex items-center justify-between mb-6 bg-gray-50 p-3 rounded-2xl">
-            <label class="text-[10px] font-bold uppercase text-gray-500">Qtd Itens</label>
-            <input type="number" id="mQtd" value="1" min="1" class="w-16 bg-transparent text-center font-bold text-lg outline-none">
-        </div>
-        
-        <button id="btnConfirmar" class="w-full bg-black text-white py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-gold transition-all">
-            Adicionar ao Carrinho
-        </button>
-        <button onclick="fecharModal()" class="w-full text-gray-400 text-[9px] mt-4 uppercase font-bold tracking-widest">Cancelar</button>
-    </div>
-</div>
-
 <script>
+// Configuração do Firebase
 const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -70,7 +55,6 @@ const slugCat = urlParams.get('cat');
 
 let categoriasDados = {};
 let promoGlobal = {};
-let itemSelecionado = null;
 
 function inicializar() {
     db.ref('settings/promocao').on('value', s => { promoGlobal = s.val() || {}; });
@@ -83,7 +67,8 @@ function inicializar() {
 
 function atualizarContador() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    document.getElementById('cartCount').innerText = carrinho.length;
+    const countElement = document.getElementById('cartCount');
+    if(countElement) countElement.innerText = carrinho.length;
 }
 
 function carregarProdutos() {
@@ -93,86 +78,76 @@ function carregarProdutos() {
         
         snap.forEach(sp => {
             const p = sp.val();
-            p.id = sp.key;
             if(p.paused) return;
 
-            const dProd = parseInt(p.discount || 0);
+            // Lógica de Descontos
             const dCat = parseInt(categoriasDados[p.category]?.discount || 0);
             const dGlob = (promoGlobal && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem) : 0;
-            const melhorDesc = Math.max(dProd, dCat, dGlob);
+            const melhorDesc = Math.max(dCat, dGlob);
 
             const pOriginal = parseFloat(p.price || 0);
             const pFinal = melhorDesc > 0 ? pOriginal * (1 - melhorDesc/100) : pOriginal;
-            const pPix = pFinal * 0.95;
-            const pParcela = pFinal / 3;
 
-            // Formatação do Peso/Grama para clareza
-            const pesoTexto = p.weight ? `Peso: ${p.weight}g` : 'Peso: ---';
+            // MUDANÇA NO PESO: Texto claro com "Gramas" ou "g"
+            const pesoExibicao = p.weight ? `PESO: ${p.weight}g` : "PESO: --";
 
             grid.innerHTML += `
-                <div class="card p-3" onclick="abrirModalCompra('${p.id}')">
-                    ${melhorDesc > 0 ? `<div class="absolute top-3 right-3 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold z-10 animate-pulse">${melhorDesc}% OFF</div>` : ''}
+                <div class="card p-3">
+                    ${melhorDesc > 0 ? `<div class="absolute top-2 right-2 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold z-10 animate-pulse">${melhorDesc}% OFF</div>` : ''}
+                    
                     <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
                     
-                    <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">REF: ${p.sku || '---'}</span>
-                    <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-2 h-7 overflow-hidden">${p.name}</h3>
-                    
-                    <div class="flex justify-between items-center mb-2 bg-gray-50 p-1.5 rounded-lg">
-                        <span class="text-[9px] text-gray-600 font-bold uppercase">${pesoTexto}</span>
-                        <span class="text-[8px] text-gold font-bold uppercase italic tracking-tighter">Bruto</span>
-                    </div>
-
-                    <div class="mt-auto border-t pt-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold gold">R$ ${pFinal.toFixed(2)}</span>
-                            ${melhorDesc > 0 ? `<span class="text-[9px] text-gray-300 line-through">R$ ${pOriginal.toFixed(2)}</span>` : ''}
+                    <div class="px-1">
+                        <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">REF: ${p.sku || '---'}</span>
+                        <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-2 h-7 overflow-hidden">${p.name}</h3>
+                        
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <span class="peso-tag">${pesoExibicao}</span>
+                            <span class="text-[8px] gold font-bold uppercase tracking-tighter italic">Joia no Bruto</span>
                         </div>
-                        <p class="text-[10px] text-green-600 font-bold mt-1 leading-none">R$ ${pPix.toFixed(2)} <span class="text-[7px] text-gray-400 font-normal uppercase italic">no PIX</span></p>
-                        <p class="text-[8px] text-gray-400 mt-1 uppercase italic">3x de R$ ${pParcela.toFixed(2)}</p>
+
+                        <div class="mt-auto border-t pt-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold gold">R$ ${pFinal.toFixed(2)}</span>
+                                ${melhorDesc > 0 ? `<span class="text-[9px] text-gray-300 line-through">R$ ${pOriginal.toFixed(2)}</span>` : ''}
+                            </div>
+                            <p class="text-[9px] text-green-600 font-bold mt-1 uppercase italic">R$ ${(pFinal * 0.95).toFixed(2)} no PIX</p>
+                        </div>
+                        
+                        <button onclick="adicionarAoCarrinhoDireto('${sp.key}')" class="w-full bg-black text-white py-3 rounded-xl text-[9px] font-bold uppercase tracking-widest mt-3 hover:bg-gold transition-all">
+                            Adicionar
+                        </button>
                     </div>
                 </div>`;
         });
     });
 }
 
-function abrirModalCompra(id) {
+function adicionarAoCarrinhoDireto(id) {
     db.ref('products/' + id).once('value', s => {
-        itemSelecionado = s.val();
-        itemSelecionado.id = s.key;
-        document.getElementById('mFoto').src = itemSelecionado.image;
-        document.getElementById('mNome').innerText = itemSelecionado.name;
-        document.getElementById('mSku').innerText = 'REF: ' + (itemSelecionado.sku || '---');
-        document.getElementById('mQtd').value = 1;
-        document.getElementById('modalCompra').style.display = 'flex';
+        const item = s.val();
+        let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        
+        // Calcula o preço final para o carrinho
+        const dCat = parseInt(categoriasDados[item.category]?.discount || 0);
+        const dGlob = (promoGlobal && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem) : 0;
+        const melhorDesc = Math.max(dCat, dGlob);
+        const precoFinal = melhorDesc > 0 ? item.price * (1 - melhorDesc/100) : item.price;
+
+        carrinho.push({
+            nome: item.name,
+            sku: item.sku,
+            preco: precoFinal,
+            qtd: 1,
+            image: item.image,
+            peso: item.weight
+        });
+
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        atualizarContador();
+        alert("Adicionado ao pedido!");
     });
 }
-
-function fecharModal() { document.getElementById('modalCompra').style.display = 'none'; }
-
-document.getElementById('btnConfirmar').onclick = () => {
-    let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const qtd = parseInt(document.getElementById('mQtd').value);
-    
-    const dProd = parseInt(itemSelecionado.discount || 0);
-    const dCat = parseInt(categoriasDados[itemSelecionado.category]?.discount || 0);
-    const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
-    const melhorDesc = Math.max(dProd, dCat, dGlob);
-    const precoFinal = melhorDesc > 0 ? itemSelecionado.price * (1 - melhorDesc/100) : itemSelecionado.price;
-
-    carrinho.push({
-        id: itemSelecionado.id,
-        nome: itemSelecionado.name,
-        sku: itemSelecionado.sku || "S/N",
-        preco: precoFinal,
-        qtd: qtd,
-        image: itemSelecionado.image,
-        peso: itemSelecionado.weight || '---'
-    });
-
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    atualizarContador();
-    fecharModal();
-};
 
 inicializar();
 </script>
