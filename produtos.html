@@ -87,39 +87,51 @@ function carregarProdutos() {
             p.id = sp.key;
             if(p.paused) return;
 
-            // Lógica de Descontos
+            // 1. LÓGICA DE DESCONTOS (Busca o maior desconto disponível)
             const dProd = parseInt(p.discount || 0);
             const dCat = parseInt(categoriasDados[p.category]?.discount || 0);
-            const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
+            const dGlob = (promoGlobal && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem) : 0;
+            
             const melhorDesc = Math.max(dProd, dCat, dGlob);
 
-            const pOriginal = parseFloat(p.price);
+            // 2. CÁLCULO DE PREÇOS
+            const pOriginal = parseFloat(p.price || 0);
             const pFinal = melhorDesc > 0 ? pOriginal * (1 - melhorDesc/100) : pOriginal;
             
-            // Cálculos Adicionais (Pix e Parcelas)
-            const pPix = pFinal * 0.95; // 5% de desconto no Pix
-            const parcela = pFinal / 3; // Exemplo em 3x sem juros
+            // Pix com 5% de desconto sobre o valor já com promoção
+            const pPix = pFinal * 0.95; 
+            // Parcelamento em 3x sem juros
+            const parcela = pFinal / 3;
 
+            // 3. INJEÇÃO DO HTML NO GRID
             grid.innerHTML += `
-                <div class="card p-3" onclick="abrirModalCompra('${p.id}')">
-                    ${melhorDesc > 0 ? `<div class="absolute top-2 left-2 bg-green-600 text-white text-[8px] font-bold px-2 py-1 rounded-md z-10">-${melhorDesc}%</div>` : ''}
-                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
+                <div class="card p-3 relative flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer" onclick="abrirModalCompra('${p.id}')">
                     
-                    <span class="text-[8px] text-gray-400 font-bold uppercase">REF: ${p.sku || '---'}</span>
+                    ${melhorDesc > 0 ? `
+                        <div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg z-10 shadow-lg animate-pulse">
+                            ${melhorDesc}% OFF
+                        </div>
+                    ` : ''}
+                    
+                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3 bg-gray-50">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase tracking-wider">REF: ${p.sku || '---'}</span>
                     <h3 class="font-bold text-[11px] leading-tight mb-2 h-7 overflow-hidden text-gray-700">${p.name}</h3>
                     
                     <div class="mt-auto border-t border-gray-50 pt-2">
-                        <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1 flex-wrap">
                             <span class="gold font-bold text-sm">R$ ${pFinal.toFixed(2)}</span>
-                            ${melhorDesc > 0 ? `<span class="text-gray-400 line-through text-[9px]">R$ ${pOriginal.toFixed(2)}</span>` : ''}
+                            ${melhorDesc > 0 ? `
+                                <span class="text-gray-400 line-through text-[9px]">R$ ${pOriginal.toFixed(2)}</span>
+                            ` : ''}
                         </div>
                         
-                        <p class="text-[10px] text-green-600 font-bold mt-1">
-                            R$ ${pPix.toFixed(2)} <span class="text-[8px] font-normal uppercase">no PIX (-5%)</span>
+                        <p class="text-[10px] text-green-600 font-bold mt-1 leading-none">
+                            R$ ${pPix.toFixed(2)} 
+                            <span class="text-[7px] font-normal uppercase text-gray-400">no PIX (-5%)</span>
                         </p>
                         
-                        <p class="text-[9px] text-gray-500">
-                            ou 3x de <span class="font-bold">R$ ${parcela.toFixed(2)}</span>
+                        <p class="text-[9px] text-gray-500 mt-1">
+                            ou 3x de <span class="font-bold text-gray-700">R$ ${parcela.toFixed(2)}</span>
                         </p>
                     </div>
                 </div>`;
