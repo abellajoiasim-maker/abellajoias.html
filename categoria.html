@@ -1,177 +1,118 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Abella Joias | Categoria</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<title>Categoria | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <style>
-        body { font-family: 'Poppins', sans-serif !important; background: #f8f6f2 !important; color: #333; }
-        .serif { font-family: 'Cinzel', serif !important; }
-        .gold { color: #A68966 !important; }
-        
-        .tag-peso { 
-            background: #1a1a1a !important; 
-            color: #ffffff !important; 
-            font-size: 10px !important; 
-            font-weight: 700; 
-            padding: 4px 10px; 
-            border-radius: 6px; 
-            display: inline-block;
-            margin: 5px 0;
-        }
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-        .card-produto { background: #fff; border-radius: 20px; border: 1px solid #eee; padding: 15px; transition: 0.3s; position: relative; display: flex; flex-direction: column; height: 100%; }
-        .card-produto:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .btn-nav { background: white; border: 1px solid #ddd; padding: 6px 12px; border-radius: 50px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-    </style>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+.serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.card{background:#fff;border-radius:16px;border:1px solid #eee;transition:.3s;position:relative}
+.card:hover{transform:translateY(-4px);border-color:#A68966}
+.badge{position:absolute;top:10px;left:10px;background:#000;color:#fff;font-size:10px;padding:4px 8px;border-radius:999px}
+.riscado{text-decoration:line-through;color:#999;font-size:12px}
+</style>
 </head>
 
 <body>
 
-<header class="bg-white border-b sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <button onclick="window.history.back()" class="btn-nav">← Voltar</button>
-        <a href="checkout_premium.html" class="btn-nav">🛒 Pedido (<span id="cartCount">0</span>)</a>
-    </div>
-    
-    <div class="text-center py-8 space-y-4">
-        <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
-        <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
-        <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">Atacado de Joias no Bruto</p>
-    </div>
+<header class="bg-white border-b sticky top-0 z-40">
+  <div class="text-center py-8">
+    <h1 class="serif text-3xl gold">Abella Joias</h1>
+    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Catálogo Atacado</p>
+  </div>
+
+  <div class="flex justify-center gap-2 pb-4">
+    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">CATEGORIAS</a>
+    <a href="checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">CARRINHO</a>
+  </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-4 md:p-8">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-        </div>
+<main class="max-w-7xl mx-auto p-6">
+  <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700"></h2>
+  <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
-};
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+firebase.initializeApp({
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
 
-const urlParams = new URLSearchParams(window.location.search);
-const catSlug = urlParams.get('cat');
+const catId=new URLSearchParams(location.search).get('cat');
+if(!catId){alert('Categoria inválida');throw'';}
 
-let promoGlobal = { ativa: false, porcentagem: 0 };
-let categoriasDados = {};
+let descontoCategoria=0;
+let nomeCategoria='';
 
-function inicializar() {
-    if(!catSlug) {
-        document.getElementById('gridProdutos').innerHTML = "<p class='col-span-full text-center py-20 text-gray-400'>Selecione uma categoria.</p>";
-        return;
-    }
+db.ref('categories/'+catId).once('value').then(s=>{
+  const c=s.val();
+  if(!c) return;
+  descontoCategoria=c.discount||0;
+  nomeCategoria=c.name||'Categoria';
+  tituloCategoria.innerText=nomeCategoria;
+});
 
-    // 1. Pega Promoção Global
-    db.ref('settings/promocao').on('value', s => { 
-        promoGlobal = s.val() || { ativa: false, porcentagem: 0 }; 
-    });
+db.ref('products').on('value',snap=>{
+  const grid=document.getElementById('gridProdutos');
+  grid.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+    if(p.paused) return;
+    if(p.category!==catId) return;
 
-    // 2. Pega Descontos das Categorias
-    db.ref('categories').on('value', s => { 
-        s.forEach(c => { 
-            const cat = c.val();
-            categoriasDados[cat.slug] = cat; 
-        });
-        carregarProdutos(); // Carrega produtos após ter os dados das categorias
-    });
-    
-    atualizarContador();
+    let desconto=p.discount||descontoCategoria||0;
+    let precoFinal=p.price;
+    if(desconto>0) precoFinal=(p.price*(1-desconto/100)).toFixed(2);
+
+    grid.innerHTML+=`
+    <div class="card p-4 shadow-sm">
+      ${desconto>0?`<div class="badge">-${desconto}%</div>`:''}
+      <div class="aspect-square flex items-center justify-center mb-4">
+        <img src="${p.image||'https://via.placeholder.com/400'}" class="object-contain max-h-full">
+      </div>
+
+      <h3 class="text-xs font-bold uppercase tracking-widest mb-1">${p.name}</h3>
+      <p class="text-[11px] text-gray-500 mb-1">SKU: ${p.sku}</p>
+
+      ${desconto>0?`<p class="riscado">R$ ${Number(p.price).toFixed(2)}</p>`:''}
+      <p class="text-sm font-semibold mb-3">R$ ${Number(precoFinal).toFixed(2)}</p>
+
+      <button onclick="addCarrinho('${s.key}')"
+        class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
+        ADICIONAR
+      </button>
+    </div>`;
+  });
+});
+
+function addCarrinho(id){
+ db.ref('products/'+id).once('value').then(s=>{
+  const p=s.val();
+  let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
+  carrinho.push({
+    sku:p.sku,
+    nome:p.name,
+    preco:p.price,
+    peso:p.weight||0,
+    variacao:p.variacao||'',
+    qtd:1,
+    promocao:p.discount||0
+  });
+  localStorage.setItem('carrinho',JSON.stringify(carrinho));
+  alert('Adicionado ao carrinho');
+ });
 }
-
-function carregarProdutos() {
-    db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
-        const grid = document.getElementById('gridProdutos');
-        grid.innerHTML = '';
-        
-        snap.forEach(sp => {
-            const p = sp.val();
-            if(p.paused) return;
-
-            // --- LÓGICA DE DESCONTO SINCRONIZADA COM O PAINEL ---
-            const dProd = parseFloat(p.discount) || 0;
-            const dCat = parseFloat(categoriasDados[catSlug]?.discount) || 0;
-            const dGlob = (promoGlobal && promoGlobal.ativa) ? parseFloat(promoGlobal.porcentagem) : 0;
-            
-            // Escolhe o maior entre os três
-            const maiorDesc = Math.max(dProd, dCat, dGlob);
-            
-            const vOrig = parseFloat(p.price || 0);
-            const vFinal = maiorDesc > 0 ? vOrig * (1 - maiorDesc/100) : vOrig;
-            const vPix = vFinal * 0.95;
-            const vParcela = vFinal / 3;
-
-            const textoPeso = p.weight ? `PESO: ${p.weight}g` : "PESO: --";
-
-            grid.innerHTML += `
-                <div class="card-produto">
-                    ${maiorDesc > 0 ? `
-                        <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] px-2 py-1 rounded-full font-black z-10 animate-bounce shadow-lg">
-                            ${maiorDesc}% OFF
-                        </div>
-                    ` : ''}
-                    
-                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3 shadow-inner">
-                    
-                    <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">REF: ${p.sku || '---'}</span>
-                    <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-2 h-8 overflow-hidden uppercase">${p.name}</h3>
-                    
-                    <div><span class="tag-peso">${textoPeso}</span></div>
-                    <p class="text-[8px] text-gold font-bold uppercase italic mb-3 tracking-tighter">Joia no Bruto</p>
-
-                    <div class="mt-auto border-t pt-3">
-                        <div class="flex items-center gap-2 mb-1">
-                           <span class="text-sm font-bold gold">R$ ${vFinal.toFixed(2)}</span>
-                           
-                           ${maiorDesc > 0 ? `
-                                <span class="text-[10px] text-gray-400 line-through">R$ ${vOrig.toFixed(2)}</span>
-                           ` : ''}
-                        </div>
-                        
-                        <div class="space-y-1">
-                            <p class="text-[10px] text-green-600 font-bold uppercase italic">
-                                R$ ${vPix.toFixed(2)} <span class="text-[7px] text-gray-400 font-normal">no Pix</span>
-                            </p>
-                            <p class="text-[9px] text-gray-400 uppercase italic">
-                                3x de R$ ${vParcela.toFixed(2)} <span class="text-[7px] font-normal">s/ juros</span>
-                            </p>
-                        </div>
-                    </div>
-
-                    <button onclick="addCarrinho('${sp.key}', ${vFinal})" class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold uppercase mt-4 hover:bg-[#A68966] transition-all shadow-md">
-                        Adicionar
-                    </button>
-                </div>`;
-        });
-    });
-}
-
-function atualizarContador() {
-    const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    document.getElementById('cartCount').innerText = c.length;
-}
-
-function addCarrinho(id, preco) {
-    db.ref('products/' + id).once('value', s => {
-        const p = s.val();
-        let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        cart.push({ nome: p.name, sku: p.sku, preco: preco, qtd: 1, image: p.image, peso: p.weight });
-        localStorage.setItem('carrinho', JSON.stringify(cart));
-        atualizarContador();
-        alert("Adicionado ao seu pedido!");
-    });
-}
-
-inicializar();
 </script>
+
 </body>
 </html>
