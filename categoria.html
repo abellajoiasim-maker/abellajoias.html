@@ -15,10 +15,30 @@
 body{font-family:'Poppins',sans-serif;background:#f8f6f2}
 .serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-.card{background:#fff;border-radius:16px;border:1px solid #eee;transition:.3s;position:relative}
+.card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #eee;
+  transition:.3s;
+  position:relative
+}
 .card:hover{transform:translateY(-4px);border-color:#A68966}
-.badge{position:absolute;top:10px;left:10px;background:#000;color:#fff;font-size:10px;padding:4px 8px;border-radius:999px}
-.riscado{text-decoration:line-through;color:#999;font-size:12px}
+.badge{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#000;
+  color:#fff;
+  font-size:10px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-weight:bold
+}
+.riscado{
+  text-decoration:line-through;
+  color:#999;
+  font-size:12px
+}
 </style>
 </head>
 
@@ -27,90 +47,132 @@ body{font-family:'Poppins',sans-serif;background:#f8f6f2}
 <header class="bg-white border-b sticky top-0 z-40">
   <div class="text-center py-8">
     <h1 class="serif text-3xl gold">Abella Joias</h1>
-    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Catálogo Atacado</p>
+    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">
+      Catálogo Atacado
+    </p>
   </div>
 
   <div class="flex justify-center gap-2 pb-4">
-    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">CATEGORIAS</a>
-    <a href="checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">CARRINHO</a>
+    <a href="index.html"
+       class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">
+      CATEGORIAS
+    </a>
+    <a href="checkout_premium.html"
+       class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">
+      CARRINHO
+    </a>
   </div>
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
-  <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700"></h2>
-  <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
+  <h2 id="tituloCategoria"
+      class="serif text-xl text-center mb-10 text-gray-700"></h2>
+
+  <div id="gridProdutos"
+       class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
 <script>
+/* FIREBASE */
 firebase.initializeApp({
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
-const db=firebase.database();
+const db = firebase.database();
 
-const catId=new URLSearchParams(location.search).get('cat');
-if(!catId){alert('Categoria inválida');throw'';}
+/* CATEGORIA */
+const catId = new URLSearchParams(window.location.search).get('cat');
+if(!catId){
+  document.body.innerHTML='<p style="padding:40px;text-align:center">Categoria inválida</p>';
+  throw '';
+}
 
-let descontoCategoria=0;
-let nomeCategoria='';
+let descontoCategoria = 0;
 
+/* CARREGA CATEGORIA */
 db.ref('categories/'+catId).once('value').then(s=>{
-  const c=s.val();
+  const c = s.val();
   if(!c) return;
-  descontoCategoria=c.discount||0;
-  nomeCategoria=c.name||'Categoria';
-  tituloCategoria.innerText=nomeCategoria;
+  descontoCategoria = Number(c.discount||0);
+  document.getElementById('tituloCategoria').innerText = c.name;
 });
 
+/* PRODUTOS */
 db.ref('products').on('value',snap=>{
-  const grid=document.getElementById('gridProdutos');
-  grid.innerHTML='';
+  const grid = document.getElementById('gridProdutos');
+  grid.innerHTML = '';
+
   snap.forEach(s=>{
-    const p=s.val();
+    const p = s.val();
     if(p.paused) return;
-    if(p.category!==catId) return;
+    if(p.category !== catId) return;
 
-    let desconto=p.discount||descontoCategoria||0;
-    let precoFinal=p.price;
-    if(desconto>0) precoFinal=(p.price*(1-desconto/100)).toFixed(2);
+    const preco = Number(p.price||0);
+    const descontoProduto = Number(p.discount||0);
+    const descontoFinal = descontoProduto>0 ? descontoProduto : descontoCategoria;
 
-    grid.innerHTML+=`
+    const precoComDesconto = descontoFinal>0
+      ? (preco * (1 - descontoFinal/100)).toFixed(2)
+      : preco.toFixed(2);
+
+    grid.innerHTML += `
     <div class="card p-4 shadow-sm">
-      ${desconto>0?`<div class="badge">-${desconto}%</div>`:''}
+
+      ${descontoFinal>0 ? `<div class="badge">-${descontoFinal}%</div>` : ``}
+
       <div class="aspect-square flex items-center justify-center mb-4">
-        <img src="${p.image||'https://via.placeholder.com/400'}" class="object-contain max-h-full">
+        <img src="${p.image||'https://via.placeholder.com/400'}"
+             class="object-contain max-h-full">
       </div>
 
-      <h3 class="text-xs font-bold uppercase tracking-widest mb-1">${p.name}</h3>
-      <p class="text-[11px] text-gray-500 mb-1">SKU: ${p.sku}</p>
+      <h3 class="text-xs font-bold uppercase tracking-widest mb-1">
+        ${p.name}
+      </h3>
 
-      ${desconto>0?`<p class="riscado">R$ ${Number(p.price).toFixed(2)}</p>`:''}
-      <p class="text-sm font-semibold mb-3">R$ ${Number(precoFinal).toFixed(2)}</p>
+      <p class="text-[11px] text-gray-500 mb-1">
+        SKU: ${p.sku||''}
+      </p>
 
-      <button onclick="addCarrinho('${s.key}')"
+      <p class="text-[11px] text-gray-500 mb-2">
+        Peso: ${p.weight||''}
+      </p>
+
+      ${descontoFinal>0
+        ? `<p class="riscado">R$ ${preco.toFixed(2)}</p>`
+        : ``}
+
+      <p class="text-sm font-semibold mb-3">
+        R$ ${precoComDesconto}
+      </p>
+
+      <button onclick="adicionarCarrinho('${s.key}')"
         class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
-        ADICIONAR
+        ADICIONAR AO CARRINHO
       </button>
+
     </div>`;
   });
 });
 
-function addCarrinho(id){
- db.ref('products/'+id).once('value').then(s=>{
-  const p=s.val();
-  let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
-  carrinho.push({
-    sku:p.sku,
-    nome:p.name,
-    preco:p.price,
-    peso:p.weight||0,
-    variacao:p.variacao||'',
-    qtd:1,
-    promocao:p.discount||0
+/* CARRINHO */
+function adicionarCarrinho(id){
+  db.ref('products/'+id).once('value').then(s=>{
+    const p = s.val();
+    let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
+
+    carrinho.push({
+      sku:p.sku,
+      nome:p.name,
+      preco:Number(p.price),
+      peso:Number(p.weight||0),
+      variacao:p.variacao||'',
+      qtd:1,
+      promocao:Number(p.discount||0)
+    });
+
+    localStorage.setItem('carrinho',JSON.stringify(carrinho));
+    alert('Produto adicionado ao carrinho');
   });
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  alert('Adicionado ao carrinho');
- });
 }
 </script>
 
