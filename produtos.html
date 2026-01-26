@@ -7,232 +7,182 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-    body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+    body{font-family:'Poppins',sans-serif;background:#f8f6f2;color:#333}
     .serif{font-family:'Cinzel',serif}
     .gold{color:#A68966}
-    .card{ background:#fff; border-radius:16px; border:1px solid #eee; transition:.3s; height: 100%; display: flex; flex-direction: column; position: relative; }
-    #modalCompra { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; }
-    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-
-    /* ETIQUETA DE DESCONTO */
-    .badge-promo {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #16a34a;
-        color: white;
-        font-size: 10px;
-        font-weight: 800;
-        padding: 4px 10px;
-        border-radius: 8px;
-        z-index: 10;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        letter-spacing: 0.05em;
-    }
-    .preco-riscado { text-decoration: line-through; color: #a1a1aa; font-size: 10px; }
+    .card{ background:#fff; border-radius:20px; border:1px solid #eee; transition:0.3s; position:relative; overflow:hidden; }
+    .card:hover{ transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    #modalCompra { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(5px); }
+    .modal-content { background:#fff; width:100%; max-width:450px; border-radius:30px; overflow:hidden; position:relative; }
+    input { background:#f9f9f9; border:1px solid #eee; padding:12px; border-radius:12px; text-align:center; outline:none; font-weight:bold; }
 </style>
 </head>
-<body>
+<body class="pb-24">
 
-<header class="bg-white border-b sticky top-0 z-40 text-center py-6">
-    <h1 class="serif text-2xl gold">Abella Joias</h1>
-    <div class="flex justify-center flex-wrap gap-2 mt-4 px-4">
-        <a href="index.html" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-full text-[9px] font-bold uppercase">← Voltar</a>
-        <a href="index.html" class="bg-black text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Categorias</a>
-        <a href="galvanicas.html" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-full text-[9px] font-bold uppercase">Galvânicas</a>
-        <a href="https://abellajoiasim-maker.github.io/abellajoias/checkout_premium.html" class="bg-[#A68966] text-white px-4 py-2 rounded-full text-[9px] font-bold uppercase">Carrinho (<span id="cartCount">0</span>)</a>
-    </div>
+<header class="p-6 bg-white border-b border-gray-100 sticky top-0 z-50 flex justify-between items-center">
+    <button onclick="history.back()" class="p-2 bg-gray-50 rounded-full">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <h1 id="tituloCategoria" class="serif text-lg gold tracking-widest uppercase">Carregando...</h1>
+    <a href="carrinho.html" class="relative p-2 bg-gray-50 rounded-full">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
+        <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
+    </a>
 </header>
 
-<main class="max-w-7xl mx-auto p-6">
-    <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700 uppercase tracking-widest font-bold border-b border-gray-200 pb-4"></h2>
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+<main class="p-4 max-w-7xl mx-auto">
+    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        </div>
 </main>
 
 <div id="modalCompra">
-    <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center relative shadow-2xl">
-        <button onclick="fecharModal()" class="absolute top-5 right-5 text-gray-400 text-3xl font-light hover:text-black">&times;</button>
-        <div class="aspect-square w-40 mx-auto mb-4 border rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
-            <img id="mImg" src="" class="max-h-full max-w-full object-contain">
-        </div>
-        <h3 id="mNome" class="font-bold gold text-sm uppercase px-2 mb-1 leading-tight"></h3>
-        <p id="mSku" class="text-[10px] text-gray-400 mb-8 font-bold tracking-widest"></p>
-        <div class="mb-10">
-            <label class="text-[10px] block mb-4 font-bold text-gray-400 uppercase tracking-[0.2em]">Quantidade Desejada</label>
-            <div class="flex items-center justify-center">
-                <input type="number" id="mQtd" value="1" min="1" 
-                       class="w-32 text-center text-4xl font-bold bg-gray-50 border-b-4 border-black p-3 outline-none focus:bg-yellow-50 focus:border-[#A68966] transition-all rounded-t-lg"
-                       inputmode="numeric"> 
+    <div class="modal-content">
+        <button onclick="fecharModal()" class="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full shadow-lg">&times;</button>
+        <img id="mFoto" class="w-full aspect-square object-cover" src="">
+        <div class="p-6">
+            <h2 id="mNome" class="serif text-xl mb-2">Nome do Produto</h2>
+            
+            <div id="mFicha" class="grid grid-cols-3 gap-2 py-3 border-y border-gray-100 mb-4 text-center">
+                <div><p class="text-[9px] text-gray-400 uppercase">Ref</p><p id="mSku" class="text-xs font-bold">---</p></div>
+                <div><p class="text-[9px] text-gray-400 uppercase">Peso</p><p id="mPeso" class="text-xs font-bold">0g</p></div>
+                <div><p class="text-[9px] text-gray-400 uppercase">Banho</p><p class="text-xs font-bold">Premium</p></div>
             </div>
+
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Preço Atacado</p>
+                    <p id="mPreco" class="text-2xl font-bold gold">R$ 0,00</p>
+                </div>
+                <div class="w-24">
+                    <p class="text-[9px] text-gray-400 uppercase mb-1 text-center">Quantidade</p>
+                    <input type="number" id="mQtd" value="1" min="1">
+                </div>
+            </div>
+
+            <button id="btnConfirmar" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg">
+                Adicionar ao Pedido
+            </button>
         </div>
-        <button id="btnConfirmar" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg">
-            Adicionar ao Pedido
-        </button>
     </div>
 </div>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const params = new URLSearchParams(window.location.search);
-const catSlug = params.get('cat');
+const urlParams = new URLSearchParams(window.location.search);
+const slugCat = urlParams.get('cat');
 let itemSelecionado = null;
-let configEmpresa = { desconto_pix: 5, parcelas: 6 };
+let categoriasDados = {};
+let promoGlobal = { ativa: false, porcentagem: 0 };
 
-if(!catSlug) location.href = 'index.html';
+// Carrega as configurações de promoção e categorias primeiro
+async function inicializar() {
+    const [snapCats, snapPromo] = await Promise.all([
+        db.ref('categories').once('value'),
+        db.ref('settings/promocao').once('value')
+    ]);
+    
+    categoriasDados = snapCats.val() || {};
+    promoGlobal = snapPromo.val() || { ativa: false, porcentagem: 0 };
+    
+    // Encontrar nome da categoria pelo slug
+    const catAtual = Object.values(categoriasDados).find(c => c.slug === slugCat);
+    if(catAtual) document.getElementById('tituloCategoria').innerText = catAtual.name;
 
-// 1. CARREGAR CONFIGURAÇÕES E PROMOÇÕES PRIMEIRO
-function inicializar() {
-    Promise.all([
-        db.ref('settings').once('value'),
-        db.ref('categories/' + catSlug).once('value')
-    ]).then(([snapSettings, snapCat]) => {
-        const settings = snapSettings.val() || {};
-        const categoria = snapCat.val() || { name: catSlug, discount: 0 };
-        
-        // Configs Gerais
-        configEmpresa.desconto_pix = parseFloat(settings.pix) || 5;
-        configEmpresa.parcelas = parseInt(settings.parcelas) || 6;
-        
-        // Título da Página
-        document.getElementById('tituloCategoria').innerText = categoria.name;
-
-        // Determinar a porcentagem de desconto para esta página
-        // Prioridade: Promoção Global Ativa > Desconto da Categoria
-        const promoGlobal = settings.promocao || { ativa: false, porcentagem: 0 };
-        let descAtivo = 0;
-        
-        if (promoGlobal.ativa) {
-            descAtivo = parseInt(promoGlobal.porcentagem);
-        } else {
-            descAtivo = parseInt(categoria.discount || 0);
-        }
-
-        renderizarProdutos(descAtivo);
-    });
+    carregarProdutos();
+    atualizarContador();
 }
 
-// 2. RENDERIZAR PRODUTOS COM A LÓGICA DE ETIQUETA
-function renderizarProdutos(percentualDesconto) {
-    db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
+function carregarProdutos() {
+    db.ref('products').orderByChild('category_slug').equalTo(slugCat).on('value', snap => {
         const grid = document.getElementById('gridProdutos');
         grid.innerHTML = '';
         
-        snap.forEach(p => {
-            const prod = p.val();
-            if(prod.paused) return;
+        if(!snap.exists()) {
+            grid.innerHTML = "<p class='col-span-full text-center p-10 text-gray-400'>Nenhum produto encontrado nesta categoria.</p>";
+            return;
+        }
 
-            const precoOriginal = parseFloat(prod.price);
-            let precoComDesconto = precoOriginal;
-            let htmlPrecos = '';
-            let htmlEtiqueta = '';
+        snap.forEach(sp => {
+            const p = sp.val();
+            p.id = sp.key;
 
-            // Aplicar desconto se houver
-            if (percentualDesconto > 0) {
-                precoComDesconto = precoOriginal * (1 - (percentualDesconto / 100));
-                htmlEtiqueta = `<div class="badge-promo">${percentualDesconto}% OFF</div>`;
-                htmlPrecos = `
-                    <div class="flex justify-between items-baseline">
-                        <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
-                        <div class="text-right">
-                            <p class="preco-riscado">R$ ${precoOriginal.toFixed(2)}</p>
-                            <p class="text-xs font-bold text-gray-900 leading-none">R$ ${precoComDesconto.toFixed(2)}</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                htmlPrecos = `
-                    <div class="flex justify-between items-baseline">
-                        <span class="text-[10px] text-gray-400 uppercase">Bruto:</span>
-                        <span class="text-xs font-bold text-gray-900">R$ ${precoOriginal.toFixed(2)}</span>
-                    </div>
-                `;
-            }
+            // Lógica do Melhor Desconto
+            const dProd = parseInt(p.discount || 0);
+            const dCat = parseInt(categoriasDados[p.category]?.discount || 0);
+            const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
+            const melhorDesc = Math.max(dProd, dCat, dGlob);
 
-            const precoPix = precoComDesconto * (1 - (configEmpresa.desconto_pix / 100));
-            const valorParc = precoComDesconto / configEmpresa.parcelas;
+            const pOriginal = parseFloat(p.price);
+            const pFinal = melhorDesc > 0 ? pOriginal * (1 - melhorDesc/100) : pOriginal;
 
             grid.innerHTML += `
-                <div class="card p-4 shadow-sm border border-gray-100">
-                    ${htmlEtiqueta}
-                    <div class="aspect-square flex items-center justify-center mb-4 bg-white rounded-lg overflow-hidden">
-                        <img src="${prod.image || 'https://via.placeholder.com/400'}" class="object-contain max-h-full w-full hover:scale-110 transition-transform duration-500">
-                    </div>
-                    <div class="flex-grow">
-                        <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">SKU: ${prod.sku}</p>
-                        <h3 class="text-[11px] font-bold uppercase mb-3 leading-tight text-gray-800 h-8 overflow-hidden">${prod.name}</h3>
-                        <div class="border-t border-gray-50 pt-3 space-y-1">
-                            ${htmlPrecos}
-                            <div class="flex justify-between items-baseline text-green-600">
-                                <span class="text-[9px] font-bold uppercase tracking-tighter">PIX (-${configEmpresa.desconto_pix}%):</span>
-                                <span class="text-xs font-bold">R$ ${precoPix.toFixed(2)}</span>
-                            </div>
-                            <p class="text-[9px] text-gray-400 text-right">${configEmpresa.parcelas}x de R$ ${valorParc.toFixed(2)}</p>
-                            <p class="text-[9px] text-gray-400 font-medium italic mt-2 text-right">Peso: ${prod.weight}g</p>
+                <div class="card p-3" onclick="abrirModalCompra('${p.id}')">
+                    ${melhorDesc > 0 ? `<div class="absolute top-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-1 rounded-lg z-10">-${melhorDesc}% OFF</div>` : ''}
+                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
+                    <p class="text-[9px] text-gray-400 uppercase mb-1">REF: ${p.sku || '---'}</p>
+                    <h3 class="font-bold text-[11px] leading-tight mb-2 h-7 overflow-hidden text-gray-700">${p.name}</h3>
+                    <div class="mt-auto">
+                        <div class="flex items-center gap-2">
+                            <span class="gold font-bold text-sm">R$ ${pFinal.toFixed(2)}</span>
+                            ${melhorDesc > 0 ? `<span class="text-gray-400 line-through text-[9px]">R$ ${pOriginal.toFixed(2)}</span>` : ''}
                         </div>
+                        <p class="text-[9px] text-gray-400 mt-1">${p.weight || p.peso || 0}g | Atacado</p>
                     </div>
-                    <button onclick="abrirModal('${p.key}')" class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold mt-4 uppercase tracking-[0.15em] hover:bg-[#A68966] transition-all">
-                        Selecionar
-                    </button>
                 </div>`;
         });
     });
 }
 
-// Inicializa o sistema
-inicializar();
+function abrirModalCompra(id) {
+    db.ref('products/' + id).once('value').then(snap => {
+        itemSelecionado = snap.val();
+        itemSelecionado.id = snap.key;
 
-async function abrirModal(id) {
-    const snap = await db.ref('products/' + id).once('value');
-    const p = snap.val();
-    itemSelecionado = { ...p, id: id };
-    document.getElementById('mImg').src = p.image || 'https://via.placeholder.com/400';
-    document.getElementById('mNome').innerText = p.name;
-    document.getElementById('mSku').innerText = "SKU: " + p.sku;
-    const inputQtd = document.getElementById('mQtd');
-    inputQtd.value = 1;
-    document.getElementById('modalCompra').style.display = 'flex';
-    setTimeout(() => { inputQtd.focus(); inputQtd.select(); }, 100);
+        document.getElementById('mFoto').src = itemSelecionado.image;
+        document.getElementById('mNome').innerText = itemSelecionado.name;
+        document.getElementById('mSku').innerText = itemSelecionado.sku || 'S/N';
+        document.getElementById('mPeso').innerText = (itemSelecionado.weight || itemSelecionado.peso || 0) + 'g';
+        
+        const dProd = parseInt(itemSelecionado.discount || 0);
+        const dCat = parseInt(categoriasDados[itemSelecionado.category]?.discount || 0);
+        const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
+        const melhorDesc = Math.max(dProd, dCat, dGlob);
+        const pFinal = melhorDesc > 0 ? itemSelecionado.price * (1 - melhorDesc/100) : itemSelecionado.price;
+
+        document.getElementById('mPreco').innerText = `R$ ${parseFloat(pFinal).toFixed(2)}`;
+        document.getElementById('mQtd').value = 1;
+        document.getElementById('modalCompra').style.display = 'flex';
+    });
 }
 
 function fecharModal() { document.getElementById('modalCompra').style.display = 'none'; }
 
 document.getElementById('btnConfirmar').onclick = () => {
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const inputQtd = document.getElementById('mQtd');
-    const qtd = parseInt(inputQtd.value);
+    const qtd = parseInt(document.getElementById('mQtd').value);
     
-    if(isNaN(qtd) || qtd < 1) {
-        alert("Por favor, digite uma quantidade válida.");
-        inputQtd.focus();
-        return;
-    }
+    if(isNaN(qtd) || qtd < 1) return;
 
-    // 1. CÁLCULO DO MELHOR DESCONTO (Sincronizado com o Painel)
-    const descProd = parseInt(itemSelecionado.discount || 0);
-    const descCat = parseInt(categoriasDados[itemSelecionado.category]?.discount || 0);
-    const descGlobal = (typeof promoGlobal !== 'undefined' && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem || 0) : 0;
-    
-    // Define qual o maior desconto entre Produto, Categoria e Global
-    const melhorDesconto = Math.max(descProd, descCat, descGlobal);
-    
-    const precoBase = parseFloat(itemSelecionado.price || 0);
-    const precoFinal = melhorDesconto > 0 ? precoBase * (1 - melhorDesconto / 100) : precoBase;
+    // Repete o cálculo de desconto para salvar o preço final correto no carrinho
+    const dProd = parseInt(itemSelecionado.discount || 0);
+    const dCat = parseInt(categoriasDados[itemSelecionado.category]?.discount || 0);
+    const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
+    const melhorDesc = Math.max(dProd, dCat, dGlob);
+    const precoFinalNoCarrinho = melhorDesc > 0 ? itemSelecionado.price * (1 - melhorDesc/100) : itemSelecionado.price;
 
-    // 2. ADIÇÃO AO CARRINHO COM DADOS PARA ROMANEIO
     carrinho.push({
         id: itemSelecionado.id,
         nome: itemSelecionado.name,
-        sku: itemSelecionado.sku || "S/N", 
-        preco: precoFinal,
+        sku: itemSelecionado.sku || "S/N",
+        preco: precoFinalNoCarrinho,
         qtd: qtd,
         image: itemSelecionado.image,
         peso: itemSelecionado.weight || itemSelecionado.peso || 0,
@@ -241,26 +191,25 @@ document.getElementById('btnConfirmar').onclick = () => {
 
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     
-    // 3. FEEDBACK VISUAL NO BOTÃO
     const btn = document.getElementById('btnConfirmar');
-    const textoOriginal = btn.innerText;
-    
-    btn.innerText = "✓ ADICIONADO AO PEDIDO";
-    btn.style.backgroundColor = "#16a34a"; // Verde Sucesso
+    btn.innerText = "✓ ADICIONADO!";
+    btn.style.background = "#16a34a";
 
     setTimeout(() => {
         fecharModal();
-        if(typeof atualizarContador === 'function') atualizarContador();
-        btn.innerText = textoOriginal;
-        btn.style.backgroundColor = "black";
+        atualizarContador();
+        btn.innerText = "ADICIONAR AO PEDIDO";
+        btn.style.background = "black";
     }, 800);
 };
 
 function atualizarContador() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    document.getElementById('cartCount').innerText = carrinho.length;
+    const total = carrinho.reduce((sum, item) => sum + item.qtd, 0);
+    document.getElementById('cartCount').innerText = total;
 }
-atualizarContador();
+
+inicializar();
 </script>
 </body>
 </html>
