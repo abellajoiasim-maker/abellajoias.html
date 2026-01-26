@@ -179,54 +179,83 @@ function salvarEmpresa(){
     alert('Configurações salvas!');
 }
 
-/* CATEGORIAS & PRODUTOS (Lógica que você já tinha) */
-db.ref('categories').on('value',s=>{
+/* ============================================================
+   LÓGICA DE EDIÇÃO E RENDERIZAÇÃO (CATEGORIAS & PRODUTOS)
+   ============================================================ */
+
+// 1. GESTÃO DE CATEGORIAS (Listagem e Edição)
+db.ref('categories').on('value', s => {
     const listaCategorias = document.getElementById('listaCategorias');
     const listaPromocoes = document.getElementById('listaPromocoes');
-    listaCategorias.innerHTML=''; listaPromocoes.innerHTML='';
-    s.forEach(c=>{
-        const d=c.val();
-        listaCategorias.innerHTML+=`<div class="card"><b>${d.name}</b><div class="flex gap-1 mt-2"><button class="btn" onclick="editarCategoria('${c.key}')">Editar</button><button class="btn btn-red" onclick="excluir('categories','${c.key}')">Excluir</button></div></div>`;
-        listaPromocoes.innerHTML+=`<div class="card flex justify-between items-center"><span>${d.name}</span><input type="number" id="promo-${c.key}" value="${d.discount||0}" class="w-20 mb-0"></div>`;
+    if (!listaCategorias || !listaPromocoes) return;
+
+    listaCategorias.innerHTML = ''; 
+    listaPromocoes.innerHTML = '';
+
+    s.forEach(c => {
+        const d = c.val();
+        const id = c.key;
+
+        // Renderiza na lista de gestão de nomes
+        listaCategorias.innerHTML += `
+            <div class="card p-3 mb-2">
+                <b class="text-xs uppercase">${d.name}</b>
+                <div class="flex gap-1 mt-2">
+                    <button class="btn text-[9px] py-1 px-2" onclick="editarCategoria('${id}')">Renomear</button>
+                    <button class="btn btn-red text-[9px] py-1 px-2" onclick="excluir('categories','${id}')">Excluir</button>
+                </div>
+            </div>`;
+
+        // Renderiza na lista de descontos/promoções
+        listaPromocoes.innerHTML += `
+            <div class="card flex justify-between items-center p-3 mb-2">
+                <span class="text-[11px] font-bold">${d.name}</span>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="promo-${id}" value="${d.discount || 0}" 
+                           class="w-16 mb-0 text-center p-1 text-black border rounded text-xs font-bold">
+                    <span class="text-[10px] font-bold">%</span>
+                </div>
+            </div>`;
     });
 });
 
+// 2. GESTÃO DE PRODUTOS (Listagem Agrupada e Edição)
 db.ref('products').on('value', snapProdutos => {
     const container = document.getElementById('produtosPorCategoria');
+    if (!container) return;
+    
     container.innerHTML = '';
     const map = {};
 
-    // 1. Buscamos as configurações de promoções primeiro
     Promise.all([
         db.ref('settings/promocao').once('value'),
         db.ref('categories').once('value')
     ]).then(([snapPromoGlobal, snapCats]) => {
-        
         const promoGeral = snapPromoGlobal.val() || { ativa: false, porcentagem: 0 };
         const categorias = snapCats.val() || {};
 
-        // 2. Agrupa produtos por categoria
         snapProdutos.forEach(p => {
             const v = p.val(); v.id = p.key;
             if (!map[v.category]) map[v.category] = [];
             map[v.category].push(v);
         });
 
-        // 3. Renderiza cada categoria e seus produtos
         Object.keys(map).forEach(catID => {
             const nomeCat = categorias[catID]?.name || catID;
-            container.innerHTML += `<h3 class="text-[#caa85c] mt-6 mb-2 uppercase text-xs font-bold tracking-widest">${nomeCat}</h3><div class="grid" id="grid-${catID}"></div>`;
+            container.innerHTML += `
+                <h3 class="text-[#caa85c] mt-8 mb-4 uppercase text-[10px] font-bold tracking-widest border-b border-[#caa85c]/20 pb-2">
+                    ${nomeCat}
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="grid-${catID}"></div>`;
             
             const grid = document.getElementById(`grid-${catID}`);
             
             map[catID].forEach(p => {
-                // --- LÓGICA DO DESCONTO ---
                 const precoBase = parseFloat(p.price || 0);
-                const descIndividual = parseInt(p.discount || 0); // Desconto no produto
-                const descCategoria = parseInt(categorias[catID]?.discount || 0); // Desconto na categoria
+                const descIndividual = parseInt(p.discount || 0);
+                const descCategoria = parseInt(categorias[catID]?.discount || 0);
                 const descGlobal = promoGeral.ativa ? parseInt(promoGeral.porcentagem || 0) : 0;
 
-                // Escolhe o maior desconto entre os três
                 const melhorDesconto = Math.max(descIndividual, descCategoria, descGlobal);
 
                 let precoHtml = `<div class="text-sm font-bold text-white">R$ ${precoBase.toFixed(2)}</div>`;
@@ -242,10 +271,10 @@ db.ref('products').on('value', snapProdutos => {
                 }
 
                 grid.innerHTML += `
-                    <div class="card produto-container relative overflow-hidden">
+                    <div class="card produto-container relative overflow-hidden bg-[#111] p-3 rounded-xl border border-white/5">
                         ${badgeHtml}
                         <img src="${p.image}" class="w-full h-32 object-cover rounded-lg mb-2 bg-black" onerror="this.src='https://via.placeholder.com/150'">
-                        <div class="text-[9px] opacity-40 uppercase tracking-tighter">${p.sku || 'S/ SKU'}</div>
+                        <div class="text-[9px] opacity-40 uppercase tracking-tighter text-white">SKU: ${p.sku || 'S/ SKU'}</div>
                         <div class="text-[11px] font-medium truncate mb-1 text-gray-200">${p.name}</div>
                         ${precoHtml}
                         <div class="flex gap-1 mt-3">
@@ -257,6 +286,60 @@ db.ref('products').on('value', snapProdutos => {
         });
     });
 });
+
+/* ============================================================
+   FUNÇÕES DE AÇÃO (JANELAS DE EDIÇÃO)
+   ============================================================ */
+
+// EDITAR CATEGORIA (NOME)
+window.editarCategoria = function(id) {
+    db.ref('categories/' + id).once('value').then(snap => {
+        const d = snap.val();
+        const novoNome = prompt("Digite o novo nome para a categoria:", d.name);
+        if (novoNome && novoNome.trim() !== "") {
+            db.ref('categories/' + id).update({ name: novoNome })
+                .then(() => alert("Nome da categoria atualizado!"));
+        }
+    });
+};
+
+// EDITAR PRODUTO (NOME, PREÇO E DESCONTO)
+window.editarProduto = function(id) {
+    db.ref('products/' + id).once('value').then(snap => {
+        const p = snap.val();
+        const novoNome = prompt("Nome do Produto:", p.name);
+        const novoPreco = prompt("Preço Bruto (R$):", p.price);
+        const novoDesc = prompt("Desconto Individual (%) - Digite 0 para nenhum:", p.discount || 0);
+
+        if (novoNome && novoPreco) {
+            db.ref('products/' + id).update({
+                name: novoNome,
+                price: parseFloat(novoPreco.replace(',', '.')),
+                discount: parseInt(novoDesc) || 0
+            }).then(() => alert("Produto atualizado com sucesso!"));
+        }
+    });
+};
+
+// EXCLUIR (UNIVERSAL)
+window.excluir = function(caminho, id) {
+    const confirmacao = confirm("Atenção! Esta ação é permanente. Deseja realmente excluir?");
+    if (confirmacao) {
+        db.ref(caminho + '/' + id).remove()
+            .then(() => alert("Removido com sucesso!"));
+    }
+};
+
+// SALVAR TODOS OS DESCONTOS DE CATEGORIA (BOTÃO GERAL)
+window.salvarPromocoes = function() {
+    const inputs = document.querySelectorAll('input[id^="promo-"]');
+    const updates = {};
+    inputs.forEach(input => {
+        const id = input.id.replace('promo-', '');
+        updates[`categories/${id}/discount`] = parseInt(input.value) || 0;
+    });
+    db.ref().update(updates).then(() => alert("Todos os descontos de categoria foram salvos!"));
+};
 
 /* === 1. FUNÇÃO EDITAR PRODUTO (COM CAMPO DE DESCONTO) === */
 function editarProduto(id) {
