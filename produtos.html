@@ -215,32 +215,45 @@ document.getElementById('btnConfirmar').onclick = () => {
         inputQtd.focus();
         return;
     }
+
+    // 1. CÁLCULO DO MELHOR DESCONTO (Sincronizado com o Painel)
+    const descProd = parseInt(itemSelecionado.discount || 0);
+    const descCat = parseInt(categoriasDados[itemSelecionado.category]?.discount || 0);
+    const descGlobal = (typeof promoGlobal !== 'undefined' && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem || 0) : 0;
     
+    // Define qual o maior desconto entre Produto, Categoria e Global
+    const melhorDesconto = Math.max(descProd, descCat, descGlobal);
+    
+    const precoBase = parseFloat(itemSelecionado.price || 0);
+    const precoFinal = melhorDesconto > 0 ? precoBase * (1 - melhorDesconto / 100) : precoBase;
+
+    // 2. ADIÇÃO AO CARRINHO COM DADOS PARA ROMANEIO
     carrinho.push({
         id: itemSelecionado.id,
         nome: itemSelecionado.name,
-        sku: itemSelecionado.sku,
-        preco: parseFloat(itemSelecionado.price),
+        sku: itemSelecionado.sku || "S/N", 
+        preco: precoFinal,
         qtd: qtd,
         image: itemSelecionado.image,
-        peso: itemSelecionado.weight,
+        peso: itemSelecionado.weight || itemSelecionado.peso || 0,
         category: itemSelecionado.category
     });
 
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     
+    // 3. FEEDBACK VISUAL NO BOTÃO
     const btn = document.getElementById('btnConfirmar');
-    const originalText = btn.innerText;
+    const textoOriginal = btn.innerText;
     
-    btn.innerText = "ADICIONADO!";
-    btn.classList.replace('bg-black', 'bg-green-600'); 
+    btn.innerText = "✓ ADICIONADO AO PEDIDO";
+    btn.style.backgroundColor = "#16a34a"; // Verde Sucesso
 
     setTimeout(() => {
         fecharModal();
-        atualizarContador();
-        btn.innerText = originalText;
-        btn.classList.replace('bg-green-600', 'bg-black');
-    }, 600);
+        if(typeof atualizarContador === 'function') atualizarContador();
+        btn.innerText = textoOriginal;
+        btn.style.backgroundColor = "black";
+    }, 800);
 };
 
 function atualizarContador() {
