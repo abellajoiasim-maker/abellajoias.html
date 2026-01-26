@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Categorias | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f4f4; }
+        .gold { color: #A68966; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
+        <div class="bg-black p-6 text-center">
+            <h1 class="text-white font-bold uppercase tracking-widest">Gerenciar Categorias</h1>
+            <p class="text-gray-400 text-xs mt-1">Abella Joias - Painel Master</p>
+        </div>
+
+        <div class="p-6 border-b bg-gray-50">
+            <h2 class="font-bold text-sm uppercase mb-4">Nova Categoria</h2>
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="newCatName" placeholder="Nome da Categoria (Ex: Brincos)" class="flex-1 p-3 border rounded-xl outline-none focus:border-[#A68966]">
+                <input type="number" id="newCatDisc" placeholder="% Desconto" class="w-24 p-3 border rounded-xl outline-none focus:border-[#A68966]">
+                <button onclick="salvarCategoria()" class="bg-[#A68966] text-white px-6 py-3 rounded-xl font-bold uppercase text-xs hover:bg-black transition-all">Criar</button>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <h2 class="font-bold text-sm uppercase mb-4 text-gray-400">Categorias Atuais</h2>
+            <div id="listaCategorias" class="space-y-3">
+                </div>
+        </div>
+        
+        <div class="p-6 text-center">
+            <a href="index.html" class="text-gray-400 text-xs underline">Voltar para o Catálogo</a>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = { 
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+    };
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 1. CARREGAR E EXIBIR CATEGORIAS
+    function carregarCategorias() {
+        db.ref('categories').on('value', snap => {
+            const lista = document.getElementById('listaCategorias');
+            lista.innerHTML = '';
+            
+            snap.forEach(cat => {
+                const data = cat.val();
+                const id = cat.key;
+                
+                lista.innerHTML += `
+                    <div class="flex items-center justify-between bg-white border p-4 rounded-2xl hover:border-[#A68966] transition-all">
+                        <div>
+                            <span class="font-bold text-gray-800">${data.name}</span>
+                            <span class="ml-2 text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-md">${data.discount || 0}% OFF</span>
+                            <p class="text-[10px] text-gray-400">ID: ${id}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editarCategoria('${id}', '${data.name}', ${data.discount || 0})" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">✏️</button>
+                            <button onclick="excluirCategoria('${id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    // 2. SALVAR/CRIAR
+    function salvarCategoria() {
+        const name = document.getElementById('newCatName').value;
+        const disc = document.getElementById('newCatDisc').value || 0;
+        
+        if(!name) return alert("Digite o nome da categoria!");
+
+        // O slug é o nome sem espaços e minúsculo (ex: "Brincos Luxo" vira "brincos-luxo")
+        const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
+
+        db.ref('categories/' + slug).set({
+            name: name,
+            discount: parseInt(disc)
+        }).then(() => {
+            document.getElementById('newCatName').value = '';
+            document.getElementById('newCatDisc').value = '';
+            alert("Categoria salva com sucesso!");
+        });
+    }
+
+    // 3. EDITAR
+    function editarCategoria(id, nomeAtual, descAtual) {
+        const novoNome = prompt("Novo nome da categoria:", nomeAtual);
+        const novoDesc = prompt("Novo desconto %:", descAtual);
+        
+        if (novoNome) {
+            db.ref('categories/' + id).update({
+                name: novoNome,
+                discount: parseInt(novoDesc)
+            });
+        }
+    }
+
+    // 4. EXCLUIR
+    function excluirCategoria(id) {
+        if (confirm("Tem certeza? Isso pode fazer os produtos desta categoria sumirem do catálogo!")) {
+            db.ref('categories/' + id).remove();
+        }
+    }
+
+    carregarCategorias();
+</script>
+</body>
+</html>
