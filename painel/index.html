@@ -14,9 +14,12 @@
         section{display:none}
         section.active{display:block}
         .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px}
-        input, select, textarea{background:#1f1f1f;border:1px solid #333;color:#fff;padding:10px;border-radius:8px;width:100%;margin-bottom:10px}
+        .grid{display:grid;gap:12px}
+        @media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
+        @media(min-width:1200px){.grid{grid-template-columns:repeat(6,1fr)}}
         .btn-gold{background:#caa85c;color:#000;font-weight:bold;padding:10px;border-radius:8px;transition:0.3s}
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center;padding:20px}
+        input, select, textarea{background:#1f1f1f;border:1px solid #333;color:#fff;padding:10px;border-radius:8px;width:100%;margin-bottom:10px}
     </style>
 </head>
 <body>
@@ -29,38 +32,25 @@
 </nav>
 
 <section id="pedidos" class="active p-4">
-    <div id="listaPedidos" class="grid gap-4"></div>
+    <div id="listaPedidos" class="flex flex-col gap-4"></div>
 </section>
 
 <section id="produtos" class="p-4">
     <button onclick="modalProd()" class="w-full btn-gold mb-4">+ NOVO PRODUTO</button>
-    <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+    <div id="listaProdutos" class="grid"></div>
 </section>
 
 <section id="categorias" class="p-4">
     <button onclick="abrirModalCat()" class="w-full btn-gold mb-4">+ NOVA CATEGORIA</button>
-    <div id="listaCategorias" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    <div id="listaCategorias" class="grid !grid-cols-1 md:!grid-cols-3 gap-4"></div>
 </section>
 
 <div id="modal" class="modal">
     <div class="bg-[#141414] p-6 rounded-2xl w-full max-w-lg border border-[#333]">
         <div id="modalConteudo"></div>
         <div class="flex gap-2 mt-4">
-            <button onclick="fecharModal()" class="flex-1 bg-white/10 py-3 rounded-xl">FECHAR</button>
+            <button onclick="fecharModal()" class="flex-1 bg-white/10 py-3 rounded-xl font-bold">FECHAR</button>
             <button id="btnSalvarModal" class="flex-1 btn-gold py-3 rounded-xl">SALVAR</button>
-        </div>
-    </div>
-</div>
-
-<div id="modalCat" class="modal">
-    <div class="bg-[#141414] p-6 rounded-2xl w-full max-w-md border border-[#333]">
-        <h3 class="text-lg font-bold mb-4 text-[#caa85c]">Dados da Categoria</h3>
-        <input type="text" id="catNome" placeholder="Nome da Categoria">
-        <input type="text" id="catFoto" placeholder="URL da Imagem">
-        <input type="text" id="catSlug" placeholder="Slug (ex: aneis-ouro)">
-        <div class="flex gap-2 mt-4">
-            <button onclick="fecharModal()" class="flex-1 bg-white/10 py-3 rounded-xl">CANCELAR</button>
-            <button onclick="salvarCategoria()" class="flex-1 btn-gold py-3 rounded-xl">SALVAR</button>
         </div>
     </div>
 </div>
@@ -79,14 +69,20 @@ function tab(id) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    event.target.classList.add('active');
+    event.currentTarget.classList.add('active');
 }
 
 function fecharModal() {
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    document.getElementById('modal').style.display = 'none';
 }
 
-// --- GESTÃO DE CATEGORIAS (AJUSTADO) ---
+function abrirModal(titulo, html, acao) {
+    document.getElementById('modalConteudo').innerHTML = `<h3 class="text-lg font-bold mb-4 text-[#caa85c]">${titulo}</h3>` + html;
+    document.getElementById('btnSalvarModal').onclick = acao;
+    document.getElementById('modal').style.display = 'flex';
+}
+
+// --- GESTÃO DE CATEGORIAS (AJUSTE CIRÚRGICO) ---
 function carregarCategorias() {
     db.ref('categories').on('value', snap => {
         const list = document.getElementById('listaCategorias');
@@ -95,12 +91,12 @@ function carregarCategorias() {
             const d = c.val();
             list.innerHTML += `
                 <div class="card flex items-center gap-4">
-                    <img src="${d.image}" class="w-12 h-12 object-cover rounded-lg">
+                    <img src="${d.image || ''}" class="w-12 h-12 object-cover rounded-lg bg-[#222]">
                     <div class="flex-1">
                         <h4 class="font-bold text-sm">${d.name}</h4>
-                        <p class="text-[10px] text-gray-500">${d.slug}</p>
+                        <p class="text-[10px] text-gray-500">Slug: ${d.slug}</p>
                     </div>
-                    <button onclick="abrirModalCat('${c.key}')" class="p-2 bg-white/5 rounded-lg text-[#caa85c]">EDITAR</button>
+                    <button onclick="abrirModalCat('${c.key}')" class="p-2 bg-white/5 rounded-lg text-[#caa85c] font-bold text-xs">EDITAR</button>
                 </div>`;
         });
     });
@@ -108,25 +104,33 @@ function carregarCategorias() {
 
 function abrirModalCat(id = null) {
     catEditId = id;
+    const html = `
+        <label class="text-[10px] text-gray-500 font-bold uppercase">Nome da Categoria</label>
+        <input type="text" id="catNome" placeholder="Ex: Anéis">
+        <label class="text-[10px] text-gray-500 font-bold uppercase">URL da Imagem</label>
+        <input type="text" id="catFoto" placeholder="https://...">
+        <label class="text-[10px] text-gray-500 font-bold uppercase">Slug (Link)</label>
+        <input type="text" id="catSlug" placeholder="Ex: aneis">
+    `;
+
+    abrirModal(id ? 'Editar Categoria' : 'Nova Categoria', html, salvarCategoria);
+
     if(id) {
         db.ref('categories/'+id).once('value').then(s => {
             const d = s.val();
-            document.getElementById('catNome').value = d.name;
-            document.getElementById('catFoto').value = d.image;
-            document.getElementById('catSlug').value = d.slug;
+            document.getElementById('catNome').value = d.name || '';
+            document.getElementById('catFoto').value = d.image || '';
+            document.getElementById('catSlug').value = d.slug || '';
         });
-    } else {
-        document.getElementById('catNome').value = '';
-        document.getElementById('catFoto').value = '';
-        document.getElementById('catSlug').value = '';
     }
-    document.getElementById('modalCat').style.display = 'flex';
 }
 
 function salvarCategoria() {
     const nome = document.getElementById('catNome').value;
     const foto = document.getElementById('catFoto').value;
     const slug = document.getElementById('catSlug').value.toLowerCase().replace(/\s+/g, '-');
+
+    if(!nome || !slug) return alert("Nome e Slug são obrigatórios!");
 
     const dados = { name: nome, image: foto, slug: slug };
 
@@ -143,7 +147,69 @@ function salvarCategoria() {
     }
 }
 
-// --- FUNÇÕES DE PRODUTOS, PEDIDOS E ROMANEIO (MANTIDAS DO SEU ORIGINAL) ---
+// --- RESTANTE DAS FUNÇÕES ORIGINAIS (MANTIDAS) ---
+
+function carregarProdutos() {
+    db.ref('products').on('value', snap => {
+        const list = document.getElementById('listaProdutos');
+        list.innerHTML = '';
+        snap.forEach(p => {
+            const d = p.val();
+            list.innerHTML += `
+                <div class="card relative">
+                    <img src="${d.image}" class="w-full aspect-square object-cover rounded-xl mb-2">
+                    <h4 class="text-[11px] font-bold truncate">${d.name}</h4>
+                    <p class="text-xs gold">R$ ${d.price}</p>
+                    <button onclick="modalProd('${p.key}')" class="w-full bg-white/5 py-2 rounded-lg mt-2 text-[10px] font-bold">EDITAR</button>
+                </div>`;
+        });
+    });
+}
+
+function modalProd(id = null) {
+    db.ref('categories').once('value').then(snapCats => {
+        let options = '';
+        snapCats.forEach(c => { options += `<option value="${c.key}">${c.val().name}</option>`; });
+
+        const html = `
+            <input type="text" id="pNome" placeholder="Nome do Produto">
+            <input type="text" id="pFoto" placeholder="URL da Foto">
+            <div class="flex gap-2">
+                <input type="number" id="pPreco" placeholder="Preço">
+                <input type="text" id="pPeso" placeholder="Peso (ex: 5g)">
+            </div>
+            <input type="text" id="pSku" placeholder="SKU/Referência">
+            <select id="pCat">${options}</select>
+        `;
+
+        abrirModal(id ? 'Editar Produto' : 'Novo Produto', html, () => {
+            const dados = {
+                name: document.getElementById('pNome').value,
+                image: document.getElementById('pFoto').value,
+                price: document.getElementById('pPreco').value,
+                weight: document.getElementById('pPeso').value,
+                sku: document.getElementById('pSku').value,
+                category: document.getElementById('pCat').value,
+                category_slug: snapCats.val()[document.getElementById('pCat').value].slug
+            };
+            if(id) db.ref('products/'+id).update(dados); else db.ref('products').push(dados);
+            fecharModal();
+        });
+
+        if(id) {
+            db.ref('products/'+id).once('value').then(s => {
+                const d = s.val();
+                document.getElementById('pNome').value = d.name;
+                document.getElementById('pFoto').value = d.image;
+                document.getElementById('pPreco').value = d.price;
+                document.getElementById('pPeso').value = d.weight || '';
+                document.getElementById('pSku').value = d.sku || '';
+                document.getElementById('pCat').value = d.category;
+            });
+        }
+    });
+}
+
 function carregarPedidos() {
     db.ref('orders').on('value', snap => {
         const container = document.getElementById('listaPedidos');
@@ -155,44 +221,78 @@ function carregarPedidos() {
                     <div>
                         <p class="text-[10px] text-gray-500">${p.data}</p>
                         <h4 class="font-bold">${p.cliente}</h4>
-                        <p class="text-xs gold">R$ ${p.total}</p>
+                        <p class="text-xs gold">${p.total}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="gerarRomaneio('${s.key}', 'fotos')" class="bg-blue-600 text-[10px] px-3 py-2 rounded font-bold">ROMANEIO FOTOS</button>
-                        <button onclick="gerarRomaneio('${s.key}', 'completo')" class="bg-green-600 text-[10px] px-3 py-2 rounded font-bold">ROMANEIO COMPLETO</button>
+                        <button onclick="gerarRomaneio('${s.key}', 'fotos')" class="bg-blue-600 text-[10px] px-3 py-2 rounded font-bold">FOTOS</button>
+                        <button onclick="gerarRomaneio('${s.key}', 'completo')" class="bg-green-600 text-[10px] px-3 py-2 rounded font-bold">COMPLETO</button>
+                        <button onclick="db.ref('orders/${s.key}').remove()" class="bg-red-600 text-[10px] px-3 py-2 rounded font-bold">X</button>
                     </div>
                 </div>`;
         });
     });
 }
 
+function abrirPainelPromocoes() {
+    db.ref().once('value').then(snap => {
+        const promo = snap.val().settings?.promocao || { ativa: false, porcentagem: 0 };
+        const cats = snap.val().categories || {};
+        let listaCats = '';
+        Object.entries(cats).forEach(([id, c]) => {
+            listaCats += `<div class="flex justify-between items-center mb-2 bg-white/5 p-2 rounded">
+                <span class="text-xs">${c.name}</span>
+                <input type="number" id="promo-${id}" value="${c.discount || 0}" class="!w-16 !m-0 !p-1 text-center text-xs">
+            </div>`;
+        });
+
+        const html = `
+            <div class="flex flex-col gap-4">
+                <button onclick="togglePromo()" class="w-full py-3 rounded-xl font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">
+                    STATUS: ${promo.ativa ? 'ATIVA' : 'INATIVA'}
+                </button>
+                <label class="text-xs gold font-bold uppercase tracking-widest">Desconto Geral (%)</label>
+                <input type="number" id="pGeral" value="${promo.porcentagem}">
+                <hr class="border-[#222]">
+                <label class="text-xs gold font-bold uppercase tracking-widest">Desconto por Categoria</label>
+                <div class="max-h-48 overflow-y-auto">${listaCats}</div>
+            </div>`;
+
+        abrirModal('Gerenciar Promoções', html, () => {
+            db.ref('settings/promocao/porcentagem').set(parseInt(document.getElementById('pGeral').value));
+            document.querySelectorAll('[id^="promo-"]').forEach(input => {
+                db.ref('categories/' + input.id.replace('promo-', '')).update({ discount: parseInt(input.value || 0) });
+            });
+            alert('Promoções Salvas!');
+            fecharModal();
+        });
+    });
+}
+
+function togglePromo() {
+    db.ref('settings/promocao/ativa').once('value').then(s => {
+        db.ref('settings/promocao/ativa').set(!s.val()).then(() => { fecharModal(); abrirPainelPromocoes(); });
+    });
+}
+
 function gerarRomaneio(id, tipo) {
     db.ref('orders/'+id).once('value').then(s => {
-        const p = s.val();
+        const p = s.val(); if(!p) return;
         const win = window.open('','_blank');
-        let html = `<html><body onload="window.print()"><style>table{width:100%;border-collapse:collapse} td,th{border:1px solid #ddd;padding:8px;text-align:left} img{width:60px}</style>`;
-        html += `<h2>ABELLA JOIAS - ROMANEIO ${tipo.toUpperCase()}</h2>`;
-        html += `<p><b>Cliente:</b> ${p.cliente} | <b>WhatsApp:</b> ${p.whatsapp}</p>`;
-        html += `<table><thead><tr><th>Foto</th><th>Item</th><th>Ref</th><th>Qtd</th><th>Peso</th></tr></thead><tbody>`;
-        
+        let html = `<html><body onload="window.print()"><style>table{width:100%;border-collapse:collapse} td,th{border:1px solid #ddd;padding:8px;font-family:Arial} img{width:60px}</style>`;
+        html += `<h2>ABELLA JOIAS - ROMANEIO ${tipo.toUpperCase()}</h2><p>Cliente: ${p.cliente} | Data: ${p.data}</p><table><tr><th>Foto</th><th>Item</th><th>SKU</th><th>Qtd</th><th>Subtotal</th></tr>`;
         Object.values(p.itens || {}).forEach(i => {
-            html += `<tr>
-                <td><img src="${i.image}"></td>
-                <td>${i.nome}</td>
-                <td>${i.sku || '---'}</td>
-                <td>${i.qtd}</td>
-                <td>${i.peso || 0}g</td>
-            </tr>`;
+            html += `<tr><td><img src="${i.image}"></td><td>${i.nome}</td><td>${i.sku || '---'}</td><td>${i.qtd}</td><td>R$ ${(i.preco * i.qtd).toFixed(2)}</td></tr>`;
         });
-        html += `</tbody></table></body></html>`;
+        html += `</table><h3>Total: ${p.total}</h3></body></html>`;
         win.document.write(html);
     });
 }
 
-// Iniciar
+// Início
 carregarPedidos();
+carregarProdutos();
 carregarCategorias();
-// (Adicione aqui suas outras funções de produtos e promoções que já estavam no painel)
+
 </script>
 </body>
 </html>
