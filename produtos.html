@@ -2,156 +2,117 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Produtos | Abella Joias</title>
+<title>Abella Joias | Produtos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <style>
-    body{font-family:'Poppins',sans-serif;background:#f8f6f2;color:#333}
-    .serif{font-family:'Cinzel',serif}
-    .gold{color:#A68966}
-    .card{ background:#fff; border-radius:20px; border:1px solid #eee; transition:0.3s; position:relative; overflow:hidden; display: flex; flex-direction: column; }
-    .card:hover{ transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    .btn-nav{background:white; border:1px solid #eee; padding:8px 15px; border-radius:50px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; transition:0.3s}
-    /* Estilo para a etiqueta de peso ficar bem visível */
-    .peso-tag { background: #f3f4f6; color: #4b5563; font-weight: 700; font-size: 10px; padding: 4px 8px; border-radius: 6px; border: 1px solid #e5e7eb; }
+    /* FORÇANDO ESTILOS NOVOS PARA SAIR DO CACHE */
+    body { font-family: 'Poppins', sans-serif; background: #f8f6f2 !important; color: #333; }
+    .FONTE-LUXO { font-family: 'Cinzel', serif !important; color: #A68966 !important; }
+    .BARRA-OURO { h-px; background: #A68966 !important; width: 80px; margin: 10px auto; }
+    .CARD-NOVO { background: #fff; border-radius: 20px; border: 1px solid #eee; padding: 12px; transition: 0.3s; position: relative; }
+    .TAG-PESO-REAL { background: #000 !important; color: #fff !important; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 8px; display: inline-block; margin-top: 5px; }
+    .BOTAO-NAV { background: #fff; border: 1px solid #ddd; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
 </style>
 </head>
 
 <body>
 
-<header class="bg-white border-b sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 pt-4 flex justify-between items-center">
-        <a href="index.html" class="btn-nav">← Voltar</a>
-        <a href="checkout_premium.html" class="btn-nav flex items-center gap-2">
-            🛒 Meu Pedido <span id="cartCount" class="bg-black text-white px-2 py-0.5 rounded-full text-[8px]">0</span>
-        </a>
+<header class="bg-white border-b sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <button onclick="window.history.back()" class="BOTAO-NAV">← VOLTAR</button>
+        <a href="checkout_premium.html" class="BOTAO-NAV">🛒 CARRINHO (<span id="countV">0</span>)</a>
     </div>
-
-    <div class="text-center py-8 space-y-4">
-        <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
-        <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
-        <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">Atacado de Joias no Bruto</p>
-
-   </div>
+    
+    <div class="text-center py-6">
+        <h1 class="FONTE-LUXO text-4xl tracking-[0.2em]">Abella Joias</h1>
+        <div class="BARRA-OURO" style="height: 1px;"></div>
+        <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] font-medium mt-2">Atacado de Joias no Bruto</p>
+    </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-4 md:p-8">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
+<main class="max-w-7xl mx-auto p-4">
+    <div id="gradeProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
 </main>
 
 <script>
-// Configuração do Firebase
 const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const urlParams = new URLSearchParams(window.location.search);
-const slugCat = urlParams.get('cat');
+const slug = new URLSearchParams(window.location.search).get('cat');
+let promoAtiva = {};
+let categorias = {};
 
-let categoriasDados = {};
-let promoGlobal = {};
+// 1. Pega configurações de desconto
+db.ref('settings/promocao').on('value', s => { promoAtiva = s.val() || {}; });
+db.ref('categories').on('value', s => { 
+    s.forEach(c => { categorias[c.key] = c.val(); });
+    desenharProdutos();
+});
 
-function inicializar() {
-    db.ref('settings/promocao').on('value', s => { promoGlobal = s.val() || {}; });
-    db.ref('categories').on('value', s => { 
-        s.forEach(c => { categoriasDados[c.key] = c.val(); });
-        carregarProdutos();
-    });
-    atualizarContador();
+function atualizarIcone() {
+    const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    document.getElementById('countV').innerText = c.length;
 }
 
-function atualizarContador() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const countElement = document.getElementById('cartCount');
-    if(countElement) countElement.innerText = carrinho.length;
-}
-
-function carregarProdutos() {
-    db.ref('products').orderByChild('category').equalTo(slugCat).on('value', snap => {
-        const grid = document.getElementById('gridProdutos');
+function desenharProdutos() {
+    db.ref('products').orderByChild('category').equalTo(slug).on('value', snap => {
+        const grid = document.getElementById('gradeProdutos');
         grid.innerHTML = '';
         
         snap.forEach(sp => {
             const p = sp.val();
             if(p.paused) return;
 
-            // Lógica de Descontos
-            const dCat = parseInt(categoriasDados[p.category]?.discount || 0);
-            const dGlob = (promoGlobal && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem) : 0;
-            const melhorDesc = Math.max(dCat, dGlob);
+            // Lógica de Preço
+            const dCat = parseInt(categorias[p.category]?.discount || 0);
+            const dGlob = promoAtiva.ativa ? parseInt(promoAtiva.porcentagem) : 0;
+            const maiorD = Math.max(dCat, dGlob);
+            const vOrig = parseFloat(p.price || 0);
+            const vFinal = maiorD > 0 ? vOrig * (1 - maiorD/100) : vOrig;
 
-            const pOriginal = parseFloat(p.price || 0);
-            const pFinal = melhorDesc > 0 ? pOriginal * (1 - melhorDesc/100) : pOriginal;
-
-            // MUDANÇA NO PESO: Texto claro com "Gramas" ou "g"
-            const pesoExibicao = p.weight ? `PESO: ${p.weight}g` : "PESO: --";
+            // PESO COM TEXTO CLARO
+            const textoPeso = p.weight ? `PESO: ${p.weight}g` : "PESO: SOB CONSULTA";
 
             grid.innerHTML += `
-                <div class="card p-3">
-                    ${melhorDesc > 0 ? `<div class="absolute top-2 right-2 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold z-10 animate-pulse">${melhorDesc}% OFF</div>` : ''}
-                    
+                <div class="CARD-NOVO">
                     <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
+                    <p class="text-[8px] text-gray-400 font-bold uppercase">REF: ${p.sku || '---'}</p>
+                    <h3 class="text-[11px] font-bold text-gray-800 h-8 overflow-hidden mb-1">${p.name}</h3>
                     
-                    <div class="px-1">
-                        <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">REF: ${p.sku || '---'}</span>
-                        <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-2 h-7 overflow-hidden">${p.name}</h3>
-                        
-                        <div class="flex flex-wrap items-center gap-2 mb-3">
-                            <span class="peso-tag">${pesoExibicao}</span>
-                            <span class="text-[8px] gold font-bold uppercase tracking-tighter italic">Joia no Bruto</span>
-                        </div>
-
-                        <div class="mt-auto border-t pt-3">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-bold gold">R$ ${pFinal.toFixed(2)}</span>
-                                ${melhorDesc > 0 ? `<span class="text-[9px] text-gray-300 line-through">R$ ${pOriginal.toFixed(2)}</span>` : ''}
-                            </div>
-                            <p class="text-[9px] text-green-600 font-bold mt-1 uppercase italic">R$ ${(pFinal * 0.95).toFixed(2)} no PIX</p>
-                        </div>
-                        
-                        <button onclick="adicionarAoCarrinhoDireto('${sp.key}')" class="w-full bg-black text-white py-3 rounded-xl text-[9px] font-bold uppercase tracking-widest mt-3 hover:bg-gold transition-all">
-                            Adicionar
-                        </button>
+                    <div class="TAG-PESO-REAL">${textoPeso}</div>
+                    
+                    <div class="mt-3 border-t pt-2">
+                        <p class="text-sm font-bold gold">R$ ${vFinal.toFixed(2)}</p>
+                        ${maiorD > 0 ? `<p class="text-[9px] text-gray-400 line-through">R$ ${vOrig.toFixed(2)}</p>` : ''}
+                        <p class="text-[9px] text-green-600 font-bold">R$ ${(vFinal*0.95).toFixed(2)} NO PIX</p>
                     </div>
+
+                    <button onclick="add('${sp.key}', ${vFinal})" class="w-full bg-black text-white text-[10px] font-bold py-2 mt-3 rounded-lg uppercase">
+                        Adicionar
+                    </button>
                 </div>`;
         });
     });
 }
 
-function adicionarAoCarrinhoDireto(id) {
+function add(id, preco) {
     db.ref('products/' + id).once('value', s => {
-        const item = s.val();
-        let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        
-        // Calcula o preço final para o carrinho
-        const dCat = parseInt(categoriasDados[item.category]?.discount || 0);
-        const dGlob = (promoGlobal && promoGlobal.ativa) ? parseInt(promoGlobal.porcentagem) : 0;
-        const melhorDesc = Math.max(dCat, dGlob);
-        const precoFinal = melhorDesc > 0 ? item.price * (1 - melhorDesc/100) : item.price;
-
-        carrinho.push({
-            nome: item.name,
-            sku: item.sku,
-            preco: precoFinal,
-            qtd: 1,
-            image: item.image,
-            peso: item.weight
-        });
-
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        atualizarContador();
-        alert("Adicionado ao pedido!");
+        const p = s.val();
+        let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        cart.push({ nome: p.name, sku: p.sku, preco: preco, qtd: 1, image: p.image, peso: p.weight });
+        localStorage.setItem('carrinho', JSON.stringify(cart));
+        atualizarIcone();
+        alert('Adicionado!');
     });
 }
 
-inicializar();
+atualizarIcone();
 </script>
-
 </body>
 </html>
