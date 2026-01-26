@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Abella Joias | Categorias</title>
+<title>Abella Joias | Produtos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -11,43 +11,43 @@
 
 <style>
     body { font-family: 'Poppins', sans-serif !important; background: #f8f6f2 !important; color: #333; }
-    .FONTE-LUXO { font-family: 'Cinzel', serif !important; color: #A68966 !important; }
-    .LINHA-OURO { height: 1px; background: #A68966; width: 80px; margin: 10px auto; }
+    .serif { font-family: 'Cinzel', serif !important; }
+    .gold { color: #A68966 !important; }
     
-    /* ESTILO DO PESO QUE VOCÊ PEDIU */
-    .ETIQUETA-PESO { 
+    /* TAG DE PESO - CLAREZA TOTAL */
+    .tag-peso { 
         background: #1a1a1a !important; 
-        color: #fff !important; 
+        color: #ffffff !important; 
         font-size: 10px !important; 
         font-weight: 700; 
         padding: 4px 10px; 
         border-radius: 6px; 
         display: inline-block;
-        margin: 8px 0;
+        margin: 5px 0;
+        letter-spacing: 0.5px;
     }
 
-    .CARD-PRODUTO { background: #fff; border-radius: 20px; border: 1px solid #eee; padding: 15px; transition: 0.3s; position: relative; display: flex; flex-direction: column; }
-    .BTN-NAV { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 50px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+    .card-produto { background: #fff; border-radius: 20px; border: 1px solid #eee; padding: 15px; transition: 0.3s; position: relative; }
+    .btn-nav { background: white; border: 1px solid #ddd; padding: 6px 12px; border-radius: 50px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
 </style>
 </head>
 
 <body>
 
-<header class="bg-white border-b sticky top-0 z-50">
+<header class="bg-white border-b sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <a href="index.html" class="BTN-NAV">← Voltar</a>
-        <a href="checkout_premium.html" class="BTN-NAV">🛒 Carrinho (<span id="cartNum">0</span>)</a>
+        <button onclick="window.history.back()" class="btn-nav">← Voltar</button>
+        <a href="checkout_premium.html" class="btn-nav">🛒 Carrinho (<span id="cartCount">0</span>)</a>
     </div>
     
-    <div class="text-center py-6">
-        <h1 class="FONTE-LUXO text-4xl tracking-widest">Abella Joias</h1>
-        <div class="LINHA-OURO"></div>
-        <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] font-medium mt-2">Atacado de Joias no Bruto</p>
-        <h2 id="nomeDaCategoria" class="serif text-sm mt-4 text-gray-400 uppercase tracking-widest"></h2>
+    <div class="text-center py-8 space-y-4">
+        <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
+        <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
+        <p class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium">Atacado de Joias no Bruto</p>
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-4">
+<main class="max-w-7xl mx-auto p-4 md:p-8">
     <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
         </div>
 </main>
@@ -57,28 +57,23 @@ const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", data
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Pega o ?cat=nome-da-categoria da URL
 const urlParams = new URLSearchParams(window.location.search);
 const catSlug = urlParams.get('cat');
 
-let catInfo = {};
 let promoGlobal = {};
+let categoriasDados = {};
 
-function carregarTudo() {
+function inicializar() {
     if(!catSlug) {
-        document.getElementById('gridProdutos').innerHTML = "<p class='col-span-full text-center py-20'>Escolha uma categoria na página inicial.</p>";
+        document.getElementById('gridProdutos').innerHTML = "<p class='col-span-full text-center py-20 text-gray-400'>Selecione uma categoria na página inicial.</p>";
         return;
     }
 
-    // Busca promoções e categorias para os cálculos de desconto
+    // Pega as promos e as categorias para calcular o preço certo
     db.ref('settings/promocao').on('value', s => { promoGlobal = s.val() || {}; });
-    
-    db.ref('categories').orderByChild('slug').equalTo(catSlug).on('value', snap => {
-        snap.forEach(child => {
-            catInfo = child.val();
-            document.getElementById('nomeDaCategoria').innerText = catInfo.name;
-        });
-        buscarProdutos();
+    db.ref('categories').on('value', s => { 
+        s.forEach(c => { categoriasDados[c.val().slug] = c.val(); });
+        carregarProdutos();
     });
     
     atualizarContador();
@@ -86,10 +81,10 @@ function carregarTudo() {
 
 function atualizarContador() {
     const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    document.getElementById('cartNum').innerText = c.length;
+    document.getElementById('cartCount').innerText = c.length;
 }
 
-function buscarProdutos() {
+function carregarProdutos() {
     db.ref('products').orderByChild('category').equalTo(catSlug).on('value', snap => {
         const grid = document.getElementById('gridProdutos');
         grid.innerHTML = '';
@@ -98,39 +93,36 @@ function buscarProdutos() {
             const p = sp.val();
             if(p.paused) return;
 
-            // Lógica de Preço e Desconto
-            const dCat = parseInt(catInfo.discount || 0);
+            // Descontos: Pega o maior entre Categoria ou Global
+            const dCat = parseInt(categoriasDados[catSlug]?.discount || 0);
             const dGlob = promoGlobal.ativa ? parseInt(promoGlobal.porcentagem) : 0;
             const maiorD = Math.max(dCat, dGlob);
+            
             const vOrig = parseFloat(p.price || 0);
             const vFinal = maiorD > 0 ? vOrig * (1 - maiorD/100) : vOrig;
 
-            // TEXTO DO PESO COM 'g'
-            const pesoTexto = p.weight ? `PESO: ${p.weight}g` : "PESO: --";
+            // EXIBIÇÃO DO PESO CLARO
+            const textoPeso = p.weight ? `PESO: ${p.weight}g` : "PESO: --";
 
             grid.innerHTML += `
-                <div class="CARD-PRODUTO">
-                    ${maiorD > 0 ? `<div class="absolute top-3 right-3 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold animate-pulse z-10">${maiorD}% OFF</div>` : ''}
-                    
-                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
-                    
+                <div class="card-produto">
+                    ${maiorD > 0 ? `<div class="absolute top-3 right-3 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold z-10 animate-pulse">${maiorD}% OFF</div>` : ''}
+                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3 shadow-inner">
                     <span class="text-[8px] text-gray-400 font-bold uppercase">REF: ${p.sku || '---'}</span>
-                    <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-1 h-8 overflow-hidden">${p.name}</h3>
+                    <h3 class="text-[11px] font-bold text-gray-800 leading-tight mb-2 h-8 overflow-hidden">${p.name}</h3>
                     
-                    <div>
-                        <span class="ETIQUETA-PESO">${pesoTexto}</span>
-                    </div>
+                    <div><span class="tag-peso">${textoPeso}</span></div>
                     <p class="text-[8px] text-gold font-bold uppercase italic mb-3 tracking-tighter">Joia no Bruto</p>
 
                     <div class="mt-auto border-t pt-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold gold">R$ ${vFinal.toFixed(2)}</span>
-                            ${maiorD > 0 ? `<span class="text-[9px] text-gray-300 line-through">R$ ${vOrig.toFixed(2)}</span>` : ''}
+                           <span class="text-sm font-bold gold">R$ ${vFinal.toFixed(2)}</span>
+                           ${maiorD > 0 ? `<span class="text-[9px] text-gray-300 line-through">R$ ${vOrig.toFixed(2)}</span>` : ''}
                         </div>
-                        <p class="text-[9px] text-green-600 font-bold mt-1 uppercase italic">R$ ${(vFinal*0.95).toFixed(2)} no PIX</p>
+                        <p class="text-[9px] text-green-600 font-bold mt-1 uppercase italic">R$ ${(vFinal*0.95).toFixed(2)} NO PIX</p>
                     </div>
 
-                    <button onclick="adicionar('${sp.key}', ${vFinal})" class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold uppercase mt-3 hover:bg-gold transition-all shadow-md">
+                    <button onclick="addCarrinho('${sp.key}', ${vFinal})" class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold uppercase mt-3 hover:bg-[#A68966] transition-all">
                         Adicionar
                     </button>
                 </div>`;
@@ -138,18 +130,25 @@ function buscarProdutos() {
     });
 }
 
-function adicionar(id, preco) {
+function addCarrinho(id, preco) {
     db.ref('products/' + id).once('value', s => {
-        const item = s.val();
+        const p = s.val();
         let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        cart.push({ nome: item.name, sku: item.sku, preco: preco, qtd: 1, image: item.image, peso: item.weight });
+        cart.push({ 
+            nome: p.name, 
+            sku: p.sku, 
+            preco: preco, 
+            qtd: 1, 
+            image: p.image, 
+            peso: p.weight 
+        });
         localStorage.setItem('carrinho', JSON.stringify(cart));
         atualizarContador();
-        alert("Adicionado ao pedido!");
+        alert("Adicionado!");
     });
 }
 
-carregarTudo();
+inicializar();
 </script>
 </body>
 </html>
