@@ -9,36 +9,57 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Poppins',sans-serif;background:#f8f6f2}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.card{
-  background:#fff;
-  border-radius:16px;
-  border:1px solid #eee;
-  transition:.3s;
-  position:relative
-}
-.card:hover{transform:translateY(-4px);border-color:#A68966}
-.badge{
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:#000;
-  color:#fff;
-  font-size:10px;
-  padding:4px 8px;
-  border-radius:999px;
-  font-weight:bold
-}
-.riscado{
-  text-decoration:line-through;
-  color:#999;
-  font-size:12px
-}
+    body{font-family:'Poppins',sans-serif;background:#f8f6f2;color:#333}
+    .serif{font-family:'Cinzel',serif}
+    .gold{color:#A68966}
+    
+    .card{
+        background:#fff;
+        border-radius:16px;
+        border:1px solid #eee;
+        transition:.3s;
+        position:relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .card:hover{transform:translateY(-4px);border-color:#A68966;box-shadow: 0 10px 20px rgba(0,0,0,0.05);}
+
+    /* ETIQUETA DOURADA PREMIUM */
+    .badge-promo {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #A68966 0%, #d4bc9c 100%);
+        color: #fff;
+        font-size: 10px;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-weight: 800;
+        z-index: 10;
+        box-shadow: 0 4px 8px rgba(166, 137, 102, 0.3);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .riscado {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 11px;
+        margin-right: 5px;
+    }
+
+    .tag-info {
+        background: #f1f1f1;
+        color: #666;
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
 </style>
 </head>
 
@@ -47,131 +68,117 @@ body{font-family:'Poppins',sans-serif;background:#f8f6f2}
 <header class="bg-white border-b sticky top-0 z-40">
   <div class="text-center py-8">
     <h1 class="serif text-3xl gold">Abella Joias</h1>
-    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">
-      Catálogo Atacado
-    </p>
+    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">Catálogo Atacado</p>
   </div>
 
   <div class="flex justify-center gap-2 pb-4">
-    <a href="index.html"
-       class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">
-      CATEGORIAS
-    </a>
-    <a href="checkout_premium.html"
-       class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">
-      CARRINHO
-    </a>
+    <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">Categorias</a>
+    <a href="checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">Meu Carrinho</a>
   </div>
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
-  <h2 id="tituloCategoria"
-      class="serif text-xl text-center mb-10 text-gray-700"></h2>
-
-  <div id="gridProdutos"
-       class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
+  <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700 tracking-widest uppercase"></h2>
+  <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
 </main>
 
 <script>
 /* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-});
+const firebaseConfig = {
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* CATEGORIA */
 const catId = new URLSearchParams(window.location.search).get('cat');
 if(!catId){
-  document.body.innerHTML='<p style="padding:40px;text-align:center">Categoria inválida</p>';
+  document.body.innerHTML='<p style="padding:40px;text-align:center">Categoria não encontrada.</p>';
   throw '';
 }
 
 let descontoCategoria = 0;
 
-/* CARREGA CATEGORIA */
+/* BUSCA DADOS DA CATEGORIA */
 db.ref('categories/'+catId).once('value').then(s=>{
   const c = s.val();
-  if(!c) return;
-  descontoCategoria = Number(c.discount||0);
-  document.getElementById('tituloCategoria').innerText = c.name;
+  if(c) {
+    descontoCategoria = Number(c.discount || 0);
+    document.getElementById('tituloCategoria').innerText = c.name;
+  }
 });
 
-/* PRODUTOS */
-db.ref('products').on('value',snap=>{
+/* BUSCA PRODUTOS */
+db.ref('products').on('value', snap => {
   const grid = document.getElementById('gridProdutos');
   grid.innerHTML = '';
 
-  snap.forEach(s=>{
+  snap.forEach(s => {
     const p = s.val();
-    if(p.paused) return;
-    if(p.category !== catId) return;
+    if(p.paused || p.category !== catId) return;
 
-    const preco = Number(p.price||0);
-    const descontoProduto = Number(p.discount||0);
-    const descontoFinal = descontoProduto>0 ? descontoProduto : descontoCategoria;
+    const precoBase = Number(p.price || 0);
+    const descProd = Number(p.discount || 0);
+    
+    // Usa o maior desconto (o do produto ou o da categoria)
+    const maiorDesconto = Math.max(descProd, descontoCategoria);
 
-    const precoComDesconto = descontoFinal>0
-      ? (preco * (1 - descontoFinal/100)).toFixed(2)
-      : preco.toFixed(2);
+    const precoFinal = maiorDesconto > 0 
+      ? (precoBase * (1 - maiorDesconto/100)) 
+      : precoBase;
 
     grid.innerHTML += `
     <div class="card p-4 shadow-sm">
+      ${maiorDesconto > 0 ? `<div class="badge-promo">${maiorDesconto}% OFF</div>` : ''}
 
-      ${descontoFinal>0 ? `<div class="badge">-${descontoFinal}%</div>` : ``}
-
-      <div class="aspect-square flex items-center justify-center mb-4">
-        <img src="${p.image||'https://via.placeholder.com/400'}"
-             class="object-contain max-h-full">
+      <div class="aspect-square flex items-center justify-center mb-4 overflow-hidden rounded-lg bg-gray-50">
+        <img src="${p.image || 'https://via.placeholder.com/400'}" class="object-cover w-full h-full hover:scale-110 transition duration-500">
       </div>
 
-      <h3 class="text-xs font-bold uppercase tracking-widest mb-1">
-        ${p.name}
-      </h3>
+      <div class="flex flex-col flex-grow">
+        <div class="flex gap-1 mb-2">
+            <span class="tag-info">REF: ${p.sku || '---'}</span>
+            ${p.weight ? `<span class="tag-info">${p.weight}G</span>` : ''}
+        </div>
 
-      <p class="text-[11px] text-gray-500 mb-1">
-        SKU: ${p.sku||''}
-      </p>
+        <h3 class="text-[11px] font-bold uppercase tracking-wider text-gray-800 mb-2 h-8 overflow-hidden">
+          ${p.name}
+        </h3>
 
-      <p class="text-[11px] text-gray-500 mb-2">
-        Peso: ${p.weight||''}
-      </p>
+        <div class="mt-auto">
+          <div class="flex items-baseline mb-3">
+            ${maiorDesconto > 0 ? `<span class="riscado">R$ ${precoBase.toFixed(2)}</span>` : ''}
+            <span class="text-sm font-bold text-gray-900">R$ ${precoFinal.toFixed(2)}</span>
+          </div>
 
-      ${descontoFinal>0
-        ? `<p class="riscado">R$ ${preco.toFixed(2)}</p>`
-        : ``}
-
-      <p class="text-sm font-semibold mb-3">
-        R$ ${precoComDesconto}
-      </p>
-
-      <button onclick="adicionarCarrinho('${s.key}')"
-        class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
-        ADICIONAR AO CARRINHO
-      </button>
-
+          <button onclick="adicionarCarrinho('${s.key}', ${precoFinal})"
+            class="w-full bg-black hover:bg-[#A68966] text-white py-2 rounded-full text-[9px] font-bold uppercase transition-colors tracking-widest">
+            Adicionar ao Carrinho
+          </button>
+        </div>
+      </div>
     </div>`;
   });
 });
 
-/* CARRINHO */
-function adicionarCarrinho(id){
+/* FUNÇÃO CARRINHO */
+function adicionarCarrinho(id, precoVenda){
   db.ref('products/'+id).once('value').then(s=>{
     const p = s.val();
     let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
 
     carrinho.push({
-      sku:p.sku,
-      nome:p.name,
-      preco:Number(p.price),
-      peso:Number(p.weight||0),
-      variacao:p.variacao||'',
-      qtd:1,
-      promocao:Number(p.discount||0)
+      sku: p.sku || '---',
+      nome: p.name,
+      preco: precoVenda, // Salva o preço já com desconto aplicado
+      peso: Number(p.weight || 0),
+      variacao: p.variacao || '',
+      qtd: 1,
+      image: p.image || ''
     });
 
-    localStorage.setItem('carrinho',JSON.stringify(carrinho));
-    alert('Produto adicionado ao carrinho');
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    alert('✅ ' + p.name + ' adicionado!');
   });
 }
 </script>
