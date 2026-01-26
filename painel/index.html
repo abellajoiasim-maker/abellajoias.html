@@ -183,7 +183,7 @@ function salvarEmpresa(){
    LÓGICA DE EDIÇÃO E RENDERIZAÇÃO (CATEGORIAS & PRODUTOS)
    ============================================================ */
 
-// 1. GESTÃO DE CATEGORIAS (Listagem e Edição)
+// 1. GESTÃO DE CATEGORIAS (Listagem, Fotos e Edição)
 db.ref('categories').on('value', s => {
     const listaCategorias = document.getElementById('listaCategorias');
     const listaPromocoes = document.getElementById('listaPromocoes');
@@ -195,14 +195,18 @@ db.ref('categories').on('value', s => {
     s.forEach(c => {
         const d = c.val();
         const id = c.key;
+        const fotoCat = d.image || 'https://via.placeholder.com/150?text=Sem+Foto';
 
-        // Renderiza na lista de gestão de nomes
+        // Renderiza na lista de gestão com miniatura
         listaCategorias.innerHTML += `
-            <div class="card p-3 mb-2">
-                <b class="text-xs uppercase">${d.name}</b>
-                <div class="flex gap-1 mt-2">
-                    <button class="btn text-[9px] py-1 px-2" onclick="editarCategoria('${id}')">Renomear</button>
-                    <button class="btn btn-red text-[9px] py-1 px-2" onclick="excluir('categories','${id}')">Excluir</button>
+            <div class="card p-3 mb-2 flex items-center gap-3">
+                <img src="${fotoCat}" class="w-10 h-10 rounded object-cover bg-black border border-white/10">
+                <div class="flex-1">
+                    <b class="text-[10px] uppercase">${d.name}</b>
+                    <div class="flex gap-1 mt-1">
+                        <button class="btn text-[8px] py-1 px-2 bg-blue-600" onclick="editarCategoria('${id}')">Editar/Foto</button>
+                        <button class="btn btn-red text-[8px] py-1 px-2" onclick="excluir('categories','${id}')">Excluir</button>
+                    </div>
                 </div>
             </div>`;
 
@@ -291,18 +295,48 @@ db.ref('products').on('value', snapProdutos => {
    FUNÇÕES DE AÇÃO (JANELAS DE EDIÇÃO)
    ============================================================ */
 
-// EDITAR CATEGORIA (NOME)
+// EDITAR CATEGORIA (NOME E LINK DA FOTO)
 window.editarCategoria = function(id) {
     db.ref('categories/' + id).once('value').then(snap => {
         const d = snap.val();
-        const novoNome = prompt("Digite o novo nome para a categoria:", d.name);
-        if (novoNome && novoNome.trim() !== "") {
-            db.ref('categories/' + id).update({ name: novoNome })
-                .then(() => alert("Nome da categoria atualizado!"));
+        const novoNome = prompt("Nome da Categoria:", d.name);
+        const novaFoto = prompt("Link (URL) da Imagem da Categoria:", d.image || "");
+        
+        if (novoNome) {
+            db.ref('categories/' + id).update({ 
+                name: novoNome,
+                image: novaFoto
+            }).then(() => alert("Categoria atualizada com sucesso!"));
         }
     });
 };
 
+// EDITAR PRODUTO (NOME, PREÇO, FOTO E DESCONTO)
+window.editarProduto = function(id) {
+    db.ref('products/' + id).once('value').then(snap => {
+        const p = snap.val();
+        const novoNome = prompt("Nome do Produto:", p.name);
+        const novoPreco = prompt("Preço Bruto (R$):", p.price);
+        const novaFoto = prompt("Link (URL) da Imagem do Produto:", p.image);
+        const novoDesc = prompt("Desconto Individual (%):", p.discount || 0);
+
+        if (novoNome && novoPreco) {
+            db.ref('products/' + id).update({
+                name: novoNome,
+                price: parseFloat(novoPreco.replace(',', '.')),
+                image: novaFoto,
+                discount: parseInt(novoDesc) || 0
+            }).then(() => alert("Produto atualizado com sucesso!"));
+        }
+    });
+};
+
+// EXCLUIR (UNIVERSAL)
+window.excluir = function(caminho, id) {
+    if (confirm("Deseja realmente excluir permanentemente?")) {
+        db.ref(caminho + '/' + id).remove().then(() => alert("Removido!"));
+    }
+};
 // EDITAR PRODUTO (NOME, PREÇO E DESCONTO)
 window.editarProduto = function(id) {
     db.ref('products/' + id).once('value').then(snap => {
