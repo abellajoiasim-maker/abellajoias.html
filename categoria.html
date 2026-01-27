@@ -11,69 +11,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family:'Poppins', sans-serif; background:#f8f6f2; color:#333; }
+        body { font-family:'Poppins', sans-serif; background:#f8f6f2; color:#333; overflow-x: hidden; }
         .serif { font-family:'Cinzel', serif; }
         .gold { color:#A68966; }
         
-        /* Estilo dos Cards (Baseado no Categoria2) */
+        /* Design dos Cards */
         .card-produto {
-            background:#fff;
-            border-radius:24px;
-            border:1px solid #eee;
+            background:#fff; border-radius:24px; border:1px solid #eee;
             transition:.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position:relative;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 18px;
+            position:relative; display: flex; flex-direction: column; height: 100%; padding: 18px;
         }
         .card-produto:hover { transform: translateY(-8px); border-color: #A68966; box-shadow: 0 15px 30px rgba(166,137,102,0.1); }
 
         .badge-promo {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+            position: absolute; top: 15px; right: 15px;
             background: linear-gradient(135deg, #A68966 0%, #d4bc9c 100%);
-            color: #fff;
-            font-size: 10px;
-            padding: 5px 12px;
-            border-radius: 999px;
-            font-weight: 800;
-            z-index: 10;
+            color: #fff; font-size: 10px; padding: 5px 12px; border-radius: 999px; font-weight: 800; z-index: 10;
         }
 
         .riscado { text-decoration: line-through; color: #bbb; font-size: 11px; }
         .preco-principal { color: #1a1a1a; font-size: 18px; font-weight: 700; }
         .preco-pix { color: #15803d; font-size: 13px; font-weight: 700; }
 
-        /* Estilo do Contador do Carrinho (Baseado no Index2) */
-        #cartCount { transition: transform 0.3s ease; }
-        .bump { transform: scale(1.3); }
+        /* Modal de Quantidade */
+        #modalQtde { backdrop-filter: blur(8px); }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        #cartCount.bump { transform: scale(1.4); }
     </style>
 </head>
 <body>
 
 <header class="bg-white border-b sticky top-0 z-50">
-    <div class="text-center py-8 space-y-4">
-        <h1 class="serif text-4xl gold tracking-widest">Abella Joias</h1>
-        <div class="h-px bg-[#A68966] w-20 mx-auto"></div>
-        <p id="nomeCategoriaTopo" class="tracking-[0.3em] text-[10px] text-gray-500 uppercase font-medium italic">Coleção Atacado</p>
+    <div class="text-center py-6 space-y-3">
+        <h1 class="serif text-3xl gold tracking-widest">Abella Joias</h1>
+        <div class="h-px bg-[#A68966] w-16 mx-auto"></div>
+        <p id="nomeCategoriaTopo" class="tracking-[0.3em] text-[9px] text-gray-400 uppercase font-medium italic">Carregando...</p>
 
-        <div class="flex flex-wrap justify-center gap-3 mt-4 px-4">
-            <a href="index.html" class="bg-black text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 transition hover:bg-zinc-800">
+        <div class="flex justify-center gap-3 mt-4 px-4">
+            <a href="index.html" class="bg-black text-white px-5 py-2 rounded-full text-[9px] font-bold tracking-widest uppercase flex items-center gap-2">
                 <span>← Voltar</span>
             </a>
             
-            <a href="galvanicas.html" class="bg-white border border-gray-200 text-gray-600 px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase hover:border-[#A68966] hover:text-[#A68966] transition">
-                Galvânicas
-            </a>
-
-            <a href="checkout_premium.html" class="bg-[#A68966] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 shadow-lg shadow-[#A68966]/30">
+            <a href="carrinho.html" class="bg-[#A68966] text-white px-5 py-2 rounded-full text-[9px] font-bold tracking-widest uppercase flex items-center gap-2 shadow-lg shadow-[#A68966]/30">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <span>Carrinho</span>
-                <span id="cartCount" class="bg-white text-[#A68966] min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[9px] font-black px-1">0</span>
+                <span id="cartCount" class="bg-white text-[#A68966] min-w-[16px] h-[16px] flex items-center justify-center rounded-full text-[8px] font-black transition-all">0</span>
             </a>
         </div>
     </div>
@@ -84,8 +70,32 @@
         </div>
 </main>
 
+<div id="modalQtde" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4">
+    <div class="modal-content bg-white rounded-[32px] max-w-sm w-full overflow-hidden shadow-2xl">
+        <div class="aspect-square bg-gray-50 p-8">
+            <img id="modalImg" src="" class="w-full h-full object-contain mix-blend-multiply">
+        </div>
+        <div class="p-8 text-center">
+            <h3 id="modalNome" class="serif text-lg gold mb-1 uppercase tracking-tight"></h3>
+            <p id="modalPreco" class="text-gray-900 font-bold text-xl mb-6"></p>
+            
+            <p class="text-[9px] uppercase font-black text-gray-400 tracking-widest mb-3">Escolha a Quantidade</p>
+            <div class="flex items-center justify-center gap-8 mb-8">
+                <button onclick="alterarQtde(-1)" class="w-12 h-12 rounded-full border border-gray-200 text-2xl hover:bg-gray-50 transition">-</button>
+                <span id="displayQtde" class="text-3xl font-black w-10">1</span>
+                <button onclick="alterarQtde(1)" class="w-12 h-12 rounded-full border-2 border-[#A68966] text-[#A68966] text-2xl hover:bg-[#A68966] hover:text-white transition">+</button>
+            </div>
+
+            <button id="btnConfirmarAdd" class="w-full bg-black text-white py-4 rounded-2xl font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl active:scale-95 transition-all">
+                Adicionar ao Carrinho
+            </button>
+            <button onclick="fecharModal()" class="mt-5 text-gray-400 text-[10px] font-bold uppercase tracking-widest hover:text-red-500 transition">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script>
-/* CONFIGURAÇÃO FIREBASE */
+/* FIREBASE */
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -96,16 +106,18 @@ const db = firebase.database();
 const urlParams = new URLSearchParams(window.location.search);
 const catId = urlParams.get('cat');
 
-// Função de Carrinho (Index2 Style)
+let produtoSendoAdicionado = null;
+let qtdeAtual = 1;
+
+/* INICIALIZAÇÃO */
 function atualizarContadorCarrinho() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
     const badge = document.getElementById('cartCount');
-    badge.innerText = carrinho.length;
+    badge.innerText = cart.length;
     badge.classList.add('bump');
     setTimeout(() => badge.classList.remove('bump'), 300);
 }
 
-/* CARREGAR DADOS */
 db.ref('categories/' + catId).once('value', snapshot => {
     const catData = snapshot.val();
     if (catData) {
@@ -123,43 +135,26 @@ function renderizarProdutos(catData) {
             const p = s.val();
             if (p.category !== catId || p.paused) return;
 
-            // Lógica de Preços (Categoria2 Style)
             const precoOriginal = Number(p.price || 0);
             const maiorDesc = Math.max(Number(p.discount || 0), Number(catData.discount || 0));
-            const precoComDesconto = precoOriginal * (1 - maiorDesc / 100);
-            const precoPix = precoComDesconto * 0.95;
-            const valorParcela = precoComDesconto / 3;
+            const precoVenda = precoOriginal * (1 - maiorDesc / 100);
+            const precoPix = precoVenda * 0.95;
 
             grid.innerHTML += `
                 <div class="card-produto">
                     ${maiorDesc > 0 ? `<div class="badge-promo">-${maiorDesc}%</div>` : ''}
-                    
-                    <div class="aspect-square mb-4 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center">
-                        <img src="${p.image}" class="max-h-full object-contain" alt="${p.name}">
+                    <div class="aspect-square mb-4 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center p-4">
+                        <img src="${p.image}" class="max-h-full object-contain">
                     </div>
-
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">SKU: ${p.sku}</span>
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">${p.weight || '0.0'}G</span>
-                    </div>
-
-                    <h3 class="text-[11px] font-bold uppercase tracking-tight text-gray-800 mb-3 h-8 overflow-hidden">
-                        ${p.name}
-                    </h3>
-
-                    <div class="mt-auto pt-3 border-t border-gray-50 text-center md:text-left">
-                        <div class="flex items-center gap-2 mb-1">
+                    <h3 class="text-[11px] font-bold uppercase tracking-tight text-gray-800 mb-3 h-8 overflow-hidden">${p.name}</h3>
+                    <div class="mt-auto">
+                        <div class="flex items-center gap-2">
                             ${maiorDesc > 0 ? `<span class="riscado">R$ ${precoOriginal.toFixed(2)}</span>` : ''}
-                            <span class="preco-principal">R$ ${precoComDesconto.toFixed(2)}</span>
+                            <span class="preco-principal">R$ ${precoVenda.toFixed(2)}</span>
                         </div>
-                        
-                        <div class="mb-4">
-                            <p class="preco-pix italic">R$ ${precoPix.toFixed(2)} <span class="text-[9px] font-normal text-gray-500">no PIX</span></p>
-                            <p class="text-[10px] text-gray-400 font-medium">ou 3x de R$ ${valorParcela.toFixed(2)}</p>
-                        </div>
-
-                        <button onclick="adicionar('${s.key}', '${p.name}', ${precoComDesconto}, '${p.sku}')" 
-                                class="w-full bg-black hover:bg-[#A68966] text-white py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg">
+                        <p class="preco-pix italic">R$ ${precoPix.toFixed(2)} <span class="text-[9px] font-normal text-gray-400">no PIX</span></p>
+                        <button onclick="abrirModal('${s.key}', '${p.name}', ${precoVenda}, '${p.image}')" 
+                                class="w-full bg-black hover:bg-[#A68966] text-white py-3 rounded-xl text-[10px] font-bold uppercase mt-4 transition-all tracking-widest">
                             ADICIONAR
                         </button>
                     </div>
@@ -169,17 +164,50 @@ function renderizarProdutos(catData) {
     });
 }
 
-function adicionar(id, nome, preco, sku) {
-    let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    cart.push({ id, nome, preco, sku, qtd: 1 });
-    localStorage.setItem('carrinho', JSON.stringify(cart));
+/* LÓGICA DO MODAL */
+function abrirModal(id, nome, preco, imagem) {
+    produtoSendoAdicionado = { id, nome, preco, imagem };
+    qtdeAtual = 1;
     
-    atualizarContadorCarrinho();
+    document.getElementById('modalImg').src = imagem;
+    document.getElementById('modalNome').innerText = nome;
+    document.getElementById('modalPreco').innerText = 'R$ ' + preco.toFixed(2);
+    document.getElementById('displayQtde').innerText = qtdeAtual;
+    
+    document.getElementById('modalQtde').classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Trava o scroll do fundo
 }
 
-// Inicializa o contador ao abrir
-atualizarContadorCarrinho();
-</script>
+function fecharModal() {
+    document.getElementById('modalQtde').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
 
+function alterarQtde(v) {
+    qtdeAtual = Math.max(1, qtdeAtual + v);
+    document.getElementById('displayQtde').innerText = qtdeAtual;
+}
+
+function finalizarAdicao() {
+    let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    
+    // Adiciona o item com a quantidade escolhida
+    cart.push({
+        id: produtoSendoAdicionado.id,
+        nome: produtoSendoAdicionado.nome,
+        preco: produtoSendoAdicionado.preco,
+        image: produtoSendoAdicionado.imagem,
+        qtd: qtdeAtual
+    });
+
+    localStorage.setItem('carrinho', JSON.stringify(cart));
+    atualizarContadorCarrinho();
+    fecharModal();
+}
+
+document.getElementById('btnConfirmarAdd').onclick = finalizarAdicao;
+atualizarContadorCarrinho();
+
+</script>
 </body>
 </html>
