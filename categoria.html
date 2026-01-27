@@ -16,7 +16,6 @@
     .serif{font-family:'Cinzel',serif}
     .gold{color:#A68966}
     
-    /* RESTAURANDO LAYOUT ORIGINAL DO CARD */
     .card-produto {
         background:#fff;
         border-radius:20px;
@@ -63,7 +62,7 @@
             <div class="h-4 w-px bg-gray-200"></div>
             <p id="nomeCategoriaTopo" class="text-[10px] font-bold uppercase tracking-widest gold italic">Carregando...</p>
             <div class="h-4 w-px bg-gray-200"></div>
-            <a href="carrinho.html" class="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">
+            <a href="checkout_premium.html" class="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">
                 🛒 Carrinho (<span id="cartCount">0</span>)
             </a>
         </div>
@@ -100,7 +99,6 @@
 </div>
 
 <script>
-// 1. CONFIGURAÇÃO FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -119,7 +117,6 @@ function atualizarContadorCarrinho() {
     document.getElementById('cartCount').innerText = carrinho.length;
 }
 
-// 2. CARREGAR DADOS
 db.ref('categories/' + catId).once('value', snapshot => {
   const catData = snapshot.val();
   if (catData) {
@@ -137,6 +134,7 @@ function renderizarProdutos(catData) {
       const p = s.val();
       if (p.category !== catId || p.paused) return;
 
+      // MANTENDO TODA A LÓGICA ORIGINAL DE PREÇOS E DESCONTOS
       const precoOriginal = Number(p.price || 0);
       const maiorDesc = Math.max(Number(p.discount || 0), Number(catData.discount || 0));
       const precoComDesconto = precoOriginal * (1 - maiorDesc / 100);
@@ -176,7 +174,6 @@ function renderizarProdutos(catData) {
   });
 }
 
-// 3. FUNÇÕES DO MODAL E CARRINHO
 function prepararAdicao(id, precoVenda) {
   db.ref('products/' + id).once('value').then(s => {
     const p = s.val();
@@ -212,7 +209,7 @@ function finalizarAdicao() {
     preco: produtoAtual.precoVenda,
     peso: produtoAtual.weight || 0,
     image: produtoAtual.image || '',
-    qtd: qtdeSelecionada // Salva a quantidade definida no modal
+    qtd: qtdeSelecionada 
   });
 
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
@@ -222,8 +219,6 @@ function finalizarAdicao() {
 }
 
 document.getElementById('btnConfirmarAdd').onclick = finalizarAdicao;
-
-// Inicializa o contador ao abrir a página
 atualizarContadorCarrinho();
 
 </script>
