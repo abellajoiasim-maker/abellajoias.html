@@ -2,37 +2,40 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Abella Joias | Atacado de Joias no Bruto</title>
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Abella Joias | Catálogo de Atacado">
-    <meta property="og:description" content="Confira nossas joias no bruto. Qualidade e sofisticação para o seu negócio.">
-    <meta property="og:url" content="https://abellajoiasim-maker.github.io/abellajoias/">
-    <meta property="og:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
+    <title>Produtos | Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; color: #333; }
+        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #A68966; }
-        .card-lux { background: #fff; border: 1px solid #eee; transition: .4s; overflow: hidden; }
-        /* Ajuste 1:1 Cirúrgico */
-        .img-container { width: 100%; aspect-ratio: 1 / 1; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; }
-        .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .gold-bg { background: #A68966; }
+        .card-prod { background: #fff; border-radius: 15px; border: 1px solid #eee; transition: .3s; }
+        .btn-nav { border: 1px solid #A68966; color: #A68966; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; }
+        .btn-nav:hover { background: #A68966; color: #fff; }
+        .price-old { text-decoration: line-through; color: #999; font-size: 11px; }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; }
+        .modal.active { display:flex; }
     </style>
 </head>
 <body>
-    <header class="p-6 md:p-10 text-center">
-        <h1 class="serif text-3xl md:text-5xl gold-text tracking-[0.2em] uppercase">Abella Joias</h1>
-        <p class="text-[10px] md:text-xs tracking-[0.3em] uppercase mt-2 opacity-60">Atacado de Joias no Bruto</p>
-    </header>
+
+<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm text-center">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center">
+        <h1 class="serif text-3xl gold-text tracking-widest uppercase">Abella Joias</h1>
+        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
+        <div class="flex gap-3 flex-wrap justify-center">
+            <a href="index.html" class="btn-nav px-6 py-2 rounded-full">CATEGORIAS</a>
+            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
+            <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">
+                CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span>
+            </a>
+        </div>
+    </div>
+</header>
 
     <main class="max-w-7xl mx-auto p-6 md:p-12">
         <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
