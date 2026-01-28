@@ -166,50 +166,57 @@ function remover(index) {
 /* ===== FINALIZAÇÃO DO PEDIDO (WHATSAPP E BANCO) ===== */
 
 async function enviarPedido() {
-        const nome = document.getElementById('nome').value.trim();
-        const contato = document.getElementById('contato').value.trim();
-        const totalNumerico = carrinho.reduce((acc, item) => acc + ((item.precoFinal || item.preco || 0) * item.quantidade), 0);
+    const nome = document.getElementById('nome').value.trim();
+    const contato = document.getElementById('contato').value.trim();
+    
+    // 1. Calculamos o valor real
+    const valorTotal = carrinho.reduce((acc, item) => acc + ((item.precoFinal || item.preco || 0) * item.quantidade), 0);
+    
+    // 2. Criamos a formatação de moeda para usar na mensagem
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        if (!nome || !contato || !formaPagamento || carrinho.length === 0) {
-            return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
-        }
+    // 3. Validação de campos
+    if (!nome || !contato || !formaPagamento || carrinho.length === 0) {
+        return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
+    }
 
-        const orderData = {
-            cliente: nome,
-            whatsapp: contato,
-            total: fM(totalNumerico),
-            pagamento: formaPagamento,
-            data: new Date().toLocaleString('pt-BR'),
-            itens: carrinho,
-            endereco: {
-                rua: document.getElementById('rua').value,
-                num: document.getElementById('num').value,
-                bairro: document.getElementById('bairro').value,
-                cidade: document.getElementById('cidade').value
+    const orderData = {
+        cliente: nome,
+        whatsapp: contato,
+        total: fM(valorTotal), // Usando a função de moeda
+        pagamento: formaPagamento,
+        data: new Date().toLocaleString('pt-BR'),
+        itens: carrinho,
+        endereco: {
+            rua: document.getElementById('rua').value,
+            num: document.getElementById('num').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value
         }
     };
 
     try {
-        // Salva no Firebase (Lógica do arquivo 1)
-       await db.ref('orders').push(pedidoDB);
+        // Salva no Firebase
+        await db.ref('orders').push(orderData);
 
-            // Mensagem de WhatsApp (Limpa e Objetiva como solicitado)
-             let msg = `Olá, meu nome é *${nome}*!\n\n`;
-             msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-             msg += `💰 *Total:* ${total}\n`;
-             msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-             msg += `Aguardando seu retorno para finalizar!`;
+        // 4. Montagem da Mensagem (USANDO AS VARIÁVEIS CORRETAS)
+        let msg = `Olá, meu nome é *${nome}*!\n\n`;
+        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+        msg += `💰 *Total:* ${fM(valorTotal)}\n`; // <--- Corrigido para fM(valorTotal)
+        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+        msg += `Aguardando seu retorno para finalizar!`;
 
-            window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-            
-            localStorage.removeItem('carrinho');
-        } catch (e) {
-            alert("Erro ao processar pedido. Verifique sua conexão.");
-        }
+        // 5. Redirecionamento
+        const linkWhatsapp = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+        
+        localStorage.removeItem('carrinho');
+        window.location.href = linkWhatsapp;
+
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao processar pedido. Verifique sua conexão.");
     }
-
-    // Iniciar a listagem ao abrir a página
-    carregarCarrinho();
+}
 </script>
 
 </body>
