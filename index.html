@@ -14,14 +14,10 @@ body{background:#F8F6F2}
 .gold{color:#A68966}
 .font-serif{font-family:'Cinzel',serif}
 .floating{position:fixed;bottom:20px;right:20px;z-index:50}
-
-/* Estilos do Modal de Quantidade */
-#modalAdd { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-.modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; text-align: center; border: 2px solid #A68966; }
-.input-qty { border: 2px solid #A68966; padding: 12px; border-radius: 8px; width: 100px; text-align: center; font-size: 20px; font-weight: bold; margin: 10px 0; }
-.btn-confirm { background: #000; color: #fff; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; }
-.btn-cancel { color: #999; font-size: 12px; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; background: #fff; }
+/* Modal */
+#modalAdd { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+.modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 400px; width: 100%; text-align: center; }
+.input-qty { border: 2px solid #A68966; padding: 10px; border-radius: 5px; width: 80px; text-align: center; font-size: 18px; font-weight: bold; }
 </style>
 </head>
 
@@ -35,58 +31,56 @@ Abella Joias<br>
 <div id="categorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto"></div>
 
 <div id="lista-produtos" class="hidden max-w-6xl mx-auto">
-  <button onclick="voltarCategorias()" class="mb-6 text-gray-500 font-bold flex items-center gap-2">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-    Voltar para Categorias
-  </button>
-  <h2 id="titulo-categoria" class="font-serif text-2xl gold mb-6 uppercase tracking-wider"></h2>
-  <div id="grid-produtos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+  <button onclick="voltarCategorias()" class="mb-6 text-gray-500 font-bold">← Voltar para Categorias</button>
+  <h2 id="titulo-categoria" class="font-serif text-2xl gold mb-6 uppercase"></h2>
+  <div id="grid-produtos" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
 </div>
 
 <div id="modalAdd">
     <div class="modal-content shadow-2xl">
-        <h3 id="m-nome" class="font-serif gold text-xl mb-1">Nome do Produto</h3>
-        <p id="m-sku" class="text-[10px] text-gray-400 mb-6 uppercase tracking-widest"></p>
+        <h3 id="m-nome" class="font-serif gold text-xl mb-2">Nome do Produto</h3>
+        <p id="m-sku" class="text-xs text-gray-400 mb-4"></p>
         
-        <div id="area-variacao" class="hidden text-left mb-4">
-            <label id="label-var" class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Selecione a Opção:</label>
-            <select id="m-variacao"></select>
+        <div id="area-variacao" class="mb-4 hidden text-left">
+            <label id="label-var" class="block text-sm font-bold mb-1">Escolha uma opção:</label>
+            <select id="m-variacao" class="w-full border-2 border-gray-200 p-2 rounded-md"></select>
         </div>
 
-        <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Quantidade Atacado:</label>
+        <div class="mb-6">
+            <label class="block text-sm font-bold mb-1">Quantidade Atacado:</label>
             <input type="number" id="m-qty" value="1" min="1" class="input-qty">
         </div>
 
-        <button onclick="confirmarAdicao()" class="btn-confirm shadow-lg">Adicionar ao Carrinho</button>
-        <div onclick="fecharModal()" class="btn-cancel">Cancelar</div>
+        <div class="flex gap-2">
+            <button onclick="fecharModal()" class="flex-1 bg-gray-200 p-3 rounded-md font-bold">Cancelar</button>
+            <button onclick="confirmarAdicao()" class="flex-1 bg-black text-white p-3 rounded-md font-bold">Adicionar</button>
+        </div>
     </div>
 </div>
 
 <div class="floating flex flex-col gap-3">
-  <a href="cart_checkout_premium.html" class="bg-black text-white px-6 py-4 rounded-full text-sm shadow-xl flex items-center gap-2">
-    <span>🛒</span> <b>Carrinho</b>
-  </a>
+  <a href="cart_checkout_premium.html" class="bg-black text-white px-4 py-3 rounded-full text-sm shadow-lg">🛒 Carrinho</a>
 </div>
 
 <script>
-// Firebase Config
+// Firebase
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   authDomain: "catalogo-abella-joias.firebaseapp.com",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias"
+  projectId: "catalogo-abella-joias",
+  storageBucket: "catalogo-abella-joias.appspot.com"
 });
 const db = firebase.database();
 
 let todosProdutos = [];
-let itemSelecionado = null;
+let produtoAtualParaAdicionar = null;
 
 // Listas de Variações
 const LISTA_INICIAIS = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z".split(",");
 const LISTA_DIZERES = ["Deus", "Jesus", "Fé", "Gratidão", "Abençoada", "Paz", "Amor", "Família", "Força"];
 
-// Carrega os 1.396 produtos do banco
+// Carrega Produtos
 db.ref('products').once('value', snapshot => {
   const data = snapshot.val();
   if (data) {
@@ -99,8 +93,8 @@ function renderCategorias() {
   const cats = [...new Set(todosProdutos.map(p => p.categoria))].sort();
   const container = document.getElementById('categorias');
   container.innerHTML = cats.map(cat => `
-    <div onclick="filtrar('${cat}')" class="bg-white p-6 border-b-4 border-[#A68966] text-center cursor-pointer shadow-sm hover:shadow-md transition group">
-      <h3 class="font-serif gold uppercase tracking-wider group-hover:scale-110 transition duration-300 text-sm">${cat}</h3>
+    <div onclick="filtrar('${cat}')" class="bg-white p-6 border-b-4 border-[#A68966] text-center cursor-pointer shadow-sm hover:shadow-md transition">
+      <h3 class="font-serif gold uppercase tracking-wider">${cat}</h3>
     </div>
   `).join('');
 }
@@ -114,19 +108,16 @@ function filtrar(cat) {
   const grid = document.getElementById('grid-produtos');
   
   grid.innerHTML = filtrados.map(p => `
-    <div class="bg-white border p-3 shadow-sm flex flex-col rounded-lg">
-      <div class="aspect-square bg-white flex items-center justify-center overflow-hidden mb-3">
-        <img src="${p.imagem || 'https://via.placeholder.com/300'}" class="max-w-full max-h-full object-contain">
-      </div>
-      <h4 class="text-[11px] font-bold uppercase flex-1 leading-tight mb-1">${p.nome}</h4>
-      <p class="text-[9px] text-gray-400 mb-2">${p.sku}</p>
-      <p class="gold font-bold text-sm mb-3">R$ ${parseFloat(p.preco).toFixed(2)}</p>
-      <button onclick='abrirModal(${JSON.stringify(p)})' class="bg-black text-white text-[10px] py-2 uppercase font-bold tracking-widest hover:bg-[#A68966] transition">
+    <div class="bg-white border p-4 shadow-sm flex flex-col">
+      <img src="${p.imagem || 'https://via.placeholder.com/300'}" class="w-full aspect-square object-contain mb-4">
+      <h4 class="text-sm font-bold flex-1">${p.nome}</h4>
+      <p class="text-xs text-gray-400 mb-2">${p.sku}</p>
+      <p class="gold font-bold mb-4">R$ ${parseFloat(p.preco).toFixed(2)}</p>
+      <button onclick='abrirModal(${JSON.stringify(p)})' class="bg-black text-white text-xs py-2 uppercase tracking-widest hover:bg-gold transition">
         Adicionar
       </button>
     </div>
   `).join('');
-  window.scrollTo(0,0);
 }
 
 function voltarCategorias() {
@@ -136,9 +127,9 @@ function voltarCategorias() {
 
 // LÓGICA DO MODAL
 function abrirModal(p) {
-    itemSelecionado = p;
+    produtoAtualParaAdicionar = p;
     document.getElementById('m-nome').innerText = p.nome;
-    document.getElementById('m-sku').innerText = p.sku;
+    document.getElementById('m-sku').innerText = "SKU: " + p.sku;
     document.getElementById('m-qty').value = 1;
     
     const areaVar = document.getElementById('area-variacao');
@@ -148,22 +139,21 @@ function abrirModal(p) {
     areaVar.classList.add('hidden');
     selectVar.innerHTML = "";
 
-    const nomeL = p.nome.toLowerCase();
+    // Lógica para detectar se precisa de Inicial ou Frase
+    const nomeLower = p.nome.toLowerCase();
     
-    // Se for um produto de iniciais (A-Z)
-    if (nomeL.includes("inicial") || nomeL.includes("letra")) {
+    if (nomeLower.includes("inicial") || nomeLower.includes("letra")) {
         areaVar.classList.remove('hidden');
-        labelVar.innerText = "Escolha a Letra:";
-        LISTA_INICIAIS.forEach(l => {
-            selectVar.innerHTML += `<option value="${l}">${l}</option>`;
+        labelVar.innerText = "Selecione a Letra:";
+        LISTA_INICIAIS.forEach(letra => {
+            selectVar.innerHTML += `<option value="${letra}">${letra}</option>`;
         });
     } 
-    // Se for um produto de frases (Dizeres)
-    else if (nomeL.includes("dizeres") || nomeL.includes("frase") || nomeL.includes("escrito")) {
+    else if (nomeLower.includes("dizeres") || nomeLower.includes("frase") || nomeLower.includes("escrito")) {
         areaVar.classList.remove('hidden');
-        labelVar.innerText = "Escolha o Dizer:";
-        LISTA_DIZERES.forEach(d => {
-            selectVar.innerHTML += `<option value="${d}">${d}</option>`;
+        labelVar.innerText = "Selecione o Dizer:";
+        LISTA_DIZERES.forEach(diz => {
+            selectVar.innerHTML += `<option value="${diz}">${diz}</option>`;
         });
     }
 
@@ -176,20 +166,20 @@ function fecharModal() {
 
 function confirmarAdicao() {
     const qty = parseInt(document.getElementById('m-qty').value);
-    const variacao = document.getElementById('m-variacao').value;
+    const variacao = document.getElementById('m-variacao').value; // Pode ser vazio se hidden
     
-    if (qty < 1 || isNaN(qty)) return alert("Digite uma quantidade válida.");
+    if (qty < 1) return alert("A quantidade deve ser pelo menos 1");
 
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
-    // Verifica se já existe o mesmo produto com a mesma variação no carrinho
-    const index = cart.findIndex(i => i.sku === itemSelecionado.sku && i.variacao === (variacao || ""));
+    // Identificador único considerando a variação (se houver)
+    const itemIdx = cart.findIndex(item => item.sku === produtoAtualParaAdicionar.sku && item.variacao === variacao);
 
-    if (index > -1) {
-        cart[index].qty += qty;
+    if (itemIdx > -1) {
+        cart[itemIdx].qty += qty;
     } else {
         cart.push({
-            ...itemSelecionado,
+            ...produtoAtualParaAdicionar,
             qty: qty,
             variacao: variacao || ""
         });
@@ -197,11 +187,7 @@ function confirmarAdicao() {
 
     localStorage.setItem('cart', JSON.stringify(cart));
     fecharModal();
-    
-    // Feedback suave ao usuário
-    const btnCart = document.querySelector('.floating b');
-    btnCart.innerText = "Adicionado!";
-    setTimeout(() => { btnCart.innerText = "Carrinho"; }, 2000);
+    alert(`Sucesso! ${qty} unidade(s) adicionada(s).`);
 }
 </script>
 
