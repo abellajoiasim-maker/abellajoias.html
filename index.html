@@ -22,9 +22,9 @@
 <body>
 
 <header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center text-center">
         <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">Abella Joias</h1>
-        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6">ATACADO DE JOIAS NO BRUTO</p>
+        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
         
         <div class="flex gap-3 flex-wrap justify-center">
             <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">INÍCIO</a>
@@ -38,8 +38,7 @@
 
 <main class="max-w-7xl mx-auto p-6 md:p-12">
     <h2 class="serif text-center text-2xl mb-12 gold-text">Nossas Categorias</h2>
-    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
-        </div>
+    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
 </main>
 
 <script>
@@ -68,7 +67,7 @@
                         <img src="${cat.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
                     </div>
                     <div class="p-4 text-center">
-                        <span class="serif text-sm gold-text tracking-widest uppercase">${cat.name}</span>
+                        <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
                     </div>
                 </a>
             `;
