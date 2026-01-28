@@ -1,79 +1,137 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Abella Joias | Atacado de Joias no Bruto</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; color: #333; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold-bg { background: #A68966; }
-        .gold-text { color: #A68966; }
-        .card-lux { background: #fff; border-radius: 20px; border: 1px solid #eee; transition: .4s; overflow: hidden; }
-        .card-lux:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(166,137,102,0.15); border-color: #A68966; }
-        .btn-nav { border: 1px solid #A68966; color: #A68966; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; }
-        .btn-nav:hover { background: #A68966; color: #fff; }
-    </style>
+<meta charset="UTF-8">
+<title>Categoria | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+body{font-family:'Poppins',sans-serif;background:#f8f6f2}
+.serif{font-family:'Cinzel',serif}
+.gold{color:#A68966}
+.card{background:#fff;border-radius:18px;border:1px solid #eee;transition:.3s;position:relative}
+.card:hover{transform:translateY(-5px);border-color:#A68966}
+.badge{position:absolute;top:10px;left:10px;background:#000;color:#fff;font-size:10px;padding:4px 6px;border-radius:999px}
+.riscado{text-decoration:line-through;font-size:11px;color:#999}
+</style>
 </head>
+
 <body>
 
-<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center">
-        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">Abella Joias</h1>
-        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6">ATACADO DE JOIAS NO BRUTO</p>
-        
-        <div class="flex gap-3 flex-wrap justify-center">
-            <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">INÍCIO</a>
-            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
-            <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">
-                CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span>
-            </a>
-        </div>
+<header class="bg-white border-b sticky top-0 z-40">
+  <div class="text-center py-8">
+    <h1 class="serif text-3xl gold">Abella Joias</h1>
+    <p class="text-[10px] tracking-[0.3em] text-gray-500 uppercase">
+      ATACADO DE JOIAS NO BRUTO
+    </p>
+
+    <div class="flex justify-center gap-2 mt-4">
+      <a href="index.html" class="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold">CATEGORIAS</a>
+      <a href="galvanicas.html" class="bg-white border px-6 py-2 rounded-full text-[10px] font-bold text-gray-500">GALVÂNICAS</a>
+      <a href="carrinho.html" class="bg-[#A68966] text-white px-6 py-2 rounded-full text-[10px] font-bold">
+        CARRINHO <span id="count">(0)</span>
+      </a>
     </div>
+  </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-6 md:p-12">
-    <h2 class="serif text-center text-2xl mb-12 gold-text">Nossas Categorias</h2>
-    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
-        </div>
+<main class="max-w-7xl mx-auto p-6">
+  <h2 id="tituloCategoria" class="serif text-xl text-center mb-10 text-gray-700"></h2>
+  <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-8"></div>
 </main>
 
+<!-- MODAL -->
+<div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center">
+  <div class="bg-white p-6 rounded-xl w-[90%] max-w-sm text-center">
+    <h3 class="serif gold mb-4">Digite a Quantidade</h3>
+    <input id="qtd" type="number" min="1" value="1"
+      class="border w-full p-3 text-center mb-4">
+    <div class="flex gap-2">
+      <button onclick="fecharModal()" class="flex-1 bg-gray-200 py-2 rounded">Cancelar</button>
+      <button onclick="confirmar()" class="flex-1 bg-black text-white py-2 rounded">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+firebase.initializeApp({
+  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
 
-    function atualizarContador() {
-        const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        document.getElementById('contadorCarrinho').innerText = `(${c.length})`;
-    }
-    atualizarContador();
+const params=new URLSearchParams(location.search);
+const slug=params.get('cat');
+let produtoAtual=null;
 
-    db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('gridCategorias');
-        grid.innerHTML = '';
-        snap.forEach(s => {
-            const cat = s.val();
-            if (cat.paused) return;
-            grid.innerHTML += `
-                <a href="categoria.html?id=${s.key}" class="card-lux group">
-                    <div class="aspect-[4/5] overflow-hidden bg-gray-50">
-                        <img src="${cat.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
-                    </div>
-                    <div class="p-4 text-center">
-                        <span class="serif text-sm gold-text tracking-widest uppercase">${cat.name}</span>
-                    </div>
-                </a>
-            `;
-        });
+/* Carrinho */
+let carrinho=JSON.parse(localStorage.getItem("carrinho")||"[]");
+document.getElementById('count').innerText=`(${carrinho.length})`;
+
+db.ref('categories').orderByChild('slug').equalTo(slug).once('value',cs=>{
+  let descontoCategoria=0, nomeCat='';
+  cs.forEach(c=>{
+    descontoCategoria=Number(c.val().discount)||0;
+    nomeCat=c.val().name;
+  });
+  tituloCategoria.innerText=nomeCat;
+
+  db.ref('products').orderByChild('categorySlug').equalTo(slug).on('value',ps=>{
+    gridProdutos.innerHTML='';
+    ps.forEach(s=>{
+      const p=s.val();
+      if(p.paused) return;
+
+      const preco=Number(p.price)||0;
+      const descProd=Number(p.discount)||0;
+      const desc=descProd>0?descProd:descontoCategoria;
+      const final=desc>0?(preco*(1-desc/100)).toFixed(2):preco.toFixed(2);
+
+      gridProdutos.innerHTML+=`
+      <div class="card p-4">
+        ${desc>0?`<div class="badge">-${desc}%</div>`:''}
+        <div class="aspect-square flex items-center justify-center mb-4">
+          <img src="${p.image||''}" class="object-contain max-h-full">
+        </div>
+
+        <div class="text-[11px] text-gray-500">SKU: ${p.sku||''}</div>
+        <div class="text-xs font-bold uppercase">${p.name}</div>
+
+        ${desc>0?`<div class="riscado">R$ ${preco.toFixed(2)}</div>`:''}
+        <div class="text-sm font-semibold mb-1">R$ ${final}</div>
+
+        <div class="text-[11px] text-gray-500 mb-2">
+          Peso: ${p.weight||'-'} | PIX -5% | até 6x
+        </div>
+
+        <button onclick='abrirModal(${JSON.stringify(p)})'
+         class="w-full bg-black text-white py-2 rounded-full text-[10px] font-bold">
+         ADICIONAR AO CARRINHO
+        </button>
+      </div>`;
     });
+  });
+});
+
+function abrirModal(p){
+  produtoAtual=p;
+  qtd.value=1;
+  modal.classList.remove('hidden');
+}
+function fecharModal(){modal.classList.add('hidden')}
+function confirmar(){
+  carrinho.push({...produtoAtual,qtd:Number(qtd.value)});
+  localStorage.setItem("carrinho",JSON.stringify(carrinho));
+  count.innerText=`(${carrinho.length})`;
+  fecharModal();
+}
 </script>
+
 </body>
 </html>
