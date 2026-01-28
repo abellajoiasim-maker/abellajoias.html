@@ -16,7 +16,7 @@
         .btn-pagamento { border: 2px solid #eee; transition: 0.3s; cursor: pointer; background: #fdfdfd; border-radius: 12px; padding: 15px; text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .btn-pagamento.active { border-color: #A68966; background: #fffaf5; color: #A68966; }
         input.dados { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; outline: none; }
-        input.qtd-input { width: 50px; border: 1px solid #A68966; border-radius: 6px; text-align: center; font-weight: bold; padding: 4px; }
+        input.qtd-input { width: 60px; border: 1px solid #A68966; border-radius: 6px; text-align: center; font-weight: bold; padding: 4px; }
     </style>
 </head>
 <body>
@@ -39,7 +39,7 @@
         <input type="tel" id="contato" class="dados" placeholder="WhatsApp *">
         
         <div class="mt-4 pt-4 border-t">
-            <p class="text-[10px] gold uppercase font-bold mb-3 tracking-widest">Endereço de Entrega</p>
+            <p class="text-[10px] gold uppercase font-bold mb-3 tracking-widest">Endereço de Entrega (Opcional)</p>
             <input type="text" id="rua" class="dados" placeholder="Rua / Avenida">
             <div class="grid grid-cols-2 gap-2">
                 <input type="text" id="num" class="dados" placeholder="Nº">
@@ -67,13 +67,14 @@
 
 <footer class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg">
     <div class="max-w-xl mx-auto">
-        <button onclick="enviarPedido()" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-[#A68966]">
+        <button onclick="enviarPedido()" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-[#A68966] transition-all">
             Finalizar via WhatsApp
         </button>
     </div>
 </footer>
 
 <script>
+    // Inicialização do Firebase
     const firebaseConfig = { 
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
@@ -81,10 +82,12 @@
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // LER CARRINHO DO LOCALSTORAGE
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     let formaPagamento = "";
-    let foneLoja = "5511999999999";
+    let foneLoja = "5511999999999"; 
 
+    // Busca o telefone configurado no painel
     db.ref('settings/whatsapp').on('value', s => {
         let rawFone = s.val();
         if(rawFone) {
@@ -99,36 +102,42 @@
         el.classList.add('active');
     }
 
+    // FUNÇÃO PRINCIPAL: MOSTRAR OS ITENS
     function carregarCarrinho() {
         const lista = document.getElementById('listaItens');
         let total = 0;
         lista.innerHTML = "";
 
         if(carrinho.length === 0) {
-            lista.innerHTML = "<p class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</p>";
+            lista.innerHTML = "<div class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</div>";
             document.getElementById('totalGeral').innerText = "R$ 0,00";
             return;
         }
 
         carrinho.forEach((item, index) => {
-            const subtotal = item.precoFinal * item.quantidade;
+            // ALINHAMENTO: Usando as chaves exatas que vêm do categoria.html
+            // Se o item não tiver 'precoFinal', tentamos 'price' como segurança
+            const preco = item.precoFinal || item.price || 0;
+            const qtd = item.quantidade || 1;
+            const subtotal = preco * qtd;
             total += subtotal;
+
             lista.innerHTML += `
                 <div class="item-card flex gap-4 items-center">
-                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg border">
                     <div class="flex-1">
                         <h3 class="text-[11px] font-bold uppercase">${item.name}</h3>
-                        <p class="text-[10px] text-gray-500 mb-1">R$ ${item.precoFinal.toFixed(2)} cada</p>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-bold text-gray-400">QTD:</span>
-                            <input type="number" value="${item.quantidade}" min="1" 
-                                onchange="editarQtd(${index}, this.value)" 
-                                class="qtd-input">
+                        <p class="text-[10px] text-gray-500">R$ ${preco.toFixed(2)} unit.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase">Qtd:</span>
+                            <input type="number" value="${qtd}" min="1" 
+                                onchange="atualizarQuantidade(${index}, this.value)" 
+                                class="qtd-input text-xs">
                         </div>
                     </div>
                     <div class="text-right">
-                        <button onclick="remover(${index})" class="text-red-400 text-xs mb-2">Remover</button>
-                        <p class="font-bold text-xs gold">R$ ${subtotal.toFixed(2)}</p>
+                        <button onclick="removerItem(${index})" class="text-red-400 text-[10px] font-bold uppercase mb-2">Remover</button>
+                        <p class="font-bold text-sm gold">R$ ${subtotal.toFixed(2)}</p>
                     </div>
                 </div>`;
         });
@@ -136,14 +145,14 @@
         document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
     }
 
-    function editarQtd(index, novaQtd) {
-        if(novaQtd < 1) novaQtd = 1;
-        carrinho[index].quantidade = parseInt(novaQtd);
+    function atualizarQuantidade(index, valor) {
+        if(valor < 1) valor = 1;
+        carrinho[index].quantidade = parseInt(valor);
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         carregarCarrinho();
     }
 
-    function remover(index) {
+    function removerItem(index) {
         carrinho.splice(index, 1);
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         carregarCarrinho();
@@ -155,12 +164,18 @@
         const total = document.getElementById('totalGeral').innerText;
 
         if(!nome || !contato || !formaPagamento || carrinho.length === 0) {
-            return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
+            alert("Por favor, preencha o nome, contato e escolha a forma de pagamento.");
+            return;
         }
 
-        const orderData = {
-            cliente: nome, whatsapp: contato, total: total, pagamento: formaPagamento,
-            data: new Date().toLocaleString('pt-BR'), itens: carrinho,
+        // Dados para o seu controle no Painel Admin
+        const pedidoDB = {
+            cliente: nome,
+            whatsapp: contato,
+            total: total,
+            pagamento: formaPagamento,
+            data: new Date().toLocaleString('pt-BR'),
+            itens: carrinho,
             endereco: {
                 rua: document.getElementById('rua').value,
                 num: document.getElementById('num').value,
@@ -169,19 +184,27 @@
             }
         };
 
-        await db.ref('orders').push(orderData);
+        try {
+            await db.ref('orders').push(pedidoDB);
 
-        let msg = `Olá, meu nome é *${nome}*!\n\n`;
-        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-        msg += `💰 *Total:* ${total}\n`;
-        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-        msg += `Aguardando seu retorno para finalizar!`;
+            // Mensagem de WhatsApp (Limpa e Objetiva como solicitado)
+             let msg = `Olá, meu nome é *${nome}*!\n\n`;
+             msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+             msg += `💰 *Total:* ${total}\n`;
+             msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+             msg += `Aguardando seu retorno para finalizar!`;
 
-        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-        localStorage.removeItem('carrinho');
+            window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+            
+            localStorage.removeItem('carrinho');
+        } catch (e) {
+            alert("Erro ao processar pedido. Verifique sua conexão.");
+        }
     }
 
+    // Iniciar a listagem ao abrir a página
     carregarCarrinho();
 </script>
+
 </body>
 </html>
