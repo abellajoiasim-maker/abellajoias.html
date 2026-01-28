@@ -166,29 +166,26 @@ function remover(index) {
 /* ===== FINALIZAÇÃO DO PEDIDO (WHATSAPP E BANCO) ===== */
 
 async function enviarPedido() {
-    const nome = document.getElementById('nome').value.trim();
-    const contato = document.getElementById('contato').value.trim();
-    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    
-    // Cálculo do total numérico para o Banco de Dados
-    const totalNumerico = carrinho.reduce((acc, item) => acc + (item.precoFinal * item.quantidade), 0);
+        const nome = document.getElementById('nome').value.trim();
+        const contato = document.getElementById('contato').value.trim();
+        const totalNumerico = carrinho.reduce((acc, item) => acc + ((item.precoFinal || item.preco || 0) * item.quantidade), 0);
 
-    if (!nome || !contato || carrinho.length === 0) {
-        return alert("Preencha seus dados e certifique-se que o carrinho não está vazio.");
-    }
+        if (!nome || !contato || !formaPagamento || carrinho.length === 0) {
+            return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
+        }
 
-    const orderData = {
-        cliente: nome,
-        whatsapp: contato,
-        total: fM(totalNumerico), // Salva formatado como pedido
-        pagamento: typeof formaPagamento !== 'undefined' ? formaPagamento : "A combinar",
-        data: new Date().toLocaleString('pt-BR'),
-        itens: carrinho,
-        endereco: {
-            rua: document.getElementById('rua').value,
-            num: document.getElementById('num').value,
-            bairro: document.getElementById('bairro').value,
-            cidade: document.getElementById('cidade').value
+        const orderData = {
+            cliente: nome,
+            whatsapp: contato,
+            total: fM(totalNumerico),
+            pagamento: formaPagamento,
+            data: new Date().toLocaleString('pt-BR'),
+            itens: carrinho,
+            endereco: {
+                rua: document.getElementById('rua').value,
+                num: document.getElementById('num').value,
+                bairro: document.getElementById('bairro').value,
+                cidade: document.getElementById('cidade').value
         }
     };
 
