@@ -134,6 +134,39 @@
         });
     });
 }
+    // ... dentro da função de listagem de produtos
+    function renderProdutos(pSnap) {
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = '';
+        
+        pSnap.forEach(pData => {
+            const p = pData.val();
+            if (p.paused) return;
+
+            const precoFinal = p.preco;
+            const valorPix = precoFinal * (1 - (configEmpresa.descontoPix / 100));
+
+            // Ajuste Moeda Brasileira
+            const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            grid.innerHTML += `
+                <div class="card-prod p-3 flex flex-col h-full bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div class="w-full aspect-square overflow-hidden mb-3 flex items-center justify-center bg-white">
+                        <img src="${p.image}" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-[11px] font-semibold uppercase leading-tight mb-1">${p.name}</h3>
+                        <p class="text-[9px] text-gray-400 mb-2">SKU: ${p.sku}</p>
+                        <div class="text-xs font-bold">${fM(precoFinal)}</div>
+                        <div class="text-[10px] text-green-600 font-bold uppercase mt-1">${fM(valorPix)} no PIX</div>
+                    </div>
+                    <button onclick='prepararAdd(${JSON.stringify({...p, image: p.image}).replace(/'/g, "")})' 
+                        class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase mt-3">
+                        Adicionar
+                    </button>
+                </div>`;
+        });
+    }
     function prepararAdd(p) {
         produtoAtualParaAdd = p;
         document.getElementById('modalImgProd').src = p.image;
