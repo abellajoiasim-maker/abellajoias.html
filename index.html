@@ -20,10 +20,12 @@
     </style>
 </head>
 <body>
-<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm text-center">
-    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center">
+
+<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center text-center">
         <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">Abella Joias</h1>
         <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
+        
         <div class="flex gap-3 flex-wrap justify-center">
             <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">INÍCIO</a>
             <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
@@ -33,25 +35,40 @@
         </div>
     </div>
 </header>
+
 <main class="max-w-7xl mx-auto p-6 md:p-12">
     <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
 </main>
+
 <script>
-    firebase.initializeApp({ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
+    firebase.initializeApp({
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    });
     const db = firebase.database();
+
     function atualizarContador() {
         const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
         document.getElementById('contadorCarrinho').innerText = `(${c.length})`;
     }
     atualizarContador();
+
     db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('gridCategorias'); grid.innerHTML = '';
+        const grid = document.getElementById('gridCategorias');
+        grid.innerHTML = '';
         snap.forEach(s => {
-            const cat = s.val(); if (cat.paused) return;
-            grid.innerHTML += `<a href="categoria.html?id=${s.key}" class="card-lux group">
-                <div class="aspect-[4/5] overflow-hidden bg-gray-50"><img src="${cat.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110"></div>
-                <div class="p-4 text-center"><span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span></div>
-            </a>`;
+            const cat = s.val();
+            if (cat.paused) return;
+            grid.innerHTML += `
+                <a href="categoria.html?id=${s.key}" class="card-lux group">
+                    <div class="aspect-[4/5] overflow-hidden bg-gray-50">
+                        <img src="${cat.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="p-4 text-center">
+                        <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
+                    </div>
+                </a>
+            `;
         });
     });
 </script>
