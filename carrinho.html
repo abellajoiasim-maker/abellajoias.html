@@ -2,61 +2,78 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Meu Carrinho | Abella Joias</title>
+    <title>Finalizar Pedido | Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; color: #333; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold { color: #A68966; }
-        .item-card { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; }
-        .qtd-input { width: 50px; border: 1px solid #ddd; border-radius: 6px; text-align: center; padding: 2px; }
-        .btn-pagamento { border: 2px solid #eee; transition: 0.3s; cursor: pointer; background: #fff; border-radius: 12px; padding: 12px; text-align: center; font-size: 11px; font-weight: bold; }
+        body{font-family:'Poppins',sans-serif;background:#fdfcf9;color:#333}
+        .serif{font-family:'Cinzel',serif}
+        .gold{color:#A68966}
+        .item-card { background:#fff; border-radius:12px; border:1px solid #eee; padding: 15px; margin-bottom: 10px;}
+        .btn-pagamento { border: 2px solid #eee; transition: 0.3s; cursor: pointer; background: #fdfdfd; border-radius: 12px; padding: 15px; text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .btn-pagamento.active { border-color: #A68966; background: #fffaf5; color: #A68966; }
-        /* Garantir imagem 1:1 no carrinho */
-        .img-carrinho { width: 64px; height: 64px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid #eee; }
+        input.dados { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; outline: none; }
+        input.qtd-input { width: 50px; border: 1px solid #A68966; border-radius: 6px; text-align: center; font-weight: bold; padding: 4px; }
     </style>
 </head>
 <body>
 
-<header class="bg-white border-b p-6 mb-6 sticky top-0 z-50 shadow-sm text-center">
-    <h1 class="serif text-xl gold uppercase tracking-widest">Finalizar Pedido</h1>
+<header class="bg-white border-b p-6 mb-6 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-xl mx-auto flex justify-between items-center">
+        <button onclick="window.history.back()" class="text-[10px] font-bold uppercase tracking-widest">← Voltar</button>
+        <h1 class="serif text-xl gold uppercase tracking-widest">Meu Pedido</h1>
+        <div class="w-10"></div>
+    </div>
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-32">
+    <h2 class="serif mb-4 text-gray-700 border-b pb-2">Itens no Carrinho</h2>
     <div id="listaItens" class="mb-8"></div>
 
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 mb-8">
-        <h2 class="serif mb-4 text-gray-700 text-sm border-b pb-2">Seus Dados</h2>
-        <input type="text" id="nome" class="w-full p-3 border rounded-lg mb-3 text-sm" placeholder="Nome Completo *">
-        <input type="tel" id="contato" class="w-full p-3 border rounded-lg text-sm" placeholder="WhatsApp (DDD + Número) *">
-    </div>
-
-    <div class="mb-8">
-        <h2 class="serif mb-4 text-gray-700 text-center text-sm">Forma de Pagamento</h2>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="btn-pagamento" onclick="setPagamento('Pix', this)">PIX</div>
-            <div class="btn-pagamento" onclick="setPagamento('Cartão', this)">CARTÃO</div>
+    <section class="mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <h2 class="serif mb-4 text-gray-700 border-b pb-2">Seus Dados</h2>
+        <input type="text" id="nome" class="dados" placeholder="Nome Completo *">
+        <input type="tel" id="contato" class="dados" placeholder="WhatsApp *">
+        
+        <div class="mt-4 pt-4 border-t">
+            <p class="text-[10px] gold uppercase font-bold mb-3 tracking-widest">Endereço de Entrega</p>
+            <input type="text" id="rua" class="dados" placeholder="Rua / Avenida">
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="num" class="dados" placeholder="Nº">
+                <input type="text" id="bairro" class="dados" placeholder="Bairro">
+            </div>
+            <input type="text" id="cidade" class="dados" placeholder="Cidade">
         </div>
-    </div>
+    </section>
 
-    <div class="bg-black text-white p-6 rounded-2xl flex justify-between items-center shadow-xl">
-        <span class="font-bold uppercase text-[10px] tracking-widest">Total do Pedido:</span>
-        <span id="totalGeral" class="text-xl font-bold">R$ 0,00</span>
+    <section class="mb-8">
+        <h2 class="serif mb-4 text-gray-700">Forma de Pagamento</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="btn-pagamento" onclick="setPagamento('Pix', this)">Pix</div>
+            <div class="btn-pagamento" onclick="setPagamento('Cartão', this)">Cartão</div>
+        </div>
+    </section>
+
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-inner">
+        <div class="flex justify-between items-center text-xl font-bold gold">
+            <span>Total do Pedido</span>
+            <span id="totalGeral">R$ 0,00</span>
+        </div>
     </div>
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-[0_-5px_15px_rgba(0,0,0,0.05)] text-center">
-    <button onclick="enviarPedido()" class="w-full max-w-xl bg-green-600 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-sm shadow-md active:scale-95 transition">
-        Enviar via WhatsApp
-    </button>
+<footer class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg">
+    <div class="max-w-xl mx-auto">
+        <button onclick="enviarPedido()" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-[#A68966]">
+            Finalizar via WhatsApp
+        </button>
+    </div>
 </footer>
 
 <script>
-    // Configuração Firebase
     const firebaseConfig = { 
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
@@ -66,16 +83,14 @@
 
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     let formaPagamento = "";
-    let foneLoja = "5511999999999"; 
+    let foneLoja = "5511999999999";
 
-    // Formatação de Moeda Brasileira
-    function formatarMoeda(v) { 
-        return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
-    }
-
-    // Busca telefone da loja no Firebase
-    db.ref('settings/whatsapp').on('value', s => { 
-        if(s.val()) foneLoja = s.val().replace(/\D/g, ''); 
+    db.ref('settings/whatsapp').on('value', s => {
+        let rawFone = s.val();
+        if(rawFone) {
+            foneLoja = rawFone.replace(/\D/g, ''); 
+            if(foneLoja.length <= 11 && !foneLoja.startsWith('55')) foneLoja = "55" + foneLoja;
+        }
     });
 
     function setPagamento(tipo, el) {
@@ -90,47 +105,45 @@
         lista.innerHTML = "";
 
         if(carrinho.length === 0) {
-            lista.innerHTML = "<div class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</div>";
+            lista.innerHTML = "<p class='text-center py-10 text-gray-400'>Seu carrinho está vazio.</p>";
             document.getElementById('totalGeral').innerText = "R$ 0,00";
             return;
         }
 
         carrinho.forEach((item, index) => {
-            const preco = parseFloat(item.precoFinal || item.price || 0);
-            const qtd = parseInt(item.quantidade || 1);
-            const subtotal = preco * qtd;
+            const subtotal = item.precoFinal * item.quantidade;
             total += subtotal;
-
             lista.innerHTML += `
                 <div class="item-card flex gap-4 items-center">
-                    <img src="${item.image}" class="img-carrinho">
+                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
                     <div class="flex-1">
                         <h3 class="text-[11px] font-bold uppercase">${item.name}</h3>
-                        <p class="text-[10px] text-gray-500">${formatarMoeda(preco)} cada</p>
-                        <div class="mt-2 flex items-center gap-2">
-                            <span class="text-[9px] font-bold text-gray-400">QTD:</span>
-                            <input type="number" value="${qtd}" min="1" onchange="atualizarQuantidade(${index}, this.value)" class="qtd-input text-xs">
+                        <p class="text-[10px] text-gray-500 mb-1">R$ ${item.precoFinal.toFixed(2)} cada</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-gray-400">QTD:</span>
+                            <input type="number" value="${item.quantidade}" min="1" 
+                                onchange="editarQtd(${index}, this.value)" 
+                                class="qtd-input">
                         </div>
                     </div>
                     <div class="text-right">
-                        <button onclick="removerItem(${index})" class="text-red-400 text-[10px] font-bold mb-2 uppercase">Remover</button>
-                        <p class="font-bold text-sm gold">${formatarMoeda(subtotal)}</p>
+                        <button onclick="remover(${index})" class="text-red-400 text-xs mb-2">Remover</button>
+                        <p class="font-bold text-xs gold">R$ ${subtotal.toFixed(2)}</p>
                     </div>
                 </div>`;
         });
 
-        document.getElementById('totalGeral').innerText = formatarMoeda(total);
+        document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
     }
 
-    function atualizarQuantidade(index, valor) {
-        let nVal = parseInt(valor);
-        if(isNaN(nVal) || nVal < 1) nVal = 1;
-        carrinho[index].quantidade = nVal;
+    function editarQtd(index, novaQtd) {
+        if(novaQtd < 1) novaQtd = 1;
+        carrinho[index].quantidade = parseInt(novaQtd);
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         carregarCarrinho();
     }
 
-    function removerItem(index) {
+    function remover(index) {
         carrinho.splice(index, 1);
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         carregarCarrinho();
@@ -139,43 +152,36 @@
     async function enviarPedido() {
         const nome = document.getElementById('nome').value.trim();
         const contato = document.getElementById('contato').value.trim();
-        const totalString = document.getElementById('totalGeral').innerText;
+        const total = document.getElementById('totalGeral').innerText;
 
         if(!nome || !contato || !formaPagamento || carrinho.length === 0) {
-            alert("Por favor, preencha o nome, contato e escolha a forma de pagamento.");
-            return;
+            return alert("Preencha seus dados, selecione o pagamento e certifique-se que o carrinho não está vazio.");
         }
 
-        const pedidoDB = {
-            cliente: nome,
-            whatsapp: contato,
-            total: totalString,
-            pagamento: formaPagamento,
-            data: new Date().toLocaleString('pt-BR'),
-            itens: carrinho
+        const orderData = {
+            cliente: nome, whatsapp: contato, total: total, pagamento: formaPagamento,
+            data: new Date().toLocaleString('pt-BR'), itens: carrinho,
+            endereco: {
+                rua: document.getElementById('rua').value,
+                num: document.getElementById('num').value,
+                bairro: document.getElementById('bairro').value,
+                cidade: document.getElementById('cidade').value
+            }
         };
 
-        try {
-            // Salva no banco (gera o romaneio no painel)
-            await db.ref('orders').push(pedidoDB);
+        await db.ref('orders').push(orderData);
 
-            // Mensagem de WhatsApp formatada exatamente como você pediu
-            let msg = `Olá, meu nome é *${nome}*!\n\n`;
-            msg += `Acabei de fazer um pedido pelo catálogo da *Abella Joias*.\n\n`;
-            msg += `💰 *Total:* ${totalString}\n`;
-            msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-            msg += `_Aguardando seu retorno para finalizar!_`;
+        let msg = `Olá, meu nome é *${nome}*!\n\n`;
+        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+        msg += `💰 *Total:* ${total}\n`;
+        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+        msg += `Aguardando seu retorno para finalizar!`;
 
-            window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-            
-            localStorage.removeItem('carrinho');
-        } catch (e) {
-            alert("Erro ao processar pedido. Verifique sua conexão.");
-        }
+        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+        localStorage.removeItem('carrinho');
     }
 
     carregarCarrinho();
 </script>
-
 </body>
 </html>
