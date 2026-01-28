@@ -1,106 +1,117 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Produtos | Abella Joias</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; }
-        .gold-text { color: #A68966; }
-        .gold-bg { background: #A68966; }
-        .card-prod { background: #fff; border-radius: 15px; border: 1px solid #eee; transition: .3s; position: relative; }
-        .img-container { aspect-ratio: 1 / 1; width: 100%; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; border-radius: 12px; }
-        .img-container img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
-        .price-old { text-decoration: line-through; color: #999; font-size: 11px; }
-        .badge-promo { position: absolute; top: 10px; left: 10px; background: #c53030; color: white; font-size: 9px; font-weight: bold; padding: 4px 8px; border-radius: 50px; z-index: 10; }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
-        .modal.active { display:flex; }
-    </style>
+<meta charset="UTF-8">
+<title>Categoria | Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+body{font-family:Poppins,sans-serif;background:#fdfcf9}
+.serif{font-family:Cinzel,serif}
+.gold{color:#A68966}
+
+.card{
+ background:#fff;
+ border:1px solid #eee;
+ border-radius:18px;
+ padding:14px;
+ position:relative;
+}
+.img-box{
+ aspect-ratio:1/1;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+}
+.img-box img{
+ width:100%;
+ height:100%;
+ object-fit:contain;
+}
+.badge{
+ position:absolute;
+ top:10px;left:10px;
+ background:#c53030;
+ color:#fff;
+ font-size:9px;
+ padding:4px 8px;
+ border-radius:99px;
+}
+</style>
 </head>
+
 <body>
-<header class="bg-white border-b p-6 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <button onclick="window.history.back()" class="text-[10px] font-bold uppercase tracking-widest">← Voltar</button>
-        <h1 id="tituloCategoria" class="serif text-lg gold-text uppercase tracking-widest text-center flex-1">...</h1>
-        <a href="carrinho.html" class="text-[10px] font-bold gold-text uppercase tracking-widest">Carrinho</a>
-    </div>
+
+<header class="bg-white border-b p-6 sticky top-0">
+ <div class="max-w-7xl mx-auto flex justify-between items-center">
+  <a href="index.html" class="text-xs font-bold">Categorias</a>
+  <h1 id="titulo" class="serif gold text-sm uppercase">...</h1>
+  <a href="carrinho.html" class="text-xs font-bold">Carrinho</a>
+ </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-4 md:p-12">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+<main class="max-w-7xl mx-auto p-6">
+ <div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
 </main>
 
-<div id="modalQtd" class="modal">
-    <div class="bg-white p-8 rounded-2xl text-center max-w-sm w-[90%]">
-        <img id="modalImgProd" class="w-32 h-32 mx-auto object-contain mb-4">
-        <h3 id="modalNomeProd" class="serif text-sm mb-6 uppercase"></h3>
-        <div class="flex items-center justify-center gap-4 mb-6">
-            <span class="text-xs font-bold uppercase">Quantidade:</span>
-            <input type="number" id="inputQtd" value="1" min="1" class="w-20 border-2 border-gray-100 rounded-lg p-2 text-center font-bold">
-        </div>
-        <button id="btnConfirmarAdd" class="w-full gold-bg text-white py-4 rounded-xl font-bold uppercase text-xs">Confirmar Item</button>
-        <button onclick="fecharModal()" class="mt-4 text-[10px] uppercase font-bold text-gray-400">Cancelar</button>
-    </div>
-</div>
-
 <script>
-    firebase.initializeApp({ apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" });
-    const db = firebase.database();
-    const catId = new URLSearchParams(window.location.search).get('id');
-    let produtoAtualParaAdd = null;
+firebase.initializeApp({
+ apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+ databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
 
-    function formatarMoeda(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function moeda(v){
+ return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
 
-    async function carregarProdutos() {
-        const empSnap = await db.ref('settings/empresa').once('value');
-        const configEmpresa = empSnap.val() || { descontoPix: 0, parcelas: 1 };
-        const setSnap = await db.ref('settings/promocao').once('value');
-        const promoGeral = setSnap.val() || { ativa: false, porcentagem: 0 };
-        const catSnap = await db.ref('categories/' + catId).once('value');
-        const categoria = catSnap.val() || {};
-        document.getElementById('tituloCategoria').innerText = categoria.name;
+const catId=new URLSearchParams(location.search).get("id");
 
-        db.ref('products').on('value', snap => {
-            const grid = document.getElementById('gridProdutos'); grid.innerHTML = '';
-            snap.forEach(s => {
-                const p = s.val(); if (p.paused || p.category !== catId) return;
-                let perc = 0;
-                if(promoGeral.ativa) perc = p.discount > 0 ? p.discount : (categoria.discount > 0 ? categoria.discount : promoGeral.porcentagem);
-                let precoFinal = perc > 0 ? p.price * (1 - perc/100) : p.price;
-                let vPix = precoFinal * (1 - (configEmpresa.descontoPix/100));
-                let vParc = precoFinal / configEmpresa.parcelas;
+db.ref("categories/"+catId).once("value",s=>{
+ document.getElementById("titulo").innerText=s.val()?.name||"Produtos";
+});
 
-                grid.innerHTML += `<div class="card-prod p-4 flex flex-col">
-                    ${perc > 0 ? `<div class="badge-promo">-${perc}%</div>` : ''}
-                    <div class="img-container mb-4"><img src="${p.image}"></div>
-                    <div class="text-[9px] text-gray-400 font-bold uppercase">SKU: ${p.sku}</div>
-                    <h3 class="text-[11px] font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
-                    <div class="mb-4">
-                        ${perc > 0 ? `<div class="price-old">${formatarMoeda(p.price)}</div>` : ''}
-                        <div class="text-base font-bold gold-text">${formatarMoeda(precoFinal)}</div>
-                        <div class="text-[10px] text-gray-600 font-medium">Ou ${configEmpresa.parcelas}x de ${formatarMoeda(vParc)}</div>
-                        <div class="text-[10px] text-green-600 font-bold uppercase mt-1">${formatarMoeda(vPix)} no PIX (-${configEmpresa.descontoPix}%)</div>
-                    </div>
-                    <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal}).replace(/'/g, "")})' class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase">Adicionar</button>
-                </div>`;
-            });
-        });
-    }
-    function prepararAdd(p) { produtoAtualParaAdd = p; document.getElementById('modalImgProd').src = p.image; document.getElementById('modalNomeProd').innerText = p.name; document.getElementById('modalQtd').classList.add('active'); }
-    function fecharModal() { document.getElementById('modalQtd').classList.remove('active'); }
-    document.getElementById('btnConfirmarAdd').onclick = () => {
-        const qtd = parseInt(document.getElementById('inputQtd').value);
-        if(qtd < 1) return;
-        let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        carrinho.push({ ...produtoAtualParaAdd, quantidade: qtd });
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        fecharModal();
-    };
-    carregarProdutos();
+db.ref("products").on("value",snap=>{
+ const grid=document.getElementById("grid");
+ grid.innerHTML="";
+ snap.forEach(s=>{
+  const p=s.val();
+  if(p.paused||p.category!==catId) return;
+
+  let desconto=p.discount||0;
+  let precoFinal=desconto?p.price*(1-desconto/100):p.price;
+
+  grid.innerHTML+=`
+  <div class="card">
+   ${desconto?`<div class="badge">-${desconto}%</div>`:""}
+   <div class="img-box mb-3">
+     <img src="${p.image||''}">
+   </div>
+   <div class="text-[10px] text-gray-400">SKU: ${p.sku}</div>
+   <div class="text-xs font-bold uppercase mb-2">${p.name}</div>
+   ${desconto?`<div class="text-[11px] line-through">${moeda(p.price)}</div>`:""}
+   <div class="font-bold gold">${moeda(precoFinal)}</div>
+   <button onclick="addCarrinho(${JSON.stringify({...p,precoFinal}).replace(/"/g,'&quot;')})"
+    class="w-full mt-3 bg-black text-white py-2 rounded text-[10px] font-bold">
+    Adicionar
+   </button>
+  </div>`;
+ });
+});
+
+function addCarrinho(p){
+ let c=JSON.parse(localStorage.getItem("carrinho")||"[]");
+ c.push({...p,quantidade:1});
+ localStorage.setItem("carrinho",JSON.stringify(c));
+ alert("Adicionado ao carrinho");
+}
 </script>
+
 </body>
 </html>
