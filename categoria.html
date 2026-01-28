@@ -1,95 +1,161 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Categoria | Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
-<style>
-body{font-family:'Poppins',sans-serif;background:#fdfcf9}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.card{background:#fff;border-radius:16px;border:1px solid #eee}
-.square{aspect-ratio:1/1}
-.square img{width:100%;height:100%;object-fit:contain}
-</style>
+    <meta charset="UTF-8">
+    <title>Produtos | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-text { color: #A68966; }
+        .gold-bg { background: #A68966; }
+        .card-prod { background: #fff; border-radius: 15px; border: 1px solid #eee; transition: .3s; }
+        .btn-nav { border: 1px solid #A68966; color: #A68966; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; }
+        .btn-nav:hover { background: #A68966; color: #fff; }
+        .price-old { text-decoration: line-through; color: #999; font-size: 11px; }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; }
+        .modal.active { display:flex; }
+    </style>
 </head>
-
 <body>
 
-<header class="bg-white border-b shadow sticky top-0 z-50">
-  <div class="max-w-xl mx-auto p-4">
-    <h1 class="serif text-xl gold text-center uppercase">Abella Joias</h1>
-    <p class="text-[10px] text-center tracking-widest">ATACADO DE JOIAS NO BRUTO</p>
-
-    <div class="flex justify-between mt-4 text-xs font-bold uppercase">
-      <a href="index.html">Categorias</a>
-      <a href="galvanicas.html">Galvânicas</a>
-      <a href="carrinho.html">Carrinho (<span id="contador">0</span>)</a>
+<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm text-center">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center">
+        <h1 class="serif text-3xl gold-text tracking-widest uppercase">Abella Joias</h1>
+        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
+        <div class="flex gap-3 flex-wrap justify-center">
+            <a href="index.html" class="btn-nav px-6 py-2 rounded-full">CATEGORIAS</a>
+            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
+            <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative">
+                CARRINHO <span id="contadorCarrinho" class="ml-1">(0)</span>
+            </a>
+        </div>
     </div>
-  </div>
 </header>
 
-<main class="max-w-xl mx-auto p-4 space-y-4" id="listaProdutos"></main>
+<main class="max-w-7xl mx-auto p-6">
+    <h2 id="tituloCategoria" class="serif text-center text-xl mb-8 gold-text uppercase">...</h2>
+    <div id="gridProdutos" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
+</main>
+
+<div id="modalQtd" class="modal">
+    <div class="bg-white p-6 rounded-2xl max-w-sm w-full mx-4 shadow-2xl text-center">
+        <div class="aspect-square w-full mb-4 bg-gray-50 rounded-lg overflow-hidden border">
+            <img id="modalImgProd" src="" class="w-full h-full object-contain">
+        </div>
+        <h3 class="serif gold-text text-lg mb-1">Digite a Quantidade</h3>
+        <p id="modalNomeProd" class="text-[10px] text-gray-400 uppercase mb-4 font-bold"></p>
+        <input type="number" id="inputQtd" value="1" min="1" class="w-full border-2 border-[#A68966] rounded-xl p-3 text-center text-lg font-bold mb-6 outline-none focus:ring-2 ring-[#A68966]">
+        <div class="flex gap-2">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-[10px] font-bold text-gray-400 uppercase">Cancelar</button>
+            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-white py-3 rounded-xl text-[10px] font-bold uppercase shadow-lg">Confirmar</button>
+        </div>
+    </div>
+</div>
 
 <script>
-const params=new URLSearchParams(location.search);
-const categoriaId=params.get('id');
+    firebase.initializeApp({
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    });
+    const db = firebase.database();
+    const urlParams = new URLSearchParams(window.location.search);
+    const catId = urlParams.get('id');
+    let produtoAtualParaAdd = null;
 
-const firebaseConfig={
-  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+    function atualizarContador() {
+        const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        document.getElementById('contadorCarrinho').innerText = `(${c.length})`;
+    }
 
-function moeda(v){
-  return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+   async function carregarProdutos() {
+    // 1. Busca configurações da aba EMPRESA (PIX e Parcelas)
+    const empSnap = await db.ref('settings/empresa').once('value');
+    const configEmpresa = empSnap.val() || { descontoPix: 0, parcelas: 1 };
+
+    // 2. Busca configurações da aba PROMOÇÕES
+    const setSnap = await db.ref('settings/promocao').once('value');
+    const promoGeral = setSnap.val() || { ativa: false, porcentagem: 0 };
+    
+    // 3. Busca dados da categoria atual (para saber o desconto específico dela)
+    const catSnap = await db.ref('categories/' + catId).once('value');
+    const categoria = catSnap.val() || {};
+    document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
+
+    db.ref('products').on('value', snap => {
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = '';
+        
+        snap.forEach(s => {
+            const p = s.val();
+            if (p.paused || p.category !== catId) return;
+
+            // --- LÓGICA DE DESCONTO ALINHADA COM O PAINEL ---
+            let porcentagemAplicada = 0;
+
+            if (promoGeral.ativa) {
+                // Se o produto tem desconto próprio, usa ele. 
+                // Senão, tenta o da categoria. Se não tiver, usa a porcentagem geral.
+                porcentagemAplicada = p.discount > 0 ? p.discount : (categoria.discount > 0 ? categoria.discount : promoGeral.porcentagem);
+            }
+
+            let precoFinal = porcentagemAplicada > 0 ? p.price * (1 - porcentagemAplicada / 100) : p.price;
+            
+            // Cálculos de Rodapé (PIX e Parcelas)
+            let valorPix = precoFinal * (1 - (configEmpresa.descontoPix / 100));
+            let valorParcela = precoFinal / configEmpresa.parcelas;
+
+            grid.innerHTML += `
+                <div class="card-prod p-4 flex flex-col">
+                    <div class="aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative">
+                        ${porcentagemAplicada > 0 ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">-${porcentagemAplicada}%</span>` : ''}
+                        <img src="${p.image}" class="w-full h-full object-contain p-2">
+                    </div>
+                    <div class="text-[9px] text-gray-400 font-bold uppercase">SKU: ${p.sku}</div>
+                    <h3 class="text-[11px] font-bold uppercase mb-1 h-8 overflow-hidden">${p.name}</h3>
+                    <div class="text-[10px] text-gray-500 mb-2 italic">Peso: ${p.weight}g</div>
+                    
+                    <div class="mb-4">
+                        ${porcentagemAplicada > 0 ? `<div class="text-[11px] text-gray-400 line-through">R$ ${p.price.toFixed(2)}</div>` : ''}
+                        <div class="text-base font-bold gold-text">R$ ${precoFinal.toFixed(2)}</div>
+                        <div class="text-[10px] text-gray-600 font-medium">Ou ${configEmpresa.parcelas}x de R$ ${valorParcela.toFixed(2)}</div>
+                        <div class="text-[10px] text-green-600 font-bold uppercase mt-1">R$ ${valorPix.toFixed(2)} no PIX (-${configEmpresa.descontoPix}%)</div>
+                    </div>
+
+                    <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal, porcentagemAplicada}).replace(/'/g, "")})' 
+                        class="w-full gold-bg text-white py-3 rounded-lg text-[10px] font-bold uppercase shadow-md active:scale-95 transition">
+                        Adicionar ao Carrinho
+                    </button>
+                </div>`;
+        });
+    });
 }
+    function prepararAdd(p) {
+        produtoAtualParaAdd = p;
+        document.getElementById('modalImgProd').src = p.image;
+        document.getElementById('modalNomeProd').innerText = p.name;
+        document.getElementById('inputQtd').value = 1;
+        document.getElementById('modalQtd').classList.add('active');
+    }
 
-db.ref('produtos').orderByChild('categoria').equalTo(categoriaId).on('value',snap=>{
-  const lista=document.getElementById('listaProdutos');
-  lista.innerHTML='';
-  snap.forEach(p=>{
-    const d=p.val();
-    lista.innerHTML+=`
-    <div class="card p-4">
-      <div class="square mb-3">
-        <img src="${d.image}">
-      </div>
+    function fecharModal() { document.getElementById('modalQtd').classList.remove('active'); }
 
-      <p class="font-bold">${d.nome}</p>
-      <p class="text-xs text-gray-400">SKU: ${d.sku}</p>
-      <p class="text-xs">Peso: ${d.peso||'-'} g</p>
+    document.getElementById('btnConfirmarAdd').onclick = () => {
+        const qtd = parseInt(document.getElementById('inputQtd').value);
+        if(qtd < 1) return;
+        let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        carrinho.push({ ...produtoAtualParaAdd, quantidade: qtd });
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        fecharModal();
+        atualizarContador();
+    };
 
-      ${d.precoPromo ? `
-        <p class="line-through text-sm text-gray-400">${moeda(d.preco)}</p>
-        <p class="font-bold gold">${moeda(d.precoPromo)}</p>
-      ` : `<p class="font-bold gold">${moeda(d.preco)}</p>`}
-
-      <p class="text-[10px]">Pix: ${moeda((d.precoPromo||d.preco)*0.95)}</p>
-      <p class="text-[10px]">Cartão: 3x</p>
-
-      <button onclick="add('${p.key}')" class="w-full mt-3 bg-black text-white py-2 rounded-lg uppercase text-xs">
-        Adicionar ao Carrinho
-      </button>
-    </div>`;
-  });
-});
-
-function add(id){
-  const carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
-  carrinho.push({id,quantidade:1});
-  localStorage.setItem('carrinho',JSON.stringify(carrinho));
-  document.getElementById('contador').innerText=carrinho.length;
-}
+    carregarProdutos();
+    atualizarContador();
 </script>
-
 </body>
 </html>
