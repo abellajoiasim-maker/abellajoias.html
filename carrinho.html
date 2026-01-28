@@ -82,6 +82,11 @@
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Função auxiliar para formatar moeda (Global)
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
     // LER CARRINHO DO LOCALSTORAGE
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
     let formaPagamento = "";
@@ -115,19 +120,17 @@
         }
 
         carrinho.forEach((item, index) => {
-            // ALINHAMENTO: Usando as chaves exatas que vêm do categoria.html
-            // Se o item não tiver 'precoFinal', tentamos 'price' como segurança
-            const preco = item.precoFinal || item.price || 0;
-            const qtd = item.quantidade || 1;
+            const preco = parseFloat(item.precoFinal || item.price || 0);
+            const qtd = parseInt(item.quantidade || 1);
             const subtotal = preco * qtd;
             total += subtotal;
 
             lista.innerHTML += `
                 <div class="item-card flex gap-4 items-center">
-                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg border">
+                    <img src="${item.image}" class="w-16 h-16 object-contain rounded-lg border bg-white">
                     <div class="flex-1">
                         <h3 class="text-[11px] font-bold uppercase">${item.name}</h3>
-                        <p class="text-[10px] text-gray-500">R$ ${preco.toFixed(2)} unit.</p>
+                        <p class="text-[10px] text-gray-500">${formatarMoeda(preco)} cada</p>
                         <div class="mt-2 flex items-center gap-2">
                             <span class="text-[9px] font-bold text-gray-400 uppercase">Qtd:</span>
                             <input type="number" value="${qtd}" min="1" 
@@ -137,17 +140,18 @@
                     </div>
                     <div class="text-right">
                         <button onclick="removerItem(${index})" class="text-red-400 text-[10px] font-bold uppercase mb-2">Remover</button>
-                        <p class="font-bold text-sm gold">R$ ${subtotal.toFixed(2)}</p>
+                        <p class="font-bold text-sm gold">${formatarMoeda(subtotal)}</p>
                     </div>
                 </div>`;
         });
 
-        document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
+        document.getElementById('totalGeral').innerText = formatarMoeda(total);
     }
 
     function atualizarQuantidade(index, valor) {
-        if(valor < 1) valor = 1;
-        carrinho[index].quantidade = parseInt(valor);
+        let nVal = parseInt(valor);
+        if(isNaN(nVal) || nVal < 1) nVal = 1;
+        carrinho[index].quantidade = nVal;
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         carregarCarrinho();
     }
@@ -161,18 +165,17 @@
     async function enviarPedido() {
         const nome = document.getElementById('nome').value.trim();
         const contato = document.getElementById('contato').value.trim();
-        const total = document.getElementById('totalGeral').innerText;
+        const totalString = document.getElementById('totalGeral').innerText;
 
         if(!nome || !contato || !formaPagamento || carrinho.length === 0) {
             alert("Por favor, preencha o nome, contato e escolha a forma de pagamento.");
             return;
         }
 
-        // Dados para o seu controle no Painel Admin
         const pedidoDB = {
             cliente: nome,
             whatsapp: contato,
-            total: total,
+            total: totalString, // Já vai formatado R$ 0.000,00
             pagamento: formaPagamento,
             data: new Date().toLocaleString('pt-BR'),
             itens: carrinho,
@@ -185,14 +188,15 @@
         };
 
         try {
+            // Salva no banco (isso gera o romaneio no seu painel)
             await db.ref('orders').push(pedidoDB);
 
-            // Mensagem de WhatsApp (Limpa e Objetiva como solicitado)
-             let msg = `Olá, meu nome é *${nome}*!\n\n`;
-             msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-             msg += `💰 *Total:* ${total}\n`;
-             msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-             msg += `Aguardando seu retorno para finalizar!`;
+            // Mensagem de WhatsApp formatada
+            let msg = `Olá, meu nome é *${nome}*!\n\n`;
+            msg += `Acabei de fazer um pedido pelo catálogo da *Abella Joias*.\n\n`;
+            msg += `💰 *Total:* ${totalString}\n`;
+            msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+            msg += `_Aguardando seu retorno para finalizar!_`;
 
             window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
             
@@ -202,9 +206,7 @@
         }
     }
 
-    // Iniciar a listagem ao abrir a página
     carregarCarrinho();
 </script>
-
 </body>
 </html>
