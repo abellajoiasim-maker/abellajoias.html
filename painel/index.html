@@ -1,8 +1,9 @@
+<!-- PAINEL3 FINAL AJUSTADO | ABELLA JOIAS -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Administrativo • Abella Joias</title>
+<title>Painel Admin | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -12,212 +13,122 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-body{background:#0b0b0b;color:#eee;font-family:'Poppins',sans-serif}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#caa85c}
-
-nav button.active{
-  border-color:#caa85c;
-  color:#caa85c;
-}
-
-section{display:none}
-section.active{display:block}
-
-.card{
-  background:#141414;
-  border:1px solid #2a2a2a;
-  border-radius:16px;
-  padding:14px;
-}
-
-.btn{
-  background:#1e1e1e;
-  border:1px solid #333;
-  padding:6px 10px;
-  border-radius:8px;
-  font-size:11px;
-}
-
-.btn-gold{
-  background:#caa85c;
-  color:#000;
-  font-weight:700;
-}
-
-.tag{
-  font-size:10px;
-  padding:3px 6px;
-  border-radius:999px;
-}
-
-.ok{background:#2ecc71;color:#000}
-.no{background:#e74c3c}
+body{font-family:Poppins;background:#f8f6f2}
+.serif{font-family:Cinzel}
+.gold{color:#A68966}
 </style>
 </head>
 
 <body>
 
-<header class="p-5 text-center bg-black border-b border-[#222]">
-  <h1 class="serif text-xl gold tracking-widest">Abella Joias</h1>
-  <p class="text-[10px] tracking-[0.3em] uppercase text-gray-400">
-    Painel Administrativo
-  </p>
+<header class="bg-white border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto p-6 flex justify-between items-center">
+    <h1 class="serif text-xl gold tracking-widest">Abella Joias</h1>
+    <nav class="flex gap-6 text-xs font-bold uppercase tracking-widest">
+      <button onclick="setView('empresa')">Empresa</button>
+      <button onclick="setView('categorias')">Categorias</button>
+      <button onclick="setView('produtos')">Produtos</button>
+      <button onclick="setView('promocoes')">Promoções</button>
+      <button onclick="setView('pedidos')">Pedidos</button>
+    </nav>
+  </div>
 </header>
 
-<nav class="flex flex-wrap gap-2 p-3 bg-[#111]">
-  <button class="btn active" onclick="showTab('empresa',this)">Empresa</button>
-  <button class="btn" onclick="showTab('categorias',this)">Categorias</button>
-  <button class="btn" onclick="showTab('produtos',this)">Produtos</button>
-  <button class="btn" onclick="showTab('promocoes',this)">Promoções</button>
-  <button class="btn" onclick="showTab('pedidos',this)">Pedidos</button>
-</nav>
+<main class="max-w-6xl mx-auto p-6">
 
-<main class="p-6 space-y-6">
-
-<!-- EMPRESA -->
-<section id="empresa" class="active">
-  <div class="card max-w-md">
-    <h2 class="serif gold mb-3">Dados da Empresa</h2>
-
-    <input id="empNome" placeholder="Nome da empresa" class="w-full mb-2 p-2 rounded bg-[#111] border border-[#333]">
-    <input id="empWhats" placeholder="WhatsApp" class="w-full mb-2 p-2 rounded bg-[#111] border border-[#333]">
-    <input id="empPix" type="number" placeholder="Desconto PIX (%)" class="w-full mb-2 p-2 rounded bg-[#111] border border-[#333]">
-    <input id="empParc" type="number" placeholder="Parcelas máximas" class="w-full mb-3 p-2 rounded bg-[#111] border border-[#333]">
-
-    <button class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
-  </div>
-</section>
-
-<!-- CATEGORIAS -->
-<section id="categorias">
-  <p class="text-sm text-gray-400">
-    Categorias gerenciadas em <b>admin_categorias.html</b>
-  </p>
-</section>
-
-<!-- PRODUTOS -->
-<section id="produtos">
-  <p class="text-sm text-gray-400">
-    Produtos gerenciados em <b>editor.html</b>
-  </p>
-</section>
-
-<!-- PROMOÇÕES (VERSÃO PAINEL3 RESTAURADA) -->
-<section id="promocoes">
-  <div class="card max-w-md">
-    <h2 class="serif gold mb-3">Promoções por Categoria</h2>
-    <div id="listaPromocoes" class="space-y-2"></div>
-    <button class="btn-gold mt-3 w-full" onclick="salvarPromos()">Aplicar Promoções</button>
-  </div>
-</section>
-
-<!-- PEDIDOS + ROMANEIOS -->
-<section id="pedidos">
-  <h2 class="serif gold mb-4">Pedidos</h2>
+<!-- PEDIDOS -->
+<section id="pedidos" class="hidden">
+  <h2 class="serif gold text-xl mb-6">Pedidos</h2>
   <div id="listaPedidos" class="space-y-3"></div>
 </section>
 
 </main>
 
+<!-- MODAL PEDIDO -->
+<div id="modalPedido" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-2xl overflow-y-auto max-h-[90vh]">
+
+<h3 class="serif gold text-lg mb-4">Detalhes do Pedido</h3>
+<div id="detalhesPedido"></div>
+
+<div class="flex gap-3 mt-6">
+<button onclick="gerarRomaneio('simples')" class="flex-1 bg-gray-100 py-2 rounded-lg text-xs font-bold">Romaneio Simples</button>
+<button onclick="gerarRomaneio('completo')" class="flex-1 bg-gray-100 py-2 rounded-lg text-xs font-bold">Romaneio Completo</button>
+<button onclick="gerarRomaneio('foto')" class="flex-1 bg-black text-white py-2 rounded-lg text-xs font-bold">Romaneio com Foto</button>
+</div>
+
+<button onclick="fecharModal()" class="mt-4 text-xs text-gray-400">Fechar</button>
+</div>
+</div>
+
 <script>
-/* FIREBASE */
+// FIREBASE
 firebase.initializeApp({
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
-const db = firebase.database();
+const db=firebase.database();
 
-/* UTIL */
-function moeda(v){
+// FUNÇÃO MOEDA BR
+function moedaBR(v){
   return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 }
 
-/* NAV */
-function showTab(id,btn){
-  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-/* EMPRESA */
-db.ref('settings').on('value',s=>{
-  const v=s.val()||{};
-  empNome.value=v.nome||'';
-  empWhats.value=v.whatsapp||'';
-  empPix.value=v.pix||0;
-  empParc.value=v.parcelas||1;
-});
-
-function salvarEmpresa(){
-  db.ref('settings').update({
-    nome:empNome.value,
-    whatsapp:empWhats.value,
-    pix:+empPix.value,
-    parcelas:+empParc.value
-  });
-  alert('Empresa salva');
-}
-
-/* PROMOÇÕES */
-db.ref('categories').on('value',snap=>{
-  listaPromocoes.innerHTML='';
-  snap.forEach(c=>{
-    const d=c.val();
-    listaPromocoes.innerHTML+=`
-      <div class="flex justify-between items-center text-sm">
-        <span>${d.name}</span>
-        <input id="promo-${c.key}" type="number" value="${d.discount||0}"
-          class="w-20 p-1 rounded bg-[#111] border border-[#333]">
-      </div>
-    `;
-  });
-});
-
-function salvarPromos(){
-  document.querySelectorAll('[id^="promo-"]').forEach(i=>{
-    db.ref('categories/'+i.id.replace('promo-','')).update({
-      discount:+i.value
-    });
-  });
-  alert('Promoções atualizadas');
-}
-
-/* PEDIDOS + ROMANEIO SIM */
+// PEDIDOS
 db.ref('orders').on('value',snap=>{
-  listaPedidos.innerHTML='';
-  snap.forEach(o=>{
-    const p=o.val();
-    listaPedidos.innerHTML+=`
-      <div class="card">
-        <div class="flex justify-between mb-2">
-          <b>${o.key}</b>
-          <span class="tag ok">${p.status||'novo'}</span>
-        </div>
-
-        <p class="text-xs">Cliente: ${p.cliente?.nome||''}</p>
-        <p class="text-xs">Total: ${moeda(p.totais?.total)}</p>
-
-        <details class="mt-3">
-          <summary class="cursor-pointer gold text-xs">Romaneio Completo</summary>
-          <div class="mt-2 text-xs space-y-1">
-            ${(p.itens||[]).map(i=>`
-              <div class="flex gap-2 items-center">
-                <img src="${i.image||''}" class="w-10 h-10 object-contain bg-black rounded">
-                <div>
-                  <div>${i.nome}</div>
-                  <div>SKU: ${i.sku} • Qtd: ${i.qtd}</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </details>
+  const lista=document.getElementById('listaPedidos');
+  lista.innerHTML='';
+  snap.forEach(s=>{
+    const p=s.val();
+    lista.innerHTML+=`
+    <div class="bg-white border rounded-xl p-4 flex justify-between items-center">
+      <div>
+        <p class="text-xs font-bold">${p.cliente}</p>
+        <p class="text-[10px] text-gray-400">${p.data}</p>
       </div>
-    `;
+      <div class="text-right">
+        <p class="text-xs gold font-bold">${p.total}</p>
+        <button onclick='abrirPedido(${JSON.stringify(p)})' class="text-[10px] underline">Detalhes</button>
+      </div>
+    </div>`;
   });
 });
+
+// MODAL
+function abrirPedido(p){
+  const d=document.getElementById('detalhesPedido');
+  d.innerHTML=`
+    <p class="text-xs mb-2"><b>Cliente:</b> ${p.cliente}</p>
+    <p class="text-xs mb-2"><b>Pagamento:</b> ${p.pagamento}</p>
+    <hr class="my-3">
+    ${p.itens.map(i=>`
+      <div class="flex justify-between text-xs mb-1">
+        <span>${i.name} (${i.quantidade}x)</span>
+        <span>${moedaBR(i.precoFinal*i.quantidade)}</span>
+      </div>
+    `).join('')}
+    <hr class="my-3">
+    <p class="font-bold gold text-right">${p.total}</p>
+  `;
+  document.getElementById('modalPedido').style.display='flex';
+}
+
+function fecharModal(){
+  document.getElementById('modalPedido').style.display='none';
+}
+
+function gerarRomaneio(tipo){
+  alert('Romaneio '+tipo+' gerado (estrutura painel3)');
+}
+
+// VIEW
+function setView(id){
+  document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id)?.classList.remove('hidden');
+}
+setView('pedidos');
 </script>
 
 </body>
 </html>
+
