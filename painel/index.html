@@ -1300,16 +1300,23 @@ function abrirPainelPromocoes() {
                 <div class="max-h-40 overflow-y-auto">${listaCats}</div>
             </div>
         `, () => {
-            // Salvar tudo de uma vez
-            const pGeral = document.getElementById('promoPorcentagem').value;
-            db.ref('settings/promocao/porcentagem').set(parseInt(pGeral));
-            
-            // Salva categorias
-            document.querySelectorAll('[id^="promo-"]').forEach(i => {
-                db.ref('categories/' + i.id.replace('promo-', '')).update({ discount: parseInt(i.value || 0) });
-            });
-            alert('Promoções aplicadas com sucesso!');
-        });
+    const updates = {};
+    const pGeral = parseInt(document.getElementById('promoPorcentagem').value) || 0;
+    
+    // Define a porcentagem global
+    updates['settings/promocao/porcentagem'] = pGeral;
+    
+    // Captura as categorias sem travar o loop
+    const inputs = document.querySelectorAll('[id^="promo-"]');
+    for (let i of inputs) {
+        const catID = i.id.replace('promo-', '');
+        updates['categories/' + catID + '/discount'] = parseInt(i.value || 0);
+    }
+    
+    // Envia tudo num único pedido (Muito mais rápido)
+    db.ref().update(updates).then(() => {
+        alert('Sincronizado!');
+        location.reload(); // Recarrega para limpar a memória do navegador
     });
 }
 
