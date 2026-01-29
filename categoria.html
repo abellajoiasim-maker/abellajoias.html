@@ -19,6 +19,12 @@
         .price-old { text-decoration: line-through; color: #999; font-size: 11px; }
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; }
         .modal.active { display:flex; }
+        .card-prod img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Garante que a joia apareça inteira */
+    padding: 8px;
+}
     </style>
 </head>
 <body>
@@ -67,18 +73,17 @@
     const catId = urlParams.get('id');
     let produtoAtualParaAdd = null;
 
-    // Função padrão para formatar moeda em todo o site
+    // ESTA FUNÇÃO ESTÁ TRAVADA NO FORMATO BRASIL
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     function atualizarContador() {
         const c = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        // Soma a quantidade total de peças
-        const total = c.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
-        document.getElementById('contadorCarrinho').innerText = `(${total})`;
+        const totalPecas = c.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
+        document.getElementById('contadorCarrinho').innerText = `(${totalPecas})`;
     }
 
     async function carregarProdutos() {
-        // Busca Configurações e Promoções
+        // Busca Configurações do Painel
         const [empSnap, setSnap, catSnap] = await Promise.all([
             db.ref('settings/empresa').once('value'),
             db.ref('settings/promocao').once('value'),
@@ -99,7 +104,7 @@
                 const p = s.val();
                 if (p.paused || p.category !== catId) return;
 
-                // Lógica de Desconto
+                // Cálculo de Descontos
                 let porcentagem = 0;
                 if (promoGeral.ativa) {
                     porcentagem = p.discount > 0 ? p.discount : (categoria.discount > 0 ? categoria.discount : promoGeral.porcentagem);
@@ -110,10 +115,10 @@
                 const valorParcela = precoFinal / configEmpresa.parcelas;
 
                 grid.innerHTML += `
-                    <div class="card-prod p-4 flex flex-col h-full shadow-sm">
-                        <div class="aspect-square mb-4 bg-white rounded-lg overflow-hidden border border-gray-100 relative flex items-center justify-center">
+                    <div class="card-prod p-4 flex flex-col h-full bg-white shadow-sm border border-gray-100">
+                        <div class="aspect-square mb-4 bg-white rounded-lg overflow-hidden relative flex items-center justify-center border border-gray-50">
                             ${porcentagem > 0 ? `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">-${porcentagem}%</span>` : ''}
-                            <img src="${p.image}" class="max-w-full max-h-full object-contain p-2">
+                            <img src="${p.image}" class="w-full h-full object-contain p-2">
                         </div>
                         <div class="flex-1">
                             <div class="text-[9px] text-gray-400 font-bold uppercase">SKU: ${p.sku}</div>
@@ -123,8 +128,8 @@
                             <div class="mb-4">
                                 ${porcentagem > 0 ? `<div class="text-[11px] text-gray-400 line-through">${fM(p.price)}</div>` : ''}
                                 <div class="text-base font-bold gold-text">${fM(precoFinal)}</div>
-                                <div class="text-[10px] text-gray-600 font-medium">Ou ${configEmpresa.parcelas}x de ${fM(valorParcela)}</div>
-                                <div class="text-[10px] text-green-600 font-bold uppercase mt-1">${fM(valorPix)} no PIX</div>
+                                <div class="text-[10px] text-gray-600 font-medium italic">Ou ${configEmpresa.parcelas}x de ${fM(valorParcela)}</div>
+                                <div class="text-[10px] text-green-600 font-bold uppercase mt-1">À Vista no PIX: ${fM(valorPix)}</div>
                             </div>
                         </div>
 
@@ -152,8 +157,6 @@
         if(qtd < 1) return;
         
         let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        
-        // Proteção: Salva precoFinal para o carrinho não ficar vazio/undefined
         carrinho.push({ ...produtoAtualParaAdd, quantidade: qtd });
         
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
