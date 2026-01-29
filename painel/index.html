@@ -1,282 +1,189 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel Admin • Abella Joias (Bruto)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <style>
-        body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;padding-bottom:50px}
-        nav button.active{border-color:#caa85c;color:#caa85c;opacity:1}
-        nav button{opacity:0.5;transition:0.3s}
-        section{display:none}
-        section.active{display:block}
-        .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px;position:relative}
-        .grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
-        @media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
-        input, select, textarea{background:#1a1a1a;border:1px solid #333;color:#fff;padding:10px;border-radius:8px;width:100%;font-size:14px;outline:none}
-        input:focus{border-color:#caa85c}
-        .btn{background:#caa85c;color:#000;font-weight:bold;padding:10px;border-radius:8px;cursor:pointer;text-align:center;display:inline-block;transition:0.2s;font-size:11px;text-transform:uppercase}
-        .btn-red{background:#ef4444;color:#fff}
-        .btn-gold-outline{border:1px solid #caa85c;color:#caa85c;background:transparent}
-        .badge-desconto{position:absolute;top:8px;right:8px;background:#22c55e;color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:bold;z-index:10}
-        .preco-riscado{text-decoration:line-through;opacity:0.5;font-size:10px}
-        ::-webkit-scrollbar{width:5px}
-        ::-webkit-scrollbar-thumb{background:#333;border-radius:10px}
-    </style>
+<meta charset="UTF-8">
+<title>Painel Admin • Abella Joias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<style>
+body{background:#0b0b0b;color:#eee;font-family:Inter,Arial}
+nav button.active{border-color:#caa85c;color:#caa85c}
+section{display:none}
+section.active{display:block}
+.card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px;position:relative}
+.grid{display:grid;gap:12px}
+@media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1200px){.grid{grid-template-columns:repeat(6,1fr)}}
+
+input,select{
+background:#111;border:1px solid #333;
+padding:8px;border-radius:8px;width:100%;
+color:#fff;font-size:13px
+}
+
+.btn{background:#222;border:1px solid #444;padding:6px 10px;
+border-radius:8px;font-size:11px;cursor:pointer}
+.btn-gold{background:#caa85c;color:#000;font-weight:700}
+.btn-red{border-color:#c33;color:#f77}
+
+.badge-desconto{
+position:absolute;top:6px;right:6px;
+background:#16a34a;color:#fff;
+font-size:9px;font-weight:800;
+padding:2px 6px;border-radius:4px
+}
+.preco-riscado{text-decoration:line-through;opacity:.5;font-size:11px}
+</style>
 </head>
+
 <body>
 
-<nav class="flex justify-around bg-[#0b0b0b]/90 backdrop-blur-md p-4 border-b border-[#222] sticky top-0 z-40">
-    <button onclick="showTab('tab-pedidos',this)" class="active font-bold text-[10px] uppercase tracking-tighter">Pedidos</button>
-    <button onclick="showTab('tab-produtos',this)" class="font-bold text-[10px] uppercase tracking-tighter">Produtos</button>
-    <button onclick="showTab('tab-categorias',this)" class="font-bold text-[10px] uppercase tracking-tighter">Categorias</button>
-    <button onclick="abrirModalConfig()" class="font-bold text-[10px] uppercase text-[#caa85c]">Config</button>
-    <button onclick="abrirModalPromocao()" class="font-bold text-[10px] uppercase text-green-500">Promo</button>
+<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222]">
+Painel Administrativo • Abella Joias
+</header>
+
+<nav class="flex gap-2 p-2 bg-[#111] overflow-x-auto">
+<button class="btn active" onclick="showTab('empresa',this)">Empresa</button>
+<button class="btn" onclick="showTab('categorias',this)">Categorias</button>
+<button class="btn" onclick="showTab('produtos',this)">Produtos</button>
+<button class="btn" onclick="abrirPainelPromocoes()">Promoções</button>
+<button class="btn" onclick="showTab('pedidos',this)">Pedidos</button>
 </nav>
 
-<main class="p-4 max-w-7xl mx-auto">
-    <section id="tab-pedidos" class="active">
-        <div id="listaPedidos" class="space-y-3"></div>
-    </section>
+<main class="p-6">
 
-    <section id="tab-produtos">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-[#caa85c] font-bold uppercase text-xs tracking-widest">Catálogo de Bruto</h2>
-            <button class="btn" onclick="abrirModalProduto()">+ Novo Produto</button>
-        </div>
-        <div id="produtosPorCategoria"></div>
-    </section>
+<section id="empresa" class="active max-w-md mx-auto">
+<div class="card space-y-2">
+<label class="text-[10px] uppercase">Nome da Loja</label>
+<input id="empNome">
+<label class="text-[10px] uppercase">WhatsApp</label>
+<input id="empWhats">
+<label class="text-[10px] uppercase">Desconto PIX %</label>
+<input id="empPix" type="number">
+<label class="text-[10px] uppercase">Parcelas</label>
+<input id="empParc" type="number">
+<button class="btn-gold w-full mt-3 py-3" onclick="salvarEmpresa()">Salvar</button>
+</div>
+</section>
 
-    <section id="tab-categorias">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-[#caa85c] font-bold uppercase text-xs tracking-widest">Categorias</h2>
-            <button class="btn" onclick="abrirModalCategoria()">+ Nova Categoria</button>
-        </div>
-        <div id="listaCategorias" class="grid"></div>
-    </section>
+<section id="categorias">
+<button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
+<div id="listaCategorias" class="grid"></div>
+</section>
+
+<section id="produtos">
+<div id="produtosPorCategoria"></div>
+</section>
+
+<section id="pedidos">
+<div id="listaPedidos"></div>
+</section>
+
 </main>
 
-<div id="modal" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-[#111] w-full max-w-md rounded-2xl border border-[#222] shadow-2xl overflow-hidden">
-        <div class="p-4 border-b border-[#222] flex justify-between items-center bg-[#141414]">
-            <h2 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-[10px] tracking-widest"></h2>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-white transition">✕</button>
-        </div>
-        <div id="modalBody" class="p-6 max-h-[75vh] overflow-y-auto"></div>
-        <div id="modalFooter" class="p-4 bg-[#0b0b0b] border-t border-[#222] flex justify-end gap-3">
-            <button onclick="fecharModal()" class="text-[10px] uppercase font-bold opacity-40 hover:opacity-100">Cancelar</button>
-            <button id="btnSalvar" class="btn px-8">Salvar</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        authDomain: "catalogo-abella-joias.firebaseapp.com",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-        projectId: "catalogo-abella-joias"
-    });
-    const db = firebase.database();
+firebase.initializeApp({
+apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+});
+const db=firebase.database();
 
-    /* --- MOTOR DO MODAL --- */
-    function abrirModal(titulo, corpo, callback) {
-        const m = document.getElementById('modal');
-        document.getElementById('modalTitle').innerText = titulo;
-        document.getElementById('modalBody').innerHTML = corpo;
-        const btn = document.getElementById('btnSalvar');
-        m.classList.replace('hidden', 'flex');
-        
-        if (callback) {
-            btn.style.display = 'block';
-            btn.onclick = () => { callback(); fecharModal(); };
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-    function fecharModal() { document.getElementById('modal').classList.replace('flex', 'hidden'); }
+/* === UTIL === */
+function showTab(id,btn){
+document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+}
 
-    /* --- GESTÃO DE EMPRESA --- */
-    function abrirModalConfig() {
-        db.ref('settings/empresa').once('value', s => {
-            const v = s.val() || {};
-            const html = `
-                <div class="space-y-4 text-left">
-                    <div><label class="text-[10px] text-[#caa85c] font-bold">NOME DA LOJA</label><input id="confNome" value="${v.nome||''}"></div>
-                    <div><label class="text-[10px] text-[#caa85c] font-bold">WHATSAPP (COM DDD)</label><input id="confFone" value="${v.fone||''}"></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-[10px] text-[#caa85c] font-bold">DESC. PIX (%)</label><input type="number" id="confPix" value="${v.descontoPix||0}"></div>
-                        <div><label class="text-[10px] text-[#caa85c] font-bold">PEDIDO MÍN. (R$)</label><input type="number" id="confMin" value="${v.minPedido||0}"></div>
-                    </div>
-                </div>`;
-            abrirModal('Configurações Gerais', html, () => {
-                db.ref('settings/empresa').update({
-                    nome: document.getElementById('confNome').value,
-                    fone: document.getElementById('confFone').value,
-                    descontoPix: parseInt(document.getElementById('confPix').value) || 0,
-                    minPedido: parseFloat(document.getElementById('confMin').value) || 0
-                }).then(() => alert("Sincronizado!"));
-            });
-        });
-    }
+/* === EMPRESA === */
+db.ref('settings').on('value',s=>{
+const v=s.val()||{};
+empNome.value=v.nome||'';
+empWhats.value=v.whatsapp||'';
+empPix.value=v.pix||0;
+empParc.value=v.parcelas||1;
+});
 
-    /* --- GESTÃO DE PROMOÇÕES (SISTEMA PAINEL 3) --- */
-    function abrirModalPromocao() {
-        db.ref().once('value', snap => {
-            const data = snap.val();
-            const promo = data.settings?.promocao || { ativa: false, porcentagem: 0 };
-            const cats = data.categories || {};
-            let lista = "";
-            Object.entries(cats).forEach(([id, c]) => {
-                lista += `<div class="flex justify-between items-center p-2 bg-white/5 rounded mb-1">
-                    <span class="text-[10px] font-bold">${c.name}</span>
-                    <input type="number" id="promo-${id}" value="${c.discount||0}" class="w-16 text-center text-xs p-1">
-                </div>`;
-            });
-            const html = `
-                <div class="space-y-4">
-                    <button onclick="togglePromoStatus()" class="w-full py-2 rounded font-bold text-[10px] ${promo.ativa?'bg-green-600':'bg-red-600'}">
-                        STATUS GLOBAL: ${promo.ativa?'ATIVA':'INATIVA'}
-                    </button>
-                    <div><label class="text-[10px] text-[#caa85c] font-bold">DESCONTO GERAL (%)</label><input type="number" id="pGeral" value="${promo.porcentagem||0}"></div>
-                    <div class="max-h-48 overflow-y-auto border-t border-[#222] pt-2">${lista}</div>
-                </div>`;
-            abrirModal('Promoções e Descontos', html, () => {
-                const updates = {};
-                updates['settings/promocao/porcentagem'] = parseInt(document.getElementById('pGeral').value) || 0;
-                document.querySelectorAll('[id^="promo-"]').forEach(i => {
-                    updates['categories/' + i.id.replace('promo-', '') + '/discount'] = parseInt(i.value) || 0;
-                });
-                db.ref().update(updates).then(() => alert("Descontos Aplicados!"));
-            });
-        });
-    }
-    function togglePromoStatus() {
-        db.ref('settings/promocao/ativa').once('value', s => {
-            db.ref('settings/promocao/ativa').set(!s.val()).then(() => abrirModalPromocao());
-        });
-    }
+function salvarEmpresa(){
+db.ref('settings').update({
+nome:empNome.value,
+whatsapp:empWhats.value,
+pix:+empPix.value,
+parcelas:+empParc.value
+});
+alert('Salvo');
+}
 
-    /* --- LISTAGEM DE PRODUTOS --- */
-    db.ref('products').on('value', snap => {
-        const container = document.getElementById('produtosPorCategoria');
-        container.innerHTML = '';
-        const data = snap.val() || {};
-        const cats = {};
-        
-        Object.entries(data).forEach(([id, p]) => {
-            if(!cats[p.category]) cats[p.category] = [];
-            p.id = id;
-            cats[p.category].push(p);
-        });
+/* === CATEGORIAS === */
+db.ref('categories').on('value',s=>{
+listaCategorias.innerHTML='';
+s.forEach(c=>{
+const d=c.val();
+listaCategorias.innerHTML+=`
+<div class="card">
+<b>${d.name}</b>
+<div class="flex gap-1 mt-2">
+<button class="btn" onclick="editarCategoria('${c.key}')">Editar</button>
+<button class="btn btn-red" onclick="db.ref('categories/${c.key}').remove()">Excluir</button>
+</div>
+</div>`;
+});
+});
 
-        Object.keys(cats).forEach(catName => {
-            container.innerHTML += `<h3 class="text-[#caa85c] text-[10px] font-bold mt-8 mb-3 uppercase tracking-widest border-l-2 border-[#caa85c] pl-2">${catName}</h3><div class="grid" id="grid-${catName.replace(/\s/g,'')}"></div>`;
-            cats[catName].forEach(p => {
-                const grid = document.getElementById(`grid-${catName.replace(/\s/g,'')}`);
-                grid.innerHTML += `
-                    <div class="card">
-                        ${p.discount > 0 ? `<div class="badge-desconto">-${p.discount}%</div>` : ''}
-                        <img src="${p.image}" class="w-full h-32 object-cover rounded-lg mb-2 opacity-80">
-                        <div class="text-[9px] opacity-40 font-mono">${p.sku || 'S/SKU'} | ${p.weight || '0'}g</div>
-                        <div class="text-[11px] font-bold truncate">${p.name}</div>
-                        <div class="text-[11px] text-[#caa85c] mt-1 font-bold">R$ ${parseFloat(p.price||0).toFixed(2)}</div>
-                        <div class="flex gap-1 mt-3">
-                            <button class="btn flex-1 py-1" onclick="editarProduto('${p.id}')">Editar</button>
-                            <button class="btn btn-red px-3" onclick="excluir('products','${p.id}')">✕</button>
-                        </div>
-                    </div>`;
-            });
-        });
-    });
+/* === PRODUTOS COM PROMO HÍBRIDA === */
+db.ref('products').on('value',s=>{
+produtosPorCategoria.innerHTML='';
+db.ref('settings/promocao').once('value').then(sp=>{
+const promo=sp.val()||{ativa:false,porcentagem:0};
+const map={};
 
-    /* --- GESTÃO DE PEDIDOS --- */
-    db.ref('orders').on('value', snap => {
-        const lista = document.getElementById('listaPedidos');
-        lista.innerHTML = '<h2 class="text-[#caa85c] font-bold uppercase text-xs tracking-widest mb-4">Pedidos Recentes</h2>';
-        snap.forEach(o => {
-            const p = o.val();
-            if(p.arquivado) return;
-            lista.innerHTML += `
-                <div class="card flex justify-between items-center border-l-4 ${p.status === 'Novo' ? 'border-l-green-500' : 'border-l-gray-700'}">
-                    <div onclick="verDetalhesPedido('${o.key}')" class="cursor-pointer">
-                        <div class="text-[10px] font-bold text-[#caa85c]">#${p.numeroPedido || o.key.substring(0,6)}</div>
-                        <div class="text-xs font-bold">${p.cliente}</div>
-                        <div class="text-[10px] opacity-50 uppercase">${p.data || ''}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-gold-outline px-4" onclick="verDetalhesPedido('${o.key}')">VER</button>
-                        <button class="btn btn-red px-2" onclick="cancelarPedido('${o.key}')">✕</button>
-                    </div>
-                </div>`;
-        });
-    });
+s.forEach(p=>{
+const v=p.val();v.id=p.key;
+if(!map[v.category])map[v.category]=[];
+map[v.category].push(v);
+});
 
-    /* --- FUNÇÕES AUXILIARES --- */
-    function showTab(id, btn) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
+Object.keys(map).forEach(cat=>{
+produtosPorCategoria.innerHTML+=`<h3 class="mt-6 text-[#caa85c]">${cat}</h3><div class="grid"></div>`;
+const grid=produtosPorCategoria.lastElementChild;
 
-    function excluir(path, id) {
-        if(confirm("Deseja excluir permanentemente?")) db.ref(path+'/'+id).remove();
-    }
+map[cat].forEach(p=>{
+let base=p.price||0;
+let dProd=p.discount||0;
+let dCat=0;
+let dGlobal=promo.ativa?promo.porcentagem:0;
+let best=Math.max(dProd,dCat,dGlobal);
+let priceHTML=`R$ ${base.toFixed(2)}`;
+let badge='';
 
-    function cancelarPedido(id) {
-        if(confirm("Arquivar pedido?")) db.ref('orders/'+id).update({arquivado: true});
-    }
+if(best>0){
+const novo=base*(1-best/100);
+badge=`<div class="badge-desconto">-${best}%</div>`;
+priceHTML=`<div class="preco-riscado">R$ ${base.toFixed(2)}</div>
+<div class="text-green-500">R$ ${novo.toFixed(2)}</div>`;
+}
 
-    // [Funções de abrirModalProduto e verDetalhesPedido seriam inseridas aqui para fechar o ciclo]
-    
-    function verDetalhesPedido(id) {
-        db.ref('orders/'+id).once('value', s => {
-            const p = s.val();
-            let itens = '';
-            Object.values(p.itens||{}).forEach(i => {
-                itens += `<div class="flex justify-between text-[11px] py-1 border-b border-white/5">
-                    <span>${i.qtd}x ${i.nome}</span>
-                    <span>R$ ${(i.preco*i.qtd).toFixed(2)}</span>
-                </div>`;
-            });
-            const html = `
-                <div class="text-left space-y-4">
-                    <div class="bg-white/5 p-3 rounded">
-                        <p class="text-xs"><b>Cliente:</b> ${p.cliente}</p>
-                        <p class="text-xs"><b>Whats:</b> ${p.whatsapp||'--'}</p>
-                    </div>
-                    <div class="py-2">${itens}</div>
-                    <div class="text-right font-bold text-[#caa85c]">TOTAL: R$ ${parseFloat(p.total).toFixed(2)}</div>
-                </div>`;
-            abrirModal('Detalhes do Pedido', html, null);
-        });
-    }
-
-    function abrirModalCategoria() {
-        const html = `<div><label class="text-[10px] font-bold text-[#caa85c]">NOME DA CATEGORIA</label><input id="newCat"></div>`;
-        abrirModal('Nova Categoria', html, () => {
-            const name = document.getElementById('newCat').value;
-            if(name) db.ref('categories').push({ name, discount: 0 });
-        });
-    }
-    
-    // Lista Categorias (Aba Categorias)
-    db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('listaCategorias');
-        grid.innerHTML = '';
-        snap.forEach(c => {
-            grid.innerHTML += `
-                <div class="card flex justify-between items-center">
-                    <span class="text-xs font-bold">${c.val().name}</span>
-                    <button class="text-red-500 text-xs" onclick="excluir('categories','${c.key}')">Remover</button>
-                </div>`;
-        });
-    });
-
+grid.innerHTML+=`
+<div class="card">
+${badge}
+<img src="${p.image}" class="w-full h-32 object-contain mb-2">
+<div class="text-[10px] opacity-50">${p.sku||''}</div>
+<div class="font-bold">${p.name}</div>
+${priceHTML}
+<div class="flex gap-1 mt-2">
+<button class="btn" onclick="editarProduto('${p.id}')">Editar</button>
+<button class="btn btn-red" onclick="db.ref('products/${p.id}').remove()">✕</button>
+</div>
+</div>`;
+});
+});
+});
+});
 </script>
 </body>
 </html>
