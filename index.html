@@ -72,42 +72,47 @@
         <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
     </main>
 
-    <script>
-        firebase.initializeApp({
-            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-        });
-        const db = firebase.database();
-        // Adicione esta linha (por volta da linha 80)
-const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+<script>
+    firebase.initializeApp({
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    });
+    const db = firebase.database();
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        function atualizarContador() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    // Soma a quantidade total de itens
-    const totalItens = carrinho.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
-    document.getElementById('contadorCarrinho').innerText = `(${totalItens})`;
-}
-// Chama a função ao carregar a página
-atualizarContador();
+    function atualizarContador() {
+        const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        const totalItens = carrinho.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
+        const el = document.getElementById('contadorCarrinho');
+        if(el) el.innerText = `(${totalItens})`;
+    }
+    
+    atualizarContador();
 
-        db.ref('categories').on('value', snap => {
-            const grid = document.getElementById('gridCategorias');
-            grid.innerHTML = '';
-            snap.forEach(s => {
-                const cat = s.val();
-                if (cat.paused) return;
-                grid.innerHTML += `
-                    <a href="categoria.html?id=${s.key}" class="card-lux group block">
-                        <div class="img-container">
-                            <img src="${cat.image || 'https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png'}" 
-                                 class="transition duration-700 group-hover:scale-110">
-                        </div>
-                        <div class="p-4 text-center">
-                            <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
-                        </div>
-                    </a>`;
-            });
+    db.ref('categories').on('value', snap => {
+        const grid = document.getElementById('gridCategorias');
+        if(!grid) return;
+        grid.innerHTML = '';
+        
+        snap.forEach(s => {
+            const cat = s.val();
+            if (cat.paused) return;
+            
+            const imgUrl = cat.image || 'https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png';
+            
+            grid.innerHTML += `
+                <a href="categoria.html?id=${s.key}" class="card-lux group block">
+                    <div class="img-container">
+                        <img src="${imgUrl}" 
+                             class="transition duration-700 group-hover:scale-110" 
+                             loading="lazy">
+                    </div>
+                    <div class="p-4 text-center">
+                        <span class="serif text-sm gold-text tracking-widest uppercase font-bold">${cat.name}</span>
+                    </div>
+                </a>`;
         });
-    </script>
+    });
+</script>
 </body>
 </html>
