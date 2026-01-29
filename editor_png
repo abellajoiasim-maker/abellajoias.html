@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Produtos PNG • Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
+        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 6px 10px; border-radius: 6px; width: 100%; font-size: 11px; }
+        .input-dark:focus { border-color: #caa85c; outline: none; }
+        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 4px; border: 1px solid #333; }
+        tr:hover { background: #141414; }
+        .sticky-th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8 bg-[#141414] p-6 rounded-xl border border-[#2a2a2a]">
+            <div>
+                <h1 class="text-xl font-bold text-[#caa85c]">Gestor de Estoque</h1>
+                <p class="text-[10px] text-gray-500 uppercase">Abella Joias • Sincronização PNG</p>
+            </div>
+            <div class="flex gap-3">
+                <input id="filtro" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-black border border-[#333] px-4 py-2 rounded-lg text-sm text-white outline-none focus:border-[#caa85c]">
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-lg text-sm">BUSCAR</button>
+                <button onclick="syncFotosPNG()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-lg text-sm hover:bg-blue-700">🔄 SYNC FOTOS (.PNG)</button>
+            </div>
+        </header>
+
+        <div class="bg-[#141414] rounded-xl border border-[#2a2a2a] overflow-hidden">
+            <div class="overflow-y-auto" style="max-height: 60vh;">
+                <table class="w-full text-left text-[11px]">
+                    <thead>
+                        <tr class="text-[#caa85c] uppercase text-[9px] sticky-th">
+                            <th class="p-4">Foto</th>
+                            <th class="p-4">SKU</th>
+                            <th class="p-4">Nome do Produto</th>
+                            <th class="p-4 w-32">Preço (R$)</th>
+                            <th class="p-4">Link da Imagem (.png)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaCorpo">
+                        <tr><td colspan="5" class="p-10 text-center text-gray-500 italic">Busque um produto para começar...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button id="btnSalvar" onclick="salvarTudo()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-12 py-4 rounded-xl shadow-lg transition-all uppercase text-xs tracking-widest">
+                💾 Salvar Todas as Alterações
+            </button>
+        </div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function carregarProdutos() {
+        const filtro = document.getElementById('filtro').value.toUpperCase();
+        const corpo = document.getElementById('tabelaCorpo');
+        corpo.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-[#caa85c] animate-pulse">Buscando...</td></tr>';
+
+        db.ref('products').once('value', snap => {
+            let html = '';
+            let encontrou = false;
+            snap.forEach(child => {
+                const p = child.val();
+                const sku = String(p.sku || "").toUpperCase();
+                const nome = String(p.name || "").toUpperCase();
+
+                if (filtro && !sku.includes(filtro) && !nome.includes(filtro)) return;
+
+                encontrou = true;
+                html += `
+                <tr data-id="${child.key}" class="border-b border-[#222]">
+                    <td class="p-2"><img src="${p.image}" class="img-preview row-img" onerror="this.src='https://via.placeholder.com/40/FFFFFF/000000?text=ERR'"></td>
+                    <td class="p-2 font-bold text-[#caa85c] row-sku">${p.sku}</td>
+                    <td class="p-2"><input class="input-dark edit-name" value="${p.name || ''}"></td>
+                    <td class="p-2"><input class="input-dark edit-price" type="number" step="0.01" value="${p.price || 0}"></td>
+                    <td class="p-2"><input class="input-dark edit-img" value="${p.image || ''}" onchange="atualizarPreview(this)"></td>
+                </tr>`;
+            });
+            corpo.innerHTML = html || '<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Nenhum produto encontrado.</td></tr>';
+        });
+    }
+
+    function atualizarPreview(input) {
+        const tr = input.closest('tr');
+        tr.querySelector('.row-img').src = input.value;
+    }
+
+    // FUNÇÃO SYNC FOTOS PARA PNG
+    function syncFotosPNG() {
+        const dominio = "catalogo-abella-joias.firebasestorage.app";
+        const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
+        
+        if(linhas.length === 0) return alert("Busque os produtos primeiro.");
+
+        linhas.forEach(tr => {
+            const sku = tr.querySelector('.row-sku').innerText.trim();
+            const inputImg = tr.querySelector('.edit-img');
+            const imgTag = tr.querySelector('.row-img');
+            
+            if (sku) {
+                // Monta o link .PNG conforme solicitado
+                const novoLink = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.png?alt=media`;
+                
+                inputImg.value = novoLink;
+                imgTag.src = novoLink;
+            }
+        });
+        alert("Links gerados para .PNG! Verifique se as imagens carregaram e clique em SALVAR.");
+    }
+
+    function salvarTudo() {
+        const updates = {};
+        const linhas = document.querySelectorAll('#tabelaCorpo tr[data-id]');
+        
+        if(linhas.length === 0) return;
+
+        linhas.forEach(tr => {
+            const id = tr.dataset.id;
+            updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
+            updates[`/products/${id}/price`] = parseFloat(tr.querySelector('.edit-price').value) || 0;
+            updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
+        });
+
+        db.ref().update(updates)
+            .then(() => alert("✅ Alterações em PNG salvas com sucesso!"))
+            .catch(err => alert("Erro ao salvar: " + err.message));
+    }
+</script>
+</body>
+</html>
