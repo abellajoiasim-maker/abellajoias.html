@@ -21,49 +21,8 @@
         input, select { background: #111; border: 1px solid #333; padding: 8px; border-radius: 8px; width: 100%; margin-bottom: 8px; color: #fff; }
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
         .modal-box { background: #141414; border: 1px solid #333; border-radius: 20px; width: 100%; max-width: 520px; padding: 20px; max-height: 90vh; overflow-y: auto; }
-        /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL --- */
-@media print {
-    /* 1. Esconde absolutamente tudo da tela (menus, fundo preto, botões) */
-    body { 
-        background: white !important; 
-        color: black !important; 
-    }
-    body * { 
-        visibility: hidden; 
-    }
-
-    /* 2. Torna visível APENAS a área do romaneio e seus filhos */
-    #print-area, #print-area * { 
-        visibility: visible; 
-    }
-
-    /* 3. Posiciona a área de impressão no topo da página */
-    #print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        display: block !important;
-        padding: 0;
-        margin: 0;
-    }
-
-    /* 4. Ajustes finos de Luxo para o Papel */
-    .print-header { border-bottom: 3px solid #caa85c !important; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; }
-    th { border-bottom: 1px solid #000 !important; background: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
-    td { border-bottom: 1px solid #eee !important; padding: 8px; }
-    
-    /* Remove URLs que o navegador às vezes coloca automaticamente nos links */
-    a[href]:after { content: none !important; }
-}
-
-/* Estilo para que a área de impressão não apareça na tela comum, apenas no papel */
-#print-area { 
-    display: none; 
-}
- 
-</style>
+        @media print { body * { visibility: hidden; } #romaneio-area, #romaneio-area * { visibility: visible; } #romaneio-area { position: absolute; left: 0; top: 0; width: 100%; } }
+    </style>
 </head>
 <body>
 
@@ -80,45 +39,19 @@
     </nav>
 
     <main class="p-6">
-        <section id="empresa">
-    <div class="card space-y-4">
-        <h2 class="text-[#caa85c] font-bold mb-4">Configurações da Loja</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="text-xs opacity-50">Título (Ex: Abella Joias)</label>
-                <input type="text" id="empNome" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+        <section id="empresa" class="active">
+            <div class="card max-w-md mx-auto">
+                <label class="text-[10px] uppercase opacity-50">Nome da Loja</label>
+                <input id="empNome">
+                <label class="text-[10px] uppercase opacity-50">WhatsApp (DDD + Número)</label>
+                <input id="empWhats">
+                <label class="text-[10px] uppercase opacity-50">Desconto PIX %</label>
+                <input id="empPix" type="number">
+                <label class="text-[10px] uppercase opacity-50">Máximo Parcelas</label>
+                <input id="empParc" type="number">
+                <button class="btn-gold w-full mt-2 py-3 rounded-xl" onclick="salvarEmpresa()">Salvar Configurações</button>
             </div>
-            <div>
-                <label class="text-xs opacity-50">Subtítulo (Ex: ATACADO DE JOIAS NO BRUTO)</label>
-                <input type="text" id="empSub" placeholder="Subtítulo (Ex: ATACADO DE JOIAS NO BRUTO)" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
-            </div>
-        </div>
-
-        <div>
-            <label class="text-xs opacity-50">WhatsApp de Atendimento</label>
-            <input type="text" id="empWhats" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
-        </div>
-
-        <div>
-            <input type="text" id="empPix" placeholder="Chave PIX" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
-            <input type="number" id="empDesc" placeholder="Desconto PIX (%)" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
-       </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="text-xs opacity-50">Desconto PIX (%)</label>
-                <input type="number" id="empDesc" class="w-full bg-black border border-[#333] p-2 rounded mt-1" placeholder="Ex: 5">
-            </div>
-            <div>
-                <label class="text-xs opacity-50">Máx. Parcelas</label>
-                <input type="number" id="empParc" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
-            </div>
-        </div>
-
-        <button class="btn-gold w-full py-3 mt-4" onclick="salvarEmpresa()">SALVAR CONFIGURAÇÕES</button>
-    </div>
-</section>
+        </section>
 
         <section id="categorias">
             <button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
@@ -131,17 +64,8 @@
         </section>
 
         <section id="pedidos">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-bold text-[#caa85c] flex items-center gap-2">
-            📦 Gestão de Pedidos
-        </h2>
-        <span id="contadorPedidos" class="bg-[#caa85c] text-black px-3 py-1 rounded-full text-xs font-black">0</span>
-    </div>
-    <div id="listaPedidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-</section>
-
-<div id="print-area" class="hidden"></div>
-</section>
+            <div id="listaPedidos" class="space-y-3"></div>
+        </section>
     </main>
 
     <div id="modal">
@@ -157,9 +81,9 @@
 
     <div id="romaneio-area"></div>
 
-    <script>
-        // CONFIGURAÇÃO FIREBASE
-        const firebaseConfig = {
+   <script>
+    // 1. CONFIGURAÇÃO FIREBASE
+    const firebaseConfig = {
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
         authDomain: "catalogo-abella-joias.firebaseapp.com",
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
@@ -174,261 +98,53 @@
         currency: 'BRL' 
     }).format(v || 0);
 
-        // NAVEGAÇÃO
-        function showTab(id, btn) {
-            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-            
-            if(id === 'categorias') carregarCategorias();
-            if(id === 'produtos') carregarProdutos();
-            if(id === 'pedidos') carregarPedidos();
-        }
+    // 3. NAVEGAÇÃO E MODAL
+    function showTab(id, btn) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        
+        if(id === 'categorias') carregarCategorias();
+        if(id === 'produtos') carregarProdutos();
+        if(id === 'pedidos') carregarPedidos();
+    }
 
-        // MODAL
-        function abrirModal(titulo, conteudo, acaoSalvar) {
-            document.getElementById('modalTitle').innerText = titulo;
-            document.getElementById('modalBody').innerHTML = conteudo;
-            document.getElementById('modal').style.display = 'flex';
-            document.getElementById('btnSalvar').onclick = acaoSalvar;
-        }
-        function fecharModal() { document.getElementById('modal').style.display = 'none'; }
+    function abrirModal(titulo, conteudo, acaoSalvar) {
+        document.getElementById('modalTitle').innerText = titulo;
+        document.getElementById('modalBody').innerHTML = conteudo;
+        document.getElementById('modal').style.display = 'flex';
+        const btnS = document.getElementById('btnSalvar');
+        btnS.style.display = 'block';
+        btnS.onclick = () => { acaoSalvar(); };
+    }
 
-        // --- EMPRESA ---
-// --- EMPRESA ---
+    function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
-function salvarEmpresa() {
-    const dados = {
-        nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value, // Certifique-se que este ID existe no seu HTML
-        whats: document.getElementById('empWhats').value,
-        pix: document.getElementById('empPix').value,
-        descontoPix: document.getElementById('empDesc').value,
-        parcelas: document.getElementById('empParc').value
-    };
-    db.ref('settings/empresa').set(dados).then(() => alert('Configurações salvas!'));
-}
-
-        // --- CATEGORIAS ---
-        function carregarCategorias() {
-            db.ref('categories').on('value', snap => {
-                let html = '';
-                snap.forEach(cat => {
-                    html += `
-                        <div class="card flex justify-between items-center">
-                            <span>${cat.val().name}</span>
-                            <div class="flex gap-2">
-                                <button class="btn text-blue-400" onclick="editarCategoria('${cat.key}', '${cat.val().name}')">Edit</button>
-                                <button class="btn text-red-400" onclick="excluirCategoria('${cat.key}')">X</button>
-                            </div>
-                        </div>`;
-                });
-                document.getElementById('listaCategorias').innerHTML = html;
-            });
-        }
-
-        function novaCategoria() {
-            const nome = prompt("Nome da Categoria:");
-            if(nome) db.ref('categories').push({ name: nome, discount: 0 });
-        }
-
-        function editarCategoria(id, nomeAntigo) {
-            const novoNome = prompt("Novo nome:", nomeAntigo);
-            if(novoNome) db.ref('categories/' + id).update({ name: novoNome });
-        }
-
-        function excluirCategoria(id) {
-            if(confirm("Excluir categoria e todos os produtos dela?")) {
-                db.ref('categories/' + id).remove();
-            }
-        }
-
-        // --- PRODUTOS ---
-        function carregarProdutos() {
-            db.ref('categories').once('value', snapCats => {
-                db.ref('products').on('value', snapProds => {
-                    let html = '';
-                    snapCats.forEach(cat => {
-                        html += `<h2 class="text-[#caa85c] font-bold mt-6 mb-2 uppercase text-sm border-l-4 border-[#caa85c] pl-2">${cat.val().name}</h2>`;
-                        html += `<div class="grid">`;
-                        snapProds.forEach(prod => {
-                            if(prod.val().category === cat.key) {
-                                html += `
-                                    <div class="card relative">
-                                        <img src="${prod.val().img || ''}" class="w-full h-32 object-cover rounded-lg mb-2 bg-black">
-                                        <div class="text-xs font-bold truncate">${prod.val().name}</div>
-                                        <div class="text-[#caa85c] text-sm">R$ ${prod.val().price}</div>
-                                        <div class="flex gap-1 mt-2">
-                                            <button class="btn flex-1 text-[10px]" onclick="editarProduto('${prod.key}')">EDIT</button>
-                                            <button class="btn flex-1 text-[10px] text-red-500" onclick="excluirProduto('${prod.key}')">DEL</button>
-                                        </div>
-                                    </div>`;
-                            }
-                        });
-                        html += `</div>`;
-                    });
-                    document.getElementById('produtosPorCategoria').innerHTML = html;
-                });
-            });
-        }
-
-        function addProduto() {
-            db.ref('categories').once('value', snap => {
-                let options = '';
-                snap.forEach(c => options += `<option value="${c.key}">${c.val().name}</option>`);
-                const form = `
-                    <label>Nome do Produto</label><input id="pNome">
-                    <label>Preço (Ex: 150.00)</label><input id="pPreco" type="number">
-                    <label>Categoria</label><select id="pCat">${options}</select>
-                    <label>Foto</label><input type="file" id="pImg" accept="image/*">
-                `;
-                abrirModal("Novo Produto", form, () => salvarProduto(null));
-            });
-        }
-
-        function editarProduto(id) {
-            db.ref('products/' + id).once('value', pSnap => {
-                const p = pSnap.val();
-                db.ref('categories').once('value', cSnap => {
-                    let options = '';
-                    cSnap.forEach(c => options += `<option value="${c.key}" ${c.key === p.category ? 'selected' : ''}>${c.val().name}</option>`);
-                    const form = `
-                        <input id="pNome" value="${p.name}">
-                        <input id="pPreco" type="number" value="${p.price}">
-                        <select id="pCat">${options}</select>
-                        <input type="file" id="pImg" accept="image/*">
-                    `;
-                    abrirModal("Editar Produto", form, () => salvarProduto(id));
-                });
-            });
-        }
-
-        function atualizarCarrinho() {
-    const lista = document.getElementById('lista-carrinho');
-    if(!lista) return;
-    lista.innerHTML = '';
-    let total = 0;
-    let qtdTotal = 0;
-
-    carrinho.forEach((item, index) => {
-        // Garante que o preço seja um número para o cálculo
-        const precoNum = parseFloat(item.precoFinal || item.price || 0);
-        const subtotal = precoNum * item.quantidade;
-        total += subtotal;
-        qtdTotal += item.quantidade;
-
-        lista.innerHTML += `
-            <div class="item-card flex items-center gap-4">
-                <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
-                <div class="flex-1">
-                    <h3 class="font-bold text-sm uppercase">${item.name}</h3>
-                    <p class="text-xs gold font-bold">${fMoeda(precoNum)}</p>
-                    <div class="flex items-center gap-3 mt-2">
-                        <button onclick="alterarQtd(${index}, -1)" class="w-8 h-8 border rounded-full">-</button>
-                        <span class="font-bold">${item.quantidade}</span>
-                        <button onclick="alterarQtd(${index}, 1)" class="w-8 h-8 border rounded-full">+</button>
-                    </div>
-                </div>
-                <button onclick="removerItem(${index})" class="text-red-500 text-xs">Remover</button>
-            </div>
-        `;
-    });
-
-    // Página Categorias/Produtos: Mostra a quantidade de peças e o valor total
-    const resumoQtd = document.getElementById('resumo-qtd');
-    const resumoTotal = document.getElementById('resumo-total');
-    if(resumoQtd) resumoQtd.innerText = `${qtdTotal} peças`;
-    if(resumoTotal) resumoTotal.innerText = fMoeda(total);
-
-    // Página Carrinho: Mostra o total final
-    const totalCarrinho = document.getElementById('total-carrinho');
-    if(totalCarrinho) totalCarrinho.innerText = fMoeda(total);
-}
-
-        function excluirProduto(id) {
-            if(confirm("Excluir este produto?")) db.ref('products/' + id).remove();
-        }
-
-        // --- PROMOÇÕES ---
-        function abrirPainelPromocoes() {
-            db.ref('settings/promocao').once('value', snapPromo => {
-                db.ref('categories').once('value', snapCats => {
-                    const promo = snapPromo.val() || { porcentagem: 0, ativa: false };
-                    let listaCatsHtml = '';
-                    snapCats.forEach(cat => {
-                        listaCatsHtml += `
-                            <div class="flex justify-between items-center bg-[#111] p-2 rounded-lg mb-1">
-                                <span class="text-xs">${cat.val().name}</span>
-                                <input type="number" id="promo_cat_${cat.key}" value="${cat.val().discount || 0}" class="!w-16 !m-0 !p-1 text-center">
-                            </div>`;
-                    });
-
-                    const body = `
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center bg-black p-3 rounded-xl border border-[#333]">
-                                <span>Status da Promoção:</span>
-                                <button onclick="togglePromo()" class="px-4 py-1 rounded-full font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">
-                                    ${promo.ativa ? 'ATIVA' : 'INATIVA'}
-                                </button>
-                            </div>
-                            <label class="text-[10px] uppercase font-bold text-[#caa85c]">Desconto Geral (%)</label>
-                            <input type="number" id="promoGeral" value="${promo.porcentagem}">
-                            <label class="text-[10px] uppercase font-bold text-[#caa85c]">Por Categoria</label>
-                            ${listaCatsHtml}
-                        </div>`;
-                    
-                    abrirModal("Gestão de Promoções", body, () => {
-                        const novaPorcentagem = document.getElementById('promoGeral').value;
-                        db.ref('settings/promocao').update({ porcentagem: parseInt(novaPorcentagem) });
-                        snapCats.forEach(cat => {
-                            const valCat = document.getElementById(`promo_cat_${cat.key}`).value;
-                            db.ref('categories/' + cat.key).update({ discount: parseInt(valCat) });
-                        });
-                        fecharModal();
-                    });
-                });
-            });
-        }
-
-        function togglePromo() {
-            db.ref('settings/promocao/ativa').once('value', s => {
-                db.ref('settings/promocao').update({ ativa: !s.val() });
-                fecharModal();
-                setTimeout(abrirPainelPromocoes, 100);
-            });
-        }
-
-        // --- PEDIDOS ---
-       // --- LOGICA DE PEDIDOS E IMPRESSÃO ---
-
-function carregarPedidos() {
+    // 4. LOGICA DE PEDIDOS
+   function carregarPedidos() {
     db.ref('orders').on('value', snap => {
         let html = '';
         snap.forEach(ped => {
             const p = ped.val();
             
-            // CORREÇÃO: Verifica se cliente é objeto ou string para não dar undefined
-           const nomeExibicao = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente Indefinido");
-            const foneExibicao = p.whatsapp || (p.cliente && p.cliente.telefone) || "Sem contato";
-
-            // CORREÇÃO: Formatação de Moeda inteligente
+            // Segurança para o nome
+            const nomeExibicao = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente");
+            
+            // Segurança para a moeda (evita R$ duplicado)
             let totalExibicao = p.total || "0,00";
-            if (typeof totalExibicao === 'string' && !totalExibicao.includes("R$")) {
-                totalExibicao = fMoeda(totalExibicao);
-            } else if (typeof totalExibicao === 'number') {
-                totalExibicao = fMoeda(totalExibicao);
-            }
+            if (typeof totalExibicao === 'number') totalExibicao = fMoeda(totalExibicao);
+            if (typeof totalExibicao === 'string' && !totalExibicao.includes("R$")) totalExibicao = `R$ ${totalExibicao}`;
 
             html += `
-                <div class="card border-t-4 border-[#caa85c] flex flex-col justify-between">
+                <div class="card border-t-4 border-[#caa85c] flex flex-col justify-between p-4">
                     <div>
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-mono text-gray-500">#${ped.key.slice(-6).toUpperCase()}</span>
                             <span class="text-[10px] bg-[#222] px-2 py-1 rounded text-gray-300">${p.data || ''}</span>
                         </div>
                         <div class="font-bold text-lg leading-tight mb-1 text-white uppercase">${nomeExibicao}</div>
-                        <div class="text-sm text-gray-400 mb-4">${foneExibicao}</div>
+                        <div class="text-sm text-gray-400 mb-4">${p.whatsapp || 'Sem contato'}</div>
                         
                         <div class="bg-black/30 p-3 rounded-lg mb-4 border border-white/5">
                             <div class="flex justify-between text-xs opacity-70 mb-1">
@@ -442,157 +158,126 @@ function carregarPedidos() {
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 gap-2">
-                        <button onclick="gerarRomaneio('${ped.key}', 'foto')" class="w-full bg-[#caa85c] text-black font-bold py-2 rounded text-xs uppercase hover:bg-white transition">
-                            Imprimir Romaneio
-                        </button>
-                        <button onclick="excluirPedido('${ped.key}')" class="w-full bg-red-900/20 text-red-500 font-bold py-2 rounded text-[10px] uppercase border border-red-900/50 hover:bg-red-900 hover:text-white transition">
-                            Excluir Pedido
-                        </button>
-                    </div>
+                    <button onclick="gerarRomaneio('${ped.key}', 'foto')" class="w-full bg-[#caa85c] text-black font-bold py-2 rounded text-xs uppercase transition">
+                        Imprimir Romaneio
+                    </button>
                 </div>
             `;
         });
         document.getElementById('lista-pedidos').innerHTML = html;
     });
 }
+    // 5. SISTEMA DE ROMANEIOS LUXO
+    function abrirOpcoesImpressao(id) {
+        const body = `
+            <div class="grid grid-cols-1 gap-3">
+                <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'simples')">
+                    <div class="font-bold text-[#caa85c]">📄 Romaneio de Expedição</div>
+                    <div class="text-[10px] opacity-60">Foco em logística: Nome, Endereço, SKU e Qtd. (Sem Preços)</div>
+                </button>
+                <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'completo')">
+                    <div class="font-bold text-[#caa85c]">📑 Romaneio Financeiro Completo</div>
+                    <div class="text-[10px] opacity-60">Dados completos, Pesos, Preços, Descontos e Totais.</div>
+                </button>
+                <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'foto')">
+                    <div class="font-bold text-[#caa85c]">🖼️ Romaneio Premium com Foto</div>
+                    <div class="text-[10px] opacity-60">Visualização das peças + Dados financeiros completos.</div>
+                </button>
+            </div>
+        `;
+        abrirModal("Selecione o Formato de Impressão", body, () => {});
+        document.getElementById('btnSalvar').style.display = 'none'; // Esconde o botão confirmar padrão
+    }
 
-function abrirOpcoesImpressao(id) {
-    const body = `
-        <div class="grid grid-cols-1 gap-3">
-            <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'simples')">
-                <div class="font-bold text-[#caa85c]">📄 Romaneio Simples</div>
-                <div class="text-[10px] opacity-60">Apenas lista de nomes e quantidades.</div>
-            </button>
-            <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'completo')">
-                <div class="font-bold text-[#caa85c]">📑 Romaneio Completo</div>
-                <div class="text-[10px] opacity-60">Dados do cliente, preços, subtotal e descontos.</div>
-            </button>
-            <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'foto')">
-                <div class="font-bold text-[#caa85c]">🖼️ Romaneio com Fotos</div>
-                <div class="text-[10px] opacity-60">Ideal para conferência visual das peças.</div>
-            </button>
-        </div>
-    `;
-    abrirModal("Escolha o formato de impressão", body, () => {});
-    // Esconde o botão salvar do modal original pois a ação é nos botões internos
-    document.getElementById('btnSalvar').style.display = 'none';
+    function salvarEmpresa() {
+    const dados = {
+        nome: document.getElementById('empNome').value,
+        subtitulo: document.getElementById('empSub').value, // NOVO: Subtítulo
+        whats: document.getElementById('empWhats').value,
+        descontoPix: document.getElementById('empDesc').value, // NOVO: % Desconto
+        parcelas: document.getElementById('empParc').value
+    };
+    db.ref('settings/empresa').set(dados).then(() => alert('Configurações salvas com sucesso!'));
 }
 
-function gerarRomaneio(id, tipo) {
+   function gerarRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', s => {
         const p = s.val();
-        if (!p) return alert("Pedido não encontrado.");
+        if (!p) return;
 
         db.ref('settings/empresa').once('value', empSnap => {
-            const emp = empSnap.val() || { 
-                nome: 'Abella Joias', 
-                subtitulo: 'ATACADO DE JOIAS NO BRUTO', 
-                whats: '(00) 00000-0000' 
-            };
+            const emp = empSnap.val() || {};
             
-            const limparNum = (val) => {
-                if (!val) return 0;
-                if (typeof val === 'number') return val;
-                return parseFloat(val.replace(/[^\d,-]/g, '').replace('.', '').replace(',', '.')) || 0;
+            // LIMPEZA DE MOEDA GARANTIDA
+            const formatarParaNumero = (str) => {
+                if (!str) return 0;
+                if (typeof str === 'number') return str;
+                // Remove R$, espaços e pontos de milhar, troca vírgula por ponto
+                let n = str.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+                return parseFloat(n) || 0;
             };
 
-            const valorTotal = limparNum(p.total);
-            const valorDesconto = limparNum(p.desconto);
-            let pesoTotal = 0;
+            const valorTotalCalculado = formatarParaNumero(p.total);
+            const endereco = p.endereco || {};
 
             let html = `
-                <div style="padding: 20px; font-family: sans-serif; color: #000; background: #fff;">
-                    
-                    <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
-                        <h1 style="margin:0; font-size:22px; text-transform:uppercase; letter-spacing:1px;">
-                            ${emp.nome.toUpperCase()}
-                        </h1>
-                        <p style="margin:2px 0; font-size:13px; font-weight:bold; letter-spacing:1px;">
-                            ${(emp.subtitulo || 'ATACADO DE JOIAS NO BRUTO').toUpperCase()}
-                        </p>
-                        <p style="margin:4px 0 0 0; font-size:11px;">
-                            WhatsApp: ${emp.whats} | <b>Pedido: #${id.slice(-6).toUpperCase()}</b> | Data: ${p.data}
-                        </p>
+            <div style="padding:20px; font-family:sans-serif; font-size:11px; color:#000;">
+                
+                <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
+                    <h1 style="margin:0; font-size:20px;">${(emp.nome || 'ABELLA JOIAS').toUpperCase()}</h1>
+                    <p style="margin:2px 0; font-weight:bold;">${(emp.subtitulo || 'ATACADO DE JOIAS NO BRUTO').toUpperCase()}</p>
+                    <p>WhatsApp: ${emp.whats || ''} | Pedido: #${id.slice(-6).toUpperCase()} | Data: ${p.data}</p>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div style="flex: 1; border: 1px solid #ccc; border-radius: 6px; padding: 8px;">
+                        <p style="margin:0 0 5px 0; color: #557799; font-weight: bold; font-size: 9px; text-transform: uppercase;">Dados do Cliente</p>
+                        <strong>Nome:</strong> ${p.cliente.nome || p.cliente}<br>
+                        <strong>WhatsApp:</strong> ${p.whatsapp || 'N/I'}
                     </div>
-
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        
-                        <div style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-size: 10px;">
-                            <p style="margin: 0 0 5px 0; color: #557799; font-weight: bold; text-transform: uppercase; font-size: 9px;">Dados do Cliente</p>
-                            <p style="margin: 2px 0;"><strong>Nome:</strong> ${p.cliente.nome || p.cliente}</p>
-                            <p style="margin: 2px 0;"><strong>WhatsApp:</strong> ${p.whatsapp || p.cliente.telefone || 'N/I'}</p>
-                        </div>
-
-                        <div style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-size: 10px;">
-                            <p style="margin: 0 0 5px 0; color: #557799; font-weight: bold; text-transform: uppercase; font-size: 9px;">Local de Entrega</p>
-                            <p style="margin: 2px 0;"><strong>Logradouro:</strong> ${p.endereco?.rua || ''}, ${p.endereco?.num || ''}</p>
-                            <p style="margin: 2px 0;"><strong>Bairro:</strong> ${p.endereco?.bairro || ''} | <strong>Cidade:</strong> ${p.endereco?.cidade || ''}</p>
-                        </div>
-
-                    </div>
-
-                    <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                        <thead>
-                            <tr style="background:#f2f2f2; text-align:left;">
-                                ${tipo === 'foto' ? '<th style="border:1px solid #ddd; padding:6px;">Foto</th>' : ''}
-                                <th style="border:1px solid #ddd; padding:6px;">Ref/SKU</th>
-                                <th style="border:1px solid #ddd; padding:6px;">Descrição</th>
-                                ${tipo !== 'simples' ? '<th style="border:1px solid #ddd; padding:6px; text-align:right;">Peso Un.</th>' : ''}
-                                ${tipo !== 'simples' ? '<th style="border:1px solid #ddd; padding:6px; text-align:right;">Preço Un.</th>' : ''}
-                                <th style="border:1px solid #ddd; padding:6px; text-align:center;">Qtd</th>
-                                ${tipo !== 'simples' ? '<th style="border:1px solid #ddd; padding:6px; text-align:right;">Subtotal</th>' : ''}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${p.itens ? p.itens.map(item => {
-                                const pesoUn = parseFloat(item.weight || item.peso || 0);
-                                const precoUn = limparNum(item.price || item.preco);
-                                const qtd = parseInt(item.quantidade || item.qtd || 1);
-                                pesoTotal += (pesoUn * qtd);
-                                return `
-                                <tr>
-                                    ${tipo === 'foto' ? `<td style="border:1px solid #ddd; padding:4px; text-align:center;"><img src="${item.image || item.img}" style="width:45px; height:45px; object-fit:contain;"></td>` : ''}
-                                    <td style="border:1px solid #ddd; padding:6px; font-family:monospace;">${item.sku || '---'}</td>
-                                    <td style="border:1px solid #ddd; padding:6px;">${(item.name || item.titulo).toUpperCase()}</td>
-                                    ${tipo !== 'simples' ? `<td style="border:1px solid #ddd; padding:6px; text-align:right;">${pesoUn.toFixed(2)}g</td>` : ''}
-                                    ${tipo !== 'simples' ? `<td style="border:1px solid #ddd; padding:6px; text-align:right;">${fMoeda(precoUn)}</td>` : ''}
-                                    <td style="border:1px solid #ddd; padding:6px; text-align:center;">${qtd}</td>
-                                    ${tipo !== 'simples' ? `<td style="border:1px solid #ddd; padding:6px; text-align:right;">${fMoeda(precoUn * qtd)}</td>` : ''}
-                                </tr>`;
-                            }).join('') : ''}
-                        </tbody>
-                    </table>
-
-                    <div style="margin-top:15px; display: flex; justify-content: flex-end;">
-                        ${tipo !== 'simples' ? `
-                            <div style="text-align:right; font-size:11px; line-height:1.6; min-width: 250px;">
-                                <span>Peso Total: <b>${pesoTotal.toFixed(2)}g</b></span><br>
-                                <span style="color:red;">Total Descontos: <b>- ${fMoeda(valorDesconto)}</b></span><br>
-                                <span>Forma de Pagamento: <b>${(p.pagamento || 'A combinar').toUpperCase()}</b></span>
-                                <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px;">
-                                    <span style="font-size:16px; font-weight:bold;">VALOR TOTAL: ${fMoeda(valorTotal)}</span>
-                                </div>
-                            </div>
-                        ` : `
-                            <div style="width:100%; border:1px dashed #000; padding:10px; font-size:10px;">
-                                <strong>Conferência:</strong> Itens conferidos. Valores financeiros ocultos conforme solicitado.
-                            </div>
-                        `}
+                    <div style="flex: 1; border: 1px solid #ccc; border-radius: 6px; padding: 8px;">
+                        <p style="margin:0 0 5px 0; color: #557799; font-weight: bold; font-size: 9px; text-transform: uppercase;">Local de Entrega</p>
+                        <strong>Logradouro:</strong> ${endereco.rua || ''}, ${endereco.num || ''}<br>
+                        <strong>Bairro:</strong> ${endereco.bairro || ''} | <strong>Cidade:</strong> ${endereco.cidade || ''}
                     </div>
                 </div>
-            `;
 
-            const printArea = document.getElementById('print-area');
-            if (printArea) {
-                printArea.innerHTML = html;
-                fecharModal();
-                setTimeout(() => { window.print(); }, 800);
-            }
+                <table style="width:100%; border-collapse:collapse; margin-bottom:15px;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #ddd; padding:5px; text-align:left;">Ref/SKU</th>
+                            <th style="border:1px solid #ddd; padding:5px; text-align:left;">Descrição</th>
+                            <th style="border:1px solid #ddd; padding:5px; text-align:right;">Preço Un.</th>
+                            <th style="border:1px solid #ddd; padding:5px; text-align:center;">Qtd</th>
+                            <th style="border:1px solid #ddd; padding:5px; text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${p.itens.map(item => {
+                            const precoUn = formatarParaNumero(item.precoFinal || item.price);
+                            const qtd = item.quantidade || item.qtd || 0;
+                            return `
+                            <tr>
+                                <td style="border:1px solid #ddd; padding:5px;">${item.sku || '---'}</td>
+                                <td style="border:1px solid #ddd; padding:5px;">${item.name.toUpperCase()}</td>
+                                <td style="border:1px solid #ddd; padding:5px; text-align:right;">${fMoeda(precoUn)}</td>
+                                <td style="border:1px solid #ddd; padding:5px; text-align:center;">${qtd}</td>
+                                <td style="border:1px solid #ddd; padding:5px; text-align:right;">${fMoeda(precoUn * qtd)}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+
+                <div style="text-align:right; border-top:2px solid #000; padding-top:10px;">
+                    <span style="font-size:14px; font-weight:bold;">VALOR TOTAL: ${fMoeda(valorTotalCalculado)}</span>
+                </div>
+            </div>`;
+
+            document.getElementById('print-area').innerHTML = html;
+            setTimeout(() => { window.print(); }, 500);
         });
     });
 }
-
-    </script>
+</script>
 </body>
 </html>
