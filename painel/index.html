@@ -535,60 +535,28 @@ function editarProduto(id) {
 
 
 
-/* === 2. GERENCIADOR DE PROMOÇÕES POR CATEGORIA (AJUSTADO) === */
-function abrirPainelPromocoes() {
-    Promise.all([
-        db.ref('settings/promocao').once('value'),
-        db.ref('categories').once('value')
-    ]).then(([snapPromo, snapCats]) => {
-        const promo = snapPromo.val() || { ativa: false, porcentagem: 0 };
-        let listaCats = '';
-        
-        snapCats.forEach(c => {
-            const cat = c.val();
-            // Mudamos o ID do input para "promo-ID" para bater com o seletor de salvamento
-            listaCats += `
-                <div class="flex justify-between items-center mb-2 bg-white/5 p-2 rounded border border-[#222]">
-                    <span class="text-[11px] font-bold">${cat.name}</span>
-                    <div class="flex items-center gap-1">
-                        <input type="number" id="promo-${c.key}" value="${cat.discount || 0}" 
-                               class="w-14 bg-black border border-[#444] text-center text-xs p-1 rounded">
-                        <span class="text-[#caa85c] text-[10px]">%</span>
-                    </div>
-                </div>`;
-        });
+/* PROMOÇÕES */
+db.ref('categories').on('value',snap=>{
+  listaPromocoes.innerHTML='';
+  snap.forEach(c=>{
+    const d=c.val();
+    listaPromocoes.innerHTML+=`
+      <div class="flex justify-between items-center text-sm">
+        <span>${d.name}</span>
+        <input id="promo-${c.key}" type="number" value="${d.discount||0}"
+          class="w-20 p-1 rounded bg-[#111] border border-[#333]">
+      </div>
+    `;
+  });
+});
 
-        const html = `
-            <div class="flex flex-col gap-4">
-                <button onclick="togglePromo()" class="w-full py-3 rounded-xl font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">
-                    STATUS GLOBAL: ${promo.ativa ? 'ATIVA' : 'INATIVA'}
-                </button>
-                <div>
-                    <label class="text-[10px] text-[#caa85c] font-bold uppercase">Desconto Geral (%)</label>
-                    <input type="number" id="promoPorcentagem" value="${promo.porcentagem || 0}" class="w-full bg-black border border-[#444] p-2 rounded">
-                </div>
-                <hr class="border-[#222]">
-                <label class="text-[10px] text-[#caa85c] font-bold uppercase">Por Categoria (%)</label>
-                <div class="max-h-48 overflow-y-auto pr-1">${listaCats}</div>
-            </div>`;
-
-        abrirModal('Gerenciar Promoções', html, () => {
-            const updates = {};
-            const pGeral = parseInt(document.getElementById('promoPorcentagem').value) || 0;
-            
-            updates['settings/promocao/porcentagem'] = pGeral;
-            
-            document.querySelectorAll('[id^="promo-"]').forEach(i => {
-                const catID = i.id.replace('promo-', '');
-                updates['categories/' + catID + '/discount'] = parseInt(i.value || 0);
-            });
-            
-            db.ref().update(updates).then(() => {
-                alert('Descontos sincronizados com sucesso!');
-                fecharModal();
-            });
-        });
+function salvarPromos(){
+  document.querySelectorAll('[id^="promo-"]').forEach(i=>{
+    db.ref('categories/'+i.id.replace('promo-','')).update({
+      discount:+i.value
     });
+  });
+  alert('Promoções atualizadas');
 }
 
 
