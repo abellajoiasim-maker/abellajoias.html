@@ -68,6 +68,56 @@ firebase.initializeApp({
 const db = firebase.database();
 const pedidosRef = db.ref('orders');
 
+function gerarRomaneio(id, tipo){
+    db.ref('orders/'+id).once('value').then(snap=>{
+        const p = snap.val();
+        if(!p) return alert('Pedido não encontrado');
+
+        let itensHTML = '';
+        Object.values(p.itens || {}).forEach(i=>{
+            itensHTML += `
+            <tr>
+                <td>${i.qtd}x</td>
+                <td>${i.nome}</td>
+                <td>R$ ${(i.preco||0).toFixed(2)}</td>
+                <td>R$ ${(i.qtd*(i.preco||0)).toFixed(2)}</td>
+            </tr>`;
+        });
+
+        const win = window.open('', '_blank');
+        win.document.write(`
+        <html>
+        <head>
+            <title>Romaneio ${tipo}</title>
+            <style>
+                body{font-family:Arial;padding:20px}
+                h1{margin-bottom:10px}
+                table{width:100%;border-collapse:collapse;margin-top:15px}
+                td,th{border:1px solid #ccc;padding:6px;font-size:12px}
+                th{background:#eee}
+            </style>
+        </head>
+        <body>
+            <h1>Romaneio ${tipo.toUpperCase()}</h1>
+            <p><b>Cliente:</b> ${p.cliente}</p>
+            <p><b>WhatsApp:</b> ${p.whatsapp||'-'}</p>
+            <table>
+                <tr>
+                    <th>Qtd</th>
+                    <th>Produto</th>
+                    <th>Unit.</th>
+                    <th>Total</th>
+                </tr>
+                ${itensHTML}
+            </table>
+            <h2>Total: R$ ${(p.total||0).toFixed(2)}</h2>
+            <script>window.print()</script>
+        </body>
+        </html>
+        `);
+    });
+}
+
 /* UTIL */
 const money = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
@@ -117,9 +167,10 @@ function verDetalhes(id){
    <b>${p.cliente}</b><br>
    Total: ${money(p.total||0)}
    <div class="mt-3 grid gap-2">
-     <button class="btn">Romaneio Simples</button>
-     <button class="btn">Romaneio Completo</button>
-     <button class="btn">Com Fotos</button>
+     <button class="btn" onclick="gerarRomaneio('${id}','simples')">📄 Simples</button>
+     <button class="btn" onclick="gerarRomaneio('${id}','completo')">🖨️ Completo</button>
+     <button class="btn" onclick="gerarRomaneio('${id}','fotos')">📸 Com Fotos</button>
+
    </div>
   `);
  });
