@@ -304,27 +304,47 @@ function salvarEmpresa() {
             });
         }
 
-        function salvarProduto(id) {
-            const file = document.getElementById('pImg').files[0];
-            const pData = {
-                name: document.getElementById('pNome').value,
-                price: document.getElementById('pPreco').value,
-                category: document.getElementById('pCat').value
-            };
+        function atualizarCarrinho() {
+    const lista = document.getElementById('lista-carrinho');
+    if(!lista) return;
+    lista.innerHTML = '';
+    let total = 0;
+    let qtdTotal = 0;
 
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    pData.img = reader.result;
-                    const ref = id ? db.ref('products/' + id) : db.ref('products').push();
-                    ref.update(pData).then(() => fecharModal());
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const ref = id ? db.ref('products/' + id) : db.ref('products').push();
-                ref.update(pData).then(() => fecharModal());
-            }
-        }
+    carrinho.forEach((item, index) => {
+        // Garante que o preço seja um número para o cálculo
+        const precoNum = parseFloat(item.precoFinal || item.price || 0);
+        const subtotal = precoNum * item.quantidade;
+        total += subtotal;
+        qtdTotal += item.quantidade;
+
+        lista.innerHTML += `
+            <div class="item-card flex items-center gap-4">
+                <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
+                <div class="flex-1">
+                    <h3 class="font-bold text-sm uppercase">${item.name}</h3>
+                    <p class="text-xs gold font-bold">${fMoeda(precoNum)}</p>
+                    <div class="flex items-center gap-3 mt-2">
+                        <button onclick="alterarQtd(${index}, -1)" class="w-8 h-8 border rounded-full">-</button>
+                        <span class="font-bold">${item.quantidade}</span>
+                        <button onclick="alterarQtd(${index}, 1)" class="w-8 h-8 border rounded-full">+</button>
+                    </div>
+                </div>
+                <button onclick="removerItem(${index})" class="text-red-500 text-xs">Remover</button>
+            </div>
+        `;
+    });
+
+    // Página Categorias/Produtos: Mostra a quantidade de peças e o valor total
+    const resumoQtd = document.getElementById('resumo-qtd');
+    const resumoTotal = document.getElementById('resumo-total');
+    if(resumoQtd) resumoQtd.innerText = `${qtdTotal} peças`;
+    if(resumoTotal) resumoTotal.innerText = fMoeda(total);
+
+    // Página Carrinho: Mostra o total final
+    const totalCarrinho = document.getElementById('total-carrinho');
+    if(totalCarrinho) totalCarrinho.innerText = fMoeda(total);
+}
 
         function excluirProduto(id) {
             if(confirm("Excluir este produto?")) db.ref('products/' + id).remove();
