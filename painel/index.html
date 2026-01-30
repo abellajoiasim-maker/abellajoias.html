@@ -91,7 +91,7 @@
             </div>
             <div>
                 <label class="text-xs opacity-50">Subtítulo (Ex: ATACADO DE JOIAS NO BRUTO)</label>
-                <input type="text" id="empSub" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+                <input type="text" id="empSub" placeholder="Subtítulo (Ex: ATACADO DE JOIAS NO BRUTO)" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
             </div>
         </div>
 
@@ -101,9 +101,9 @@
         </div>
 
         <div>
-            <label class="text-xs opacity-50">Chave PIX (Para aparecer no carrinho)</label>
-            <input type="text" id="empPix" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
-        </div>
+            <input type="text" id="empPix" placeholder="Chave PIX" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+            <input type="number" id="empDesc" placeholder="Desconto PIX (%)" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+       </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
@@ -197,31 +197,17 @@
 
         // --- EMPRESA ---
 // --- EMPRESA ---
+
 function salvarEmpresa() {
     const dados = {
         nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
+        subtitulo: document.getElementById('empSub').value, // Certifique-se que este ID existe no seu HTML
         whats: document.getElementById('empWhats').value,
-        pix: document.getElementById('empPix').value,       // Chave PIX
-        descontoPix: document.getElementById('empDesc').value, // % de Desconto no PIX
+        pix: document.getElementById('empPix').value,
+        descontoPix: document.getElementById('empDesc').value,
         parcelas: document.getElementById('empParc').value
     };
     db.ref('settings/empresa').set(dados).then(() => alert('Configurações salvas!'));
-}
-
-// Lembre-se de ajustar a função que carrega os dados para preencher o novo campo
-function carregarDadosEmpresa() {
-    db.ref('settings/empresa').once('value', snap => {
-        const d = snap.val();
-        if(d) {
-            document.getElementById('empNome').value = d.nome || '';
-            document.getElementById('empSub').value = d.subtitulo || '';
-            document.getElementById('empWhats').value = d.whats || '';
-            document.getElementById('empPix').value = d.pix || '';
-            document.getElementById('empDesc').value = d.descontoPix || '';
-            document.getElementById('empParc').value = d.parcelas || '';
-        }
-    });
 }
 
         // --- CATEGORIAS ---
@@ -399,44 +385,55 @@ function carregarDadosEmpresa() {
 function carregarPedidos() {
     db.ref('orders').on('value', snap => {
         let html = '';
-        let count = 0;
         snap.forEach(ped => {
             const p = ped.val();
-            count++;
+            
+            // CORREÇÃO: Verifica se cliente é objeto ou string para não dar undefined
+            const nomeExibicao = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente Indefinido");
+            const foneExibicao = p.whatsapp || (p.cliente && p.cliente.telefone) || "Sem contato";
+
+            // CORREÇÃO: Formatação de Moeda inteligente
+            let totalExibicao = p.total || "0,00";
+            if (typeof totalExibicao === 'string' && !totalExibicao.includes("R$")) {
+                totalExibicao = fMoeda(totalExibicao);
+            } else if (typeof totalExibicao === 'number') {
+                totalExibicao = fMoeda(totalExibicao);
+            }
+
             html += `
                 <div class="card border-t-4 border-[#caa85c] flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-mono text-gray-500">#${ped.key.slice(-6).toUpperCase()}</span>
-                            <span class="text-[10px] bg-[#222] px-2 py-1 rounded text-gray-300">${p.data}</span>
+                            <span class="text-[10px] bg-[#222] px-2 py-1 rounded text-gray-300">${p.data || ''}</span>
                         </div>
-                        <div class="font-bold text-lg leading-tight mb-1 text-white">${p.cliente.nome}</div>
-                        <div class="text-sm text-gray-400 mb-4">${p.cliente.telefone}</div>
+                        <div class="font-bold text-lg leading-tight mb-1 text-white uppercase">${nomeExibicao}</div>
+                        <div class="text-sm text-gray-400 mb-4">${foneExibicao}</div>
                         
                         <div class="bg-black/30 p-3 rounded-lg mb-4 border border-white/5">
                             <div class="flex justify-between text-xs opacity-70 mb-1">
                                 <span>Itens:</span>
-                                <span>${p.itens.length} peças</span>
+                                <span>${p.itens ? (p.itens.length || 0) : 0} peças</span>
                             </div>
                             <div class="flex justify-between font-bold text-[#caa85c]">
                                 <span>Total:</span>
-                                <span>R$ ${p.total}</span>
+                                <span>${totalExibicao}</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="flex gap-2">
-                        <button class="btn-gold flex-1 py-2 text-[10px]" onclick="abrirOpcoesImpressao('${ped.key}')">
-                            🖨️ IMPRIMIR
+                    
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="gerarRomaneio('${ped.key}', 'foto')" class="w-full bg-[#caa85c] text-black font-bold py-2 rounded text-xs uppercase hover:bg-white transition">
+                            Imprimir Romaneio
                         </button>
-                        <button class="btn flex-1 py-2 text-[10px] text-red-500 border-red-900/30" onclick="removerPedido('${ped.key}')">
-                            EXCLUIR
+                        <button onclick="excluirPedido('${ped.key}')" class="w-full bg-red-900/20 text-red-500 font-bold py-2 rounded text-[10px] uppercase border border-red-900/50 hover:bg-red-900 hover:text-white transition">
+                            Excluir Pedido
                         </button>
                     </div>
-                </div>`;
+                </div>
+            `;
         });
-        document.getElementById('listaPedidos').innerHTML = html || '<p class="text-center opacity-30 py-10 w-full col-span-full">Nenhum pedido na fila.</p>';
-        document.getElementById('contadorPedidos').innerText = count;
+        document.getElementById('lista-pedidos').innerHTML = html;
     });
 }
 
