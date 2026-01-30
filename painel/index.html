@@ -389,7 +389,7 @@ function carregarPedidos() {
             const p = ped.val();
             
             // CORREÇÃO: Verifica se cliente é objeto ou string para não dar undefined
-            const nomeExibicao = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente s/ Nome");
+           const nomeExibicao = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente Indefinido");
             const foneExibicao = p.whatsapp || (p.cliente && p.cliente.telefone) || "Sem contato";
 
             // CORREÇÃO: Formatação de Moeda inteligente
