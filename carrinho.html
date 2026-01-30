@@ -144,6 +144,11 @@
         document.getElementById('totalGeral').innerText = `R$ ${total.toFixed(2)}`;
     }
 
+    function fMoeda(v) {
+    return parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    }
+
     function atualizarQuantidade(index, valor) {
         if(valor < 1) valor = 1;
         carrinho[index].quantidade = parseInt(valor);
@@ -157,50 +162,53 @@
         carregarCarrinho();
     }
 
-    async function enviarPedido() {
-        const nome = document.getElementById('nome').value.trim();
-        const contato = document.getElementById('contato').value.trim();
-        const total = document.getElementById('totalGeral').innerText;
+    async function finalizarPedido() { // Adicionado async aqui
+    const nome = document.getElementById('nome').value;
+    const contato = document.getElementById('contato').value;
+    const formaPagamento = document.querySelector('.btn-pagamento.border-gold')?.innerText;
 
-        if(!nome || !contato || !formaPagamento || carrinho.length === 0) {
-            alert("Por favor, preencha o nome, contato e escolha a forma de pagamento.");
-            return;
-        }
-
-        // Dados para o seu controle no Painel Admin
-        const pedidoDB = {
-            cliente: nome,
-            whatsapp: contato,
-            total: total,
-            pagamento: formaPagamento,
-            data: new Date().toLocaleString('pt-BR'),
-            itens: carrinho,
-            endereco: {
-                rua: document.getElementById('rua').value,
-                num: document.getElementById('num').value,
-                bairro: document.getElementById('bairro').value,
-                cidade: document.getElementById('cidade').value
-            }
-        };
-
-        try {
-            await db.ref('orders').push(pedidoDB);
-
-            // Mensagem de WhatsApp (Limpa e Objetiva como solicitado)
-             let msg = `Olá, meu nome é *${nome}*!\n\n`;
-             msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
-             msg += `💰 *Total:* ${total}\n`;
-             msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
-             msg += `Aguardando seu retorno para finalizar!`;
-
-            window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-            
-            localStorage.removeItem('carrinho');
-        } catch (e) {
-            alert("Erro ao processar pedido. Verifique sua conexão.");
-        }
+    if (!nome || !contato || !formaPagamento) {
+        alert("Por favor, preencha nome, contato e escolha a forma de pagamento.");
+        return;
     }
 
+    const totalElement = document.getElementById('total-carrinho');
+    const totalTexto = totalElement ? totalElement.innerText : "R$ 0,00";
+
+    const pedidoDB = {
+        cliente: nome,
+        whatsapp: contato,
+        total: totalTexto, // Já salva com R$ para o painel ler fácil
+        pagamento: formaPagamento,
+        data: new Date().toLocaleString('pt-BR'),
+        itens: carrinho,
+        endereco: {
+            rua: document.getElementById('rua').value || '',
+            num: document.getElementById('num').value || '',
+            bairro: document.getElementById('bairro').value || '',
+            cidade: document.getElementById('cidade').value || ''
+        }
+    };
+
+    try {
+        // Envio para o Firebase
+        await db.ref('orders').push(pedidoDB);
+
+        // Mensagem de WhatsApp
+        let msg = `Olá, meu nome é *${nome}*!\n\n`;
+        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+        msg += `💰 *Total:* ${totalTexto}\n`;
+        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+        msg += `Aguardando seu retorno para finalizar!`;
+
+        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+        
+        localStorage.removeItem('carrinho');
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao processar pedido. Verifique sua conexão.");
+    }
+}
     // Iniciar a listagem ao abrir a página
     carregarCarrinho();
 </script>
