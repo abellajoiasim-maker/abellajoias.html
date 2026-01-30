@@ -465,78 +465,113 @@ function abrirOpcoesImpressao(id) {
 function gerarRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', s => {
         const p = s.val();
-        if (!p) return;
+        if (!p) return alert("Pedido não encontrado.");
 
         db.ref('settings/empresa').once('value', empSnap => {
-            const emp = empSnap.val() || {};
+            const emp = empSnap.val() || { 
+                nome: 'Abella Joias', 
+                subtitulo: 'ATACADO DE JOIAS NO BRUTO', 
+                whats: '(00) 00000-0000' 
+            };
             
-            // LIMPEZA DE MOEDA GARANTIDA
-            const formatarParaNumero = (str) => {
-                if (!str) return 0;
-                if (typeof str === 'number') return str;
-                // Remove R$, espaços e pontos de milhar, troca vírgula por ponto
-                let n = str.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-                return parseFloat(n) || 0;
+            const limparNum = (val) => {
+                if (!val) return 0;
+                if (typeof val === 'number') return val;
+                return parseFloat(val.replace(/[^\d,-]/g, '').replace('.', '').replace(',', '.')) || 0;
             };
 
-            const valorTotalCalculado = formatarParaNumero(p.total);
-            const endereco = p.endereco || {};
+            const valorTotal = limparNum(p.total);
+            const valorDesconto = limparNum(p.desconto);
+            let pesoTotal = 0;
 
             let html = `
-            <div style="padding:20px; font-family:sans-serif; font-size:11px; color:#000;">
-                
-                <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
-                    <h1 style="margin:0; font-size:20px;">${(emp.nome || 'ABELLA JOIAS').toUpperCase()}</h1>
-                    <p style="margin:2px 0; font-weight:bold;">${(emp.subtitulo || 'ATACADO DE JOIAS NO BRUTO').toUpperCase()}</p>
-                    <p>WhatsApp: ${emp.whats || ''} | Pedido: #${id.slice(-6).toUpperCase()} | Data: ${p.data}</p>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <div style="flex: 1; border: 1px solid #ccc; border-radius: 6px; padding: 8px;">
-                        <p style="margin:0 0 5px 0; color: #557799; font-weight: bold; font-size: 9px; text-transform: uppercase;">Dados do Cliente</p>
-                        <strong>Nome:</strong> ${p.cliente.nome || p.cliente}<br>
-                        <strong>WhatsApp:</strong> ${p.whatsapp || 'N/I'}
+                <div style="padding: 20px; font-family: sans-serif; color: #000; background: #fff;">
+                    
+                    <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
+                        <h1 style="margin:0; font-size:22px; text-transform:uppercase; letter-spacing:1px;">
+                            ${emp.nome.toUpperCase()}
+                        </h1>
+                        <p style="margin:2px 0; font-size:13px; font-weight:bold; letter-spacing:1px;">
+                            ${(emp.subtitulo || 'ATACADO DE JOIAS NO BRUTO').toUpperCase()}
+                        </p>
+                        <p style="margin:4px 0 0 0; font-size:11px;">
+                            WhatsApp: ${emp.whats} | <b>Pedido: #${id.slice(-6).toUpperCase()}</b> | Data: ${p.data}
+                        </p>
                     </div>
-                    <div style="flex: 1; border: 1px solid #ccc; border-radius: 6px; padding: 8px;">
-                        <p style="margin:0 0 5px 0; color: #557799; font-weight: bold; font-size: 9px; text-transform: uppercase;">Local de Entrega</p>
-                        <strong>Logradouro:</strong> ${endereco.rua || ''}, ${endereco.num || ''}<br>
-                        <strong>Bairro:</strong> ${endereco.bairro || ''} | <strong>Cidade:</strong> ${endereco.cidade || ''}
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        
+                        <div style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-size: 10px;">
+                            <p style="margin: 0 0 5px 0; color: #557799; font-weight: bold; text-transform: uppercase; font-size: 9px;">Dados do Cliente</p>
+                            <p style="margin: 2px 0;"><strong>Nome:</strong> ${p.cliente.nome || p.cliente}</p>
+                            <p style="margin: 2px 0;"><strong>WhatsApp:</strong> ${p.whatsapp || p.cliente.telefone || 'N/I'}</p>
+                        </div>
+
+                        <div style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-size: 10px;">
+                            <p style="margin: 0 0 5px 0; color: #557799; font-weight: bold; text-transform: uppercase; font-size: 9px;">Local de Entrega</p>
+                            <p style="margin: 2px 0;"><strong>Logradouro:</strong> ${p.endereco?.rua || ''}, ${p.endereco?.num || ''}</p>
+                            <p style="margin: 2px 0;"><strong>Bairro:</strong> ${p.endereco?.bairro || ''} | <strong>Cidade:</strong> ${p.endereco?.cidade || ''}</p>
+                        </div>
+
+                    </div>
+
+                    <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                        <thead>
+                            <tr style="background:#f2f2f2; text-align:left;">
+                                ${tipo === 'foto' ? '<th style="border:1px solid #ddd; padding:6px;">Foto</th>' : ''}
+                                <th style="border:1px solid #ddd; padding:6px;">Ref/SKU</th>
+                                <th style="border:1px solid #ddd; padding:6px;">Descrição</th>
+                                ${tipo !== 'simples' ? '<th style="border:1px solid #ddd; padding:6px; text-align:right;">Peso Un.</th>' : ''}
+                                ${tipo !== 'simples' ? '<th style="border:1px solid #ddd; padding:6px; text-align:right;">Preço Un.</th>' : ''}
+                                <th style="border:1px solid #ddd; padding:6px; text-align:center;">Qtd</th>
+                                ${tipo !== 'simples' ? '<th style="border:1px solid #ddd; padding:6px; text-align:right;">Subtotal</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${p.itens ? p.itens.map(item => {
+                                const pesoUn = parseFloat(item.weight || item.peso || 0);
+                                const precoUn = limparNum(item.price || item.preco);
+                                const qtd = parseInt(item.quantidade || item.qtd || 1);
+                                pesoTotal += (pesoUn * qtd);
+                                return `
+                                <tr>
+                                    ${tipo === 'foto' ? `<td style="border:1px solid #ddd; padding:4px; text-align:center;"><img src="${item.image || item.img}" style="width:45px; height:45px; object-fit:contain;"></td>` : ''}
+                                    <td style="border:1px solid #ddd; padding:6px; font-family:monospace;">${item.sku || '---'}</td>
+                                    <td style="border:1px solid #ddd; padding:6px;">${(item.name || item.titulo).toUpperCase()}</td>
+                                    ${tipo !== 'simples' ? `<td style="border:1px solid #ddd; padding:6px; text-align:right;">${pesoUn.toFixed(2)}g</td>` : ''}
+                                    ${tipo !== 'simples' ? `<td style="border:1px solid #ddd; padding:6px; text-align:right;">${fMoeda(precoUn)}</td>` : ''}
+                                    <td style="border:1px solid #ddd; padding:6px; text-align:center;">${qtd}</td>
+                                    ${tipo !== 'simples' ? `<td style="border:1px solid #ddd; padding:6px; text-align:right;">${fMoeda(precoUn * qtd)}</td>` : ''}
+                                </tr>`;
+                            }).join('') : ''}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:15px; display: flex; justify-content: flex-end;">
+                        ${tipo !== 'simples' ? `
+                            <div style="text-align:right; font-size:11px; line-height:1.6; min-width: 250px;">
+                                <span>Peso Total: <b>${pesoTotal.toFixed(2)}g</b></span><br>
+                                <span style="color:red;">Total Descontos: <b>- ${fMoeda(valorDesconto)}</b></span><br>
+                                <span>Forma de Pagamento: <b>${(p.pagamento || 'A combinar').toUpperCase()}</b></span>
+                                <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px;">
+                                    <span style="font-size:16px; font-weight:bold;">VALOR TOTAL: ${fMoeda(valorTotal)}</span>
+                                </div>
+                            </div>
+                        ` : `
+                            <div style="width:100%; border:1px dashed #000; padding:10px; font-size:10px;">
+                                <strong>Conferência:</strong> Itens conferidos. Valores financeiros ocultos conforme solicitado.
+                            </div>
+                        `}
                     </div>
                 </div>
+            `;
 
-                <table style="width:100%; border-collapse:collapse; margin-bottom:15px;">
-                    <thead>
-                        <tr style="background:#f2f2f2;">
-                            <th style="border:1px solid #ddd; padding:5px; text-align:left;">Ref/SKU</th>
-                            <th style="border:1px solid #ddd; padding:5px; text-align:left;">Descrição</th>
-                            <th style="border:1px solid #ddd; padding:5px; text-align:right;">Preço Un.</th>
-                            <th style="border:1px solid #ddd; padding:5px; text-align:center;">Qtd</th>
-                            <th style="border:1px solid #ddd; padding:5px; text-align:right;">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${p.itens.map(item => {
-                            const precoUn = formatarParaNumero(item.precoFinal || item.price);
-                            const qtd = item.quantidade || item.qtd || 0;
-                            return `
-                            <tr>
-                                <td style="border:1px solid #ddd; padding:5px;">${item.sku || '---'}</td>
-                                <td style="border:1px solid #ddd; padding:5px;">${item.name.toUpperCase()}</td>
-                                <td style="border:1px solid #ddd; padding:5px; text-align:right;">${fMoeda(precoUn)}</td>
-                                <td style="border:1px solid #ddd; padding:5px; text-align:center;">${qtd}</td>
-                                <td style="border:1px solid #ddd; padding:5px; text-align:right;">${fMoeda(precoUn * qtd)}</td>
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>
-
-                <div style="text-align:right; border-top:2px solid #000; padding-top:10px;">
-                    <span style="font-size:14px; font-weight:bold;">VALOR TOTAL: ${fMoeda(valorTotalCalculado)}</span>
-                </div>
-            </div>`;
-
-            document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 500);
+            const printArea = document.getElementById('print-area');
+            if (printArea) {
+                printArea.innerHTML = html;
+                fecharModal();
+                setTimeout(() => { window.print(); }, 800);
+            }
         });
     });
 }
