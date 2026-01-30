@@ -98,6 +98,14 @@
         <div>
             <label class="text-xs opacity-50">WhatsApp de Atendimento</label>
             <input type="text" id="empWhats" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+        </div>
+
+        <div>
+            <input type="text" id="empPix" placeholder="Chave PIX" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+            <input type="number" id="empDesc" placeholder="Desconto PIX (%)" class="w-full bg-black border border-[#333] p-2 rounded mt-1">
+       </div>
+
+        <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="text-xs opacity-50">Desconto PIX (%)</label>
                 <input type="number" id="empDesc" class="w-full bg-black border border-[#333] p-2 rounded mt-1" placeholder="Ex: 5">
@@ -375,14 +383,21 @@ function salvarEmpresa() {
        // --- LOGICA DE PEDIDOS E IMPRESSÃO ---
 
 function carregarPedidos() {
-    db.ref('orders').on('value', snap => {
-        let html = '';
-        snap.forEach(ped => {
-            const p = ped.val();
+            db.ref('orders').on('value', snap => {
+                const lista = document.getElementById('listaPedidos');
+                const contador = document.getElementById('contadorPedidos');
+                if(!lista) return;
+                
+                let html = '';
+                let count = 0;
+
+                snap.forEach(ped => {
+                    const p = ped.val();
+                    count++;
             
             // CORREÇÃO: Verifica se cliente é objeto ou string para não dar undefined
-            const nomeExibicao = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente s/ Nome");
-            const foneExibicao = p.whatsapp || (p.cliente && p.cliente.telefone) || "Sem contato";
+            const nomeCli = (p.cliente && p.cliente.nome) ? p.cliente.nome : (p.cliente || "Cliente");
+                    const zapCli = p.whatsapp || (p.cliente && p.cliente.telefone) || "N/I";
 
             // CORREÇÃO: Formatação de Moeda inteligente
             let totalExibicao = p.total || "0,00";
@@ -425,12 +440,21 @@ function carregarPedidos() {
                 </div>
             `;
         });
-        document.getElementById('lista-pedidos').innerHTML = html;
+        lista.innerHTML = html || '<p class="col-span-full text-center py-10 opacity-30">Nenhum pedido encontrado.</p>';
+        contador.innerText = count;
     });
-}
+        }
 
-function abrirOpcoesImpressao(id) {
-    const body = `
+        function excluirPedido(id) {
+            if(confirm("Deseja apagar este pedido permanentemente?")) {
+                db.ref('orders/' + id).remove();
+            }
+        }
+
+        // --- ROMANEIO ---
+
+        function abrirOpcoesImpressao(id) {
+        const body = `
         <div class="grid grid-cols-1 gap-3">
             <button class="p-4 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-[#caa85c] text-left transition" onclick="gerarRomaneio('${id}', 'simples')">
                 <div class="font-bold text-[#caa85c]">📄 Romaneio Simples</div>
