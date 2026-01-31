@@ -18,7 +18,9 @@ section.active{display:block}
 .btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
 .btn-gold{background:#caa85c;color:#000;font-weight:700}
 input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff}
+
 #print-area{display:none}
+
 @media print{
  body *{visibility:hidden}
  #print-area,#print-area *{visibility:visible}
@@ -71,6 +73,7 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
     <button class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('categorias')">🏷️ Por Categorias</button>
     <button class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('produtos')">💎 Por Produtos</button>
   </div>
+  
   <div id="listaPromocoes" class="grid gap-2">
     <p class="text-center text-gray-500 mt-10">Selecione uma opção acima para editar os descontos.</p>
   </div>
@@ -86,218 +89,220 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
 </main>
 
 <script>
+/* FIREBASE CONFIG */
 firebase.initializeApp({
  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
  databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 });
 const db = firebase.database();
-const fMoeda = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
-/* ================= NAVEGAÇÃO ================= */
+/* HELPERS */
+const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+
+/* NAVEGAÇÃO CENTRALIZADA (CORRIGE O TRAVAMENTO) */
 function showTab(id, btn) {
+  // 1. Esconde todas as seções 
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  // 2. Desativa todos os botões do menu
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  const target = document.getElementById(id);
-  if(target) target.classList.add('active');
-  if(btn) btn.classList.add('active');
 
-  if(id === 'categorias') carregarCategorias();
-  if(id === 'produtos') carregarProdutos();
-  if(id === 'pedidos') carregarPedidos();
+  // 3. Ativa o que foi clicado 
+  const target = document.getElementById(id);
+  if (target) {
+    target.classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  // 4. Carrega os dados da aba
+  if (id === 'categorias') carregarCategorias();
+  if (id === 'produtos') carregarProdutos();
+  if (id === 'pedidos') carregarPedidos();
+  if (id === 'promocoes') {
+    document.getElementById('listaPromocoes').innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione uma opção acima.</p>';
+  }
 }
 
-/* ================= EMPRESA ================= */
+/* EMPRESA */
 function salvarEmpresa() {
   db.ref('settings/empresa').set({
-    nome: empNome.value,
-    subtitulo: empSub.value,
-    whats: empWhats.value,
-    descontoPix: +empDesc.value || 0,
-    parcelas: +empParc.value || 0
-  }).then(() => alert('Salvo!'));
+    nome: document.getElementById('empNome').value,
+    subtitulo: document.getElementById('empSub').value,
+    whats: document.getElementById('empWhats').value,
+    descontoPix: +document.getElementById('empDesc').value || 0,
+    parcelas: +document.getElementById('empParc').value || 0
+  }).then(() => alert('Configurações salvas!'));
 }
 
 function carregarEmpresaSeExistir() {
   db.ref('settings/empresa').once('value', s => {
     const v = s.val();
-    if(v){
-      empNome.value=v.nome||'';
-      empSub.value=v.subtitulo||'';
-      empWhats.value=v.whats||'';
-      empDesc.value=v.descontoPix||0;
-      empParc.value=v.parcelas||0;
+    if (v) {
+      document.getElementById('empNome').value = v.nome || '';
+      document.getElementById('empSub').value = v.subtitulo || '';
+      document.getElementById('empWhats').value = v.whats || '';
+      document.getElementById('empDesc').value = v.descontoPix || 0;
+      document.getElementById('empParc').value = v.parcelas || 0;
     }
   });
 }
 
-/* ================= CATEGORIAS ================= */
+/* CATEGORIAS */
 function carregarCategorias() {
   db.ref('categories').once('value', s => {
     const lista = document.getElementById('listaCategorias');
     lista.innerHTML = '';
-    let cats=[];
-    s.forEach(c=>cats.push({key:c.key,...c.val()}));
-    cats.sort((a,b)=>a.name.localeCompare(b.name));
-    cats.forEach(c=>{
-      lista.innerHTML+=`
-      <div class="card flex justify-between items-center mb-2 py-2 px-4 text-sm">
-        <b class="uppercase">${c.name}</b>
-        <button class="btn text-red-500" onclick="if(confirm('Excluir?')) db.ref('categories/${c.key}').remove().then(()=>carregarCategorias())">X</button>
-      </div>`;
+    let cats = [];
+    s.forEach(c => { cats.push({ key: c.key, ...c.val() }); });
+    cats.sort((a, b) => a.name.localeCompare(b.name));
+    cats.forEach(c => {
+      lista.innerHTML += `
+        <div class="card flex justify-between items-center mb-2 py-2 px-4 text-sm">
+          <b class="uppercase">${c.name}</b>
+          <div class="flex gap-2">
+            <button class="btn text-red-500" onclick="if(confirm('Excluir?')) db.ref('categories/${c.key}').remove().then(()=>carregarCategorias())">X</button>
+          </div>
+        </div>`;
     });
   });
 }
 
-/* ================= PRODUTOS ================= */
-let cacheProdutos=[];
-function carregarProdutos(){
-  const lista=document.getElementById('listaProdutos');
-  lista.innerHTML='<p class="text-center p-4">Sincronizando...</p>';
-  db.ref('products').once('value', s=>{
-    cacheProdutos=[];
-    s.forEach(p=>cacheProdutos.push({key:p.key,...p.val()}));
-    cacheProdutos.sort((a,b)=>(a.sku||"").localeCompare(b.sku||"",undefined,{numeric:true}));
+/* PRODUTOS E CACHE (OTIMIZADO) */
+let cacheProdutos = [];
+function carregarProdutos() {
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '<p class="text-center p-4">Sincronizando...</p>';
+  db.ref('products').once('value', s => {
+    cacheProdutos = [];
+    s.forEach(p => { cacheProdutos.push({ key: p.key, ...p.val() }); });
+    cacheProdutos.sort((a, b) => (a.sku || "").localeCompare(b.sku || "", undefined, { numeric: true }));
     renderizarEstruturaProdutos();
   });
 }
 
-function renderizarEstruturaProdutos(){
-  const lista=document.getElementById('listaProdutos');
-  lista.innerHTML='';
-  const categorias=[...new Set(cacheProdutos.map(p=>p.category||"Sem Categoria"))].sort();
-  categorias.forEach(cat=>{
-    const total=cacheProdutos.filter(p=>(p.category||"Sem Categoria")===cat).length;
-    const catId=cat.replace(/\s+/g,'-');
-    lista.innerHTML+=`
-    <div class="mb-2">
-      <div onclick="toggleCategoria('${cat}','${catId}')" class="flex justify-between p-3 bg-[#1a1a1a] rounded-lg cursor-pointer">
-        <b class="text-xs uppercase">${cat} (${total})</b>
-        <span>▼</span>
-      </div>
-      <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#caa85c]"></div>
-    </div>`;
+function renderizarEstruturaProdutos() {
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '';
+  const categorias = [...new Set(cacheProdutos.map(p => p.category || "Sem Categoria"))].sort();
+  categorias.forEach(cat => {
+    const total = cacheProdutos.filter(p => (p.category || "Sem Categoria") === cat).length;
+    const catId = cat.replace(/\s+/g, '-');
+    lista.innerHTML += `
+      <div class="mb-2">
+        <div onclick="toggleCategoria('${cat}', '${catId}')" class="flex justify-between p-3 bg-[#1a1a1a] rounded-lg cursor-pointer">
+          <b class="text-xs uppercase">${cat} (${total})</b>
+          <span id="seta-${catId}">▼</span>
+        </div>
+        <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#caa85c]"></div>
+      </div>`;
   });
 }
 
-function toggleCategoria(nomeCat,catId){
-  const content=document.getElementById(`cat-content-${catId}`);
-  const isHidden=content.classList.contains('hidden');
-  document.querySelectorAll('[id^="cat-content-"]').forEach(el=>el.classList.add('hidden'));
-  if(isHidden){
+function toggleCategoria(nomeCat, catId) {
+  const content = document.getElementById(`cat-content-${catId}`);
+  const isHidden = content.classList.contains('hidden');
+  document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
+  if (isHidden) {
     content.classList.remove('hidden');
-    const prods=cacheProdutos.filter(p=>(p.category||"Sem Categoria")===nomeCat);
-    content.innerHTML=prods.map(p=>`
-      <div class="card flex justify-between py-2 px-3 text-[11px] bg-[#0d0d0d] mb-1">
-        <div><span class="text-[#caa85c]">[${p.sku||'---'}]</span> <b>${p.name}</b></div>
-        <button class="text-red-500 font-bold" onclick="if(confirm('Excluir?')) db.ref('products/${p.key}').remove().then(()=>carregarProdutos())">×</button>
+    const prods = cacheProdutos.filter(p => (p.category || "Sem Categoria") === nomeCat);
+    content.innerHTML = prods.map(p => `
+      <div class="card flex justify-between py-2 px-3 text-[11px] bg-[#0d0d0d]">
+        <div>
+          <span class="text-[#caa85c]">[${p.sku || '---'}]</span> <b>${p.name}</b>
+          ${p.variacao ? `<br><small class="text-blue-400">Var: ${p.variacao}</small>` : ''}
+        </div>
+        <button class="text-red-500" onclick="removerProduto('${p.key}')">X</button>
       </div>`).join('');
   }
 }
 
-/* ================= PROMOÇÕES ================= */
-function listarPromos(tipo){
-  const container=document.getElementById('listaPromocoes');
-  container.innerHTML='<p class="text-center p-4">Carregando itens...</p>';
-  const path=tipo==='categorias'?'categories':'products';
-  db.ref(path).once('value', s=>{
-    container.innerHTML='';
-    let itens=[];
-    s.forEach(child=>itens.push({key:child.key,...child.val()}));
-    itens.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    itens.forEach(item=>{
-      const nome=tipo==='categorias'?item.name:`[${item.sku||'---'}] ${item.name}`;
-      const cor=item.promoCor||'#caa85c';
-      const pct=item.promoPct||0;
-      container.innerHTML+=`
-      <div class="card mb-2 border-l-4" style="border-color:${pct>0?cor:'#2a2a2a'}">
-        <div class="flex justify-between items-center gap-2">
-          <b class="text-[10px] uppercase flex-1">${nome}</b>
-          <div class="flex items-center gap-2 bg-black/40 p-1 rounded border border-white/5">
-            <input type="number" class="w-12 text-center text-xs bg-transparent" value="${pct}" onchange="db.ref('${path}/${item.key}').update({promoPct:+this.value})">
-            <span class="text-[10px] text-gray-500">%</span>
-            <input type="color" value="${cor}" onchange="db.ref('${path}/${item.key}').update({promoCor:this.value})">
+/* PEDIDOS */
+function carregarPedidos() {
+  const lista = document.getElementById('listaPedidos');
+  db.ref('orders').on('value', snapshot => {
+    lista.innerHTML = '';
+    if (!snapshot.exists()) return;
+    snapshot.forEach(ped => {
+      const p = ped.val();
+      const id = ped.key;
+      lista.innerHTML += `
+        <div class="card mb-3 border-l-4 border-[#caa85c]">
+          <div class="flex justify-between">
+            <b class="text-sm uppercase">${p.cliente?.nome || p.cliente}</b>
+            <span class="text-[9px] bg-[#222] px-1">${p.pagamento || ''}</span>
           </div>
-        </div>
-      </div>`;
+          <div class="grid grid-cols-3 gap-1 mt-2">
+            <button class="btn text-[9px]" onclick="gerarRomaneio('${id}', 1)">Simples</button>
+            <button class="btn text-[9px]" onclick="gerarRomaneio('${id}', 2)">Completo</button>
+            <button class="btn text-[9px]" onclick="gerarRomaneio('${id}', 3)">Com Foto</button>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button class="btn flex-1 text-blue-400" onclick="abrirEditorPedido('${id}')">✎ AJUSTAR</button>
+            <button class="btn flex-1 text-red-500" onclick="excluirPedido('${id}')">EXCLUIR</button>
+          </div>
+          <div class="text-right mt-2 font-bold">${fMoeda(p.total)}</div>
+        </div>`;
     });
   });
 }
 
-/* ================= PEDIDOS ================= */
-function carregarPedidos(){
-  const lista=document.getElementById('listaPedidos');
-  db.ref('orders').on('value', snapshot=>{
-    lista.innerHTML='';
-    if(!snapshot.exists()) return;
-    snapshot.forEach(ped=>{
-      const p=ped.val();
-      const id=ped.key;
-      lista.innerHTML+=`
-      <div class="card mb-3 border-l-4 border-[#caa85c]">
-        <div class="flex justify-between">
-          <b class="text-sm uppercase">${p.cliente?.nome||p.cliente}</b>
-          <span class="text-[9px] bg-[#222] px-1">${p.pagamento||''}</span>
-        </div>
-        <div class="grid grid-cols-3 gap-1 mt-2">
-          <button class="btn text-[9px]" onclick="gerarRomaneio('${id}',1)">Simples</button>
-          <button class="btn text-[9px]" onclick="gerarRomaneio('${id}',2)">Completo</button>
-          <button class="btn text-[9px]" onclick="gerarRomaneio('${id}',3)">Com Foto</button>
-        </div>
-        <div class="flex gap-2 mt-2">
-          <button class="btn flex-1 text-blue-400" onclick="abrirEditorPedido('${id}')">✎ AJUSTAR</button>
-          <button class="btn flex-1 text-red-500" onclick="excluirPedido('${id}')">EXCLUIR</button>
-        </div>
-        <div class="text-right mt-2 font-bold">${fMoeda(p.total)}</div>
-      </div>`;
-    });
+function excluirPedido(id) {
+  if (confirm("Excluir pedido?")) db.ref('orders/' + id).remove();
+}
+
+function abrirEditorPedido(id) {
+  db.ref('orders/' + id).once('value', s => {
+    const p = s.val();
+    const novoTotal = prompt("Novo valor total:", p.total);
+    const nota = prompt("Observação:", p.obs || "");
+    if (novoTotal) db.ref('orders/' + id).update({ total: Number(novoTotal), obs: nota, ajustadoManualmente: true });
   });
 }
 
-function excluirPedido(id){ if(confirm("Excluir pedido?")) db.ref('orders/'+id).remove(); }
-
-function abrirEditorPedido(id){
-  db.ref('orders/'+id).once('value', s=>{
-    const p=s.val();
-    const novoTotal=prompt("Novo valor total:",p.total);
-    const nota=prompt("Observação:",p.obs||"");
-    if(novoTotal) db.ref('orders/'+id).update({total:Number(novoTotal),obs:nota,ajustadoManualmente:true});
-  });
-}
-
-/* ================= ROMANEIO ================= */
-function gerarRomaneio(id,tipo){
-  db.ref('orders/'+id).once('value', s=>{
-    const p=s.val();
-    db.ref('settings/empresa').once('value', e=>{
-      const emp=e.val()||{};
-      let html=`<div style="font-family:Arial;padding:20px;">
-      <h1 style="text-align:center;color:#A68966">${emp.nome||'Abella Joias'}</h1>
-      <p style="text-align:center">${emp.subtitulo||''}<br>Whats: ${emp.whats||''}</p><hr>
-      <p><b>Cliente:</b> ${p.cliente?.nome||p.cliente}</p>
-      <table style="width:100%;border-collapse:collapse;margin-top:10px;">
-      <thead><tr style="border-bottom:1px solid #000"><th>Produto</th><th>Peso</th><th>Preço</th><th>Qtd</th><th>Subtotal</th></tr></thead><tbody>`;
-      p.itens.forEach(i=>{
-        const peso=(Number(i.peso||0)/1000).toFixed(3);
-        html+=`<tr style="border-bottom:1px solid #eee">
-        <td>${i.name}</td><td>${peso} Kg</td><td>${fMoeda(i.precoFinal||i.price)}</td><td>${i.quantidade}</td>
-        <td>${fMoeda((i.precoFinal||i.price)*i.quantidade)}</td></tr>`;
+/* ROMANEIO */
+function gerarRomaneio(id, tipo) {
+  db.ref('orders/'+id).once('value', s => {
+    const p = s.val();
+    db.ref('settings/empresa').once('value', e => {
+      const emp = e.val() || {};
+      let html = `<div style="font-family:Arial; padding:20px;">
+        <h1 style="text-align:center; color:#A68966">${emp.nome || 'Abella Joias'}</h1>
+        <p style="text-align:center">${emp.subtitulo || ''}<br>Whats: ${emp.whats || ''}</p>
+        <hr>
+        <p><b>Cliente:</b> ${p.cliente?.nome || p.cliente}</p>
+        <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+          <thead><tr style="border-bottom:1px solid #000"><th>Produto</th><th>Peso</th><th>Preço</th><th>Qtd</th><th>Subtotal</th></tr></thead>
+          <tbody>`;
+      
+      p.itens.forEach(i => {
+        const peso = (Number(i.peso || 0) / 1000).toFixed(3);
+        html += `<tr style="border-bottom:1px solid #eee">
+          <td>${i.name} ${i.variacao ? '('+i.variacao+')' : ''}</td>
+          <td>${peso} Kg</td><td>${fMoeda(i.precoFinal || i.price)}</td><td>${i.quantidade}</td>
+          <td>${fMoeda((i.precoFinal || i.price) * i.quantidade)}</td></tr>`;
       });
-      html+=`</tbody></table>`;
-      if(tipo>1){
-        html+=`<div style="text-align:right;margin-top:20px;">Subtotal: ${fMoeda(p.subtotal)}<br><b>TOTAL: ${fMoeda(p.total)}</b></div>`;
+
+      html += `</tbody></table>`;
+      if (tipo > 1) {
+        html += `<div style="text-align:right; margin-top:20px;">
+          Subtotal: ${fMoeda(p.subtotal)}<br>
+          <b>TOTAL: ${fMoeda(p.total)}</b><br>
+          ${p.obs ? `<small>Obs: ${p.obs}</small>` : ''}
+        </div>`;
       }
-      html+=`</div>`;
-      document.getElementById('print-area').innerHTML=html;
-      setTimeout(()=>window.print(),500);
+      html += `</div>`;
+      document.getElementById('print-area').innerHTML = html;
+      setTimeout(() => window.print(), 500);
     });
   });
 }
 
-/* START */
-window.addEventListener('load',()=>{
+/* INICIALIZAÇÃO */
+window.addEventListener('load', () => {
   carregarEmpresaSeExistir();
-  showTab('empresa',document.querySelector('nav button'));
+  showTab('empresa', document.querySelector('nav button'));
 });
+
 </script>
+
 </body>
 </html>
