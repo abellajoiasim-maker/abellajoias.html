@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
@@ -16,12 +15,9 @@
 body{font-family:'Poppins',sans-serif;background:#fdfcf9}
 .serif{font-family:'Cinzel',serif}
 .gold{color:#A68966}
-
 .card{background:#fff;border-radius:18px;border:1px solid #eee;padding:20px;margin-bottom:20px}
-
 .item{display:flex;gap:14px;border:1px solid #eee;border-radius:14px;padding:12px}
 .item img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid #eee}
-
 .pay-btn{border:2px solid #eee;border-radius:14px;padding:16px;text-align:center;cursor:pointer;font-weight:bold;text-transform:uppercase}
 .pay-btn.active{border-color:#A68966;color:#A68966;background:#fffaf5}
 </style>
@@ -33,7 +29,6 @@ body{font-family:'Poppins',sans-serif;background:#fdfcf9}
   <div class="max-w-xl mx-auto p-4 flex justify-between items-center">
     <button onclick="history.back()" class="text-xs font-bold uppercase">← Voltar</button>
     <h1 class="serif gold uppercase">Meu Pedido</h1>
-    <div></div>
   </div>
 </header>
 
@@ -46,10 +41,11 @@ body{font-family:'Poppins',sans-serif;background:#fdfcf9}
 
   <div class="card">
     <h2 class="serif gold uppercase mb-4">Dados do Cliente</h2>
-    <input id="nome" placeholder="Nome completo *" class="w-full mb-2 p-3 border rounded">
-    <input id="contato" placeholder="WhatsApp *" class="w-full mb-2 p-3 border rounded">
+    <input id="nomeCliente" placeholder="Nome completo *" class="w-full mb-2 p-3 border rounded">
+    <input id="telefoneCliente" placeholder="WhatsApp *" class="w-full mb-2 p-3 border rounded">
 
-    <p class="mt-4 text-xs uppercase gold font-bold">Entrega</p>
+    <p class="mt-4 text-xs uppercase gold font-bold">Local de Entrega</p>
+    <input id="nomeEntrega" placeholder="Nome do local (ex: Loja, Residência)" class="w-full mb-2 p-3 border rounded">
     <input id="rua" placeholder="Rua / Avenida" class="w-full mb-2 p-3 border rounded">
     <div class="grid grid-cols-2 gap-2">
       <input id="num" placeholder="Nº" class="p-3 border rounded">
@@ -61,19 +57,18 @@ body{font-family:'Poppins',sans-serif;background:#fdfcf9}
   <div class="card">
     <h2 class="serif gold uppercase mb-4">Forma de Pagamento</h2>
     <div class="grid grid-cols-2 gap-4">
-      <div class="pay-btn" onclick="setPagamento('Pix',this)">Pix<br><small>Desconto aplicado</small></div>
-      <div class="pay-btn" onclick="setPagamento('Cartão',this)">Cartão<br><small>3x sem acréscimo</small></div>
+      <div class="pay-btn" onclick="setPagamento('Pix',this)">Pix</div>
+      <div class="pay-btn" onclick="setPagamento('Cartão',this)">Cartão</div>
     </div>
   </div>
 
   <div class="card text-sm">
     <div class="flex justify-between"><span>Peso total</span><b id="pesoTotal">0g</b></div>
-    <div class="flex justify-between"><span>Subtotal</span><b id="subtotal">R$ 0,00</b></div>
-    <div class="flex justify-between text-green-700"><span>Descontos</span><b id="desconto">- R$ 0,00</b></div>
+    <div class="flex justify-between"><span>Subtotal</span><b id="subtotalTxt">R$ 0,00</b></div>
+    <div class="flex justify-between text-green-700"><span>Descontos</span><b id="descontoTxt">R$ 0,00</b></div>
     <div class="flex justify-between text-lg font-bold gold mt-2">
-      <span>Total</span><span id="total">R$ 0,00</span>
+      <span>Total</span><span id="totalTxt">R$ 0,00</span>
     </div>
-    <div class="text-[10px] uppercase mt-2">Pagamento: <b id="pagInfo">não selecionado</b></div>
   </div>
 
 </main>
@@ -87,83 +82,79 @@ body{font-family:'Poppins',sans-serif;background:#fdfcf9}
 </footer>
 
 <script>
-const firebaseConfig={
+firebase.initializeApp({
   apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-firebase.initializeApp(firebaseConfig);
+});
 const db=firebase.database();
 
 let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
 let pagamento='';
-let foneLoja='55';
+let totalNumero=0;
+let pesoNumero=0;
+let descontoNumero=0;
 
-db.ref('settings/whatsapp').once('value',s=>{
-  if(s.val()) foneLoja='55'+s.val().replace(/\D/g,'');
-});
-
-function fMoeda(v){
-  return Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-}
+function fMoeda(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 
 function setPagamento(p,el){
   pagamento=p;
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('pagInfo').innerText=p;
 }
 
 function carregarCarrinho(){
-  let subtotal=0,pesoTotal=0,desconto=0;
-  const box=document.getElementById('listaItens');
+  let box=document.getElementById('listaItens');
   box.innerHTML='';
+  totalNumero=0;
+  pesoNumero=0;
+  descontoNumero=0;
 
   carrinho.forEach(i=>{
-    const q=i.quantidade||1;
-    const preco=Number(i.precoFinal||i.price||0);
-    const precoOrig=Number(i.precoOriginal||preco);
-    const peso=Number(i.peso||i.weight||0);
+    let q=i.quantidade||1;
+    let preco=Number(i.precoFinal||i.price||0);
+    let precoOrig=Number(i.precoOriginal||preco);
+    let peso=Number(i.peso||i.weight||0);
 
-    subtotal+=preco*q;
-    pesoTotal+=peso*q;
-
-    if(precoOrig>preco) desconto+=(precoOrig-preco)*q;
+    totalNumero+=preco*q;
+    pesoNumero+=peso*q;
+    if(precoOrig>preco) descontoNumero+=(precoOrig-preco)*q;
 
     box.innerHTML+=`
       <div class="item">
         <img src="${i.image}">
         <div class="flex-1">
-          <b class="uppercase">${i.name}</b><br>
+          <b>${i.name}</b><br>
           <small>SKU: ${i.sku||'---'}</small><br>
-          <small>Qtd ${q} | Peso ${(peso*q).toFixed(2)}g</small>
+          <small>Qtd ${q} | ${(peso*q).toFixed(2)}g</small>
         </div>
         <b class="gold">${fMoeda(preco*q)}</b>
       </div>`;
   });
 
-  document.getElementById('subtotal').innerText=fMoeda(subtotal);
-  document.getElementById('pesoTotal').innerText=pesoTotal.toFixed(2)+'g';
-  document.getElementById('desconto').innerText='- '+fMoeda(desconto);
-  document.getElementById('total').innerText=fMoeda(subtotal-desconto);
+  document.getElementById('subtotalTxt').innerText=fMoeda(totalNumero);
+  document.getElementById('pesoTotal').innerText=pesoNumero.toFixed(2)+'g';
+  document.getElementById('descontoTxt').innerText='- '+fMoeda(descontoNumero);
+  document.getElementById('totalTxt').innerText=fMoeda(totalNumero-descontoNumero);
 }
 
 async function finalizarPedido(){
-  if(!nome.value||!contato.value||!pagamento){
-    alert('Preencha nome, WhatsApp e forma de pagamento.');
+  if(!nomeCliente.value||!telefoneCliente.value||!pagamento){
+    alert('Preencha nome, WhatsApp e pagamento.');
     return;
   }
 
   await db.ref('orders').push({
-    cliente:{nome:nome.value,telefone:contato.value},
-    whatsapp:contato.value,
+    cliente:{nome:nomeCliente.value,telefone:telefoneCliente.value},
+    whatsapp:telefoneCliente.value,
     pagamento,
     itens:carrinho,
-    subtotal:subtotal.innerText,
-    descontos:desconto.innerText,
-    pesoTotal:pesoTotal.innerText,
-    total:Number((subtotal.innerText.replace(/[^\d,]/g,'').replace(',','.'))) ,
+    subtotal:totalNumero,
+    descontos:descontoNumero,
+    pesoTotal:pesoNumero,
+    total:totalNumero-descontoNumero,
     data:new Date().toLocaleString('pt-BR'),
     endereco:{
+      nome:nomeEntrega.value,
       rua:rua.value,
       num:num.value,
       bairro:bairro.value,
@@ -174,10 +165,8 @@ async function finalizarPedido(){
   localStorage.removeItem('carrinho');
 
   window.location.href=
-   `https://api.whatsapp.com/send?phone=${foneLoja}&text=`+
-   encodeURIComponent(
-     `Olá, meu nome é ${nome.value}!\n\nAcabei de fazer um pedido pelo catálogo.\nAguardando seu retorno para finalizar!`
-   );
+    `https://api.whatsapp.com/send?phone=55&text=`+
+    encodeURIComponent(`Olá, meu nome é ${nomeCliente.value}! Acabei de fazer um pedido pelo catálogo.`);
 }
 
 carregarCarrinho();
