@@ -168,46 +168,121 @@ function carregarCategorias() {
   });
 }
 
-/* PRODUTOS - SEPARADOS POR CATEGORIA E ORDEM DE SKU */
-function carregarProdutos() {
-  db.ref('products').once('value', s => {
-    const lista = document.getElementById('listaProdutos');
-    lista.innerHTML = '';
-    let prods = [];
-    s.forEach(p => { prods.push({ key: p.key, ...p.val() }); });
+/* PRODUTOS - CARREGAMENTO RÁPIDO E GESTÃO DE VARIAÇÕES */
+let cacheProdutos = []; 
 
-    // Ordenação: 1º Categoria (Alfabética), 2º SKU (Crescente)
-    prods.sort((a, b) => {
-      let catA = (a.category || "Sem Categoria").toUpperCase();
-      let catB = (b.category || "Sem Categoria").toUpperCase();
-      if (catA !== catB) return catA.localeCompare(catB);
-      return (a.sku || "").localeCompare(b.sku || "", undefined, {numeric: true});
+function carregarProdutos() {
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '<p class="text-center p-4 text-gray-500">Sincronizando estoque...</p>';
+
+  // Busca única para o Cache
+  db.ref('products').once('value', s => {
+    cacheProdutos = [];
+    s.forEach(p => { 
+      cacheProdutos.push({ key: p.key, ...p.val() }); 
     });
 
-    let currentCat = "";
-    prods.forEach(p => {
-      // Criar cabeçalho de categoria se mudar
-      if ((p.category || "Sem Categoria") !== currentCat) {
-        currentCat = p.category || "Sem Categoria";
-        lista.innerHTML += `<div class="text-[#caa85c] font-bold text-xs uppercase mt-4 mb-2 border-b border-[#caa85c]/30 pb-1">${currentCat}</div>`;
-      }
+    // Ordenação por SKU (Numérica/Crescente)
+    cacheProdutos.sort((a, b) => (a.sku || "").localeCompare(b.sku || "", undefined, {numeric: true}));
 
-      const temImg = p.image ? '🖼️' : '<span class="text-red-800">🚫</span>';
-      
-      lista.innerHTML += `
-        <div class="card flex justify-between items-center mb-1 py-1 px-3 text-[12px]">
+    renderizarEstruturaProdutos();
+  });
+}
+
+function renderizarEstruturaProdutos() {
+  const lista = document.getElementById('listaProdutos');
+  lista.innerHTML = '';
+
+  // Filtro de categorias únicas presentes nos produtos
+  const categoriasPresentes = [...new Set(cacheProdutos.map(p => p.category || "Sem Categoria"))].sort();
+
+  categoriasPresentes.forEach(cat => {
+    const totalNaCat = cacheProdutos.filter(p => (p.category || "Sem Categoria") === cat).length;
+    
+    const divCat = document.createElement('div');
+    divCat.className = "mb-2";
+    // Geramos o ID escapado para evitar erros com espaços no nome da categoria
+    const catId = cat.replace(/\s+/g, '-');
+    
+    divCat.innerHTML = `
+      <div onclick="toggleCategoria('${cat}', '${catId}')" 
+           class="flex justify-between items-center bg-[#141414] p-3 rounded-lg cursor-pointer border-l-4 border-[#caa85c] hover:bg-[#1a1a1a] transition-all">
+        <b class="text-[11px] uppercase tracking-wider">${cat} <span class="text-[#caa85c] ml-2">(${totalNaCat})</span></b>
+        <span id="seta-${catId}" class="text-[10px] text-gray-500">▼</span>
+      </div>
+      <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#222]">
+        </div>
+    `;
+    lista.appendChild(divCat);
+  });
+}
+
+function toggleCategoria(nomeCat, catId) {
+  const content = document.getElementById(`cat-content-${catId}`);
+  const seta = document.getElementById(`seta-${catId}`);
+  const isHidden = content.classList.contains('hidden');
+
+  // Fecha todos os outros para manter o painel limpo e rápido
+  document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('[id^="seta-"]').forEach(el => el.innerText = '▼');
+
+  if (isHidden) {
+    content.classList.remove('hidden');
+    seta.innerText = '▲';
+    
+    // Filtra os produtos do cache para esta categoria específica
+    const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria") === nomeCat);
+    
+    // Renderiza apenas os produtos desta categoria
+    content.innerHTML = produtosFiltrados.map(p => {
+      const temImagem = p.image ? '🖼️' : '<span class="text-red-900">🚫</span>';
+      // Exibição da Variação (Letras A-Z ou Dizeres)
+      const labelVariacao = p.variacao ? `<span class="bg-[#222] text-[#caa85c] px-1 rounded ml-1 text-[9px] border border-[#caa85c]/30">${p.variacao}</span>` : '';
+
+      return `
+        <div class="card flex justify-between items-center py-2 px-3 text-[11px] bg-[#0d0d0d] border-[#222] hover:border-[#333]">
           <div class="flex-1">
-            <span class="text-gray-500 font-mono text-[10px]">[${p.sku || 'S/ SKU'}]</span> 
-            <b class="ml-1">${p.name}</b> ${temImg}
-            <span class="ml-2 text-gray-400">${fMoeda(p.price)}</span>
+            <span class="text-gray-500 font-mono text-[9px] uppercase">${p.sku || '---'}</span>
+            <b class="ml-1 uppercase text-gray-200">${p.name}</b>
+            ${labelVariacao}
+            ${temImagem}
+            <div class="text-[#caa85c] mt-0.5">${fMoeda(p.price)}</div>
           </div>
-          <div class="flex gap-1">
-            <button class="btn py-0 px-2 text-blue-400" onclick="editarProduto('${p.key}')">✎</button>
-            <button class="btn py-0 px-2 text-red-500" onclick="if(confirm('Excluir produto?')) db.ref('products/${p.key}').remove().then(()=>carregarProdutos())">X</button>
+          <div class="flex gap-3">
+            <button class="text-blue-400 hover:text-blue-300 transition-colors" onclick="editarProduto('${p.key}')">✎</button>
+            <button class="text-red-500 hover:text-red-400 transition-colors" onclick="removerProduto('${p.key}')">X</button>
           </div>
         </div>`;
-    });
-  });
+    }).join('');
+  }
+}
+
+function toggleCategoria(cat) {
+  const content = document.getElementById(`cat-content-${cat}`);
+  const isHidden = content.classList.contains('hidden');
+
+  // Fecha todos os outros para economizar memória (opcional)
+  document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
+
+  if (isHidden) {
+    content.classList.remove('hidden');
+    // Filtra os produtos desta categoria
+    const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria") === cat);
+    
+    content.innerHTML = produtosFiltrados.map(p => `
+      <div class="card flex justify-between items-center py-1 px-3 text-[11px] bg-[#111]">
+        <div class="flex-1">
+          <span class="text-[#caa85c] font-bold">[${p.sku || '---'}]</span> 
+          <span class="ml-1">${p.name}</span>
+          ${p.variacao ? `<br><small class="text-blue-400">Variação: ${p.variacao}</small>` : ''}
+        </div>
+        <div class="flex gap-2">
+          <button onclick="editarProduto('${p.key}')">✎</button>
+          <button class="text-red-500" onclick="removerProduto('${p.key}')">X</button>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 /* PROMOÇÕES - SISTEMA DE GESTÃO INDIVIDUAL */
 
