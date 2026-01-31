@@ -105,6 +105,7 @@ const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency
 /* NAVEGAÇÃO — VERSÃO ÚNICA (remove duplicidade que travava o menu) */
 function showTab(id, btn) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
 
@@ -116,10 +117,21 @@ function showTab(id, btn) {
   if (id === 'pedidos') carregarPedidos();
 
   if (id === 'promocoes') {
-    const el = document.getElementById('listaPromocoes');
-    if (el) el.innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
+    const box = document.getElementById('listaPromocoes');
+    if (box) {
+      box.innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
+    }
   }
 }
+ function removerProduto(id) {
+  if (confirm("Excluir este produto?")) {
+    db.ref('products/' + id).remove()
+      .then(() => carregarProdutos())
+      .catch(() => alert("Erro ao excluir produto."));
+  }
+}
+
+
 
 /* EMPRESA */
 function salvarEmpresa() {
@@ -552,6 +564,39 @@ function carregarEmpresaSeExistir() {
     if (empParc)  empParc.value  = v.parcelas || 0;
   });
 }
+ function editarProduto(id) {
+  db.ref('products/' + id).once('value', s => {
+    const p = s.val();
+    if (!p) return alert("Produto não encontrado.");
+
+    const novoNome = prompt("Nome do produto:", p.name || "");
+    const novoPreco = prompt("Preço do produto:", p.price || 0);
+    const novoSku = prompt("SKU do produto:", p.sku || "");
+
+    if (novoNome !== null) {
+      db.ref('products/' + id).update({
+        name: novoNome,
+        price: Number(novoPreco) || 0,
+        sku: novoSku
+      }).then(() => {
+        alert("Produto atualizado!");
+        carregarProdutos(); // Atualiza a tela
+      });
+    }
+  });
+}
+function editarCategoria(id, nomeAtual) {
+  const novoNome = prompt("Novo nome da categoria:", nomeAtual);
+  if (!novoNome || novoNome === nomeAtual) return;
+
+  db.ref('categories/' + id).update({ name: novoNome })
+    .then(() => {
+      alert("Categoria atualizada!");
+      carregarCategorias(); // Atualiza lista
+    })
+    .catch(() => alert("Erro ao atualizar categoria."));
+}
+
 
 /* ================= INIT ================= */
 window.addEventListener('load',()=>{
