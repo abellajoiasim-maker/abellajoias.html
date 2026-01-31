@@ -112,18 +112,29 @@ const db=firebase.database();
 /* HELPERS */
 const fMoeda=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
-/* NAVEGAÇÃO - AJUSTE CIRÚRGICO PARA VOLTAR A FUNCIONAR */
-function showTab(id,btn){
- document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
- const target = document.getElementById(id);
- if(target) target.classList.add('active');
+/* NAVEGAÇÃO UNIFICADA E CORRIGIDA */
+function showTab(id, btn) {
+  // Remove a classe 'active' de todas as seções e botões
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
 
- document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- if(btn) btn.classList.add('active');
+  // Ativa a seção e o botão clicado
+  const target = document.getElementById(id);
+  if (target) {
+    target.classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
 
- if(id==='categorias') carregarCategorias();
- if(id==='produtos') carregarProdutos();
- if(id==='pedidos') carregarPedidos();
+  // Carrega os dados específicos da aba selecionada
+  if (id === 'categorias') carregarCategorias();
+  if (id === 'produtos') carregarProdutos();
+  if (id === 'pedidos') carregarPedidos();
+  
+  // Reset visual da aba de promoções ao entrar nela
+  if (id === 'promocoes') {
+     document.getElementById('listaPromocoes').innerHTML = 
+       '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
+  }
 }
 
 /* EMPRESA */
@@ -580,21 +591,25 @@ function gerarRomaneio(id, tipo = 1) {
 });
 }
 
-/* START */
-window.addEventListener('load',()=>{
- // Inicia na aba empresa
- carregarEmpresaSeExistir(); 
+/* START - INICIALIZAÇÃO AUTOMÁTICA */
+window.addEventListener('load', () => {
+  // Carrega os dados da empresa nos inputs [cite: 79]
+  carregarEmpresaSeExistir(); 
+  
+  // Ativa visualmente a aba 'empresa' e o primeiro botão do menu [cite: 7, 8]
+  const btnInicial = document.querySelector('nav button');
+  showTab('empresa', btnInicial);
 });
 
 function carregarEmpresaSeExistir(){
     db.ref('settings/empresa').once('value', s => {
         const v = s.val();
         if(v){
-            document.getElementById('empNome').value = v.nome || '';
-            document.getElementById('empSub').value = v.subtitulo || '';
-            document.getElementById('empWhats').value = v.whats || '';
-            document.getElementById('empDesc').value = v.descontoPix || 0;
-            document.getElementById('empParc').value = v.parcelas || 0;
+            document.getElementById('empNome').value = v.nome || ''; [cite: 79]
+            document.getElementById('empSub').value = v.subtitulo || ''; [cite: 79]
+            document.getElementById('empWhats').value = v.whats || ''; [cite: 79]
+            document.getElementById('empDesc').value = v.descontoPix || 0; [cite: 79]
+            document.getElementById('empParc').value = v.parcelas || 0; [cite: 80]
         }
     });
 }
