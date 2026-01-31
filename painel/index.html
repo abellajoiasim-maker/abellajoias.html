@@ -111,7 +111,7 @@ function salvarEmpresa() {
     whats: document.getElementById('empWhats').value,
     descontoPix: +document.getElementById('empDesc').value || 0,
     parcelas: +document.getElementById('empParc').value || 0
-  }).then(() => alert('Salvo com sucesso!'));
+  }).then(() => alert('Salvo!'));
 }
 
 function carregarEmpresaSeExistir() {
@@ -129,23 +129,24 @@ function carregarEmpresaSeExistir() {
 
 /* CATEGORIAS */
 function carregarCategorias() {
+  const lista = document.getElementById('listaCategorias');
+  lista.innerHTML = '<p class="p-4 text-center">Buscando...</p>';
   db.ref('categories').once('value', s => {
-    const lista = document.getElementById('listaCategorias');
     lista.innerHTML = '';
     let cats = [];
     s.forEach(c => cats.push({ key: c.key, ...c.val() }));
     cats.sort((a,b) => a.name.localeCompare(b.name));
     cats.forEach(c => {
       lista.innerHTML += `
-        <div class="card flex justify-between items-center py-2 px-4">
+        <div class="card flex justify-between items-center py-2 px-4 mb-2">
           <b class="uppercase text-sm">${c.name}</b>
-          <button class="text-red-500" onclick="if(confirm('Excluir?')) db.ref('categories/${c.key}').remove().then(()=>carregarCategorias())">X</button>
+          <button class="text-red-500 font-bold" onclick="if(confirm('Excluir?')) db.ref('categories/${c.key}').remove().then(()=>carregarCategorias())">×</button>
         </div>`;
     });
   });
 }
 
-/* PRODUTOS COM CACHE E ACORDEÃO */
+/* PRODUTOS (ACORDEÃO PARA VELOCIDADE) */
 let cacheProdutos = [];
 function carregarProdutos() {
   const lista = document.getElementById('listaProdutos');
@@ -179,41 +180,51 @@ function renderizarEstruturaProdutos() {
 function toggleCategoria(nomeCat, catId) {
   const content = document.getElementById(`cat-content-${catId}`);
   const isHidden = content.classList.contains('hidden');
-  document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
   if (isHidden) {
     content.classList.remove('hidden');
     const prods = cacheProdutos.filter(p => (p.category || "Sem Categoria") === nomeCat);
     content.innerHTML = prods.map(p => `
       <div class="card flex justify-between py-2 px-3 text-[11px] bg-[#0d0d0d] mb-1">
-        <div>
-          <span class="text-[#caa85c]">[${p.sku || '---'}]</span> <b>${p.name}</b>
-          ${p.variacao ? `<br><small class="text-blue-400">Variação: ${p.variacao}</small>` : ''}
-        </div>
-        <button class="text-red-500" onclick="if(confirm('Excluir?')) db.ref('products/${p.key}').remove().then(()=>carregarProdutos())">X</button>
+        <div><span class="text-[#caa85c]">[${p.sku || '---'}]</span> <b>${p.name}</b> ${p.variacao ? `<br><small class="text-blue-400">Var: ${p.variacao}</small>` : ''}</div>
+        <button class="text-red-500 font-bold" onclick="if(confirm('Excluir?')) db.ref('products/${p.key}').remove().then(()=>carregarProdutos())">×</button>
       </div>`).join('');
+  } else {
+    content.classList.add('hidden');
   }
 }
 
-/* PROMOÇÕES */
+/* PROMOÇÕES (RECUPERADO PORCENTAGEM E COR) */
 function listarPromos(tipo) {
   const container = document.getElementById('listaPromocoes');
-  container.innerHTML = '<p class="text-center p-4">Carregando...</p>';
-  db.ref(tipo === 'categorias' ? 'categories' : 'products').once('value', s => {
+  container.innerHTML = '<p class="text-center p-4">Carregando itens...</p>';
+  
+  const path = tipo === 'categorias' ? 'categories' : 'products';
+  db.ref(path).once('value', s => {
     container.innerHTML = '';
     let itens = [];
     s.forEach(child => itens.push({ key: child.key, ...child.val() }));
     itens.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+
     itens.forEach(item => {
       const nome = tipo === 'categorias' ? item.name : `[${item.sku || '---'}] ${item.name}`;
+      const cor = item.promoCor || '#caa85c';
+      const pct = item.promoPct || 0;
+
       container.innerHTML += `
-        <div class="card mb-2 border-l-4" style="border-color: ${item.promoPct > 0 ? (item.promoCor || '#caa85c') : '#2a2a2a'}">
+        <div class="card mb-2 border-l-4" style="border-color: ${pct > 0 ? cor : '#2a2a2a'}">
           <div class="flex justify-between items-center gap-2">
             <b class="text-[10px] uppercase flex-1">${nome}</b>
-            <div class="flex items-center gap-2 bg-black/40 p-1 rounded">
-              <input type="number" class="w-10 m-0 p-1 text-center text-xs" value="${item.promoPct || 0}" 
-                onchange="db.ref('${tipo === 'categorias' ? 'categories' : 'products'}/${item.key}').update({promoPct: +this.value})">
-              <input type="color" class="w-5 h-5 p-0 border-none" value="${item.promoCor || '#caa85c'}" 
-                onchange="db.ref('${tipo === 'categorias' ? 'categories' : 'products'}/${item.key}').update({promoCor: this.value})">
+            
+            <div class="flex items-center gap-2 bg-black/40 p-1 rounded border border-white/5">
+              <input type="number" class="w-12 m-0 p-1 text-center text-xs bg-transparent outline-none" 
+                value="${pct}" 
+                onchange="db.ref('${path}/${item.key}').update({promoPct: +this.value})">
+              
+              <span class="text-[10px] text-gray-500">%</span>
+              
+              <input type="color" class="w-6 h-6 p-0 border-none bg-transparent cursor-pointer" 
+                value="${cor}" 
+                onchange="db.ref('${path}/${item.key}').update({promoCor: this.value})">
             </div>
           </div>
         </div>`;
@@ -227,23 +238,23 @@ function carregarPedidos() {
   db.ref('orders').on('value', snapshot => {
     lista.innerHTML = '';
     if (!snapshot.exists()) return;
-    snapshot.forEach(ped => {
-      const p = ped.val();
-      const id = ped.key;
+    let peds = [];
+    snapshot.forEach(ped => peds.push({key: ped.key, ...ped.val()}));
+    peds.reverse().forEach(p => {
       lista.innerHTML += `
         <div class="card mb-3 border-l-4 border-[#caa85c]">
-          <div class="flex justify-between mb-2">
+          <div class="flex justify-between mb-1">
             <b class="text-sm uppercase text-[#caa85c]">${p.cliente?.nome || p.cliente}</b>
             <span class="text-[9px] bg-[#222] px-1 rounded">${p.pagamento || ''}</span>
           </div>
           <div class="grid grid-cols-3 gap-1 mb-2">
-            <button class="btn text-[9px]" onclick="gerarRomaneio('${id}', 1)">Simples</button>
-            <button class="btn text-[9px]" onclick="gerarRomaneio('${id}', 2)">Completo</button>
-            <button class="btn text-[9px]" onclick="gerarRomaneio('${id}', 3)">Com Foto</button>
+            <button class="btn text-[9px]" onclick="gerarRomaneio('${p.key}', 1)">Simples</button>
+            <button class="btn text-[9px]" onclick="gerarRomaneio('${p.key}', 2)">Completo</button>
+            <button class="btn text-[9px]" onclick="gerarRomaneio('${p.key}', 3)">Com Foto</button>
           </div>
           <div class="flex gap-2">
-            <button class="btn flex-1 text-blue-400" onclick="abrirEditorPedido('${id}')">✎ AJUSTAR</button>
-            <button class="btn flex-1 text-red-500" onclick="excluirPedido('${id}')">EXCLUIR</button>
+            <button class="btn flex-1 text-blue-400" onclick="abrirEditorPedido('${p.key}')">✎ AJUSTAR</button>
+            <button class="btn flex-1 text-red-500" onclick="excluirPedido('${p.key}')">EXCLUIR</button>
           </div>
           <div class="text-right mt-2 font-bold">${fMoeda(p.total)}</div>
         </div>`;
@@ -252,17 +263,15 @@ function carregarPedidos() {
 }
 
 function excluirPedido(id) {
-  if (confirm("Excluir pedido permanentemente?")) db.ref('orders/' + id).remove();
+  if (confirm("Excluir?")) db.ref('orders/' + id).remove();
 }
 
 function abrirEditorPedido(id) {
   db.ref('orders/' + id).once('value', s => {
     const p = s.val();
-    const novoTotal = prompt("Novo valor total:", p.total);
-    const nota = prompt("Observação para o romaneio:", p.obs || "");
-    if (novoTotal !== null) {
-      db.ref('orders/' + id).update({ total: Number(novoTotal), obs: nota, ajustadoManualmente: true });
-    }
+    const nt = prompt("Novo total:", p.total);
+    const obs = prompt("Observação:", p.obs || "");
+    if (nt !== null) db.ref('orders/' + id).update({ total: +nt, obs: obs, ajustadoManualmente: true });
   });
 }
 
@@ -271,27 +280,21 @@ function gerarRomaneio(id, tipo) {
     const p = s.val();
     db.ref('settings/empresa').once('value', e => {
       const emp = e.val() || {};
-      let html = `<div style="font-family:Arial; padding:20px; color:#000; background:#fff;">
-        <h1 style="text-align:center; color:#A68966; margin:0;">${emp.nome || 'Abella Joias'}</h1>
-        <p style="text-align:center; margin:5px 0;">${emp.subtitulo || ''}<br>Whats: ${emp.whats || ''}</p>
-        <hr>
-        <p><b>Cliente:</b> ${p.cliente?.nome || p.cliente}</p>
-        <table style="width:100%; border-collapse:collapse; font-size:11px;">
-          <thead><tr style="border-bottom:1px solid #000; text-align:left;"><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th></tr></thead>
-          <tbody>`;
+      let h = `<div style="font-family:Arial;padding:20px;background:#fff;color:#000;">
+        <h1 style="text-align:center;color:#A68966;margin:0;">${emp.nome}</h1>
+        <p style="text-align:center;font-size:12px;">${emp.subtitulo}<br>Whats: ${emp.whats}</p>
+        <hr><p><b>Cliente:</b> ${p.cliente?.nome || p.cliente}</p>
+        <table style="width:100%;font-size:11px;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #000;text-align:left;"><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th></tr>`;
       p.itens.forEach(i => {
-        html += `<tr style="border-bottom:1px solid #eee">
+        h += `<tr style="border-bottom:1px solid #eee">
           <td style="padding:5px;">${i.name} ${i.variacao ? '('+i.variacao+')' : ''}</td>
           <td>${i.quantidade}</td><td>${fMoeda(i.precoFinal || i.price)}</td>
           <td>${fMoeda((i.precoFinal || i.price) * i.quantidade)}</td></tr>`;
       });
-      html += `</tbody></table>
-        <div style="text-align:right; margin-top:20px;">
-          Subtotal: ${fMoeda(p.subtotal)}<br>
-          <b style="font-size:16px;">TOTAL: ${fMoeda(p.total)}</b>
-          ${p.obs ? `<br><small>Obs: ${p.obs}</small>` : ''}
-        </div></div>`;
-      document.getElementById('print-area').innerHTML = html;
+      h += `</table><div style="text-align:right;margin-top:20px;">Subtotal: ${fMoeda(p.subtotal)}<br>
+        <b style="font-size:16px;">TOTAL: ${fMoeda(p.total)}</b></div></div>`;
+      document.getElementById('print-area').innerHTML = h;
       setTimeout(() => window.print(), 500);
     });
   });
