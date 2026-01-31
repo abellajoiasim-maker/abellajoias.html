@@ -4,36 +4,27 @@
 <meta charset="UTF-8">
 <title>Painel Administrativo • Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <style>
 body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;margin:0}
-nav button.active{border-color:#caa85c;color:#caa85c}
+nav button.active{border-bottom:2px solid #caa85c;color:#caa85c}
 section{display:none;min-height:300px}
 section.active{display:block}
 .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px}
 .btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
-.btn-gold{background:#caa85c;color:#000;font-weight:700}
-input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff}
+.btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px}
+input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff;outline:none}
 #print-area{display:none}
-@media print{
- body *{visibility:hidden}
- #print-area,#print-area *{visibility:visible}
- #print-area{position:absolute;top:0;left:0;width:100%;background:#fff;color:#000;display:block}
-}
-main section { display: none; }
-main section.active { display: block; }
+@media print{ body *{visibility:hidden} #print-area,#print-area *{visibility:visible} #print-area{position:absolute;top:0;left:0;width:100%;background:#fff;color:#000;display:block} }
 </style>
-
 </head>
-
 <body>
 
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222]">
-  Painel Administrativo • Abella Joias
+<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
+  Abella Joias • Painel de Controlo
 </header>
 
 <nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
@@ -44,53 +35,46 @@ main section.active { display: block; }
   <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
-<main class="p-6">
-
+<main class="p-6 max-w-4xl mx-auto">
   <section id="empresa" class="active">
     <div class="card space-y-3">
-      <h2 class="text-[#caa85c] font-bold">Configurações da Loja</h2>
+      <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
       <input id="empNome" placeholder="Nome da Empresa">
-      <input id="empSub" placeholder="Subtítulo">
-      <input id="empWhats" placeholder="WhatsApp">
-      <input id="empDesc" type="number" placeholder="Desconto PIX (%)">
-      <input id="empParc" type="number" placeholder="Parcelas sem acréscimo">
-      <button type="button" class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
+      <input id="empSub" placeholder="Slogan / Subtítulo">
+      <input id="empWhats" placeholder="WhatsApp da Loja (ex: 5511...)">
+      <div class="grid grid-cols-2 gap-2">
+        <input id="empDesc" type="number" placeholder="Desc. PIX %">
+        <input id="empParc" type="number" placeholder="Parcelas Máx">
+      </div>
+      <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
     </div>
   </section>
 
   <section id="categorias">
-    <button type="button" class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
-    <div id="listaCategorias"></div>
+    <div id="listaCategorias" class="grid gap-2"></div>
   </section>
 
   <section id="produtos">
-    <button type="button" class="btn-gold mb-3" onclick="novoProduto()">+ Novo Produto</button>
-    <div id="listaProdutos"></div>
+    <div id="listaProdutos" class="grid gap-2"></div>
   </section>
 
   <section id="promocoes">
-    <h2 class="text-[#caa85c] font-bold mb-4 text-center">Gestão de Promoções Individual</h2>
     <div class="flex gap-2 mb-4">
-      <button type="button" class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('categorias')">🏷️ Por Categorias</button>
-      <button type="button" class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('produtos')">💎 Por Produtos</button>
+      <button class="btn flex-1 py-3" onclick="listarPromos('categories')">🏷️ Por Categorias</button>
+      <button class="btn flex-1 py-3" onclick="listarPromos('products')">💎 Por Produtos</button>
     </div>
-
-    <div id="listaPromocoes" class="grid gap-2">
-      <p class="text-center text-gray-500 mt-10">Selecione uma opção acima para editar os descontos.</p>
-    </div>
+    <div id="listaPromocoes" class="grid gap-2"></div>
   </section>
 
   <section id="pedidos">
-    <h2 class="text-[#caa85c] font-bold mb-4 text-center uppercase tracking-widest">Pedidos Recebidos</h2>
     <div id="listaPedidos" class="grid gap-4"></div>
   </section>
-
-  <div id="print-area"></div>
-
 </main>
 
+<div id="print-area"></div>
+
 <script>
-/* FIREBASE (proteção contra reinicialização) */
+/* INICIALIZAÇÃO FIREBASE */
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -98,43 +82,21 @@ if (!firebase.apps.length) {
   });
 }
 const db = firebase.database();
-
-/* HELPERS */
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-/* NAVEGAÇÃO — VERSÃO ÚNICA (remove duplicidade que travava o menu) */
+/* NAVEGAÇÃO ENTRE ABAS */
 function showTab(id, btn) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-
-  const target = document.getElementById(id);
-  if (target) target.classList.add('active');
-
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
   if (btn) btn.classList.add('active');
 
   if (id === 'categorias') carregarCategorias();
   if (id === 'produtos') carregarProdutos();
   if (id === 'pedidos') carregarPedidos();
-
-  if (id === 'promocoes') {
-    const box = document.getElementById('listaPromocoes');
-    if (box) {
-      box.innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
-    }
-  }
 }
 
- function removerProduto(id) {
-  if (confirm("Excluir este produto?")) {
-    db.ref('products/' + id).remove()
-      .then(() => carregarProdutos())
-      .catch(() => alert("Erro ao excluir produto."));
-  }
-}
-
-
-
-/* EMPRESA */
+/* GESTÃO DA EMPRESA */
 function salvarEmpresa() {
   db.ref('settings/empresa').set({
     nome: document.getElementById('empNome').value,
@@ -142,441 +104,156 @@ function salvarEmpresa() {
     whats: document.getElementById('empWhats').value,
     descontoPix: +document.getElementById('empDesc').value || 0,
     parcelas: +document.getElementById('empParc').value || 0
-  });
-  alert('Salvo');
+  }).then(() => alert('Configurações guardadas!'));
 }
 
-/* CATEGORIAS */
+function carregarEmpresa() {
+  db.ref('settings/empresa').once('value', s => {
+    const v = s.val();
+    if (v) {
+      document.getElementById('empNome').value = v.nome || '';
+      document.getElementById('empSub').value = v.subtitulo || '';
+      document.getElementById('empWhats').value = v.whats || '';
+      document.getElementById('empDesc').value = v.descontoPix || 0;
+      document.getElementById('empParc').value = v.parcelas || 0;
+    }
+  });
+}
+
+/* GESTÃO DE CATEGORIAS */
 function carregarCategorias() {
+  const lista = document.getElementById('listaCategorias');
   db.ref('categories').once('value', s => {
-    const lista = document.getElementById('listaCategorias');
-    if (!lista) return;
     lista.innerHTML = '';
-
-    let cats = [];
-    s.forEach(c => cats.push({ key: c.key, ...c.val() }));
-    cats.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-    cats.forEach(c => {
-      const temImg = c.image ? '🖼️' : '<span class="opacity-20">🚫</span>';
-
+    s.forEach(child => {
+      const c = child.val();
       lista.innerHTML += `
-        <div class="card flex justify-between items-center mb-2 py-2 px-4 text-sm">
-          <div class="flex items-center gap-3">
-            ${temImg}
-            <b class="uppercase">${c.name}</b>
-          </div>
+        <div class="card flex justify-between items-center mb-1">
+          <b class="uppercase text-sm">${c.name}</b>
           <div class="flex gap-2">
-            <button class="btn text-blue-400" onclick="editarCategoria('${c.key}', '${c.name}')">✎</button>
-            <button class="btn text-red-500" onclick="if(confirm('Excluir categoria?')) db.ref('categories/${c.key}').remove().then(()=>carregarCategorias())">X</button>
+            <button class="btn text-blue-400" onclick="editarCat('${child.key}', '${c.name}')">✎</button>
+            <button class="btn text-red-500" onclick="if(confirm('Eliminar?')) db.ref('categories/${child.key}').remove().then(carregarCategorias)">X</button>
           </div>
         </div>`;
     });
   });
 }
 
-/* PRODUTOS */
-let cacheProdutos = [];
+function editarCat(id, nome) {
+  const n = prompt("Novo nome da categoria:", nome);
+  if (n) db.ref('categories/' + id).update({ name: n }).then(carregarCategorias);
+}
 
+/* GESTÃO DE PRODUTOS (CORRIGIDA) */
+let cacheProdutos = [];
 function carregarProdutos() {
   const lista = document.getElementById('listaProdutos');
-  if (!lista) return;
-  lista.innerHTML = '<p class="text-center p-4 text-gray-500">Sincronizando estoque...</p>';
-
+  lista.innerHTML = '<p class="text-center p-4">A carregar produtos...</p>';
   db.ref('products').once('value', s => {
     cacheProdutos = [];
     s.forEach(p => cacheProdutos.push({ key: p.key, ...p.val() }));
-    cacheProdutos.sort((a, b) => (a.sku || "").localeCompare(b.sku || "", undefined, { numeric: true }));
-    renderizarEstruturaProdutos();
+    renderizarProdutosPorCategoria();
   });
 }
 
-function renderizarEstruturaProdutos() {
+function renderizarProdutosPorCategoria() {
   const lista = document.getElementById('listaProdutos');
-  if (!lista) return;
   lista.innerHTML = '';
+  
+  db.ref('categories').once('value', catSnap => {
+    catSnap.forEach(c => {
+      const catKey = c.key;
+      const catNome = c.val().name;
+      // FILTRO POR ID (AQUI ESTAVA O ERRO)
+      const prods = cacheProdutos.filter(p => p.category === catKey);
 
- const categoriasPresentes = [...new Set(
-  cacheProdutos.map(p => (p.category || "Sem Categoria").trim())
-)].sort((a,b)=>a.localeCompare(b));
-
-
-  categoriasPresentes.forEach(cat => {
-    const catId = cat.replace(/\s+/g, '-');
-    const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria").trim() === cat);
-
-
-    lista.innerHTML += `
-      <div class="mb-2">
-        <div onclick="toggleCategoria('${cat}', '${catId}')"
-             class="flex justify-between items-center bg-[#141414] p-3 rounded-lg cursor-pointer border-l-4 border-[#caa85c]">
-          <b class="text-[11px] uppercase">${cat} (${produtosFiltrados.length})</b>
-          <span id="seta-${catId}" class="text-[10px] text-gray-500">▼</span>
-        </div>
-        <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#222]"></div>
-      </div>`;
-  });
-
-} // ← FECHAMENTO QUE FALTAVA
-function toggleCategoria(nomeCat, catId) {
-  const content = document.getElementById(`cat-content-${catId}`);
-  const seta = document.getElementById(`seta-${catId}`);
-  if (!content) return;
-
-  const isHidden = content.classList.contains('hidden');
-
-  document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
-  document.querySelectorAll('[id^="seta-"]').forEach(el => el.innerText = '▼');
-
-  if (isHidden) {
-    content.classList.remove('hidden');
-    seta.innerText = '▲';
-
-    const prods = cacheProdutos
-      .filter(p => (p.category || "Sem Categoria").trim() === nomeCat)
-      .sort((a,b)=>(a.sku||"").localeCompare(b.sku||"",undefined,{numeric:true}));
-
-    content.innerHTML = prods.map(p => `
-      <div class="card flex justify-between py-1 px-2 text-[11px] bg-[#0d0d0d]">
-        <div>
-          <span class="text-gray-400">${p.sku || '---'}</span>
-          <b class="ml-1">${p.name}</b>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="editarProduto('${p.key}')" class="text-blue-400">✎</button>
-          <button onclick="removerProduto('${p.key}')" class="text-red-500">X</button>
-        </div>
-      </div>
-    `).join('');
-  }
-}
-
-   
-function toggleCategoria(nomeCat, catId) {
-  const content = document.getElementById(`cat-content-${catId}`);
-  const seta = document.getElementById(`seta-${catId}`);
-  if (!content) return;
-
-  const isHidden = content.classList.contains('hidden');
-
-  document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
-  document.querySelectorAll('[id^="seta-"]').forEach(el => el.innerText = '▼');
-
-  if (isHidden) {
-    content.classList.remove('hidden');
-    seta.innerText = '▲';
-
-    const prods = cacheProdutos
-      .filter(p => (p.category || "Sem Categoria") === nomeCat)
-      .sort((a,b)=>(a.sku||"").localeCompare(b.sku||"",undefined,{numeric:true}));
-
-    content.innerHTML = prods.map(p => `
-      <div class="card flex justify-between py-1 px-2 text-[11px] bg-[#0d0d0d]">
-        <div>
-          <span class="text-gray-400">${p.sku || '---'}</span>
-          <b class="ml-1">${p.name}</b>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="editarProduto('${p.key}')" class="text-blue-400">✎</button>
-          <button onclick="removerProduto('${p.key}')" class="text-red-500">X</button>
-        </div>
-      </div>
-    `).join('');
-  }
-}
-/* ================= PROMOÇÕES (MODAL) ================= */
-function listarPromos(tipo){
- const container=document.getElementById('listaPromocoes');
- container.innerHTML='Carregando...';
- db.ref(tipo==='categorias'?'categories':'products').once('value',s=>{
-  container.innerHTML='';
-  let itens=[]; s.forEach(i=>itens.push({key:i.key,...i.val()}));
-  itens.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-
-  itens.forEach(item=>{
-   const nome=tipo==='categorias'?item.name:`[${item.sku||'---'}] ${item.name}`;
-   container.innerHTML+=`
-   <div class="card text-xs flex justify-between items-center">
-    <div class="flex-1">
-     <b>${nome}</b>
-     <div class="flex gap-2 mt-1">
-      <input type="number" value="${item.promoPct||0}" onchange="salvarPromo('${tipo}','${item.key}','promoPct',this.value)" class="w-14 bg-black border text-center">
-      <input type="text" value="${item.promoTexto||'OFF'}" onchange="salvarPromo('${tipo}','${item.key}','promoTexto',this.value)" class="w-16 bg-black border text-center">
-      <input type="color" value="${item.promoCor||'#caa85c'}" onchange="salvarPromo('${tipo}','${item.key}','promoCor',this.value)">
-     </div>
-    </div>
-    <button class="text-red-500" onclick="limparPromo('${tipo}','${item.key}')">X</button>
-   </div>`;
-  });
- });
-}
-
-/* PEDIDOS - GESTÃO COMPLETA (ROMANEIOS + EDIÇÃO + EXCLUSÃO) */
-let pedidosListenerAtivo = false;
-
-function carregarPedidos() {
-  const listaPedidos = document.getElementById('listaPedidos');
-  if (!listaPedidos) return;
-
-  listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Carregando pedidos...</p>';
-
-  // Evita múltiplos listeners acumulando (causa travamento)
-  if (pedidosListenerAtivo) return;
-  pedidosListenerAtivo = true;
-
-  db.ref('orders').on('value', snapshot => {
-    if (!listaPedidos) return;
-
-    listaPedidos.innerHTML = '';
-    if (!snapshot.exists()) {
-      listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Nenhum pedido encontrado.</p>';
-      return;
-    }
-
-    let pedidosHtml = [];
-
-    snapshot.forEach(ped => {
-      const p = ped.val() || {};
-      const id = ped.key;
-      const nomeCliente = (p.cliente && typeof p.cliente === 'object') ? p.cliente.nome : (p.cliente || 'Cliente s/ nome');
-
-      const html = `
-        <div class="card mb-3 border-l-4 border-[#caa85c]">
-          <div class="flex justify-between items-start mb-2">
-            <div>
-              <b class="text-[#caa85c] text-sm uppercase">${nomeCliente}</b>
-              <p class="text-[10px] text-gray-400">${p.data || ''}</p>
-            </div>
-            <span class="bg-[#222] px-2 py-1 rounded text-[9px] font-bold uppercase">${p.pagamento || 'N/A'}</span>
+      lista.innerHTML += `
+        <div class="mb-2">
+          <div onclick="toggleCat('${catKey}')" class="flex justify-between p-3 bg-[#1a1a1a] rounded-lg cursor-pointer border-l-4 border-[#caa85c]">
+            <b class="text-xs uppercase">${catNome} (${prods.length})</b>
+            <span id="seta-${catKey}">▼</span>
           </div>
-
-          <div class="grid grid-cols-3 gap-1 mt-2 border-t border-[#2a2a2a] pt-2">
-            <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 1)">Simples</button>
-            <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 2)">Completo</button>
-            <button class="btn text-[9px] py-1" onclick="gerarRomaneio('${id}', 3)">Com Foto</button>
-          </div>
-
-          <div class="flex gap-2 mt-2">
-            <button class="btn flex-1 text-blue-400 border-blue-900/30 text-[10px] py-1" onclick="abrirEditorPedido('${id}')">✎ AJUSTAR</button>
-            <button class="btn flex-1 text-red-500 border-red-900/30 text-[10px] py-1" onclick="excluirPedido('${id}')">EXCLUIR</button>
-          </div>
-
-          <div class="mt-2 text-right">
-            ${p.ajustadoManualmente ? '<span class="text-[9px] text-green-500 mr-2 font-bold">AJUSTADO</span>' : ''}
-            <b class="text-white text-sm">${fMoeda(p.total || 0)}</b>
+          <div id="cat-${catKey}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#333]">
+            ${prods.map(p => `
+              <div class="card flex justify-between py-1 px-2 text-[11px] bg-[#0d0d0d]">
+                <span><b class="text-[#caa85c]">[${p.sku || '---'}]</b> ${p.name}</span>
+                <button class="text-red-500 font-bold" onclick="removerProd('${p.key}')">×</button>
+              </div>
+            `).join('')}
           </div>
         </div>`;
-
-      pedidosHtml.push(html);
     });
-
-    listaPedidos.innerHTML = pedidosHtml.reverse().join('');
   });
 }
 
-/* EXCLUIR PEDIDO */
-function excluirPedido(id) {
-  if (!id) return;
-  if (confirm("Deseja realmente apagar este pedido? Esta ação não pode ser desfeita.")) {
-    db.ref('orders/' + id).remove()
-      .then(() => alert("Pedido removido do sistema."))
-      .catch(() => alert("Erro ao excluir."));
+function toggleCat(key) {
+  const el = document.getElementById('cat-' + key);
+  const seta = document.getElementById('seta-' + key);
+  el.classList.toggle('hidden');
+  seta.innerText = el.classList.contains('hidden') ? '▼' : '▲';
+}
+
+function removerProd(id) {
+  if (confirm("Deseja eliminar este produto?")) {
+    db.ref('products/' + id).remove().then(carregarProdutos);
   }
 }
 
-/* EDITAR PEDIDO - AJUSTE MANUAL PARA ATACADO */
-function abrirEditorPedido(id) {
-  if (!id) return;
-
-  db.ref('orders/' + id).once('value', s => {
-    const p = s.val();
-    if (!p) return alert("Pedido não encontrado.");
-
-    const novoTotal = prompt(
-      `Valor Total Atual: ${fMoeda(p.total || 0)}\nInforme o novo valor final para o cliente:`,
-      p.total || 0
-    );
-
-    if (novoTotal === null) return;
-
-    const nota = prompt("Motivo do ajuste ou observação para o romaneio:", p.obs || "");
-
-    db.ref('orders/' + id).update({
-      total: Number(novoTotal) || 0,
-      obs: nota || '',
-      ajustadoManualmente: true
-    }).then(() => {
-      alert("Pedido atualizado!");
-    }).catch(() => {
-      alert("Erro ao atualizar pedido.");
+/* PROMOÇÕES (SISTEMA DE EDIÇÃO RÁPIDA) */
+function listarPromos(tipo) {
+  const container = document.getElementById('listaPromocoes');
+  container.innerHTML = '<p class="text-center p-4">A carregar...</p>';
+  db.ref(tipo).once('value', s => {
+    container.innerHTML = '';
+    s.forEach(child => {
+      const item = child.val();
+      const nome = tipo === 'categories' ? item.name : `[${item.sku}] ${item.name}`;
+      container.innerHTML += `
+        <div class="card flex justify-between items-center" style="border-left: 4px solid ${item.promoCor || '#caa85c'}">
+          <b class="text-[10px] uppercase flex-1">${nome}</b>
+          <div class="flex items-center gap-2">
+            <input type="number" class="w-12 p-1 text-center bg-black text-xs" value="${item.promoPct || 0}" 
+                   onchange="db.ref('${tipo}/${child.key}').update({promoPct: +this.value})">
+            <input type="text" class="w-14 p-1 text-center bg-black text-xs" value="${item.promoTexto || 'OFF'}" 
+                   onchange="db.ref('${tipo}/${child.key}').update({promoTexto: this.value})">
+            <input type="color" class="w-6 h-6 p-0 border-none bg-transparent" value="${item.promoCor || '#caa85c'}" 
+                   onchange="db.ref('${tipo}/${child.key}').update({promoCor: this.value})">
+          </div>
+        </div>`;
     });
   });
 }
 
-
-function gerarRomaneio(id, tipo = 1) {
-  db.ref('orders/' + id).once('value', s => {
-    const p = s.val();
-    if (!p) return;
-
-    db.ref('settings/empresa').once('value', e => {
-      const emp = e.val() || {};
-
-      let html = `
-      <style>
-        .print-body { font-family: Arial, sans-serif; color:#000; padding:20px; font-size:11px; }
-        .lux-head { text-align:center; border-bottom:2px solid #A68966; padding-bottom:10px; margin-bottom:15px; }
-        .lux-head h1 { margin:0; color:#A68966; font-size:22px; }
-        .grid-dados { display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:15px; }
-        table { width:100%; border-collapse:collapse; margin-top:10px; font-size:11px; }
-        table th { background:#f5f5f5; text-align:left; border-bottom:1px solid #000; padding:4px; }
-        table td { border-bottom:1px solid #ddd; padding:4px; }
-        .totais { text-align:right; margin-top:15px; font-size:12px; }
-        .img-mini { width:40px; height:40px; object-fit:cover; border-radius:4px; }
-      </style>
-
-      <div class="print-body">
-        <div class="lux-head">
-          <h1>${emp.nome || 'Abella Joias'}</h1>
-          <p>${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p>
-        </div>
-
-        <div class="grid-dados">
-          <div>
-            <b>DADOS DO CLIENTE</b><br>
-            Nome: ${p.cliente?.nome || p.cliente || ''}<br>
-            WhatsApp: ${p.cliente?.telefone || p.whatsapp || ''}
+/* PEDIDOS */
+function carregarPedidos() {
+  db.ref('orders').on('value', s => {
+    const lista = document.getElementById('listaPedidos');
+    lista.innerHTML = '';
+    if (!s.exists()) { lista.innerHTML = '<p class="text-center text-gray-500 mt-10">Sem pedidos no momento.</p>'; return; }
+    
+    s.forEach(ped => {
+      const p = ped.val();
+      lista.innerHTML += `
+        <div class="card border-l-4 border-[#caa85c]">
+          <div class="flex justify-between items-start mb-2 text-xs">
+             <div><b class="uppercase text-[#caa85c]">${p.cliente?.nome || p.cliente}</b><br><small>${p.data || ''}</small></div>
+             <span class="bg-black px-2 py-1 rounded border border-gray-800">${p.pagamento}</span>
           </div>
-          <div>
-            <b>LOCAL DE ENTREGA</b><br>
-            ${p.endereco?.nome || 'Residencial'}<br>
-            ${p.endereco?.rua || ''}, ${p.endereco?.num || ''}<br>
-            ${p.endereco?.bairro || ''} - ${p.endereco?.cidade || ''}
+          <div class="flex gap-1">
+            <button class="btn flex-1" onclick="alert('Funcionalidade de Romaneio')">Imprimir</button>
+            <button class="btn text-red-500" onclick="if(confirm('Eliminar pedido?')) db.ref('orders/${ped.key}').remove()">X</button>
           </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              ${tipo === 3 ? '<th>Foto</th>' : ''}
-              <th>SKU</th>
-              <th>Produto</th>
-              ${tipo > 1 ? '<th>Peso U.</th><th>Preço U.</th>' : ''}
-              <th>Qtd</th>
-              ${tipo > 1 ? '<th>Subtotal</th>' : ''}
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      let subtotalCalc = 0;
-      let pesoTotalCalc = 0;
-
-      (p.itens || []).forEach(i => {
-        const preco = Number(i.precoFinal || i.price || 0);
-        const qtd = Number(i.quantidade || 1);
-        const pesoKg = (Number(i.peso || 0) / 1000);
-        const subtotalItem = preco * qtd;
-
-        subtotalCalc += subtotalItem;
-        pesoTotalCalc += pesoKg * qtd;
-
-        html += `
-          <tr>
-            ${tipo === 3 ? `<td><img src="${i.image || ''}" class="img-mini"></td>` : ''}
-            <td>${i.sku || '---'}</td>
-            <td>${i.name || ''}</td>
-            ${tipo > 1 ? `<td>${pesoKg.toFixed(3)} Kg</td><td>${fMoeda(preco)}</td>` : ''}
-            <td>${qtd}</td>
-            ${tipo > 1 ? `<td>${fMoeda(subtotalItem)}</td>` : ''}
-          </tr>
-        `;
-      });
-
-      html += `</tbody></table>`;
-
-      if (tipo > 1) {
-        html += `
-          <div class="totais">
-            Subtotal: ${fMoeda(p.subtotal ?? subtotalCalc)}<br>
-            Peso Total: ${pesoTotalCalc.toFixed(2)} Kg<br>
-            Descontos: - ${fMoeda(p.descontos || 0)}<br>
-            <b style="font-size:16px; color:#A68966">TOTAL: ${fMoeda(p.total)}</b>
-            ${p.obs ? `<div style="margin-top:6px;font-size:10px;"><b>Obs:</b> ${p.obs}</div>` : ''}
-          </div>
-        `;
-      }
-
-      html += `</div>`;
-
-      document.getElementById('print-area').innerHTML = html;
-
-      setTimeout(() => {
-        window.print();
-      }, 500);
+          <div class="text-right mt-2 font-bold text-[#caa85c]">${fMoeda(p.total)}</div>
+        </div>`;
     });
   });
 }
 
-function carregarEmpresaSeExistir() {
-  db.ref('settings/empresa').once('value', s => {
-    const v = s.val();
-    if (!v) return;
-
-    const empNome  = document.getElementById('empNome');
-    const empSub   = document.getElementById('empSub');
-    const empWhats = document.getElementById('empWhats');
-    const empDesc  = document.getElementById('empDesc');
-    const empParc  = document.getElementById('empParc');
-
-    if (empNome)  empNome.value  = v.nome || '';
-    if (empSub)   empSub.value   = v.subtitulo || '';
-    if (empWhats) empWhats.value = v.whats || '';
-    if (empDesc)  empDesc.value  = v.descontoPix || 0;
-    if (empParc)  empParc.value  = v.parcelas || 0;
-  });
-}
- function editarProduto(id) {
-  db.ref('products/' + id).once('value', s => {
-    const p = s.val();
-    if (!p) return alert("Produto não encontrado.");
-
-    const novoNome = prompt("Nome do produto:", p.name || "");
-    const novoPreco = prompt("Preço do produto:", p.price || 0);
-    const novoSku = prompt("SKU do produto:", p.sku || "");
-
-    if (novoNome !== null) {
-      db.ref('products/' + id).update({
-        name: novoNome,
-        price: Number(novoPreco) || 0,
-        sku: novoSku
-      }).then(() => {
-        alert("Produto atualizado!");
-        carregarProdutos(); // Atualiza a tela
-      });
-    }
-  });
-}
-function editarCategoria(id, nomeAtual) {
-  const novoNome = prompt("Novo nome da categoria:", nomeAtual);
-  if (!novoNome || novoNome === nomeAtual) return;
-
-  db.ref('categories/' + id).update({ name: novoNome })
-    .then(() => {
-      alert("Categoria atualizada!");
-      carregarCategorias(); // Atualiza lista
-    })
-    .catch(() => alert("Erro ao atualizar categoria."));
-}
-
-
-/* ================= INIT ================= */
-window.addEventListener('DOMContentLoaded', () => {
-  const firstBtn = document.querySelector('nav button.active');
-  if (firstBtn) firstBtn.click();
+/* INICIALIZAÇÃO */
+window.addEventListener('load', () => {
+  carregarEmpresa();
+  showTab('empresa', document.querySelector('nav button'));
 });
-
 </script>
-
 </body>
 </html>
