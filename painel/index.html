@@ -43,51 +43,52 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
   <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
-
 <main class="p-6">
 
-<section id="empresa" class="active">
-  <div class="card space-y-3">
-    <h2 class="text-[#caa85c] font-bold">Configurações da Loja</h2>
-    <input id="empNome" placeholder="Nome da Empresa">
-    <input id="empSub" placeholder="Subtítulo">
-    <input id="empWhats" placeholder="WhatsApp">
-    <input id="empDesc" type="number" placeholder="Desconto PIX (%)">
-    <input id="empParc" type="number" placeholder="Parcelas sem acréscimo">
-    <button class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
-  </div>
-</section>
+  <section id="empresa" class="active">
+    <div class="card space-y-3">
+      <h2 class="text-[#caa85c] font-bold">Configurações da Loja</h2>
+      <input id="empNome" placeholder="Nome da Empresa">
+      <input id="empSub" placeholder="Subtítulo">
+      <input id="empWhats" placeholder="WhatsApp">
+      <input id="empDesc" type="number" placeholder="Desconto PIX (%)">
+      <input id="empParc" type="number" placeholder="Parcelas sem acréscimo">
+      <button type="button" class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
+    </div>
+  </section>
 
-<section id="categorias">
-  <button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
-  <div id="listaCategorias"></div>
-</section>
+  <section id="categorias">
+    <button type="button" class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
+    <div id="listaCategorias"></div>
+  </section>
 
-<section id="produtos">
-  <button class="btn-gold mb-3" onclick="novoProduto()">+ Novo Produto</button>
-  <div id="listaProdutos"></div>
-</section>
+  <section id="produtos">
+    <button type="button" class="btn-gold mb-3" onclick="novoProduto()">+ Novo Produto</button>
+    <div id="listaProdutos"></div>
+  </section>
 
-<section id="promocoes">
-  <h2 class="text-[#caa85c] font-bold mb-4 text-center">Gestão de Promoções Individual</h2>
-  <div class="flex gap-2 mb-4">
-    <button class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('categorias')">🏷️ Por Categorias</button>
-    <button class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('produtos')">💎 Por Produtos</button>
-  </div>
-  
-  <div id="listaPromocoes" class="grid gap-2">
-    <p class="text-center text-gray-500 mt-10">Selecione uma opção acima para editar os descontos.</p>
-  </div>
-</section>
+  <section id="promocoes">
+    <h2 class="text-[#caa85c] font-bold mb-4 text-center">Gestão de Promoções Individual</h2>
+    <div class="flex gap-2 mb-4">
+      <button type="button" class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('categorias')">🏷️ Por Categorias</button>
+      <button type="button" class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('produtos')">💎 Por Produtos</button>
+    </div>
 
-<section id="pedidos">
-  <h2 class="text-[#caa85c] font-bold mb-4 text-center uppercase tracking-widest">Pedidos Recebidos</h2>
-  <div id="listaPedidos" class="grid gap-4"></div>
-</section>
+    <div id="listaPromocoes" class="grid gap-2">
+      <p class="text-center text-gray-500 mt-10">Selecione uma opção acima para editar os descontos.</p>
+    </div>
+  </section>
 
-<div id="print-area"></div>
+  <section id="pedidos">
+    <h2 class="text-[#caa85c] font-bold mb-4 text-center uppercase tracking-widest">Pedidos Recebidos</h2>
+    <div id="listaPedidos" class="grid gap-4"></div>
+  </section>
+
+  <div id="print-area"></div>
 
 </main>
+
+</body>
 
 <script>
 /* FIREBASE (proteção contra reinicialização) */
