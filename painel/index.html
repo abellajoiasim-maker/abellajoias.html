@@ -24,7 +24,7 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
 @media print{
  body *{visibility:hidden}
  #print-area,#print-area *{visibility:visible}
- #print-area{position:absolute;top:0;left:0;width:100%;background:#fff}
+ #print-area{position:absolute;top:0;left:0;width:100%;background:#fff;color:#000;display:block}
 }
 </style>
 </head>
@@ -87,12 +87,15 @@ const db=firebase.database();
 /* HELPERS */
 const fMoeda=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
-/* NAVEGAÇÃO */
+/* NAVEGAÇÃO - AJUSTE CIRÚRGICO PARA VOLTAR A FUNCIONAR */
 function showTab(id,btn){
  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+ const target = document.getElementById(id);
+ if(target) target.classList.add('active');
+
  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- btn.classList.add('active');
+ if(btn) btn.classList.add('active');
+
  if(id==='categorias') carregarCategorias();
  if(id==='produtos') carregarProdutos();
  if(id==='pedidos') carregarPedidos();
@@ -101,11 +104,11 @@ function showTab(id,btn){
 /* EMPRESA */
 function salvarEmpresa(){
  db.ref('settings/empresa').set({
-  nome:empNome.value,
-  subtitulo:empSub.value,
-  whats:empWhats.value,
-  descontoPix:+empDesc.value||0,
-  parcelas:+empParc.value||0
+  nome: document.getElementById('empNome').value,
+  subtitulo: document.getElementById('empSub').value,
+  whats: document.getElementById('empWhats').value,
+  descontoPix: +document.getElementById('empDesc').value||0,
+  parcelas: +document.getElementById('empParc').value||0
  });
  alert('Salvo');
 }
@@ -113,28 +116,30 @@ function salvarEmpresa(){
 /* CATEGORIAS */
 function carregarCategorias(){
  db.ref('categories').once('value',s=>{
+  const listaCategorias = document.getElementById('listaCategorias');
   listaCategorias.innerHTML='';
   s.forEach(c=>{
    listaCategorias.innerHTML+=`
-    <div class="card flex justify-between">
+    <div class="card flex justify-between mb-2">
      <b>${c.val().name}</b>
-     <button class="btn" onclick="db.ref('categories/${c.key}').remove()">X</button>
+     <button class="btn" onclick="db.ref('categories/${c.key}').remove().then(()=>carregarCategorias())">X</button>
     </div>`;
   });
  });
 }
 function novaCategoria(){
  const n=prompt('Nome da categoria');
- if(n) db.ref('categories').push({name:n});
+ if(n) db.ref('categories').push({name:n}).then(()=>carregarCategorias());
 }
 
 /* PRODUTOS */
 function carregarProdutos(){
  db.ref('products').once('value',s=>{
+  const listaProdutos = document.getElementById('listaProdutos');
   listaProdutos.innerHTML='';
   s.forEach(p=>{
    listaProdutos.innerHTML+=`
-    <div class="card">
+    <div class="card mb-2">
      <b>${p.val().name}</b><br>
      ${fMoeda(p.val().price)}
     </div>`;
@@ -144,7 +149,7 @@ function carregarProdutos(){
 function novoProduto(){
  const n=prompt('Nome');
  const v=prompt('Preço');
- if(n&&v) db.ref('products').push({name:n,price:+v});
+ if(n&&v) db.ref('products').push({name:n,price:+v}).then(()=>carregarProdutos());
 }
 
 /* PROMOÇÕES */
@@ -155,6 +160,7 @@ function abrirPromocoes(){
 /* PEDIDOS */
 function carregarPedidos(){
  db.ref('orders').on('value',s=>{
+  const listaPedidos = document.getElementById('listaPedidos');
   listaPedidos.innerHTML='';
   s.forEach(ped=>{
    const p=ped.val();
@@ -162,7 +168,7 @@ function carregarPedidos(){
     <div class="card">
      <b>${p.cliente?.nome||p.cliente}</b><br>
      ${fMoeda(p.total)}<br>
-     <button class="btn-gold w-full mt-2" onclick="gerarRomaneio('${ped.key}','foto')">
+     <button class="btn-gold w-full mt-2" onclick="gerarRomaneio('${ped.key}')">
       Romaneio
      </button>
     </div>`;
@@ -170,21 +176,25 @@ function carregarPedidos(){
  });
 }
 
-/* ROMANEIO */
-function gerarRomaneio(id,tipo){
+/* ROMANEIO - AJUSTE CIRÚRGICO NO HÍFEN */
+function gerarRomaneio(id){
  db.ref('orders/'+id).once('value',s=>{
   const p=s.val(); if(!p) return;
   db.ref('settings/empresa').once('value',e=>{
    const emp=e.val()||{};
-   let html=`<h1>${emp.nome}</h1><h3>${emp.subtitulo}</h3>`;
+   let html=`<div style="color:#000; padding:20px"><h1>${emp.nome||'Abella Joias'}</h1><h3>${emp.subtitulo||''}</h3>`;
    html+=`<p>Cliente: ${p.cliente?.nome||p.cliente}</p>`;
-   html+=`<table border="1" width="100%">`;
-   p.itens.forEach(i=>{
-    html+=`<tr><td>${i.sku||''}</td><td>${i.name}</td><td>${i.quantidade}</td></tr>`;
-   });
+   html+=`<table border="1" width="100%" style="border-collapse:collapse">`;
+   if(p.itens) {
+       p.itens.forEach(i=>{
+        html+=`<tr><td>${i.sku||''}</td><td>${i.name}</td><td>${i.quantidade||i.qty||1}</td></tr>`;
+       });
+   }
    html+=`</table>`;
-   html+=`<h2>Total ${fMoeda(p.total)}</h2>`;
-   print-area.innerHTML=html;
+   html+=`<h2>Total ${fMoeda(p.total)}</h2></div>`;
+   
+   // Ajuste aqui: usando getElementById para evitar erro de sintaxe com o hífen
+   document.getElementById('print-area').innerHTML=html;
    window.print();
   });
  });
@@ -192,8 +202,22 @@ function gerarRomaneio(id,tipo){
 
 /* START */
 window.addEventListener('load',()=>{
- showTab('empresa',document.querySelector('nav button'));
+ // Inicia na aba empresa
+ carregarEmpresaSeExistir(); 
 });
+
+function carregarEmpresaSeExistir(){
+    db.ref('settings/empresa').once('value', s => {
+        const v = s.val();
+        if(v){
+            document.getElementById('empNome').value = v.nome || '';
+            document.getElementById('empSub').value = v.subtitulo || '';
+            document.getElementById('empWhats').value = v.whats || '';
+            document.getElementById('empDesc').value = v.descontoPix || 0;
+            document.getElementById('empParc').value = v.parcelas || 0;
+        }
+    });
+}
 </script>
 
 </body>
