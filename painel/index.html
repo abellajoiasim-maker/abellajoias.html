@@ -157,23 +157,57 @@ function abrirPromocoes(){
  alert('Painel de promoções OK');
 }
 
-/* PEDIDOS */
-function carregarPedidos(){
- db.ref('orders').on('value',s=>{
+/* PEDIDOS - AJUSTE DEFINITIVO */
+function carregarPedidos() {
   const listaPedidos = document.getElementById('listaPedidos');
-  listaPedidos.innerHTML='';
-  s.forEach(ped=>{
-   const p=ped.val();
-   listaPedidos.innerHTML+=`
-    <div class="card">
-     <b>${p.cliente?.nome||p.cliente}</b><br>
-     ${fMoeda(p.total)}<br>
-     <button class="btn-gold w-full mt-2" onclick="gerarRomaneio('${ped.key}')">
-      Romaneio
-     </button>
-    </div>`;
+  
+  // Exibe carregando antes de receber os dados
+  listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Carregando pedidos...</p>';
+
+  // Mantém a escuta em tempo real 
+  db.ref('orders').on('value', snapshot => {
+    listaPedidos.innerHTML = '';
+    
+    if (!snapshot.exists()) {
+      listaPedidos.innerHTML = '<p class="p-4 text-center text-gray-500">Nenhum pedido encontrado.</p>';
+      return;
+    }
+
+    // Criamos um array para inverter a ordem (mais recentes primeiro)
+    let pedidosHtml = [];
+
+    snapshot.forEach(ped => {
+      const p = ped.val();
+      const id = ped.key;
+
+      // Tratamento para garantir que o nome apareça independente do formato 
+      const nomeCliente = (p.cliente && typeof p.cliente === 'object') ? p.cliente.nome : (p.cliente || 'Cliente s/ nome');
+      
+      const html = `
+        <div class="card mb-3 border-l-4 border-[#caa85c]">
+          <div class="flex justify-between items-start">
+            <div>
+              <b class="text-[#caa85c] text-lg uppercase">${nomeCliente}</b>
+              <p class="text-xs text-gray-400">${p.data || ''}</p>
+            </div>
+            <span class="bg-[#222] px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
+              ${p.pagamento || 'N/A'}
+            </span>
+          </div>
+          <div class="mt-3 flex justify-between items-center border-t border-[#2a2a2a] pt-3">
+            <b class="text-white text-lg">${fMoeda(p.total)}</b>
+            <button class="btn-gold" style="padding: 6px 15px" onclick="gerarRomaneio('${id}')">
+              Romaneio
+            </button>
+          </div>
+        </div>`;
+      
+      pedidosHtml.push(html);
+    });
+
+    // Inverte e exibe os pedidos 
+    listaPedidos.innerHTML = pedidosHtml.reverse().join('');
   });
- });
 }
 
 /* ROMANEIO - AJUSTE CIRÚRGICO NO HÍFEN */
