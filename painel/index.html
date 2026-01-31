@@ -32,44 +32,56 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
 <body>
 
 <header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222]">
-Painel Administrativo • Abella Joias
+  Painel Administrativo • Abella Joias
 </header>
 
-<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50">
-<button class="btn active" onclick="showTab('empresa',this)">Empresa</button>
-<button class="btn" onclick="showTab('categorias',this)">Categorias</button>
-<button class="btn" onclick="showTab('produtos',this)">Produtos</button>
-<button class="btn" onclick="abrirPromocoes()">Promoções</button>
-<button class="btn" onclick="showTab('pedidos',this)">Pedidos</button>
+<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
+  <button class="btn active" onclick="showTab('empresa',this)">Empresa</button>
+  <button class="btn" onclick="showTab('categorias',this)">Categorias</button>
+  <button class="btn" onclick="showTab('produtos',this)">Produtos</button>
+  <button class="btn" onclick="showTab('promocoes',this)">Promoções</button>
+  <button class="btn" onclick="showTab('pedidos',this)">Pedidos</button>
 </nav>
 
 <main class="p-6">
 
 <section id="empresa" class="active">
-<div class="card space-y-3">
-<h2 class="text-[#caa85c] font-bold">Configurações da Loja</h2>
-<input id="empNome" placeholder="Nome da Empresa">
-<input id="empSub" placeholder="Subtítulo">
-<input id="empWhats" placeholder="WhatsApp">
-<input id="empDesc" type="number" placeholder="Desconto PIX (%)">
-<input id="empParc" type="number" placeholder="Parcelas sem acréscimo">
-<button class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
-</div>
+  <div class="card space-y-3">
+    <h2 class="text-[#caa85c] font-bold">Configurações da Loja</h2>
+    <input id="empNome" placeholder="Nome da Empresa">
+    <input id="empSub" placeholder="Subtítulo">
+    <input id="empWhats" placeholder="WhatsApp">
+    <input id="empDesc" type="number" placeholder="Desconto PIX (%)">
+    <input id="empParc" type="number" placeholder="Parcelas sem acréscimo">
+    <button class="btn-gold w-full" onclick="salvarEmpresa()">Salvar</button>
+  </div>
 </section>
 
 <section id="categorias">
-<button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
-<div id="listaCategorias"></div>
+  <button class="btn-gold mb-3" onclick="novaCategoria()">+ Nova Categoria</button>
+  <div id="listaCategorias"></div>
 </section>
 
 <section id="produtos">
-<button class="btn-gold mb-3" onclick="novoProduto()">+ Novo Produto</button>
-<div id="listaProdutos"></div>
+  <button class="btn-gold mb-3" onclick="novoProduto()">+ Novo Produto</button>
+  <div id="listaProdutos"></div>
+</section>
+
+<section id="promocoes">
+  <h2 class="text-[#caa85c] font-bold mb-4 text-center">Gestão de Promoções Individual</h2>
+  <div class="flex gap-2 mb-4">
+    <button class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('categorias')">🏷️ Por Categorias</button>
+    <button class="btn flex-1 bg-[#222] border-[#caa85c]/50 text-[#caa85c] font-bold py-3" onclick="listarPromos('produtos')">💎 Por Produtos</button>
+  </div>
+  
+  <div id="listaPromocoes" class="grid gap-2">
+    <p class="text-center text-gray-500 mt-10">Selecione uma opção acima para editar os descontos.</p>
+  </div>
 </section>
 
 <section id="pedidos">
-<h2 class="text-[#caa85c] font-bold mb-4">Pedidos</h2>
-<div id="listaPedidos" class="grid gap-4"></div>
+  <h2 class="text-[#caa85c] font-bold mb-4 text-center uppercase tracking-widest">Pedidos Recebidos</h2>
+  <div id="listaPedidos" class="grid gap-4"></div>
 </section>
 
 <div id="print-area"></div>
@@ -77,6 +89,19 @@ Painel Administrativo • Abella Joias
 </main>
 
 <script>
+// No seu script, lembre-se de atualizar a showTab para carregar as promos se necessário:
+function showTab(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if(id === 'pedidos') carregarPedidos();
+  if(id === 'categorias') carregarCategorias();
+  if(id === 'produtos') carregarProdutos();
+  // Se clicar em promoções sem selecionar, ele limpa a lista para o estado inicial
+  if(id === 'promocoes') document.getElementById('listaPromocoes').innerHTML = '<p class="text-center text-gray-500 mt-10">Selecione "Por Categorias" ou "Por Produtos" acima.</p>';
+}
 /* FIREBASE */
 firebase.initializeApp({
  apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -184,24 +209,104 @@ function carregarProdutos() {
     });
   });
 }
-function abrirPromocoes(){
- const tipo = confirm("OK para promoção por CATEGORIA\nCANCELAR para promoção por PRODUTO");
- const pct = prompt("Porcentagem de desconto (ex: 10)");
- if(!pct) return;
+/* PROMOÇÕES - SISTEMA DE GESTÃO INDIVIDUAL */
 
- if(tipo){
-  const cat = prompt("Nome da Categoria exatamente como cadastrada:");
-  db.ref('products').once('value', s => {
-   s.forEach(p => {
-    if(p.val().category === cat){
-     const precoOriginal = p.val().price;
-     const novoPreco = precoOriginal * (1 - pct/100);
-     db.ref('products/'+p.key).update({ precoFinal: novoPreco, promoLabel: pct+'% OFF' });
+function listarPromos(tipo) {
+  const container = document.getElementById('listaPromocoes');
+  container.innerHTML = '<p class="text-center p-4">Carregando itens...</p>';
+
+  db.ref(tipo === 'categorias' ? 'categories' : 'products').once('value', s => {
+    container.innerHTML = '';
+    let itens = [];
+    s.forEach(child => { itens.push({ key: child.key, ...child.val() }); });
+
+    // Ordenar alfabeticamente pelo nome ou categoria
+    itens.sort((a, b) => (a.name || a.category || '').localeCompare(b.name || b.category || ''));
+
+    if (itens.length === 0) {
+      container.innerHTML = '<p class="text-center p-4 text-gray-500">Nenhum item encontrado.</p>';
+      return;
     }
-   });
-   alert("Promoção aplicada à categoria!");
+
+    itens.forEach(item => {
+      const nome = tipo === 'categorias' ? item.name : `[${item.sku || '---'}] ${item.name}`;
+      const promoPct = item.promoPct || 0;
+      const promoCor = item.promoCor || '#caa85c';
+      const promoTexto = item.promoTexto || 'OFF';
+
+      container.innerHTML += `
+        <div class="card mb-2 border-l-4" style="border-color: ${promoPct > 0 ? promoCor : '#2a2a2a'}">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <div class="flex-1 min-w-[150px]">
+              <small class="text-[#caa85c] uppercase text-[9px] font-bold">${tipo.slice(0,-1)}</small><br>
+              <b class="text-xs uppercase">${nome}</b>
+              ${tipo === 'produtos' ? `<br><span class="text-gray-400 text-[10px]">${fMoeda(item.price)}</span>` : ''}
+            </div>
+            
+            <div class="flex items-center gap-3 bg-[#0b0b0b] p-2 rounded-lg border border-[#222]">
+              <div class="flex flex-col">
+                <label class="text-[8px] text-gray-500 uppercase font-bold text-center">Desconto %</label>
+                <input type="number" class="w-12 bg-transparent border-b border-[#333] text-center text-sm focus:border-[#caa85c] outline-none" 
+                  value="${promoPct}" onchange="salvarPromo('${tipo}', '${item.key}', 'promoPct', this.value)">
+              </div>
+              
+              <div class="flex flex-col">
+                <label class="text-[8px] text-gray-500 uppercase font-bold text-center">Texto</label>
+                <input type="text" class="w-14 bg-transparent border-b border-[#333] text-center text-[10px] uppercase outline-none" 
+                  value="${promoTexto}" onchange="salvarPromo('${tipo}', '${item.key}', 'promoTexto', this.value)">
+              </div>
+
+              <div class="flex flex-col items-center">
+                <label class="text-[8px] text-gray-500 uppercase font-bold text-center">Cor</label>
+                <input type="color" class="w-6 h-6 bg-transparent border-none cursor-pointer p-0" 
+                  value="${promoCor}" onchange="salvarPromo('${tipo}', '${item.key}', 'promoCor', this.value)">
+              </div>
+
+              <button class="text-red-500 hover:text-red-400 font-bold px-2 ml-1" 
+                onclick="limparPromo('${tipo}', '${item.key}')" title="Zerar Desconto">×</button>
+            </div>
+          </div>
+        </div>`;
+    });
   });
- }
+}
+
+/* SALVAMENTO AUTOMÁTICO */
+function salvarPromo(tipo, id, campo, valor) {
+  const v = campo === 'promoPct' ? Number(valor) : valor;
+  
+  if (tipo === 'categorias') {
+    // Atualiza a categoria
+    db.ref('categories/' + id).update({ [campo]: v });
+    
+    // Cascata: Atualiza todos os produtos que pertencem a essa categoria
+    db.ref('categories/' + id).once('value', catSnap => {
+      const nomeCat = catSnap.val().name;
+      db.ref('products').once('value', prodSnap => {
+        prodSnap.forEach(p => {
+          if (p.val().category === nomeCat) {
+            db.ref('products/' + p.key).update({ [campo]: v });
+          }
+        });
+      });
+    });
+  } else {
+    // Atualiza apenas o produto individual
+    db.ref('products/' + id).update({ [campo]: v });
+  }
+}
+
+/* LIMPAR PROMOÇÃO */
+function limparPromo(tipo, id) {
+  if (!confirm("Deseja remover todos os dados de promoção deste item?")) return;
+  const reset = { promoPct: 0, promoTexto: 'OFF', promoCor: '#caa85c' };
+  
+  if (tipo === 'categorias') {
+    db.ref('categories/' + id).update(reset).then(() => listarPromos('categorias'));
+    // Aqui você também poderia adicionar a cascata para limpar os produtos da categoria se desejar
+  } else {
+    db.ref('products/' + id).update(reset).then(() => listarPromos('produtos'));
+  }
 }
 
 /* PEDIDOS - AJUSTE DEFINITIVO */
@@ -297,38 +402,46 @@ function gerarRomaneio(id, tipo = 1) {
      </thead>
      <tbody>`;
 
-   p.itens.forEach(i => {
+ p.itens.forEach(i => {
     const vPreco = Number(i.precoFinal || i.price || 0);
-    const vPeso = Number(i.peso || 0);
+    const vPesoGramas = Number(i.peso || 0); // Assume-se que o banco guarda em gramas
     const vQtd = Number(i.quantidade || 1);
     
+    // Converte peso unitário para Kg (ex: 0.050 Kg)
+    const vPesoKg = (vPesoGramas / 1000).toFixed(3);
+
     html += `<tr>
      ${tipo === 3 ? `<td><img src="${i.image}" class="img-mini"></td>` : ''}
      <td>${i.sku || '---'}</td>
      <td>${i.name}</td>
-     ${tipo > 1 ? `<td>${vPeso.toFixed(2)}g</td><td>${fMoeda(vPreco)}</td>` : ''}
+     ${tipo > 1 ? `<td>${vPesoKg} Kg</td><td>${fMoeda(vPreco)}</td>` : ''}
      <td>${vQtd}</td>
      ${tipo > 1 ? `<td>${fMoeda(vPreco * vQtd)}</td>` : ''}
     </tr>`;
-   });
-
-   html += `</tbody></table>`;
-
-   if(tipo > 1) {
-    html += `
-     <div class="totais">
-      Subtotal: ${fMoeda(p.subtotal)}<br>
-      Peso Total: ${p.pesoTotal?.toFixed(2)}g<br>
-      Descontos: - ${fMoeda(p.descontos)}<br>
-      <b style="font-size:16px; color:#A68966">TOTAL: ${fMoeda(p.total)}</b>
-     </div>`;
-   }
-
-   html += `</div>`;
-   document.getElementById('print-area').innerHTML = html;
-   window.print();
   });
+
+  html += `</tbody></table>`;
+
+  if(tipo > 1) {
+    // Converte o peso total do pedido para Kg (ex: 1.25 Kg)
+    const pesoTotalKg = (Number(p.pesoTotal || 0) / 1000).toFixed(2);
+
+    html += `
+     <div class="totais" style="text-align:right; margin-top:15px; font-size:12px;">
+      Subtotal: ${fMoeda(p.subtotal)}<br>
+      <span style="color:#666">Peso Total: ${pesoTotalKg} Kg</span><br>
+      Descontos: - ${fMoeda(p.descontos)}<br>
+      <div style="margin-top:5px; border-top:1px solid #eee; pt-2">
+        <b style="font-size:16px; color:#A68966">TOTAL: ${fMoeda(p.total)}</b>
+      </div>
+     </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('print-area').innerHTML = html;
+  window.print();
  });
+});
 }
 
 /* START */
