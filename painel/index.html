@@ -196,11 +196,15 @@ function renderizarEstruturaProdutos() {
   if (!lista) return;
   lista.innerHTML = '';
 
-  const categoriasPresentes = [...new Set(cacheProdutos.map(p => p.category || "Sem Categoria"))].sort();
+ const categoriasPresentes = [...new Set(
+  cacheProdutos.map(p => (p.category || "Sem Categoria").trim())
+)].sort((a,b)=>a.localeCompare(b));
+
 
   categoriasPresentes.forEach(cat => {
     const catId = cat.replace(/\s+/g, '-');
-    const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria") === cat);
+    const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria").trim() === cat);
+
 
     lista.innerHTML += `
       <div class="mb-2">
@@ -229,7 +233,7 @@ function toggleCategoria(nomeCat, catId) {
     seta.innerText = '▲';
 
     const prods = cacheProdutos
-      .filter(p => (p.category || "Sem Categoria") === nomeCat)
+      .filter(p => (p.category || "Sem Categoria").trim() === nomeCat)
       .sort((a,b)=>(a.sku||"").localeCompare(b.sku||"",undefined,{numeric:true}));
 
     content.innerHTML = prods.map(p => `
