@@ -208,51 +208,48 @@ function renderizarEstruturaProdutos() {
     const catId = cat.replace(/\s+/g, '-');
     const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria") === cat);
 
-    lista.innerHTML += `
-      <div class="mb-2">
-        <div onclick="toggleCategoria('${catId}')" class="flex justify-between items-center bg-[#141414] p-3 rounded-lg cursor-pointer border-l-4 border-[#caa85c]">
-          <b class="text-[11px] uppercase">${cat} (${produtosFiltrados.length})</b>
-          <span id="seta-${catId}" class="text-[10px] text-gray-500">▼</span>
-        </div>
-        <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#222]"></div>
-      </div>`;
-  });
-}
+lista.innerHTML += `
+  <div class="mb-2">
+    <div onclick="toggleCategoria('${cat}', '${catId}')"
+         class="flex justify-between items-center bg-[#141414] p-3 rounded-lg cursor-pointer border-l-4 border-[#caa85c]">
+      <b class="text-[11px] uppercase">${cat} (${produtosFiltrados.length})</b>
+      <span id="seta-${catId}" class="text-[10px] text-gray-500">▼</span>
+    </div>
+    <div id="cat-content-${catId}" class="hidden flex flex-col gap-1 mt-1 pl-2 border-l border-[#222]"></div>
+  </div>`;
 
-function toggleCategoria(catId) {
+function toggleCategoria(nomeCat, catId) {
   const content = document.getElementById(`cat-content-${catId}`);
   const seta = document.getElementById(`seta-${catId}`);
   if (!content) return;
 
-  const aberto = !content.classList.contains('hidden');
+  const isHidden = content.classList.contains('hidden');
 
   document.querySelectorAll('[id^="cat-content-"]').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('[id^="seta-"]').forEach(el => el.innerText = '▼');
 
-  if (!aberto) {
+  if (isHidden) {
     content.classList.remove('hidden');
     seta.innerText = '▲';
 
-    const produtosFiltrados = cacheProdutos.filter(p => (p.category || "Sem Categoria").replace(/\s+/g, '-') === catId);
+    const prods = cacheProdutos
+      .filter(p => (p.category || "Sem Categoria") === nomeCat)
+      .sort((a,b)=>(a.sku||"").localeCompare(b.sku||"",undefined,{numeric:true}));
 
-    content.innerHTML = produtosFiltrados.map(p => `
-      <div class="card flex justify-between items-center py-2 px-3 text-[11px] bg-[#0d0d0d]">
+    content.innerHTML = prods.map(p => `
+      <div class="card flex justify-between py-1 px-2 text-[11px] bg-[#0d0d0d]">
         <div>
-          <span class="text-gray-500 font-mono text-[9px]">${p.sku || '---'}</span>
+          <span class="text-gray-400">${p.sku || '---'}</span>
           <b class="ml-1">${p.name}</b>
-          ${p.variacao ? `<span class="text-[#caa85c] ml-1 text-[9px]">${p.variacao}</span>` : ''}
-          ${p.image ? '🖼️' : '<span class="text-red-900">🚫</span>'}
-          <div class="text-[#caa85c]">${fMoeda(p.price)}</div>
         </div>
-        <div class="flex gap-3">
-          <button onclick="editarProduto('${p.key}')">✎</button>
-          <button class="text-red-500" onclick="removerProduto('${p.key}')">X</button>
+        <div class="flex gap-2">
+          <button onclick="editarProduto('${p.key}')" class="text-blue-400">✎</button>
+          <button onclick="removerProduto('${p.key}')" class="text-red-500">X</button>
         </div>
       </div>
     `).join('');
   }
 }
-
 /* ================= PROMOÇÕES (MODAL) ================= */
 function listarPromos(tipo){
  const container=document.getElementById('listaPromocoes');
