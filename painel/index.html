@@ -232,10 +232,20 @@ function carregarCategorias() {
 function editarProduto(id) {
   db.ref('products/' + id).once('value', s => {
     const p = s.val(); if (!p) return;
-    const nNome = prompt("Nome:", p.name);
+    
+    const nNome  = prompt("Nome:", p.name);
     const nPreco = prompt("Preço:", p.price);
-    const nSku = prompt("SKU:", p.sku);
-    if (nNome !== null) db.ref('products/'+id).update({name:nNome, price:Number(nPreco), sku:nSku}).then(carregarProdutos);
+    const nSku   = prompt("SKU:", p.sku);
+    const nPeso  = prompt("Peso (em gramas):", p.peso || 0); // Adicionado campo de peso 
+
+    if (nNome !== null) {
+      db.ref('products/' + id).update({
+        name: nNome, 
+        price: Number(nPreco), 
+        sku: nSku,
+        peso: Number(nPeso) // Salva o novo peso no Firebase
+      }).then(carregarProdutos);
+    }
   });
 }
 
