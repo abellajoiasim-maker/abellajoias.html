@@ -138,27 +138,31 @@
         document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
     }
 
-    // Carrega Categorias e suas Imagens
-    function carregarCategorias() {
+    // Adicione a busca de promoSnap dentro de carregarCategorias
+function carregarCategorias() {
+    db.ref('settings/promocao').once('value', promoSnap => {
+        const cnf = promoSnap.val() || { ativa: false };
+
         db.ref('categories').on('value', snap => {
             const grid = document.getElementById('gridCategorias');
             grid.innerHTML = '';
             
-            if (!snap.exists()) {
-                grid.innerHTML = '<p class="text-center col-span-full text-gray-500">Nenhuma categoria encontrada.</p>';
-                return;
-            }
-
             snap.forEach(s => {
                 const cat = s.val();
-                if (cat.paused) return; // Não mostra se estiver pausada
+                if (cat.paused) return;
                 
+                // Verifica se a categoria tem desconto ativo
+                const temPromo = cnf.ativa && (cat.promoPct > 0);
+
                 grid.innerHTML += `
-                    <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
+                    <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full relative">
+                        ${temPromo ? `
+                            <span style="position:absolute; top:10px; right:10px; background:${cnf.colorBg}; color:${cnf.colorText}; font-size:9px; padding:2px 8px; border-radius:4px; z-index:10; font-weight:bold;">
+                                ${cnf.label}
+                            </span>
+                        ` : ''}
                         <div class="img-container">
-                            <img src="${cat.image || 'https://via.placeholder.com/400?text=Abella+Joias'}" 
-                                 alt="${cat.name}"
-                                 loading="lazy">
+                            <img src="${cat.image || ''}" loading="lazy">
                         </div>
                         <div class="p-4 text-center mt-auto">
                             <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
@@ -167,7 +171,8 @@
                 `;
             });
         });
-    }
+    });
+}
 
     // Inicialização
     window.onload = () => {
