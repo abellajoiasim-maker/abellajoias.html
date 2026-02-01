@@ -24,7 +24,6 @@
     .item img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #333; }
     
     .qtd-btn { background: #222; color: #caa85c; border: 1px solid #caa85c; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; }
-    
     .remove-btn { color: #ff4444; font-size: 10px; font-weight: bold; margin-top: 8px; cursor: pointer; text-transform: uppercase; }
     
     .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; font-weight: bold; text-transform: uppercase; color: #888; }
@@ -55,10 +54,12 @@
 
     <div class="card">
         <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest">Dados do Cliente</h2>
-        <input id="nomeCliente" placeholder="Nome Completo *">
+        <input id="nomeCliente" placeholder="Seu Nome Completo *">
         <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
 
-        <p class="mt-2 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Entrega (Opcional)</p>
+        <p class="mt-2 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Entrega</p>
+        <input id="nomeEntrega" placeholder="Nome do Destinatário *">
+        <input id="cepEntrega" placeholder="CEP (00000-000) *">
         <input id="rua" placeholder="Rua / Avenida">
         <div class="grid grid-cols-3 gap-2">
             <input id="num" placeholder="Nº">
@@ -75,12 +76,26 @@
         </div>
     </div>
 
-    <div class="card text-sm space-y-2">
-        <div class="flex justify-between text-gray-400"><span>Peso Total:</span><b id="pesoTotal" class="text-white">0g</b></div>
-        <div class="flex justify-between text-gray-400"><span>Subtotal:</span><b id="subtotalTxt" class="text-white">R$ 0,00</b></div>
-        <div class="flex justify-between text-green-500"><span>Descontos Aplicados:</span><b id="descontoTxt">- R$ 0,00</b></div>
-        <div class="flex justify-between text-lg font-bold gold-text mt-4 pt-4 border-t border-[#222]">
-            <span>TOTAL:</span><span id="totalTxt">R$ 0,00</span>
+    <div class="card text-sm space-y-3">
+        <div class="flex justify-between text-gray-400 font-light">
+            <span>Peso Total:</span>
+            <b id="pesoTotal" class="text-white">0.00g</b>
+        </div>
+        <div class="flex justify-between text-gray-400 font-light">
+            <span>Subtotal:</span>
+            <b id="subtotalTxt" class="text-white">R$ 0,00</b>
+        </div>
+        <div class="flex justify-between text-red-500 font-light">
+            <span>Descontos Aplicados:</span>
+            <b id="descontoTxt">R$ 0,00</b>
+        </div>
+        <div class="flex justify-between text-gray-300 border-t border-[#222] pt-2 italic">
+            <span>Cartão 3 X sem Acréscimo:</span>
+            <b id="parcelasTxt">R$ 0,00</b>
+        </div>
+        <div class="flex justify-between text-xl font-bold gold-text mt-2 pt-2 border-t border-[#caa85c]">
+            <span>TOTAL:</span>
+            <span id="totalTxt">R$ 0,00</span>
         </div>
     </div>
 
@@ -109,7 +124,6 @@ let foneLoja = '';
 
 const fM = (v) => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-// Busca telefone da loja configurado no painel
 db.ref('settings/empresa/whats').once('value', s => { 
     if(s.val()) foneLoja = s.val().replace(/\D/g,''); 
 });
@@ -128,7 +142,7 @@ function carregarCarrinho(){
         let pUnit = parseFloat(i.peso || 0);
 
         subtotal += (pFinal * q);
-        pesoTotal += (pUnit * q); // SOMA DO PESO CORRIGIDA
+        pesoTotal += (pUnit * q);
         if(pOrig > pFinal) desconto += (pOrig - pFinal) * q;
 
         box.innerHTML += `
@@ -148,10 +162,14 @@ function carregarCarrinho(){
             </div>`;
     });
 
+    const valorFinal = subtotal;
+    const valorParcela = valorFinal / 3;
+
     document.getElementById('subtotalTxt').innerText = fM(subtotal + desconto);
     document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + 'g';
-    document.getElementById('descontoTxt').innerText = '- ' + fM(desconto);
-    document.getElementById('totalTxt').innerText = fM(subtotal);
+    document.getElementById('descontoTxt').innerText = 'R$ ' + desconto.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('parcelasTxt').innerText = fM(valorParcela);
+    document.getElementById('totalTxt').innerText = fM(valorFinal);
 }
 
 function alterarQtd(index, delta){
@@ -177,32 +195,33 @@ function setPagamento(p, el){
 
 async function finalizarPedido(){
     const nome = document.getElementById('nomeCliente').value;
+    const nomeEntrega = document.getElementById('nomeEntrega').value;
+    const cep = document.getElementById('cepEntrega').value;
     const totalTexto = document.getElementById('totalTxt').innerText;
-    const formaPagamento = pagamento;
 
-    if(!nome || !pagamento) return alert("Preencha seu nome e a forma de pagamento.");
-    if(carrinho.length === 0) return alert("Carrinho vazio.");
+    if(!nome || !nomeEntrega || !cep || !pagamento) {
+        return alert("Por favor, preencha o Nome, Nome do Destinatário, CEP e Forma de Pagamento.");
+    }
 
     try {
-        // Salva no banco (Painel Admin)
         await db.ref('orders').push({
             cliente: nome,
+            destinatario: nomeEntrega,
+            cep: cep,
             total: totalTexto,
-            pagamento: formaPagamento,
+            pagamento: pagamento,
             itens: carrinho,
             data: new Date().toLocaleString('pt-BR')
         });
 
-        // MENSAGEM DO WHATSAPP CONFORME SOLICITADO
         let msg = `Olá, meu nome é *${nome}*!\n\n`;
         msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
         msg += `💰 *Total:* ${totalTexto}\n`;
-        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+        msg += `💳 *Pagamento:* ${pagamento}\n\n`;
         msg += `Aguardando seu retorno para finalizar!`;
 
         localStorage.removeItem('carrinho');
         window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
-
     } catch(e) {
         alert("Erro ao enviar. Tente novamente.");
     }
