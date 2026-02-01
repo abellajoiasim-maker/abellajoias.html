@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Abella Joias | Atacado de Joias no Bruto</title>
 
-    <!-- Open Graph / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Abella Joias | Catálogo de Atacado">
     <meta property="og:description" content="Confira nossas joias no bruto. Qualidade e sofisticação para o seu negócio.">
@@ -12,12 +11,6 @@
     <meta property="og:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Abella Joias | Catálogo">
-    <meta name="twitter:description" content="Joias no bruto com padrão premium.">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -28,100 +21,160 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* Isso garante que todas as fotos de categoria tenham o mesmo tamanho */
-.img-container {
-    aspect-ratio: 4 / 5; /* Formato padrão de catálogo */
-    overflow: hidden;
-    background: #f9f9f9;
-}
-
-.img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Faz a imagem preencher o espaço sem distorcer */
-}
-        body { font-family: 'Poppins', sans-serif; background: #fdfcf9; color: #333; }
+        body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-bg { background: #A68966; }
-        .gold-text { color: #A68966; }
-        .card-lux { background: #fff; border-radius: 20px; border: 1px solid #eee; transition: .4s; overflow: hidden; }
-        .card-lux:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(166,137,102,0.15); border-color: #A68966; }
-        .btn-nav { border: 1px solid #A68966; color: #A68966; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; }
-        .btn-nav:hover { background: #A68966; color: #fff; }
+        .gold-text { color: #caa85c; }
+        
+        /* Ajuste de Imagens das Categorias */
+        .img-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #141414;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #222;
+        }
+
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Preenche o espaço sem distorcer */
+            transition: transform 0.7s;
+        }
+
+        .card-lux { 
+            background: #141414; 
+            border-radius: 12px; 
+            border: 1px solid #2a2a2a; 
+            transition: .4s; 
+            overflow: hidden; 
+        }
+        
+        .card-lux:hover { 
+            transform: translateY(-5px); 
+            border-color: #caa85c; 
+        }
+        
+        .card-lux:hover img {
+            transform: scale(1.1);
+        }
+
+        .btn-nav { 
+            border: 1px solid #caa85c; 
+            color: #caa85c; 
+            font-size: 10px; 
+            font-weight: bold; 
+            letter-spacing: 1px; 
+            transition: .3s; 
+        }
+        
+        .btn-nav:hover, .btn-nav.active { 
+            background: #caa85c; 
+            color: #000; 
+        }
+
+        header {
+            background: #000;
+            border-bottom: 1px solid #222;
+        }
     </style>
 </head>
 <body>
 
-<header class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+<header class="sticky top-0 z-50 shadow-lg">
     <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col items-center text-center">
-        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase">Abella Joias</h1>
-        <p class="text-[10px] tracking-[4px] text-gray-400 font-light mt-1 mb-6 uppercase">Atacado de Joias no Bruto</p>
+        <h1 class="serif text-3xl md:text-4xl gold-text tracking-widest uppercase" id="nomeLoja">Abella Joias</h1>
+        <p class="text-[10px] tracking-[4px] text-gray-500 font-light mt-1 mb-6 uppercase" id="sloganLoja">Atacado de Joias no Bruto</p>
         
         <div class="flex gap-3 flex-wrap justify-center">
-            <a href="index.html" class="btn-nav px-6 py-2 rounded-full gold-bg text-white">INÍCIO</a>
-            <a href="galvanicas.html" class="btn-nav px-6 py-2 rounded-full">GALVÂNICAS</a>
+            <a href="index.html" class="btn-nav px-6 py-2 rounded-full active">INÍCIO</a>
             <a href="carrinho.html" class="btn-nav px-6 py-2 rounded-full relative flex items-center gap-2">
-    <span>Meu Carrinho</span>
-    <span id="contadorCarrinho" class="font-bold">(0)</span>
-</a>
+                <span>Meu Carrinho</span>
+                <span id="contadorCarrinho" class="font-bold">R$ 0,00</span>
+            </a>
         </div>
     </div>
 </header>
 
-    <main class="max-w-7xl mx-auto p-6 md:p-12">
-        <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"></div>
-    </main>
+<main class="max-w-7xl mx-auto p-6 md:p-12">
+    <h2 class="serif text-center mb-10 text-xl tracking-widest uppercase gold-text">Nossas Categorias</h2>
+    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+        </div>
+</main>
 
 <script>
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
+
+    // Inicialização do Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp({
+            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+        });
+    }
     const db = firebase.database();
-    
+
+    // Sincroniza Nome e Slogan com o Painel Admin
+    function carregarConfiguracoes() {
+        db.ref('settings/empresa').once('value', s => {
+            const v = s.val();
+            if (v) {
+                if(v.nome) document.getElementById('nomeLoja').innerText = v.nome;
+                if(v.subtitulo) document.getElementById('sloganLoja').innerText = v.subtitulo;
+            }
+        });
+    }
 
     function atualizarContador() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    
-    // Calcula o valor total (Preço x Quantidade)
-    const valorTotal = carrinho.reduce((acc, item) => {
-        const preco = parseFloat(item.precoFinal) || 0;
-        const qtd = parseInt(item.quantidade) || 0;
-        return acc + (preco * qtd);
-    }, 0);
+        const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        const valorTotal = carrinho.reduce((acc, item) => {
+            const preco = parseFloat(item.precoFinal || item.price) || 0;
+            const qtd = parseInt(item.quantidade || item.qtd) || 0;
+            return acc + (preco * qtd);
+        }, 0);
+        document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
+    }
 
-    // Se quiser testar com os 100 mil que você colocou:
-    // const teste = 100000; 
-    // document.getElementById('contadorCarrinho').innerText = fM(teste);
-
-    // O correto para o funcionamento real:
-    document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
-}
-    
-    atualizarContador();
-
-db.ref('categories').on('value', snap => {
-        const grid = document.getElementById('gridCategorias');
-        grid.innerHTML = '';
-        snap.forEach(s => {
-            const cat = s.val();
-            if (cat.paused) return;
+    // Carrega Categorias e suas Imagens
+    function carregarCategorias() {
+        db.ref('categories').on('value', snap => {
+            const grid = document.getElementById('gridCategorias');
+            grid.innerHTML = '';
             
-            grid.innerHTML += `
-                <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
-                    <div style="width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden;">
-                        <img src="${cat.image || 'https://via.placeholder.com/400'}" 
-                             style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 10px;"
-                             class="transition duration-700 group-hover:scale-110">
-                    </div>
-                    <div class="p-4 text-center mt-auto">
-                        <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
-                    </div>
-                </a>
-            `;
+            if (!snap.exists()) {
+                grid.innerHTML = '<p class="text-center col-span-full text-gray-500">Nenhuma categoria encontrada.</p>';
+                return;
+            }
+
+            snap.forEach(s => {
+                const cat = s.val();
+                if (cat.paused) return; // Não mostra se estiver pausada
+                
+                grid.innerHTML += `
+                    <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
+                        <div class="img-container">
+                            <img src="${cat.image || 'https://via.placeholder.com/400?text=Abella+Joias'}" 
+                                 alt="${cat.name}"
+                                 loading="lazy">
+                        </div>
+                        <div class="p-4 text-center mt-auto">
+                            <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
+                        </div>
+                    </a>
+                `;
+            });
         });
-    });
+    }
+
+    // Inicialização
+    window.onload = () => {
+        carregarConfiguracoes();
+        atualizarContador();
+        carregarCategorias();
+    };
 </script>
 </body>
 </html>
