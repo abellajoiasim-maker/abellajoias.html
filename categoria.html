@@ -267,60 +267,82 @@ document.getElementById('contadorCarrinho').innerText=`(${total})`;
 }
 
 async function carregarProdutos(){
-const [empSnap, catSnap] = await Promise.all([
-db.ref('settings/empresa').once('value'),
-db.ref('categories/'+catId).once('value')
-]);
+    // 1. Busca as configurações de promoção, empresa e a categoria atual
+    const [empSnap, catSnap, promoSnap] = await Promise.all([
+        db.ref('settings/empresa').once('value'),
+        db.ref('categories/'+catId).once('value'),
+        db.ref('settings/promocao').once('value') // Nova busca necessária
+    ]);
 
-const configEmpresa = empSnap.val() || {descontoPix:0,parcelas:1};
-const categoria = catSnap.val() || {};
-document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
+    const configEmpresa = empSnap.val() || {descontoPix:0, parcelas:1};
+    const categoria = catSnap.val() || {};
+    const cnf = promoSnap.val() || { ativa: false, label: 'OFF', colorBg: '#ff0000', colorText: '#ffffff' };
+    
+    document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
 
-db.ref('products').on('value', snap=>{
-const grid=document.getElementById('gridProdutos');
-grid.innerHTML='';
+    db.ref('products').on('value', snap=>{
+        const grid=document.getElementById('gridProdutos');
+        grid.innerHTML='';
 
-snap.forEach(s=>{
-const p=s.val();
-if(p.paused) return;
+        snap.forEach(s=>{
+            const p=s.val();
+            if(p.paused) return;
 
-/* 🔥 AJUSTE PRINCIPAL: categoria por NOME */
-if((p.category||'').trim() !== (categoria.name||'').trim()) return;
+            // Filtra pela categoria correta
+            if(p.category !== catId) return;
 
-const porcentagem = p.promoPct || 0;
-const precoFinal = porcentagem>0 ? p.price*(1-porcentagem/100) : p.price;
-const valorPix = precoFinal*(1-(configEmpresa.descontoPix/100));
-const valorParcela = precoFinal/configEmpresa.parcelas;
+            // Lógica de Preço e Desconto
+            // Prioriza o desconto da categoria se houver, senão usa o do produto
+            const porcentagem = categoria.promoPct || p.promoPct || 0;
+            const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem/100) : p.price;
+            const valorPix = precoFinal * (1 - (configEmpresa.descontoPix/100));
+            const valorParcela = precoFinal / 3;
 
-grid.innerHTML += `
-<div class="card-prod p-4 shadow-sm border border-gray-100">
-<div class="img-container mb-4 border border-gray-100 bg-gray-50">
-${porcentagem>0?`<span style="position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:10px;font-weight:bold;padding:4px 8px;border-radius:9999px;">-${porcentagem}%</span>`:''}
-<img src="${p.image||''}">
-</div>
+            grid.innerHTML += `
+            <div class="card-prod p-4">
+                <div class="img-container mb-4">
+                    ${cnf.ativa && porcentagem > 0 ? `
+                        <span style="
+                            position: absolute; 
+                            top: 10px; 
+                            left: 10px; 
+                            background: ${cnf.colorBg}; 
+                            color: ${cnf.colorText}; 
+                            font-size: 10px; 
+                            font-weight: bold; 
+                            padding: 4px 10px; 
+                            border-radius: 6px; 
+                            z-index: 10;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                            text-transform: uppercase;">
+                            ${cnf.label} ${porcentagem}%
+                        </span>
+                    ` : ''}
+                    
+                    <img src="${p.image || ''}">
+                </div>
 
-<div style="flex:1">
-<div style="font-size:9px;color:#9ca3af;font-weight:bold;">SKU: ${p.sku||'---'}</div>
-<h3 style="font-size:11px;font-weight:bold;text-transform:uppercase;margin-bottom:.25rem;height:2rem;overflow:hidden;">${p.name}</h3>
-<div style="font-size:10px;color:#6b7280;margin-bottom:.5rem;font-style:italic;">Peso: ${p.peso||0}g</div>
+                <div class="flex-1">
+                    <div class="text-[9px] text-gray-500 font-bold uppercase">SKU: ${p.sku||'---'}</div>
+                    <h3 class="text-[11px] font-bold uppercase mt-1 mb-2 h-8 overflow-hidden">${p.name}</h3>
+                    <div class="text-[10px] text-gray-400 italic mb-3">Peso: ${p.peso||0}g</div>
 
-<div>
-${porcentagem>0?`<div style="font-size:11px;color:#9ca3af;text-decoration:line-through;">${fM(p.price)}</div>`:''}
-<div style="font-size:1rem;font-weight:bold;color:#A68966;">${fM(precoFinal)}</div>
-<div style="font-size:10px;color:#4b5563;font-weight:500;">Ou ${configEmpresa.parcelas}x de ${fM(valorParcela)}</div>
-<div style="font-size:10px;color:#16a34a;font-weight:bold;text-transform:uppercase;margin-top:.25rem;">À Vista no PIX: ${fM(valorPix)}</div>
-</div>
-</div>
+                    <div class="mb-4">
+                        ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
+                        <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
+                        <div class="text-[10px] text-gray-400">3x de ${fM(valorParcela)} sem juros</div>
+                        <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
+                    </div>
+                </div>
 
-<button onclick='prepararAdd(${JSON.stringify({...p,precoFinal,porcentagem}).replace(/'/g,"")})'
-style="width:100%;background:#A68966;color:#fff;padding:.75rem 0;border-radius:.5rem;font-size:10px;font-weight:bold;text-transform:uppercase;border:none;cursor:pointer;">
-Adicionar ao Carrinho
-</button>
-</div>`;
-});
-});
+                <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal, porcentagem}).replace(/'/g,"")})'
+                    class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase transition hover:opacity-80">
+                    Adicionar ao Carrinho
+                </button>
+            </div>`;
+        });
+    });
 }
-
 function prepararAdd(p){
 produtoAtualParaAdd=p;
 modalImgProd.src=p.image;
