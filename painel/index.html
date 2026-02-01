@@ -373,19 +373,110 @@ function salvarEmpresa() {
   }).then(() => alert('Empresa Atualizada!'));
 }
 
-function listarPromos(tipo) {
-  const container = document.getElementById('listaPromocoes');
-  db.ref(tipo).once('value', s => {
-    container.innerHTML = '';
-    s.forEach(child => {
-      const item = child.val();
-      container.innerHTML += `<div class="card flex justify-between items-center mb-1">
-          <b class="text-[10px] uppercase">${item.name || item.sku}</b>
-          <input type="number" class="w-16 p-1 bg-black text-xs" value="${item.promoPct || 0}" 
-                 onchange="db.ref('${tipo}/${child.key}').update({promoPct: +this.value})">
-        </div>`;
+/* === NOVO PAINEL DE PROMOÇÕES COM ETIQUETAS E CORES === */
+async function abrirPainelPromocoes() {
+    // Busca Configurações de Promoção e Categorias
+    const [snapPromo, snapCats] = await Promise.all([
+        db.ref('settings/promocao').once('value'),
+        db.ref('categories').once('value')
+    ]);
+
+    const promo = snapPromo.val() || { 
+        ativa: false, 
+        label: 'OFF', 
+        colorBg: '#ff0000', 
+        colorText: '#ffffff',
+        porcentagemGeral: 0
+    };
+
+    let listaCats = '';
+    snapCats.forEach(cat => {
+        const c = cat.val();
+        listaCats += `
+            <div class="flex justify-between items-center bg-[#0d0d0d] p-2 rounded mb-1 border border-[#222]">
+                <span class="text-[10px] uppercase font-bold text-gray-300">${c.name}</span>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="promo_cat_${cat.key}" value="${c.promoPct || 0}" 
+                           class="w-14 text-center !p-1 text-xs bg-black border border-[#333] rounded">
+                    <span class="text-[10px] text-gray-500">%</span>
+                </div>
+            </div>`;
     });
-  });
+
+    const html = `
+        <div class="space-y-4 text-left">
+            <div class="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-xl border border-[#333]">
+                <label class="text-[10px] text-[#caa85c] font-bold uppercase tracking-widest">Status da Promoção</label>
+                <button onclick="togglePromoStatus()" id="btnStatusPromo" class="px-4 py-1 rounded-full text-[10px] font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'} transition">
+                    ${promo.ativa ? 'ATIVA' : 'INATIVA'}
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="card p-3">
+                    <label class="text-[9px] text-gray-400 uppercase font-bold">Texto da Etiqueta</label>
+                    <input id="promoLabel" value="${promo.label || 'OFF'}" class="mt-1" placeholder="Ex: OFF">
+                </div>
+                <div class="card p-3">
+                    <label class="text-[9px] text-gray-400 uppercase font-bold">Aplicar em Tudo (%)</label>
+                    <input type="number" id="promoGeral" value="${promo.porcentagemGeral || 0}" class="mt-1">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="card p-3">
+                    <label class="text-[9px] text-gray-400 uppercase font-bold text-center block">Cor de Fundo</label>
+                    <input type="color" id="promoBg" value="${promo.colorBg || '#ff0000'}" class="h-10 mt-1 cursor-pointer">
+                </div>
+                <div class="card p-3">
+                    <label class="text-[9px] text-gray-400 uppercase font-bold text-center block">Cor do Texto</label>
+                    <input type="color" id="promoTxt" value="${promo.colorText || '#ffffff'}" class="h-10 mt-1 cursor-pointer">
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <label class="text-[10px] text-[#caa85c] font-bold uppercase tracking-widest mb-2 block">Descontos por Categoria</label>
+                <div class="max-h-48 overflow-y-auto pr-2 custom-scroll">
+                    ${listaCats}
+                </div>
+            </div>
+        </div>
+    `;
+
+    abrirModal('Configurar Etiquetas e Promoções', html, () => {
+        const btnStatus = document.getElementById('btnStatusPromo');
+        const isAtiva = btnStatus.innerText === 'ATIVA';
+
+        const updates = {};
+        updates['settings/promocao/ativa'] = isAtiva;
+        updates['settings/promocao/label'] = document.getElementById('promoLabel').value.toUpperCase();
+        updates['settings/promocao/porcentagemGeral'] = parseInt(document.getElementById('promoGeral').value) || 0;
+        updates['settings/promocao/colorBg'] = document.getElementById('promoBg').value;
+        updates['settings/promocao/colorText'] = document.getElementById('promoTxt').value;
+
+        // Salva promoPct em cada categoria
+        snapCats.forEach(cat => {
+            const val = document.getElementById('promo_cat_'+cat.key).value;
+            updates['categories/' + cat.key + '/promoPct'] = parseInt(val) || 0;
+        });
+
+        db.ref().update(updates).then(() => {
+            alert("Etiquetas e Promoções atualizadas com sucesso!");
+            fecharModal();
+        });
+    });
+}
+
+// Função auxiliar para mudar o botão no modal sem fechar
+function togglePromoStatus() {
+    const btn = document.getElementById('btnStatusPromo');
+    if (btn.innerText === 'ATIVA') {
+        btn.innerText = 'INATIVA';
+        btn.classList.replace('bg-green-600', 'bg-red-600');
+    } else {
+        btn.innerText = 'ATIVA';
+        btn.classList.replace('bg-red-600', 'bg-green-600');
+    }
 }
 
 /* ================= INIT ================= */
