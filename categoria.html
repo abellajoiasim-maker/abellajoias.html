@@ -110,6 +110,9 @@ function atualizarContador() {
 }
 
 async function carregarProdutos() {
+    const params = new URLSearchParams(window.location.search);
+    const catId = params.get('id');
+
     if(!catId) { window.location.href = 'index.html'; return; }
 
     // Busca Empresa, Categoria e Configurações de Promoção (Etiquetas)
@@ -119,76 +122,81 @@ async function carregarProdutos() {
         db.ref('settings/promocao').once('value')
     ]);
 
-    const v = empSnap.val() || { nome: "Abella Joias", subtitulo: "Atacado de Joias no Bruto", descontoPix: 0, parcelas: 3 };
+    const v = empSnap.val() || { nome: "Abella Joias", subtitulo: "Atacado de Joias no Bruto", descontoPix: 5, parcelas: 3 };
     const categoria = catSnap.val() || {};
     const cnf = promoSnap.val() || { ativa: false, label: 'OFF', colorBg: '#ff0000', colorText: '#ffffff' };
 
-    document.getElementById('nomeLoja').innerText = v.nome || "Abella Joias";
-    document.getElementById('sloganLoja').innerText = v.subtitulo || "Atacado de Joias no Bruto";
-    document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
+    // Atualiza Textos da Header e Título
+    if(document.getElementById('nomeLoja')) document.getElementById('nomeLoja').innerText = v.nome;
+    if(document.getElementById('sloganLoja')) document.getElementById('sloganLoja').innerText = v.subtitulo;
+    if(document.getElementById('tituloCategoria')) document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
 
+    // Listener em tempo real para produtos
     db.ref('products').on('value', snap => {
         const grid = document.getElementById('gridProdutos');
+        if(!grid) return;
         grid.innerHTML = '';
 
         snap.forEach(s => {
             const p = s.val();
+            // Filtra por categoria e ignora pausados
             if (p.category !== catId || p.paused) return;
 
-            // Lógica de Desconto: Categoria manda primeiro, depois o Produto
+            // Lógica de Desconto: Categoria manda primeiro (se houver), depois o Produto
             const porcentagem = categoria.promoPct || p.promoPct || 0;
             const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem / 100) : p.price;
+            
+            // Cálculos financeiros baseados no painel
             const valorPix = precoFinal * (1 - (v.descontoPix / 100));
-            const valorParcela = precoFinal / (v.parcelas || 3);
+            const numParcelas = v.parcelas || 3;
+            const valorParcela = precoFinal / numParcelas;
 
             grid.innerHTML += `
-                <div class="card-prod p-4">
-                    <div class="img-container mb-4 rounded-xl">
+                <div class="card-prod p-4 flex flex-col h-full relative">
+                    <div class="img-container mb-4 rounded-xl relative overflow-hidden">
                         ${cnf.ativa && porcentagem > 0 ? `
-    <span style="
-        position: absolute; 
-        top: 6px; 
-        left: 6px; 
-        background: ${cnf.colorBg}; 
-        color: ${cnf.colorText}; 
-        /* Diminui a fonte no mobile e mantém normal no desktop */
-        font-size: clamp(8px, 2.5vw, 10px); 
-        font-weight: bold; 
-        /* Padding reduzido para não ocupar espaço excessivo */
-        padding: 2px 6px; 
-        border-radius: 4px; 
-        z-index: 10;
-        text-transform: uppercase;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        white-space: nowrap;">
-        ${cnf.label} ${porcentagem}%
-    </span>
-` : ''}
-                        <img src="${p.image || 'https://via.placeholder.com/400'}" loading="lazy">
+                            <span style="
+                                position: absolute; 
+                                top: 6px; 
+                                left: 6px; 
+                                background: ${cnf.colorBg}; 
+                                color: ${cnf.colorText}; 
+                                font-size: clamp(8px, 2.5vw, 10px); 
+                                font-weight: bold; 
+                                padding: 2px 6px; 
+                                border-radius: 4px; 
+                                z-index: 10;
+                                text-transform: uppercase;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                                white-space: nowrap;">
+                                ${cnf.label} ${porcentagem}%
+                            </span>
+                        ` : ''}
+                        <img src="${p.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover" loading="lazy">
                     </div>
 
                     <div class="flex-1 text-left">
                         <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">SKU: ${p.sku || '---'}</div>
-                        <h3 class="text-[11px] font-bold uppercase mb-2 leading-tight h-8 overflow-hidden">${p.name}</h3>
+                        <h3 class="text-[11px] font-bold uppercase mb-1 leading-tight h-8 overflow-hidden">${p.name}</h3>
+                        
                         <div class="text-[10px] text-gray-400 mb-3 italic">Peso: ${p.peso || 0}g</div>
 
                         <div class="mb-4">
                             ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
                             <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
-                            <div class="text-[9px] text-gray-400">Ou ${v.parcelas || 3}x de ${fM(valorParcela)}</div>
+                            <div class="text-[9px] text-gray-400">Ou ${numParcelas}x de ${fM(valorParcela)}</div>
                             <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
                         </div>
                     </div>
 
-                    <button onclick='prepararAdd(${JSON.stringify({ ...p, key: s.key, precoFinal }).replace(/'/g,"")})'
-                        class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase transition hover:opacity-80">
-                        Adicionar
+                    <button onclick='prepararAdd(${JSON.stringify({ ...p, key: s.key, precoFinal, porcentagem }).replace(/'/g,"&apos;")})'
+                        class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase transition hover:opacity-80 mt-auto">
+                        Adicionar ao Carrinho
                     </button>
                 </div>`;
         });
     });
 }
-
 function prepararAdd(p) {
     produtoAtualParaAdd = p;
     document.getElementById('modalImgProd').src = p.image || 'https://via.placeholder.com/400';
