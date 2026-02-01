@@ -57,9 +57,9 @@
         <input id="nomeCliente" placeholder="Seu Nome Completo *">
         <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
 
-        <p class="mt-2 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Entrega</p>
-        <input id="nomeEntrega" placeholder="Nome do Destinatário *">
-        <input id="cepEntrega" placeholder="CEP (00000-000) *">
+        <p class="mt-2 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Entrega (Opcional)</p>
+        <input id="nomeEntrega" placeholder="Nome do Destinatário">
+        <input id="cepEntrega" placeholder="CEP">
         <input id="rua" placeholder="Rua / Avenida">
         <div class="grid grid-cols-3 gap-2">
             <input id="num" placeholder="Nº">
@@ -195,22 +195,30 @@ function setPagamento(p, el){
 
 async function finalizarPedido(){
     const nome = document.getElementById('nomeCliente').value;
-    const nomeEntrega = document.getElementById('nomeEntrega').value;
-    const cep = document.getElementById('cepEntrega').value;
     const totalTexto = document.getElementById('totalTxt').innerText;
 
-    if(!nome || !nomeEntrega || !cep || !pagamento) {
-        return alert("Por favor, preencha o Nome, Nome do Destinatário, CEP e Forma de Pagamento.");
+    if(!nome || !pagamento) {
+        return alert("Por favor, preencha seu Nome e a Forma de Pagamento.");
     }
+
+    if(carrinho.length === 0) return alert("Carrinho vazio.");
+
+    const enderecoDB = {
+        destinatario: document.getElementById('nomeEntrega').value || 'Não informado',
+        cep: document.getElementById('cepEntrega').value || 'Não informado',
+        rua: document.getElementById('rua').value || '',
+        num: document.getElementById('num').value || '',
+        bairro: document.getElementById('bairro').value || '',
+        cidade: document.getElementById('cidade').value || ''
+    };
 
     try {
         await db.ref('orders').push({
             cliente: nome,
-            destinatario: nomeEntrega,
-            cep: cep,
             total: totalTexto,
             pagamento: pagamento,
             itens: carrinho,
+            endereco: enderecoDB,
             data: new Date().toLocaleString('pt-BR')
         });
 
