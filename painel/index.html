@@ -17,7 +17,9 @@ section.active{display:block}
 .btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
 .btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px}
 input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff;outline:none}
-
+#mainModal.active { display: flex; }
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
 /* Estilos de Impressão */
 #print-area { display: none; }
 @media print {
@@ -88,6 +90,19 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
             </div>
         </div>
     </div>
+     <div id="mainModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-4 border-b border-[#222] flex justify-between items-center">
+            <h3 id="modalTitle" class="serif gold-text uppercase text-sm">Título</h3>
+            <button onclick="fecharModal()" class="text-gray-500 hover:text-white">&times;</button>
+        </div>
+        <div id="modalBody" class="p-6 max-h-[70vh] overflow-y-auto"></div>
+        <div class="p-4 border-t border-[#222] flex gap-3">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
+            <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Guardar Alterações</button>
+        </div>
+    </div>
+</div>
 
     <div id="listaPromocoes" class="grid gap-2"></div>
 </section>
@@ -388,7 +403,34 @@ function salvarEmpresa() {
     parcelas: +document.getElementById('empParc').value || 0
   }).then(() => alert('Empresa Atualizada!'));
 }
+/* === FUNÇÕES DE SUPORTE PARA O MODAL (OBRIGATÓRIO) === */
+function abrirModal(titulo, conteudo, acaoSalvar) {
+    document.getElementById('modalTitle').innerText = titulo;
+    document.getElementById('modalBody').innerHTML = conteudo;
+    document.getElementById('mainModal').classList.add('active');
+    
+    // Configura o botão de salvar do modal
+    const btnSalvar = document.getElementById('modalSaveBtn');
+    btnSalvar.onclick = () => {
+        acaoSalvar();
+    };
+}
 
+function fecharModal() {
+    document.getElementById('mainModal').classList.remove('active');
+}
+
+/* === FUNÇÃO PARA ALTERAR O STATUS (ATIVA/INATIVA) DENTRO DO MODAL === */
+function togglePromoStatus() {
+    const btn = document.getElementById('btnStatusPromo');
+    if (btn.innerText === 'ATIVA') {
+        btn.innerText = 'INATIVA';
+        btn.classList.replace('bg-green-600', 'bg-red-600');
+    } else {
+        btn.innerText = 'ATIVA';
+        btn.classList.replace('bg-red-600', 'bg-green-600');
+    }
+}
 /* === NOVO PAINEL DE PROMOÇÕES COM ETIQUETAS E CORES === */
 async function abrirPainelPromocoes() {
     // Busca Configurações de Promoção e Categorias
