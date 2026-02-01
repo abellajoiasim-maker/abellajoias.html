@@ -322,6 +322,161 @@ function carregarPedidos() {
     });
   });
 }
+  function gerarRomaneio(id, tipo = 1) {
+  db.ref('orders/' + id).once('value', s => {
+    const p = s.val();
+    if (!p) return;
+
+    db.ref('settings/empresa').once('value', e => {
+      const emp = e.val() || {};
+
+      let html = `
+      <style>
+        .print-body { font-family: Arial, sans-serif; color:#000; padding:20px; font-size:11px; }
+        .lux-head { text-align:center; border-bottom:2px solid #A68966; padding-bottom:10px; margin-bottom:15px; }
+        .lux-head h1 { margin:0; color:#A68966; font-size:22px; }
+        .grid-dados { display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:15px; }
+        table { width:100%; border-collapse:collapse; margin-top:10px; font-size:11px; }
+        table th { background:#f5f5f5; text-align:left; border-bottom:1px solid #000; padding:4px; }
+        table td { border-bottom:1px solid #ddd; padding:4px; }
+        .totais { text-align:right; margin-top:15px; font-size:12px; }
+        .img-mini { width:40px; height:40px; object-fit:cover; border-radius:4px; }
+      </style>
+
+      <div class="print-body">
+        <div class="lux-head">
+          <h1>${emp.nome || 'Abella Joias'}</h1>
+          <p>${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p>
+        </div>
+
+        <div class="grid-dados">
+          <div>
+            <b>DADOS DO CLIENTE</b><br>
+            Nome: ${p.cliente?.nome || p.cliente || ''}<br>
+            WhatsApp: ${p.cliente?.telefone || p.whatsapp || ''}
+          </div>
+          <div>
+            <b>LOCAL DE ENTREGA</b><br>
+            ${p.endereco?.nome || 'Residencial'}<br>
+            ${p.endereco?.rua || ''}, ${p.endereco?.num || ''}<br>
+            ${p.endereco?.bairro || ''} - ${p.endereco?.cidade || ''}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              ${tipo === 3 ? '<th>Foto</th>' : ''}
+              <th>SKU</th>
+              <th>Produto</th>
+              ${tipo > 1 ? '<th>Peso U.</th><th>Preço U.</th>' : ''}
+              <th>Qtd</th>
+              ${tipo > 1 ? '<th>Subtotal</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      let subtotalCalc = 0;
+      let pesoTotalCalc = 0;
+
+      (p.itens || []).forEach(i => {
+        const preco = Number(i.precoFinal || i.price || 0);
+        const qtd = Number(i.quantidade || 1);
+        const pesoKg = (Number(i.peso || 0) / 1000);
+        const subtotalItem = preco * qtd;
+
+        subtotalCalc += subtotalItem;
+        pesoTotalCalc += pesoKg * qtd;
+
+        html += `
+          <tr>
+            ${tipo === 3 ? `<td><img src="${i.image || ''}" class="img-mini"></td>` : ''}
+            <td>${i.sku || '---'}</td>
+            <td>${i.name || ''}</td>
+            ${tipo > 1 ? `<td>${pesoKg.toFixed(3)} Kg</td><td>${fMoeda(preco)}</td>` : ''}
+            <td>${qtd}</td>
+            ${tipo > 1 ? `<td>${fMoeda(subtotalItem)}</td>` : ''}
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+
+      if (tipo > 1) {
+        html += `
+          <div class="totais">
+            Subtotal: ${fMoeda(p.subtotal ?? subtotalCalc)}<br>
+            Peso Total: ${pesoTotalCalc.toFixed(2)} Kg<br>
+            Descontos: - ${fMoeda(p.descontos || 0)}<br>
+            <b style="font-size:16px; color:#A68966">TOTAL: ${fMoeda(p.total)}</b>
+            ${p.obs ? `<div style="margin-top:6px;font-size:10px;"><b>Obs:</b> ${p.obs}</div>` : ''}
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+
+      document.getElementById('print-area').innerHTML = html;
+
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    });
+  });
+}
+
+function carregarEmpresaSeExistir() {
+  db.ref('settings/empresa').once('value', s => {
+    const v = s.val();
+    if (!v) return;
+
+    const empNome  = document.getElementById('empNome');
+    const empSub   = document.getElementById('empSub');
+    const empWhats = document.getElementById('empWhats');
+    const empDesc  = document.getElementById('empDesc');
+    const empParc  = document.getElementById('empParc');
+
+    if (empNome)  empNome.value  = v.nome || '';
+    if (empSub)   empSub.value   = v.subtitulo || '';
+    if (empWhats) empWhats.value = v.whats || '';
+    if (empDesc)  empDesc.value  = v.descontoPix || 0;
+    if (empParc)  empParc.value  = v.parcelas || 0;
+  });
+}
+ function editarProduto(id) {
+  db.ref('products/' + id).once('value', s => {
+    const p = s.val();
+    if (!p) return alert("Produto não encontrado.");
+
+    const novoNome = prompt("Nome do produto:", p.name || "");
+    const novoPreco = prompt("Preço do produto:", p.price || 0);
+    const novoSku = prompt("SKU do produto:", p.sku || "");
+
+    if (novoNome !== null) {
+      db.ref('products/' + id).update({
+        name: novoNome,
+        price: Number(novoPreco) || 0,
+        sku: novoSku
+      }).then(() => {
+        alert("Produto atualizado!");
+        carregarProdutos(); // Atualiza a tela
+      });
+    }
+  });
+}
+function editarCategoria(id, nomeAtual) {
+  const novoNome = prompt("Novo nome da categoria:", nomeAtual);
+  if (!novoNome || novoNome === nomeAtual) return;
+
+  db.ref('categories/' + id).update({ name: novoNome })
+    .then(() => {
+      alert("Categoria atualizada!");
+      carregarCategorias(); // Atualiza lista
+    })
+    .catch(() => alert("Erro ao atualizar categoria."));
+}
+
 
 function listarPromos(tipo) {
   const container = document.getElementById('listaPromocoes');
