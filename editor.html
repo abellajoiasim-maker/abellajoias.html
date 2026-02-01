@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editor Full Master v2.5 • Abella Joias</title>
+    <title>Editor Full Master v2.6 • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -10,14 +10,14 @@
     <style>
         body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
         .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 8px; width: 100%; font-size: 11px; transition: 0.2s; }
-        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; box-shadow: 0 0 5px rgba(202, 168, 92, 0.3); }
+        .input-dark:focus { border-color: #caa85c; outline: none; background: #222; }
         tr.is-paused { opacity: 0.4; background: #2a1010 !important; }
         .btn-status { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 5px 10px; border-radius: 5px; cursor: pointer; width: 60px; text-align: center; }
         .status-on { background: #15803d; color: white; }
         .status-off { background: #b91c1c; color: white; }
         .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 12px; }
-        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #333; }
-        .card-gold { background: #141414; border: 1px solid #2a2a2a; border-left: 4px solid #caa85c; }
+        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #222; border-radius: 6px; border: 1px solid #333; }
+        .img-error { border: 2px solid #ef4444 !important; }
     </style>
 </head>
 <body class="p-4 md:p-6">
@@ -25,8 +25,8 @@
     <div class="max-w-[99%] mx-auto">
         <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl">
             <div>
-                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.5</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold text-center xl:text-left">Gestão Avançada Multiformato</p>
+                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.6</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Sincronia Inteligente de Fotos</p>
             </div>
             
             <div class="flex flex-wrap gap-3 w-full xl:w-auto justify-center">
@@ -36,7 +36,7 @@
                 <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-48 outline-none focus:border-[#caa85c] text-white">
                 
                 <div class="flex items-center gap-1 bg-[#0b0b0b] border border-[#333] rounded-xl px-2">
-                    <span class="text-[9px] text-gray-500 font-bold px-1">TIPO:</span>
+                    <span class="text-[9px] text-gray-500 font-bold px-1">TENTAR:</span>
                     <select id="formatoFoto" class="bg-transparent text-xs text-white outline-none py-2 cursor-pointer">
                         <option value="png">.PNG</option>
                         <option value="jpg">.JPG</option>
@@ -45,8 +45,8 @@
                     </select>
                 </div>
 
-                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110 transition-all">🔍 BUSCAR</button>
-                <button onclick="sincronizarFotosComStorage()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700 transition-all">🔄 SYNC FOTOS</button>
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110">🔍 BUSCAR</button>
+                <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700">🔄 SYNC FOTOS (FALHAS)</button>
             </div>
         </header>
 
@@ -62,22 +62,20 @@
                             <th class="w-32">Categoria</th>
                             <th class="w-32">Variação</th>
                             <th class="w-48">Opções (Lista)</th>
-                            <th class="w-24">R$ Cheio</th>
-                            <th class="w-24">R$ Promo</th>
+                            <th class="w-20">R$ Cheio</th>
+                            <th class="w-20">R$ Promo</th>
                             <th class="w-10"></th>
                         </tr>
                     </thead>
-                    <tbody id="tabelaCorpo">
-                        <tr><td colspan="10" class="p-20 text-center text-gray-500 italic">Busque produtos para editar...</td></tr>
-                    </tbody>
+                    <tbody id="tabelaCorpo"></tbody>
                 </table>
             </div>
         </div>
 
         <div class="mt-6 flex flex-col md:flex-row justify-between items-center bg-[#141414] p-5 rounded-2xl border border-[#2a2a2a] gap-4">
-            <div id="statusInfo" class="text-xs text-gray-400 font-medium italic">Pronto.</div>
-            <button onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-12 py-4 rounded-xl shadow-lg transition-all uppercase tracking-widest text-sm">
-                💾 Salvar Tudo
+            <div id="statusInfo" class="text-xs text-gray-400">Pronto para editar.</div>
+            <button onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-12 py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm">
+                💾 Salvar Todas as Alterações
             </button>
         </div>
     </div>
@@ -107,8 +105,7 @@ async function carregarProdutos() {
     const filtroTexto = document.getElementById('filtroSku').value.trim().toUpperCase();
     const filtroCat = document.getElementById('filtroCat').value;
     const corpo = document.getElementById('tabelaCorpo');
-
-    corpo.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">CARREGANDO...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-[#caa85c] animate-pulse">LENDO PRODUTOS...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -130,8 +127,8 @@ async function carregarProdutos() {
                 <tr data-id="${child.key}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
                     <td class="p-2 text-center"><button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF' : 'ON'}</button></td>
                     <td class="p-2 flex flex-col items-center gap-1">
-                        <img src="${p.image}" class="img-preview row-img">
-                        <input class="input-dark edit-img w-24 text-[8px]" value="${p.image || ''}" onchange="this.closest('tr').querySelector('.row-img').src=this.value">
+                        <img src="${p.image}" class="img-preview row-img" onerror="this.classList.add('img-error')">
+                        <input class="input-dark edit-img w-24 text-[8px]" value="${p.image || ''}" onchange="atualizarPreview(this)">
                     </td>
                     <td class="p-2 font-mono text-[#caa85c] font-bold row-sku">${sku}</td>
                     <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
@@ -150,24 +147,38 @@ async function carregarProdutos() {
                 </tr>`;
             }
         });
-        corpo.innerHTML = html || '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">Nada encontrado.</td></tr>';
-        document.getElementById('statusInfo').innerText = `${contador} itens.`;
+        corpo.innerHTML = html || '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado.</td></tr>';
+        document.getElementById('statusInfo').innerText = `${contador} itens carregados.`;
     });
 }
 
-function sincronizarFotosComStorage() {
+function atualizarPreview(input) {
+    const img = input.closest('tr').querySelector('.row-img');
+    img.src = input.value;
+    img.classList.remove('img-error');
+}
+
+function sincronizarFotosInteligente() {
     const dominio = "catalogo-abella-joias.firebasestorage.app";
-    const ext = document.getElementById('formatoFoto').value; // PEGA O FORMATO ESCOLHIDO
+    const ext = document.getElementById('formatoFoto').value;
+    let modificados = 0;
+
     document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
         const sku = tr.querySelector('.row-sku').innerText.trim();
         const inputImg = tr.querySelector('.edit-img');
-        if (sku) {
+        const imgTag = tr.querySelector('.row-img');
+
+        // SÓ ATUALIZA SE: O campo estiver vazio OU a imagem atual falhou ao carregar (borda vermelha)
+        if (!inputImg.value || imgTag.classList.contains('img-error') || inputImg.value.includes('via.placeholder')) {
             const link = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.${ext}?alt=media`;
             inputImg.value = link;
-            tr.querySelector('.row-img').src = link;
+            imgTag.src = link;
+            imgTag.classList.remove('img-error');
+            modificados++;
         }
     });
-    alert(`Links gerados em .${ext.toUpperCase()}. Não esqueça de SALVAR TUDO!`);
+
+    alert(`${modificados} fotos foram tentadas com o formato .${ext.toUpperCase()}. As fotos que já estavam corretas foram preservadas!`);
 }
 
 function salvarAlteracoes() {
@@ -183,7 +194,7 @@ function salvarAlteracoes() {
         updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
-    db.ref().update(updates).then(() => alert("✅ Banco de dados atualizado!")).catch(e => alert(e.message));
+    db.ref().update(updates).then(() => alert("✅ Tudo salvo no Firebase!")).catch(e => alert(e.message));
 }
 
 function liberarCampoLista(select) {
