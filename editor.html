@@ -2,14 +2,14 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editor Full Master v2.8 • Abella Joias</title>
+    <title>Editor Full Master v2.9 • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { background: #0b0b0b; color: #eee; font-family: 'Poppins', sans-serif; }
-        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; width: 100%; font-size: 12px; transition: 0.3s; }
+        .input-dark { background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; width: 100%; font-size: 11px; transition: 0.3s; }
         .input-dark:focus { border-color: #caa85c; outline: none; background: #222; box-shadow: 0 0 8px rgba(202, 168, 92, 0.4); }
         .edit-sku { color: #caa85c; font-family: monospace; font-weight: bold; text-transform: uppercase; }
         tr.is-paused { opacity: 0.4; background: #2a1010 !important; }
@@ -17,7 +17,8 @@
         .status-on { background: #15803d; color: white; }
         .status-off { background: #b91c1c; color: white; }
         .sticky-header th { position: sticky; top: 0; background: #0b0b0b; z-index: 10; border-bottom: 2px solid #caa85c; padding: 12px; }
-        .img-preview { width: 50px; height: 50px; object-fit: contain; background: #222; border-radius: 8px; border: 1px solid #333; }
+        .img-preview { width: 45px; height: 45px; object-fit: contain; background: #222; border-radius: 6px; border: 1px solid #333; }
+        .img-error { border: 2px solid #ef4444 !important; }
         .highlight-var { border: 1px solid #caa85c !important; background: #262116 !important; }
     </style>
 </head>
@@ -26,44 +27,56 @@
     <div class="max-w-[99%] mx-auto">
         <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl">
             <div>
-                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.8</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Edição Completa: SKU, Nomes e Variações</p>
+                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.9</h1>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">TUDO LIBERADO: SKU, Fotos e Variações</p>
             </div>
             
-            <div class="flex flex-wrap gap-3 w-full xl:w-auto justify-center">
+            <div class="flex flex-wrap gap-3 w-full xl:w-auto justify-center items-center">
                 <select id="filtroCat" class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm text-white outline-none focus:border-[#caa85c]">
                     <option value="">Todas Categorias</option>
                 </select>
-                <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="Buscar SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-64 outline-none focus:border-[#caa85c] text-white">
-                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-8 py-2 rounded-xl text-sm hover:brightness-110">🔍 BUSCAR</button>
+                <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-48 outline-none focus:border-[#caa85c] text-white">
+                
+                <div class="flex items-center gap-1 bg-[#0b0b0b] border border-[#333] rounded-xl px-2">
+                    <span class="text-[9px] text-gray-500 font-bold px-1">FORMATO:</span>
+                    <select id="formatoFoto" class="bg-transparent text-xs text-white outline-none py-2 cursor-pointer">
+                        <option value="png">.PNG</option>
+                        <option value="jpg">.JPG</option>
+                        <option value="jpeg">.JPEG</option>
+                        <option value="webp">.WEBP</option>
+                    </select>
+                </div>
+
+                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110">🔍 BUSCAR</button>
+                <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700">🔄 SYNC FOTOS</button>
             </div>
         </header>
 
         <div class="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto" style="max-height: 75vh;">
+            <div class="overflow-x-auto" style="max-height: 70vh;">
                 <table class="w-full text-left text-[11px] border-collapse">
                     <thead class="sticky-header">
                         <tr class="text-[#caa85c] uppercase text-[9px] tracking-wider">
-                            <th class="w-20 p-4">Status</th>
-                            <th class="w-16">Foto</th>
-                            <th class="w-32">SKU (Código)</th>
+                            <th class="w-16 p-4">Status</th>
+                            <th class="w-20">Foto</th>
+                            <th class="w-32">SKU</th>
                             <th class="w-1/4">Nome do Produto</th>
                             <th class="w-32">Categoria</th>
                             <th class="w-32">Variação</th>
-                            <th class="w-48">Opções Lista</th>
+                            <th class="w-40">Opções Lista</th>
                             <th class="w-20">Preço R$</th>
                             <th class="w-24 text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
-                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic text-lg">Selecione os filtros para editar os produtos.</td></tr>
+                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic">Busque produtos para começar...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="mt-6 flex flex-col md:flex-row justify-between items-center bg-[#141414] p-5 rounded-2xl border border-[#2a2a2a] gap-4">
-            <div id="statusInfo" class="text-sm text-gray-400">Aguardando...</div>
+            <div id="statusInfo" class="text-sm text-gray-400">Pronto.</div>
             <button onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-16 py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm transition-all transform hover:scale-105">
                 💾 SALVAR TODAS AS ALTERAÇÕES
             </button>
@@ -95,7 +108,7 @@ async function carregarProdutos() {
     const filtroTexto = document.getElementById('filtroSku').value.trim().toUpperCase();
     const filtroCat = document.getElementById('filtroCat').value;
     const corpo = document.getElementById('tabelaCorpo');
-    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse font-bold">CARREGANDO...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse">CARREGANDO...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -114,44 +127,57 @@ async function carregarProdutos() {
                 });
 
                 html += `
-                <tr data-id="${child.key}" class="border-b border-[#222] transition-colors hover:bg-[#1a1a1a] ${p.paused ? 'is-paused' : ''}">
+                <tr data-id="${child.key}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
                     <td class="p-3 text-center">
                         <button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF' : 'ON'}</button>
                     </td>
-                    <td class="p-2"><img src="${p.image}" class="img-preview"></td>
-                    <td class="p-1">
-                        <input class="input-dark edit-sku" value="${sku}" placeholder="SKU">
+                    <td class="p-2 flex flex-col items-center">
+                        <img src="${p.image}" class="img-preview row-img" onerror="this.classList.add('img-error')">
+                        <input class="hidden edit-img" value="${p.image || ''}">
                     </td>
-                    <td class="p-1">
-                        <input class="input-dark edit-name" value="${p.name || ''}" placeholder="Nome">
-                    </td>
+                    <td class="p-1"><input class="input-dark edit-sku" value="${sku}"></td>
+                    <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
                     <td class="p-1"><select class="input-dark edit-cat">${catOptions}</select></td>
                     <td class="p-1">
                         <select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
-                            <option value="" ${!p.variacaoTipo ? 'selected' : ''}>Sem Variação</option>
-                            <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro (Anéis)</option>
-                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista (Iniciais)</option>
+                            <option value="" ${!p.variacaoTipo ? 'selected' : ''}>Padrão</option>
+                            <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro</option>
+                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista</option>
                         </select>
                     </td>
-                    <td class="p-1">
-                        <input class="input-dark edit-opcoes ${p.variacaoTipo === 'Lista' ? 'highlight-var' : 'opacity-20 pointer-events-none'}" 
-                        value="${p.opcoesPersonalizadas || ''}" placeholder="A, B, C...">
-                    </td>
-                    <td class="p-1">
-                        <input class="input-dark edit-precoFinal" type="number" step="0.01" value="${p.precoFinal || p.price || 0}">
-                    </td>
+                    <td class="p-1"><input class="input-dark edit-opcoes ${p.variacaoTipo === 'Lista' ? 'highlight-var' : 'opacity-20 pointer-events-none'}" value="${p.opcoesPersonalizadas || ''}"></td>
+                    <td class="p-1"><input class="input-dark edit-precoFinal" type="number" step="0.01" value="${p.precoFinal || p.price || 0}"></td>
                     <td class="p-1 text-center">
-                         <div class="flex justify-center gap-2">
-                            <button onclick="salvarLinhaUnica(this)" class="bg-green-600 p-2 rounded-lg hover:bg-green-500" title="Salvar Este">✅</button>
+                         <div class="flex justify-center gap-1">
+                            <button onclick="salvarLinhaUnica(this)" class="bg-green-600 p-2 rounded-lg hover:bg-green-500">✅</button>
                             <button onclick="deletarProduto('${child.key}')" class="bg-red-900 p-2 rounded-lg hover:bg-red-700">🗑️</button>
                          </div>
                     </td>
                 </tr>`;
             }
         });
-        corpo.innerHTML = html || '<tr><td colspan="9" class="p-20 text-center text-red-500 font-bold">Nenhum produto encontrado.</td></tr>';
-        document.getElementById('statusInfo').innerText = `${contador} produtos listados.`;
+        corpo.innerHTML = html || '<tr><td colspan="9" class="p-20 text-center text-red-500">Nada encontrado.</td></tr>';
+        document.getElementById('statusInfo').innerText = `${contador} itens.`;
     });
+}
+
+function sincronizarFotosInteligente() {
+    const dominio = "catalogo-abella-joias.firebasestorage.app";
+    const ext = document.getElementById('formatoFoto').value;
+    let count = 0;
+    document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
+        const sku = tr.querySelector('.edit-sku').value.trim();
+        const inputImg = tr.querySelector('.edit-img');
+        const imgTag = tr.querySelector('.row-img');
+        if (!inputImg.value || imgTag.classList.contains('img-error')) {
+            const link = `https://firebasestorage.googleapis.com/v0/b/${dominio}/o/produtos%2F${sku}.${ext}?alt=media`;
+            inputImg.value = link;
+            imgTag.src = link;
+            imgTag.classList.remove('img-error');
+            count++;
+        }
+    });
+    alert(`${count} fotos sincronizadas em .${ext.toUpperCase()}`);
 }
 
 function salvarLinhaUnica(btn) {
@@ -164,15 +190,13 @@ function salvarLinhaUnica(btn) {
         variacaoTipo: tr.querySelector('.edit-varTipo').value,
         opcoesPersonalizadas: tr.querySelector('.edit-opcoes').value,
         precoFinal: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
+        image: tr.querySelector('.edit-img').value,
         paused: tr.querySelector('.btn-status').classList.contains('status-off')
     };
-    
-    db.ref(`products/${id}`).update(data)
-        .then(() => {
-            btn.classList.add('bg-blue-600');
-            setTimeout(() => btn.classList.remove('bg-blue-600'), 1000);
-        })
-        .catch(e => alert("Erro: " + e.message));
+    db.ref(`products/${id}`).update(data).then(() => {
+        btn.classList.replace('bg-green-600', 'bg-blue-600');
+        setTimeout(() => btn.classList.replace('bg-blue-600', 'bg-green-600'), 800);
+    });
 }
 
 function salvarAlteracoes() {
@@ -185,22 +209,16 @@ function salvarAlteracoes() {
         updates[`/products/${id}/variacaoTipo`] = tr.querySelector('.edit-varTipo').value;
         updates[`/products/${id}/opcoesPersonalizadas`] = tr.querySelector('.edit-opcoes').value;
         updates[`/products/${id}/precoFinal`] = parseFloat(tr.querySelector('.edit-precoFinal').value) || 0;
+        updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
-    db.ref().update(updates).then(() => alert("✅ Tudo atualizado!")).catch(e => alert(e.message));
+    db.ref().update(updates).then(() => alert("✅ Tudo salvo!"));
 }
 
 function liberarCampoLista(select) {
-    const tr = select.closest('tr');
-    const input = tr.querySelector('.edit-opcoes');
-    if(select.value === 'Lista') {
-        input.classList.remove('opacity-20', 'pointer-events-none');
-        input.classList.add('highlight-var');
-    } else {
-        input.classList.add('opacity-20', 'pointer-events-none');
-        input.classList.remove('highlight-var');
-        input.value = '';
-    }
+    const input = select.closest('tr').querySelector('.edit-opcoes');
+    if(select.value === 'Lista') { input.classList.remove('opacity-20', 'pointer-events-none'); input.classList.add('highlight-var'); }
+    else { input.classList.add('opacity-20', 'pointer-events-none'); input.classList.remove('highlight-var'); input.value = ''; }
 }
 
 function toggleStatus(btn) {
@@ -210,7 +228,7 @@ function toggleStatus(btn) {
     btn.closest('tr').classList.toggle('is-paused', isActive);
 }
 
-function deletarProduto(id) { if(confirm("Excluir?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
+function deletarProduto(id) { if(confirm("Deletar?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
 
 carregarCategorias();
 </script>
