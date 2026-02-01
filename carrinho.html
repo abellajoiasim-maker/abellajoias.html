@@ -152,17 +152,32 @@ const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL'
 const fP = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + 'g';
 
 // Busca configurações globais (inclusive o nome da promoção)
-db.ref('settings/empresa').once('value', s => { 
-    const v = s.val();
-    if(v) {
-        foneLoja = v.whats ? v.whats.replace(/\D/g,'') : '';
-        configEmpresa.descontoPix = parseFloat(v.descontoPix) || 0;
-        configEmpresa.parcelas = parseInt(v.parcelas) || 3;
-        configEmpresa.nomePromo = v.nomePromo || "OFERTA"; // Pega o nome do menu promoções
+// Sincronização em tempo real com as configurações da loja
+db.ref('settings').on('value', s => { 
+    const data = s.val();
+    if(data) {
+        // Busca os dados básicos da empresa
+        if(data.empresa) {
+            foneLoja = data.empresa.whats ? data.empresa.whats.replace(/\D/g,'') : '';
+            configEmpresa.descontoPix = parseFloat(data.empresa.descontoPix) || 0;
+            configEmpresa.parcelas = parseInt(data.empresa.parcelas) || 3;
+        }
+        
+        // SINCRONIA DO NOME: Busca no nó 'promocoes' ou no 'empresa/nomePromo'
+        // Se não encontrar nenhum, ele usa "OFERTA" por padrão.
+        let nomePromocaoPainel = "OFERTA";
+        
+        if (data.promocoes && data.promocoes.nome) {
+            nomePromocaoPainel = data.promocoes.nome;
+        } else if (data.empresa && data.empresa.nomePromo) {
+            nomePromocaoPainel = data.empresa.nomePromo;
+        }
+        
+        configEmpresa.nomePromo = nomePromocaoPainel.toUpperCase();
     }
+    // Recarrega o carrinho para aplicar o novo nome e valores instantaneamente
     carregarCarrinho();
 });
-
 function carregarCarrinho() {
     let box = document.getElementById('listaItens');
     box.innerHTML = '';
