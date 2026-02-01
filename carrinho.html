@@ -41,7 +41,7 @@
 <main class="max-w-xl mx-auto p-4 pb-40">
 
     <div class="card">
-        <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest border-b border-[#222] pb-2">Itens Selecionados</h2>
+        <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest border-b border-[#222] pb-2">Seus Itens</h2>
         <div id="listaItens"></div>
     </div>
 
@@ -49,8 +49,7 @@
         <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest border-b border-[#222] pb-2">Dados de Entrega</h2>
         <input id="nomeCliente" placeholder="Seu Nome Completo *">
         <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
-
-        <p class="mt-4 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Envio (Opcional)</p>
+        <p class="mt-4 text-[10px] uppercase gold-text font-bold mb-2 text-center opacity-50 italic">Endereço de Envio (Opcional)</p>
         <input id="nomeEntrega" placeholder="Nome do Destinatário">
         <input id="cepEntrega" placeholder="CEP">
         <input id="rua" placeholder="Rua / Avenida">
@@ -66,7 +65,7 @@
         <div class="grid grid-cols-2 gap-4">
             <div class="pay-btn" onclick="setPagamento('Pix', this)">
                 <span class="block text-lg">Pix</span>
-                <span class="text-[9px] text-green-500 font-bold tracking-widest">Economize Agora</span>
+                <span class="text-[9px] text-green-500 font-bold tracking-widest italic">Aproveitar Desconto</span>
             </div>
             <div class="pay-btn" onclick="setPagamento('Cartão', this)">
                 <span class="block text-lg">Cartão</span>
@@ -76,34 +75,34 @@
     </div>
 
     <div class="card space-y-4">
-        <h2 class="serif gold-text uppercase text-xs mb-2 tracking-widest border-b border-[#222] pb-2">Resumo Financeiro</h2>
+        <h2 class="serif gold-text uppercase text-xs mb-2 tracking-widest border-b border-[#222] pb-2">Resumo Final</h2>
         
-        <div class="space-y-2 text-sm">
-            <div class="flex justify-between text-gray-400 font-light">
-                <span>Peso Total:</span>
-                <b id="pesoTotal" class="text-white">0.00g</b>
+        <div class="space-y-3 text-sm">
+            <div class="flex justify-between items-center bg-[#0d0d0d] px-4 py-3 rounded-xl border border-[#222]">
+                <span class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Peso Total:</span>
+                <b id="pesoTotal" class="text-lg font-mono text-white">0,00g</b>
             </div>
             
-            <div class="flex justify-between text-gray-400 font-light border-b border-[#222] pb-2">
-                <span>Subtotal Produtos:</span>
+            <div class="flex justify-between text-gray-400 px-1 pt-2">
+                <span>Subtotal Itens:</span>
                 <b id="subtotalTxt" class="text-white">R$ 0,00</b>
             </div>
 
-            <div id="boxEconomia" class="bg-green-900/20 border border-green-500/30 p-3 rounded-xl hidden">
+            <div id="boxEconomia" class="bg-green-900/10 border border-green-500/20 p-3 rounded-xl hidden">
                 <div class="flex justify-between items-center">
                     <span class="text-green-500 text-[11px] font-bold uppercase italic">✨ Ganho no Pix:</span>
                     <b id="economiaValor" class="text-green-500 text-lg">- R$ 0,00</b>
                 </div>
             </div>
 
-            <div id="boxParcelas" class="bg-blue-900/20 border border-blue-500/30 p-3 rounded-xl hidden">
+            <div id="boxParcelas" class="bg-blue-900/10 border border-blue-500/20 p-3 rounded-xl hidden">
                 <div class="flex justify-between items-center">
-                    <span class="text-blue-400 text-[11px] font-bold uppercase italic">💳 Parcelado:</span>
-                    <b id="parcelaDestaque" class="text-blue-400 text-lg">3x de R$ 0,00</b>
+                    <span class="text-blue-400 text-[11px] font-bold uppercase italic tracking-tighter">💳 Parcelamento:</span>
+                    <b id="parcelaDestaque" class="text-blue-400 text-lg">0x de R$ 0,00</b>
                 </div>
             </div>
 
-            <div class="flex justify-between text-xl font-bold gold-text mt-2 pt-2 border-t-2 border-[#caa85c]">
+            <div class="flex justify-between text-xl font-bold gold-text mt-4 pt-3 border-t-2 border-[#caa85c]">
                 <span id="labelTotal">TOTAL:</span>
                 <span id="totalTxt">R$ 0,00</span>
             </div>
@@ -121,7 +120,6 @@
 </footer>
 
 <script>
-// FIREBASE CONFIG
 if (!firebase.apps.length) {
     firebase.initializeApp({
         apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -135,9 +133,10 @@ let pagamento = '';
 let foneLoja = '';
 let configEmpresa = { descontoPix: 0, parcelas: 3 };
 
-const fM = (v) => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+// FORMATADORES PT-BR
+const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fP = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'g';
 
-// Carrega configurações iniciais
 db.ref('settings/empresa').once('value', s => { 
     const v = s.val();
     if(v) {
@@ -158,8 +157,7 @@ function carregarCarrinho(){
         let q = parseInt(i.quantidade) || 1;
         let pFinal = parseFloat(i.precoFinal || i.price || 0);
         let pUnit = i.peso || i.weight || 0;
-        if(typeof pUnit === 'string') pUnit = pUnit.replace(',', '.');
-        pUnit = parseFloat(pUnit) || 0;
+        if(typeof pUnit === 'string') pUnit = parseFloat(pUnit.replace(',', '.')) || 0;
 
         subtotalItens += (pFinal * q);
         pesoTotal += (pUnit * q);
@@ -169,48 +167,36 @@ function carregarCarrinho(){
                 <img src="${i.image || ''}">
                 <div class="flex-1">
                     <b class="text-[12px] uppercase text-white">${i.name}</b><br>
-                    <small class="text-gray-500 text-[10px]">Peso: ${pUnit.toFixed(2)}g | SKU: ${i.sku||'--'}</small>
+                    <small class="text-gray-500 text-[10px]">Peso: ${fP(pUnit)}</small>
                     <div class="flex items-center gap-3 mt-2">
                         <button class="qtd-btn" onclick="alterarQtd(${index},-1)">-</button>
                         <span class="font-bold text-sm">${q}</span>
                         <button class="qtd-btn" onclick="alterarQtd(${index},1)">+</button>
                     </div>
-                    <div class="remove-btn" onclick="removerItem(${index})">Remover</div>
                 </div>
                 <b class="gold-text text-sm">${fM(pFinal * q)}</b>
             </div>`;
     });
 
     const economiaPix = subtotalItens * (configEmpresa.descontoPix / 100);
-    const boxEco = document.getElementById('boxEconomia');
-    const boxParc = document.getElementById('boxParcelas');
-    const labelTotal = document.getElementById('labelTotal');
-    let valorFinal;
-
-    if (pagamento === 'Pix') {
-        valorFinal = subtotalItens - economiaPix;
-        boxEco.classList.remove('hidden');
-        boxParc.classList.add('hidden');
-        document.getElementById('economiaValor').innerText = `- ${fM(economiaPix)}`;
-        labelTotal.innerHTML = 'TOTAL <span class="text-[10px] text-green-500 ml-2 font-medium">(À VISTA PIX)</span>:';
-    } else if (pagamento === 'Cartão') {
-        valorFinal = subtotalItens;
-        boxParc.classList.remove('hidden');
-        boxEco.classList.add('hidden');
-        document.getElementById('parcelaDestaque').innerText = `${configEmpresa.parcelas}x de ${fM(subtotalItens / configEmpresa.parcelas)}`;
-        labelTotal.innerHTML = 'TOTAL <span class="text-[10px] text-blue-400 ml-2 font-medium">(CARTÃO)</span>:';
-    } else {
-        valorFinal = subtotalItens;
-        boxEco.classList.add('hidden');
-        boxParc.classList.add('hidden');
-        labelTotal.innerText = 'TOTAL:';
-    }
+    const valorFinal = (pagamento === 'Pix') ? subtotalItens - economiaPix : subtotalItens;
 
     document.getElementById('subtotalTxt').innerText = fM(subtotalItens);
-    document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + 'g';
+    document.getElementById('pesoTotal').innerText = fP(pesoTotal);
     document.getElementById('totalTxt').innerText = fM(valorFinal);
     
-    window.pesoTotalFinal = pesoTotal.toFixed(2);
+    const boxEco = document.getElementById('boxEconomia');
+    const boxParc = document.getElementById('boxParcelas');
+    
+    if(pagamento === 'Pix'){
+        boxEco.classList.remove('hidden'); boxParc.classList.add('hidden');
+        document.getElementById('economiaValor').innerText = `- ${fM(economiaPix)}`;
+    } else if(pagamento === 'Cartão'){
+        boxParc.classList.remove('hidden'); boxEco.classList.add('hidden');
+        document.getElementById('parcelaDestaque').innerText = `${configEmpresa.parcelas}x de ${fM(subtotalItens/configEmpresa.parcelas)}`;
+    }
+
+    window.pesoTotalFinal = pesoTotal;
     window.economiaReal = economiaPix;
 }
 
@@ -223,61 +209,52 @@ function setPagamento(p, el){
 
 function alterarQtd(index, delta){
     carrinho[index].quantidade = (carrinho[index].quantidade || 1) + delta;
-    if(carrinho[index].quantidade < 1) return removerItem(index);
+    if(carrinho[index].quantidade < 1) {
+        if(confirm("Remover item?")) { carrinho.splice(index, 1); }
+        else { carrinho[index].quantidade = 1; }
+    }
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     carregarCarrinho();
 }
 
-function removerItem(index){
-    if(confirm("Deseja remover este item?")) {
-        carrinho.splice(index, 1);
-        localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        carregarCarrinho();
-    }
-}
-
 async function finalizarPedido(){
     const nome = document.getElementById('nomeCliente').value;
-    const totalF = document.getElementById('totalTxt').innerText;
+    const totalTexto = document.getElementById('totalTxt').innerText;
+    const foneCliente = document.getElementById('telefoneCliente').value;
 
-    if(!nome || !pagamento) return alert("Por favor, preencha seu Nome e escolha a Forma de Pagamento.");
-    if(carrinho.length === 0) return alert("Seu carrinho está vazio!");
+    if(!nome || !pagamento) return alert("Por favor, preencha seu Nome e escolha o Pagamento.");
+    if(carrinho.length === 0) return alert("Carrinho vazio!");
 
     const enderecoDB = {
-        destinatario: document.getElementById('nomeEntrega').value || 'Não informado',
-        cep: document.getElementById('cepEntrega').value || 'Não informado',
+        cidade: document.getElementById('cidade').value || 'Não informado',
         rua: document.getElementById('rua').value || '',
-        num: document.getElementById('num').value || '',
-        bairro: document.getElementById('bairro').value || '',
-        cidade: document.getElementById('cidade').value || ''
+        num: document.getElementById('num').value || ''
     };
 
     try {
         await db.ref('orders').push({
             cliente: nome,
-            whats: document.getElementById('telefoneCliente').value,
-            total: totalF,
+            whats: foneCliente,
+            total: totalTexto,
             pagamento: pagamento,
-            peso: window.pesoTotalFinal + 'g',
-            itens: carrinho,
-            endereco: enderecoDB,
+            peso: fP(window.pesoTotalFinal),
             data: new Date().toLocaleString('pt-BR')
         });
 
-        let msg = `*NOVO PEDIDO - ABELLA JOIAS*\n`;
-        msg += `------------------------------\n`;
-        msg += `👤 *Cliente:* ${nome}\n`;
-        msg += `⚖️ *Peso Total:* ${window.pesoTotalFinal}g\n`;
+        // MENSAGEM DO WHATSAPP CONFORME SEU PADRÃO
+        let msg = `Olá, meu nome é *${nome}*!\n\n`;
+        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n\n`;
+        msg += `⚖️ *Peso Total:* ${fP(window.pesoTotalFinal)}\n`;
+        msg += `💰 *Total:* ${totalTexto}\n`;
         msg += `💳 *Pagamento:* ${pagamento}\n`;
         
         if(pagamento === 'Pix') {
-            msg += `✨ *Economia:* ${fM(window.economiaReal)}\n`;
+            msg += `✨ *Economia Pix:* ${fM(window.economiaReal)}\n`;
         } else {
-            msg += `💳 *Parcelas:* ${configEmpresa.parcelas}x s/ juros\n`;
+            msg += `⏳ *Parcelado:* ${configEmpresa.parcelas}x sem juros\n`;
         }
         
-        msg += `💰 *TOTAL:* ${totalF}\n`;
-        msg += `------------------------------\n`;
+        msg += `📍 *Cidade:* ${enderecoDB.cidade}\n\n`;
         msg += `Aguardando seu retorno para finalizar!`;
 
         localStorage.removeItem('carrinho');
