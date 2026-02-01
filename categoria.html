@@ -267,15 +267,16 @@ document.getElementById('contadorCarrinho').innerText=`(${total})`;
 }
 
 async function carregarProdutos(){
-    // 1. Busca as configurações de promoção, empresa e a categoria atual
+    // BUSCA CONFIGURAÇÕES DE PROMOÇÃO, EMPRESA E CATEGORIA AO MESMO TEMPO
     const [empSnap, catSnap, promoSnap] = await Promise.all([
         db.ref('settings/empresa').once('value'),
         db.ref('categories/'+catId).once('value'),
-        db.ref('settings/promocao').once('value') // Nova busca necessária
+        db.ref('settings/promocao').once('value')
     ]);
 
-    const configEmpresa = empSnap.val() || {descontoPix:0, parcelas:1};
+    const configEmpresa = empSnap.val() || {descontoPix:0};
     const categoria = catSnap.val() || {};
+    // Pega as configurações do painel (ativa, label, cores)
     const cnf = promoSnap.val() || { ativa: false, label: 'OFF', colorBg: '#ff0000', colorText: '#ffffff' };
     
     document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
@@ -286,20 +287,16 @@ async function carregarProdutos(){
 
         snap.forEach(s=>{
             const p=s.val();
-            if(p.paused) return;
+            if(p.paused || p.category !== catId) return;
 
-            // Filtra pela categoria correta
-            if(p.category !== catId) return;
-
-            // Lógica de Preço e Desconto
-            // Prioriza o desconto da categoria se houver, senão usa o do produto
+            // Define a porcentagem (prioriza categoria, depois produto)
             const porcentagem = categoria.promoPct || p.promoPct || 0;
             const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem/100) : p.price;
             const valorPix = precoFinal * (1 - (configEmpresa.descontoPix/100));
             const valorParcela = precoFinal / 3;
 
             grid.innerHTML += `
-            <div class="card-prod p-4">
+            <div class="card-prod p-4 relative">
                 <div class="img-container mb-4">
                     ${cnf.ativa && porcentagem > 0 ? `
                         <span style="
@@ -313,31 +310,29 @@ async function carregarProdutos(){
                             padding: 4px 10px; 
                             border-radius: 6px; 
                             z-index: 10;
-                            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                            text-transform: uppercase;">
+                            text-transform: uppercase;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
                             ${cnf.label} ${porcentagem}%
                         </span>
                     ` : ''}
-                    
                     <img src="${p.image || ''}">
                 </div>
 
-                <div class="flex-1">
+                <div class="flex-1 text-left">
                     <div class="text-[9px] text-gray-500 font-bold uppercase">SKU: ${p.sku||'---'}</div>
                     <h3 class="text-[11px] font-bold uppercase mt-1 mb-2 h-8 overflow-hidden">${p.name}</h3>
-                    <div class="text-[10px] text-gray-400 italic mb-3">Peso: ${p.peso||0}g</div>
-
+                    
                     <div class="mb-4">
                         ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
                         <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
-                        <div class="text-[10px] text-gray-400">3x de ${fM(valorParcela)} sem juros</div>
-                        <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
+                        <div class="text-[9px] text-gray-400 uppercase">Ou 3x de ${fM(valorParcela)}</div>
+                        <div class="text-[11px] text-green-500 font-bold mt-1">PIX: ${fM(valorPix)}</div>
                     </div>
                 </div>
 
                 <button onclick='prepararAdd(${JSON.stringify({...p, precoFinal, porcentagem}).replace(/'/g,"")})'
-                    class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase transition hover:opacity-80">
-                    Adicionar ao Carrinho
+                    class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">
+                    Adicionar
                 </button>
             </div>`;
         });
