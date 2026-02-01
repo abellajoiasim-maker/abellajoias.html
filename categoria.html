@@ -115,7 +115,6 @@ async function carregarProdutos() {
 
     if(!catId) { window.location.href = 'index.html'; return; }
 
-    // Busca Empresa, Categoria e Configurações de Promoção (Etiquetas)
     const [empSnap, catSnap, promoSnap] = await Promise.all([
         db.ref('settings/empresa').once('value'),
         db.ref('categories/' + catId).once('value'),
@@ -124,72 +123,59 @@ async function carregarProdutos() {
 
     const v = empSnap.val() || { nome: "Abella Joias", subtitulo: "Atacado de Joias no Bruto", descontoPix: 5, parcelas: 3 };
     const categoria = catSnap.val() || {};
-    const cnf = promoSnap.val() || { ativa: false, label: 'OFF', colorBg: '#ff0000', colorText: '#ffffff' };
+    const cnf = promoSnap.val() || { ativa: false, label: 'OFF' };
 
-    // Atualiza Textos da Header e Título
-    if(document.getElementById('nomeLoja')) document.getElementById('nomeLoja').innerText = v.nome;
-    if(document.getElementById('sloganLoja')) document.getElementById('sloganLoja').innerText = v.subtitulo;
-    if(document.getElementById('tituloCategoria')) document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
+    document.getElementById('nomeLoja').innerText = v.nome;
+    document.getElementById('sloganLoja').innerText = v.subtitulo;
+    document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
 
-    // Listener em tempo real para produtos
     db.ref('products').on('value', snap => {
         const grid = document.getElementById('gridProdutos');
-        if(!grid) return;
         grid.innerHTML = '';
 
         snap.forEach(s => {
             const p = s.val();
-            // Filtra por categoria e ignora pausados
             if (p.category !== catId || p.paused) return;
 
-            // Lógica de Desconto: Categoria manda primeiro (se houver), depois o Produto
+            // --- LÓGICA DE PESO (O PONTO CHAVE) ---
+            // Tenta pegar do campo 'peso' (do seu CSV), se não der, tenta variações.
+            let pesoValor = p.peso || p.weight || p.grs || 0;
+            
+            // Se o peso vier como string "1,50", transforma em número para não quebrar
+            if(typeof pesoValor === 'string') pesoValor = pesoValor.replace(',', '.');
+            const pesoExibicao = parseFloat(pesoValor).toFixed(2);
+
             const porcentagem = categoria.promoPct || p.promoPct || 0;
             const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem / 100) : p.price;
-            
-            // Cálculos financeiros baseados no painel
             const valorPix = precoFinal * (1 - (v.descontoPix / 100));
-            const numParcelas = v.parcelas || 3;
-            const valorParcela = precoFinal / numParcelas;
+            const valorParcela = precoFinal / (v.parcelas || 3);
 
             grid.innerHTML += `
                 <div class="card-prod p-4 flex flex-col h-full relative">
                     <div class="img-container mb-4 rounded-xl relative overflow-hidden">
                         ${cnf.ativa && porcentagem > 0 ? `
-                            <span style="
-                                position: absolute; 
-                                top: 6px; 
-                                left: 6px; 
-                                background: ${cnf.colorBg}; 
-                                color: ${cnf.colorText}; 
-                                font-size: clamp(8px, 2.5vw, 10px); 
-                                font-weight: bold; 
-                                padding: 2px 6px; 
-                                border-radius: 4px; 
-                                z-index: 10;
-                                text-transform: uppercase;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-                                white-space: nowrap;">
+                            <span style="position: absolute; top: 6px; left: 6px; background: ${cnf.colorBg}; color: ${cnf.colorText}; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 10; text-transform: uppercase;">
                                 ${cnf.label} ${porcentagem}%
                             </span>
                         ` : ''}
-                        <img src="${p.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover" loading="lazy">
+                        <img src="${p.image || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
                     </div>
 
                     <div class="flex-1 text-left">
                         <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">SKU: ${p.sku || '---'}</div>
                         <h3 class="text-[11px] font-bold uppercase mb-1 leading-tight h-8 overflow-hidden">${p.name}</h3>
                         
-                        <div class="text-[10px] text-gray-400 mb-3 italic">Peso: ${p.peso || 0}g</div>
+                        <div class="text-[10px] text-gray-400 mb-3 italic">Peso Médio: ${pesoExibicao}g</div>
 
                         <div class="mb-4">
                             ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
                             <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
-                            <div class="text-[9px] text-gray-400">Ou ${numParcelas}x de ${fM(valorParcela)}</div>
+                            <div class="text-[9px] text-gray-400">Ou ${v.parcelas || 3}x de ${fM(valorParcela)}</div>
                             <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
                         </div>
                     </div>
 
-                    <button onclick='prepararAdd(${JSON.stringify({ ...p, key: s.key, precoFinal, porcentagem }).replace(/'/g,"&apos;")})'
+                    <button onclick='prepararAdd(${JSON.stringify({ ...p, key: s.key, precoFinal, peso: pesoExibicao }).replace(/'/g,"&apos;")})'
                         class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase transition hover:opacity-80 mt-auto">
                         Adicionar ao Carrinho
                     </button>
