@@ -148,7 +148,7 @@ db.ref('settings').on('value', s => {
             configEmpresa.descontoPix = parseFloat(data.empresa.descontoPix) || 0;
             configEmpresa.parcelas = parseInt(data.empresa.parcelas) || 3;
         }
-        let nomePromocaoPainel = (data.promocoes && data.promocoes.nome) || (data.empresa && data.empresa.nomePromo) || "OFERTA";
+        let nomePromocaoPainel = (data.promocoes && data.promocoes.nome) || (data.empresa && data.empresa.nomePromo) || "BLACK FRIDAY";
         configEmpresa.nomePromo = nomePromocaoPainel.toUpperCase();
     }
     carregarCarrinho();
