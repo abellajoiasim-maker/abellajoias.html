@@ -9,9 +9,7 @@
     <meta property="og:description" content="Confira nossas joias no bruto. Qualidade e sofisticação para o seu negócio.">
     <meta property="og:url" content="https://abellajoiasim-maker.github.io/abellajoias/">
     <meta property="og:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
+    
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,10 +21,8 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
         .serif { font-family: 'Cinzel', serif; }
-        .gold-bg { background: #A68966; }
         .gold-text { color: #caa85c; }
         
-        /* Ajuste de Imagens das Categorias */
         .img-container {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -77,19 +73,11 @@
             color: #000; 
         }
 
-        header {
-            background: #000;
-            border-bottom: 1px solid #222;
-        }
+        header { background: #000; border-bottom: 1px solid #222; }
 
-        /* AJUSTE PARA MOBILE */
         @media (max-width: 640px) {
-            .img-container img {
-                padding: 4px !important; 
-            }
-            .card-lux {
-                border-radius: 10px !important;
-            }
+            .img-container img { padding: 4px !important; }
+            .card-lux { border-radius: 10px !important; }
         }
     </style>
 </head>
@@ -140,11 +128,12 @@
         });
     }
 
+    // ATUALIZADO: Contador agora soma corretamente mesmo produtos com variações
     function atualizarContador() {
         const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
         const valorTotal = carrinho.reduce((acc, item) => {
-            const preco = parseFloat(item.precoFinal || item.price) || 0;
-            const qtd = parseInt(item.quantidade || item.qtd) || 0;
+            const preco = parseFloat(item.precoFinal || item.price || 0);
+            const qtd = parseInt(item.quantidade || 1);
             return acc + (preco * qtd);
         }, 0);
         document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
@@ -167,18 +156,7 @@
                     grid.innerHTML += `
                         <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
                             ${temPromo ? `
-                                <span style="
-                                    position: absolute; 
-                                    top: 8px; 
-                                    right: 8px; 
-                                    background: ${cnf.colorBg || '#caa85c'}; 
-                                    color: ${cnf.colorText || '#000'}; 
-                                    font-size: clamp(7px, 2.5vw, 9px); 
-                                    padding: 2px 6px; 
-                                    border-radius: 4px; 
-                                    z-index: 10; 
-                                    font-weight: bold;
-                                    box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                <span style="position: absolute; top: 8px; right: 8px; background: ${cnf.colorBg || '#caa85c'}; color: ${cnf.colorText || '#000'}; font-size: 9px; padding: 2px 8px; border-radius: 4px; z-index: 10; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
                                     ${cnf.label} ${cat.promoPct}%
                                 </span>
                             ` : ''}
