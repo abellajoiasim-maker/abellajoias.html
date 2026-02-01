@@ -12,203 +12,200 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Poppins',sans-serif;background:#fdfcf9}
-.serif{font-family:'Cinzel',serif}
-.gold{color:#A68966}
-.card{background:#fff;border-radius:18px;border:1px solid #eee;padding:20px;margin-bottom:20px}
-.item{display:flex;gap:14px;border:1px solid #eee;border-radius:14px;padding:12px;align-items:center}
-.item img{width:70px;height:70px;object-fit:cover;border-radius:10px;border:1px solid #eee}
-.qtd-btn{background:#A68966;color:#fff;width:26px;height:26px;border-radius:6px;font-weight:bold}
-.remove-btn{color:#dc2626;font-size:11px;font-weight:bold;margin-top:4px;cursor:pointer}
-.pay-btn{border:2px solid #eee;border-radius:14px;padding:16px;text-align:center;cursor:pointer;font-weight:bold;text-transform:uppercase}
-.pay-btn.active{border-color:#A68966;color:#A68966;background:#fffaf5}
+    body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
+    .serif { font-family: 'Cinzel', serif; }
+    .gold-text { color: #caa85c; }
+    .gold-bg { background: #caa85c; }
+    
+    header { background: #000; border-bottom: 1px solid #222; }
+    .card { background: #141414; border-radius: 18px; border: 1px solid #2a2a2a; padding: 20px; margin-bottom: 20px; }
+    
+    .item { display: flex; gap: 14px; border: 1px solid #222; border-radius: 14px; padding: 12px; align-items: center; background: #0d0d0d; margin-bottom: 10px;}
+    .item img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #333; }
+    
+    .qtd-btn { background: #222; color: #caa85c; border: 1px solid #caa85c; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; }
+    
+    .remove-btn { color: #ff4444; font-size: 10px; font-weight: bold; margin-top: 8px; cursor: pointer; text-transform: uppercase; }
+    
+    .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; font-weight: bold; text-transform: uppercase; color: #888; }
+    .pay-btn.active { border-color: #caa85c; color: #caa85c; background: #1a1610; }
+    
+    input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; }
+    input:focus { border-color: #caa85c !important; }
+
+    footer { background: #000; border-top: 1px solid #222; }
 </style>
 </head>
 
 <body>
 
-<header class="bg-white border-b sticky top-0 z-10">
-<div class="max-w-xl mx-auto p-4 flex justify-between items-center">
-<button onclick="history.back()" class="text-xs font-bold uppercase">← Voltar</button>
-<h1 class="serif gold uppercase">Meu Pedido</h1>
-</div>
+<header class="sticky top-0 z-50">
+    <div class="max-w-xl mx-auto p-4 flex justify-between items-center">
+        <button onclick="history.back()" class="text-[10px] font-bold uppercase gold-text">← Voltar</button>
+        <h1 class="serif gold-text uppercase text-sm tracking-widest">Finalizar Pedido</h1>
+    </div>
 </header>
 
-<main class="max-w-xl mx-auto p-4 pb-36">
+<main class="max-w-xl mx-auto p-4 pb-40">
 
-<div class="card">
-<h2 class="serif gold uppercase mb-4">Itens do Pedido</h2>
-<div id="listaItens"></div>
-</div>
+    <div class="card">
+        <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest">Itens do Pedido</h2>
+        <div id="listaItens"></div>
+    </div>
 
-<div class="card">
-<h2 class="serif gold uppercase mb-4">Dados do Cliente</h2>
-<input id="nomeCliente" placeholder="Nome completo *" class="w-full mb-2 p-3 border rounded">
-<input id="telefoneCliente" placeholder="WhatsApp *" class="w-full mb-2 p-3 border rounded">
+    <div class="card">
+        <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest">Dados do Cliente</h2>
+        <input id="nomeCliente" placeholder="Nome Completo *">
+        <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
 
-<p class="mt-4 text-xs uppercase gold font-bold">Local de Entrega</p>
-<input id="nomeEntrega" placeholder="Nome do local" class="w-full mb-2 p-3 border rounded">
-<input id="rua" placeholder="Rua / Avenida" class="w-full mb-2 p-3 border rounded">
-<div class="grid grid-cols-2 gap-2">
-<input id="num" placeholder="Nº" class="p-3 border rounded">
-<input id="bairro" placeholder="Bairro" class="p-3 border rounded">
-</div>
-<input id="cidade" placeholder="Cidade" class="w-full mt-2 p-3 border rounded">
-</div>
+        <p class="mt-2 text-[10px] uppercase gold-text font-bold mb-2">Endereço de Entrega (Opcional)</p>
+        <input id="rua" placeholder="Rua / Avenida">
+        <div class="grid grid-cols-3 gap-2">
+            <input id="num" placeholder="Nº">
+            <input id="bairro" placeholder="Bairro" class="col-span-2">
+        </div>
+        <input id="cidade" placeholder="Cidade">
+    </div>
 
-<div class="card">
-<h2 class="serif gold uppercase mb-4">Forma de Pagamento</h2>
-<div class="grid grid-cols-2 gap-4">
-<div class="pay-btn" onclick="setPagamento('Pix',this)">Pix</div>
-<div class="pay-btn" onclick="setPagamento('Cartão',this)">Cartão</div>
-</div>
-</div>
+    <div class="card">
+        <h2 class="serif gold-text uppercase text-xs mb-4 tracking-widest">Forma de Pagamento</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="pay-btn" onclick="setPagamento('Pix', this)">Pix</div>
+            <div class="pay-btn" onclick="setPagamento('Cartão', this)">Cartão</div>
+        </div>
+    </div>
 
-<div class="card text-sm">
-<div class="flex justify-between"><span>Peso total</span><b id="pesoTotal">0g</b></div>
-<div class="flex justify-between"><span>Subtotal</span><b id="subtotalTxt">R$ 0,00</b></div>
-<div class="flex justify-between text-green-700"><span>Descontos</span><b id="descontoTxt">R$ 0,00</b></div>
-<div class="flex justify-between text-lg font-bold gold mt-2">
-<span>Total</span><span id="totalTxt">R$ 0,00</span>
-</div>
-</div>
+    <div class="card text-sm space-y-2">
+        <div class="flex justify-between text-gray-400"><span>Peso Total:</span><b id="pesoTotal" class="text-white">0g</b></div>
+        <div class="flex justify-between text-gray-400"><span>Subtotal:</span><b id="subtotalTxt" class="text-white">R$ 0,00</b></div>
+        <div class="flex justify-between text-green-500"><span>Descontos Aplicados:</span><b id="descontoTxt">- R$ 0,00</b></div>
+        <div class="flex justify-between text-lg font-bold gold-text mt-4 pt-4 border-t border-[#222]">
+            <span>TOTAL:</span><span id="totalTxt">R$ 0,00</span>
+        </div>
+    </div>
 
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
-<div class="max-w-xl mx-auto">
-<button onclick="finalizarPedido()" class="w-full bg-black text-white py-4 rounded-xl font-bold uppercase">
-Finalizar via WhatsApp
-</button>
-</div>
+<footer class="fixed bottom-0 left-0 right-0 p-4">
+    <div class="max-w-xl mx-auto">
+        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg active:scale-95 transition">
+            Finalizar via WhatsApp
+        </button>
+    </div>
 </footer>
 
 <script>
 if (!firebase.apps.length) {
-firebase.initializeApp({
-apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-});
+    firebase.initializeApp({
+        apiKey:"AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL:"https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    });
 }
 const db=firebase.database();
 
-let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
-let pagamento='';
-let subtotalNumero=0;
-let descontoNumero=0;
-let pesoNumero=0;
+let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
+let pagamento = '';
+let foneLoja = '';
 
-function fMoeda(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+const fM = (v) => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-function salvarCarrinho(){
-localStorage.setItem('carrinho',JSON.stringify(carrinho));
-carregarCarrinho();
+// Busca telefone da loja configurado no painel
+db.ref('settings/empresa/whats').once('value', s => { 
+    if(s.val()) foneLoja = s.val().replace(/\D/g,''); 
+});
+
+function carregarCarrinho(){
+    let box = document.getElementById('listaItens');
+    box.innerHTML = '';
+    let subtotal = 0;
+    let desconto = 0;
+    let pesoTotal = 0;
+
+    carrinho.forEach((i, index) => {
+        let q = parseInt(i.quantidade) || 1;
+        let pFinal = parseFloat(i.precoFinal || i.price || 0);
+        let pOrig = parseFloat(i.price || pFinal);
+        let pUnit = parseFloat(i.peso || 0);
+
+        subtotal += (pFinal * q);
+        pesoTotal += (pUnit * q); // SOMA DO PESO CORRIGIDA
+        if(pOrig > pFinal) desconto += (pOrig - pFinal) * q;
+
+        box.innerHTML += `
+            <div class="item">
+                <img src="${i.image || ''}">
+                <div class="flex-1">
+                    <b class="text-[12px] uppercase text-white">${i.name}</b><br>
+                    <small class="text-gray-500 text-[10px]">Peso: ${pUnit}g | SKU: ${i.sku||'--'}</small>
+                    <div class="flex items-center gap-3 mt-2">
+                        <button class="qtd-btn" onclick="alterarQtd(${index},-1)">-</button>
+                        <span class="font-bold text-sm">${q}</span>
+                        <button class="qtd-btn" onclick="alterarQtd(${index},1)">+</button>
+                    </div>
+                    <div class="remove-btn" onclick="removerItem(${index})">Remover</div>
+                </div>
+                <b class="gold-text text-sm">${fM(pFinal * q)}</b>
+            </div>`;
+    });
+
+    document.getElementById('subtotalTxt').innerText = fM(subtotal + desconto);
+    document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + 'g';
+    document.getElementById('descontoTxt').innerText = '- ' + fM(desconto);
+    document.getElementById('totalTxt').innerText = fM(subtotal);
 }
 
-function alterarQtd(index,delta){
-carrinho[index].quantidade+=delta;
-if(carrinho[index].quantidade<1) carrinho[index].quantidade=1;
-salvarCarrinho();
+function alterarQtd(index, delta){
+    carrinho[index].quantidade = (carrinho[index].quantidade || 1) + delta;
+    if(carrinho[index].quantidade < 1) carrinho[index].quantidade = 1;
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    carregarCarrinho();
 }
 
 function removerItem(index){
-if(confirm("Remover este item?")){
-carrinho.splice(index,1);
-salvarCarrinho();
-}
-}
-
-function setPagamento(p,el){
-pagamento=p;
-document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));
-el.classList.add('active');
+    if(confirm("Remover item?")) {
+        carrinho.splice(index, 1);
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        carregarCarrinho();
+    }
 }
 
-function carregarCarrinho(){
-let box=document.getElementById('listaItens');
-box.innerHTML='';
-subtotalNumero=0;
-descontoNumero=0;
-pesoNumero=0;
-
-if(carrinho.length===0){
-box.innerHTML='<p class="text-center text-gray-400">Seu carrinho está vazio.</p>';
-}
-
-carrinho.forEach((i,index)=>{
-let q=i.quantidade||1;
-let preco=Number(i.precoFinal||i.price||0);
-let precoOrig=Number(i.price||preco);
-let peso=Number(i.peso||0);
-
-subtotalNumero+=preco*q;
-pesoNumero+=peso*q;
-if(precoOrig>preco) descontoNumero+=(precoOrig-preco)*q;
-
-box.innerHTML+=`
-<div class="item">
-<img src="${i.image||''}">
-<div class="flex-1">
-<b>${i.name}</b><br>
-<small>SKU: ${i.sku||'---'}</small><br>
-<div class="flex items-center gap-2 mt-1">
-<button class="qtd-btn" onclick="alterarQtd(${index},-1)">-</button>
-<span>${q}</span>
-<button class="qtd-btn" onclick="alterarQtd(${index},1)">+</button>
-</div>
-<div class="remove-btn" onclick="removerItem(${index})">Remover</div>
-</div>
-<b class="gold">${fMoeda(preco*q)}</b>
-</div>`;
-});
-
-document.getElementById('subtotalTxt').innerText=fMoeda(subtotalNumero+descontoNumero);
-document.getElementById('pesoTotal').innerText=pesoNumero.toFixed(2)+'g';
-document.getElementById('descontoTxt').innerText='- '+fMoeda(descontoNumero);
-document.getElementById('totalTxt').innerText=fMoeda(subtotalNumero);
+function setPagamento(p, el){
+    pagamento = p;
+    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
 }
 
 async function finalizarPedido(){
-if(!nomeCliente.value||!telefoneCliente.value||!pagamento){
-alert('Preencha nome, WhatsApp e pagamento.');
-return;
-}
+    const nome = document.getElementById('nomeCliente').value;
+    const totalTexto = document.getElementById('totalTxt').innerText;
+    const formaPagamento = pagamento;
 
-const btn=document.querySelector("footer button");
-btn.innerText="Enviando pedido...";
-btn.disabled=true;
+    if(!nome || !pagamento) return alert("Preencha seu nome e a forma de pagamento.");
+    if(carrinho.length === 0) return alert("Carrinho vazio.");
 
-try{
-await db.ref('orders').push({
-cliente:{nome:nomeCliente.value,telefone:telefoneCliente.value},
-whatsapp:telefoneCliente.value,
-pagamento:pagamento,
-itens:carrinho,
-subtotal:subtotalNumero+descontoNumero,
-descontos:descontoNumero,
-pesoTotal:pesoNumero,
-total:subtotalNumero,
-data:new Date().toLocaleString('pt-BR'),
-endereco:{
-nome:nomeEntrega.value,
-rua:rua.value,
-num:num.value,
-bairro:bairro.value,
-cidade:cidade.value
-}
-});
+    try {
+        // Salva no banco (Painel Admin)
+        await db.ref('orders').push({
+            cliente: nome,
+            total: totalTexto,
+            pagamento: formaPagamento,
+            itens: carrinho,
+            data: new Date().toLocaleString('pt-BR')
+        });
 
-localStorage.removeItem('carrinho');
+        // MENSAGEM DO WHATSAPP CONFORME SOLICITADO
+        let msg = `Olá, meu nome é *${nome}*!\n\n`;
+        msg += `Acabei de fazer um pedido pelo catálogo da Abella Joias.\n`;
+        msg += `💰 *Total:* ${totalTexto}\n`;
+        msg += `💳 *Pagamento:* ${formaPagamento}\n\n`;
+        msg += `Aguardando seu retorno para finalizar!`;
 
-const fone=telefoneCliente.value.replace(/\D/g,'');
-const msg=encodeURIComponent(`Olá! Fiz um pedido de ${fMoeda(subtotalNumero)} pelo catálogo.`);
-window.location.href=`https://api.whatsapp.com/send?phone=55${fone}&text=${msg}`;
+        localStorage.removeItem('carrinho');
+        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
 
-}catch(e){
-alert("Erro ao enviar pedido. Tente novamente.");
-btn.innerText="Finalizar via WhatsApp";
-btn.disabled=false;
-}
+    } catch(e) {
+        alert("Erro ao enviar. Tente novamente.");
+    }
 }
 
 carregarCarrinho();
