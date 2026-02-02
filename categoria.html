@@ -133,7 +133,7 @@ async function carregarProdutos() {
             grid.innerHTML += `
                 <div class="card-prod p-4 flex flex-col h-full">
                     <div class="img-container mb-4 rounded-xl relative">
-                        ${cnf.ativa && porcentagem > 0 ? `<span style="position: absolute; top: 6px; left: 6px; background: ${cnf.colorBg}; color: ${cnf.colorText}; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 10;">${cnf.label} ${porcentagem}%</span>` : ''}
+                      ${cnf.ativa && porcentagem > 0 ? `<span style="position: absolute; top: 6px; left: 6px; background: ${cnf.colorBg}; color: ${cnf.colorText}; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 10;">${cnf.label}</span>` : ''}
                         <img src="${p.image || 'https://via.placeholder.com/400'}" loading="lazy">
                     </div>
                     <div class="flex-1">
