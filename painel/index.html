@@ -261,19 +261,32 @@ function novaCategoria() {
 
 /* GESTÃO DE PEDIDOS E EDITOR */
 let pedidoEditando = null;
-function carregarPedidos() {
-  db.ref('orders').on('value', s => {
-    const lista = document.getElementById('listaPedidos');
-    lista.innerHTML = '';
-    s.forEach(ped => {
-      const p = ped.val();
-      lista.innerHTML += `
-        <div class="card border-l-4 border-[#caa85c] flex justify-between items-center">
-          <div><b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b><br><small>${p.data || ''}</small></div>
-          <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
-        </div>`;
-    });
-  });
+function deletarPedido(id) {
+    if (confirm("Deseja excluir permanentemente este pedido do banco de dados?")) {
+        db.ref('orders/' + id).remove()
+            .then(() => {
+                // O Firebase 'on' já atualizará a lista automaticamente, 
+                // mas podemos colocar um log para confirmar
+                console.log("Pedido excluído com sucesso.");
+            })
+            .catch(error => {
+                alert("Erro ao excluir: " + error.message);
+            });
+    }
+}
+    
+function deletarPedido(id) {
+  if (confirm("Deseja excluir permanentemente este pedido do banco de dados?")) {
+     db.ref('orders/' + id).remove()
+        .then(() => {
+                // O Firebase 'on' já atualizará a lista automaticamente, 
+                // mas podemos colocar um log para confirmar
+            console.log("Pedido excluído com sucesso.");
+         })
+         .catch(error => {
+              alert("Erro ao excluir: " + error.message);
+            });
+    }
 }
 
 function abrirEditorPedido(id){
