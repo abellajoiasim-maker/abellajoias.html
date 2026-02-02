@@ -261,18 +261,28 @@ function novaCategoria() {
 
 /* GESTÃO DE PEDIDOS E EDITOR */
 let pedidoEditando = null;
-function deletarPedido(id) {
-    if (confirm("Deseja excluir permanentemente este pedido do banco de dados?")) {
-        db.ref('orders/' + id).remove()
-            .then(() => {
-                // O Firebase 'on' já atualizará a lista automaticamente, 
-                // mas podemos colocar um log para confirmar
-                console.log("Pedido excluído com sucesso.");
-            })
-            .catch(error => {
-                alert("Erro ao excluir: " + error.message);
-            });
+function carregarPedidos() {
+  db.ref('orders').on('value', s => {
+    const lista = document.getElementById('listaPedidos');
+    lista.innerHTML = '';
+    s.forEach(ped => {
+      const p = ped.val();
+      lista.innerHTML += `
+        <div class="card border-l-4 border-[#caa85c] flex justify-between items-center bg-[#111] mb-2">
+          <div class="flex-1">
+            <b class="text-[#caa85c] uppercase text-xs">${p.cliente?.nome || p.cliente || 'Sem Nome'}</b>
+            <br><small class="text-[10px] text-gray-500">${p.data || ''}</small>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn-gold text-[10px] py-1 px-3" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
+            <button class="btn bg-red-900 border-red-700 text-white text-[10px] py-1 px-3" onclick="deletarPedido('${ped.key}')">🗑️</button>
+          </div>
+        </div>`;
+    });
+    if (lista.innerHTML === '') {
+        lista.innerHTML = '<p class="text-center text-gray-500 py-10">Nenhum pedido encontrado.</p>';
     }
+  });
 }
     
 function deletarPedido(id) {
