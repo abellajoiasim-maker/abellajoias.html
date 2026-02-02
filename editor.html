@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editor Full Master v2.9 • Abella Joias</title>
+    <title>Editor Full Master v3.0 • Abella Joias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -22,33 +22,38 @@
         .highlight-var { border: 1px solid #caa85c !important; background: #262116 !important; }
     </style>
 </head>
-<body class="p-4 md:p-6">
+<body class="p-4">
 
     <div class="max-w-[99%] mx-auto">
-        <header class="flex flex-col xl:flex-row justify-between items-center mb-6 gap-6 bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl">
-            <div>
-                <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v2.9</h1>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">TUDO LIBERADO: SKU, Fotos e Variações</p>
-            </div>
-            
-            <div class="flex flex-wrap gap-3 w-full xl:w-auto justify-center items-center">
-                <select id="filtroCat" class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm text-white outline-none focus:border-[#caa85c]">
-                    <option value="">Todas Categorias</option>
-                </select>
-                <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-4 py-2 rounded-xl text-sm w-full md:w-48 outline-none focus:border-[#caa85c] text-white">
-                
-                <div class="flex items-center gap-1 bg-[#0b0b0b] border border-[#333] rounded-xl px-2">
-                    <span class="text-[9px] text-gray-500 font-bold px-1">FORMATO:</span>
-                    <select id="formatoFoto" class="bg-transparent text-xs text-white outline-none py-2 cursor-pointer">
-                        <option value="png">.PNG</option>
-                        <option value="jpg">.JPG</option>
-                        <option value="jpeg">.JPEG</option>
-                        <option value="webp">.WEBP</option>
-                    </select>
+        <header class="bg-[#141414] p-6 rounded-2xl border border-[#2a2a2a] shadow-xl mb-6">
+            <div class="flex flex-col xl:flex-row justify-between items-center gap-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-[#caa85c]">Editor Full Master v3.0</h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Gestão de Inventário e Novas Entradas</p>
                 </div>
+                
+                <div class="flex flex-wrap gap-2 w-full xl:w-auto justify-center">
+                    <button onclick="criarNovoProduto()" class="bg-white text-black font-black px-6 py-2 rounded-xl text-xs hover:bg-gray-200 flex items-center gap-2">
+                        <span class="text-lg">+</span> NOVO PRODUTO
+                    </button>
+                    
+                    <select id="filtroCat" class="bg-[#0b0b0b] border border-[#333] px-3 py-2 rounded-xl text-xs text-white outline-none focus:border-[#caa85c]">
+                        <option value="">Todas Categorias</option>
+                    </select>
+                    
+                    <input id="filtroSku" onkeypress="if(event.key === 'Enter') carregarProdutos()" placeholder="SKU ou Nome..." class="bg-[#0b0b0b] border border-[#333] px-3 py-2 rounded-xl text-xs w-40 outline-none focus:border-[#caa85c] text-white">
+                    
+                    <div class="flex items-center gap-1 bg-[#0b0b0b] border border-[#333] rounded-xl px-2">
+                        <select id="formatoFoto" class="bg-transparent text-[10px] text-white outline-none py-2 cursor-pointer">
+                            <option value="png">.PNG</option>
+                            <option value="jpg">.JPG</option>
+                            <option value="webp">.WEBP</option>
+                        </select>
+                    </div>
 
-                <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-6 py-2 rounded-xl text-sm hover:brightness-110">🔍 BUSCAR</button>
-                <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm hover:bg-blue-700">🔄 SYNC FOTOS</button>
+                    <button onclick="carregarProdutos()" class="bg-[#caa85c] text-black font-bold px-4 py-2 rounded-xl text-xs hover:brightness-110">🔍 BUSCAR</button>
+                    <button onclick="sincronizarFotosInteligente()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-blue-700">🔄 SYNC FOTOS</button>
+                </div>
             </div>
         </header>
 
@@ -57,26 +62,26 @@
                 <table class="w-full text-left text-[11px] border-collapse">
                     <thead class="sticky-header">
                         <tr class="text-[#caa85c] uppercase text-[9px] tracking-wider">
-                            <th class="w-16 p-4">Status</th>
-                            <th class="w-20">Foto</th>
-                            <th class="w-32">SKU</th>
-                            <th class="w-1/4">Nome do Produto</th>
-                            <th class="w-32">Categoria</th>
-                            <th class="w-32">Variação</th>
-                            <th class="w-40">Opções Lista</th>
-                            <th class="w-20">Preço R$</th>
-                            <th class="w-24 text-center">Ações</th>
+                            <th class="p-4">Status</th>
+                            <th>Foto</th>
+                            <th>SKU</th>
+                            <th class="w-1/4">Nome</th>
+                            <th>Categoria</th>
+                            <th>Variação</th>
+                            <th>Opções Lista</th>
+                            <th>Preço R$</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo">
-                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic">Busque produtos para começar...</td></tr>
+                        <tr><td colspan="9" class="p-20 text-center text-gray-500 italic">Clique em "Buscar" ou "Novo Produto"</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="mt-6 flex flex-col md:flex-row justify-between items-center bg-[#141414] p-5 rounded-2xl border border-[#2a2a2a] gap-4">
-            <div id="statusInfo" class="text-sm text-gray-400">Pronto.</div>
+            <div id="statusInfo" class="text-sm text-gray-400">Aguardando comando...</div>
             <button onclick="salvarAlteracoes()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-16 py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm transition-all transform hover:scale-105">
                 💾 SALVAR TODAS AS ALTERAÇÕES
             </button>
@@ -104,11 +109,66 @@ async function carregarCategorias() {
     filterSelect.innerHTML = options;
 }
 
+function criarLinhaHTML(id, p) {
+    let catOptions = '';
+    Object.entries(categoriasCache).forEach(([cid, cat]) => {
+        catOptions += `<option value="${cid}" ${p.category === cid ? 'selected' : ''}>${cat.name}</option>`;
+    });
+
+    return `
+    <tr data-id="${id}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
+        <td class="p-3 text-center">
+            <button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF' : 'ON'}</button>
+        </td>
+        <td class="p-2 flex flex-col items-center">
+            <img src="${p.image || ''}" class="img-preview row-img" onerror="this.classList.add('img-error')">
+            <input class="hidden edit-img" value="${p.image || ''}">
+        </td>
+        <td class="p-1"><input class="input-dark edit-sku" value="${p.sku || ''}"></td>
+        <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
+        <td class="p-1"><select class="input-dark edit-cat">${catOptions}</select></td>
+        <td class="p-1">
+            <select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
+                <option value="" ${!p.variacaoTipo ? 'selected' : ''}>Padrão</option>
+                <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro</option>
+                <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista</option>
+            </select>
+        </td>
+        <td class="p-1"><input class="input-dark edit-opcoes ${p.variacaoTipo === 'Lista' ? 'highlight-var' : 'opacity-20 pointer-events-none'}" value="${p.opcoesPersonalizadas || ''}"></td>
+        <td class="p-1"><input class="input-dark edit-precoFinal" type="number" step="0.01" value="${p.precoFinal || p.price || 0}"></td>
+        <td class="p-1 text-center">
+             <div class="flex justify-center gap-1">
+                <button onclick="salvarLinhaUnica(this)" class="bg-green-600 p-2 rounded-lg hover:bg-green-500">✅</button>
+                <button onclick="deletarProduto('${id}')" class="bg-red-900 p-2 rounded-lg hover:bg-red-700">🗑️</button>
+             </div>
+        </td>
+    </tr>`;
+}
+
+function criarNovoProduto() {
+    const novoRef = db.ref('products').push();
+    const novoProduto = {
+        sku: "NOVO-" + Math.floor(Math.random() * 1000),
+        name: "Novo Produto",
+        price: 0,
+        precoFinal: 0,
+        paused: true,
+        image: ""
+    };
+    
+    const corpo = document.getElementById('tabelaCorpo');
+    if(corpo.innerText.includes("Clique")) corpo.innerHTML = '';
+    
+    // Adiciona ao topo da tabela para facilitar
+    corpo.insertAdjacentHTML('afterbegin', criarLinhaHTML(novoRef.key, novoProduto));
+    document.getElementById('statusInfo').innerText = "Novo produto rascunhado no topo.";
+}
+
 async function carregarProdutos() {
     const filtroTexto = document.getElementById('filtroSku').value.trim().toUpperCase();
     const filtroCat = document.getElementById('filtroCat').value;
     const corpo = document.getElementById('tabelaCorpo');
-    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse">CARREGANDO...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-[#caa85c] animate-pulse">BUSCANDO...</td></tr>';
 
     db.ref('products').once('value', snapshot => {
         let html = '';
@@ -117,43 +177,9 @@ async function carregarProdutos() {
             const p = child.val();
             const sku = String(p.sku || "").toUpperCase();
             const nome = String(p.name || "").toUpperCase();
-            const catId = p.category || "";
-
-            if ((!filtroTexto || sku.includes(filtroTexto) || nome.includes(filtroTexto)) && (!filtroCat || catId === filtroCat)) {
+            if ((!filtroTexto || sku.includes(filtroTexto) || nome.includes(filtroTexto)) && (!filtroCat || p.category === filtroCat)) {
                 contador++;
-                let catOptions = '';
-                Object.entries(categoriasCache).forEach(([id, cat]) => {
-                    catOptions += `<option value="${id}" ${catId === id ? 'selected' : ''}>${cat.name}</option>`;
-                });
-
-                html += `
-                <tr data-id="${child.key}" class="border-b border-[#222] ${p.paused ? 'is-paused' : ''}">
-                    <td class="p-3 text-center">
-                        <button class="btn-status ${p.paused ? 'status-off' : 'status-on'}" onclick="toggleStatus(this)">${p.paused ? 'OFF' : 'ON'}</button>
-                    </td>
-                    <td class="p-2 flex flex-col items-center">
-                        <img src="${p.image}" class="img-preview row-img" onerror="this.classList.add('img-error')">
-                        <input class="hidden edit-img" value="${p.image || ''}">
-                    </td>
-                    <td class="p-1"><input class="input-dark edit-sku" value="${sku}"></td>
-                    <td class="p-1"><input class="input-dark edit-name" value="${p.name || ''}"></td>
-                    <td class="p-1"><select class="input-dark edit-cat">${catOptions}</select></td>
-                    <td class="p-1">
-                        <select class="input-dark edit-varTipo" onchange="liberarCampoLista(this)">
-                            <option value="" ${!p.variacaoTipo ? 'selected' : ''}>Padrão</option>
-                            <option value="Aro" ${p.variacaoTipo === 'Aro' ? 'selected' : ''}>Aro</option>
-                            <option value="Lista" ${p.variacaoTipo === 'Lista' ? 'selected' : ''}>Lista</option>
-                        </select>
-                    </td>
-                    <td class="p-1"><input class="input-dark edit-opcoes ${p.variacaoTipo === 'Lista' ? 'highlight-var' : 'opacity-20 pointer-events-none'}" value="${p.opcoesPersonalizadas || ''}"></td>
-                    <td class="p-1"><input class="input-dark edit-precoFinal" type="number" step="0.01" value="${p.precoFinal || p.price || 0}"></td>
-                    <td class="p-1 text-center">
-                         <div class="flex justify-center gap-1">
-                            <button onclick="salvarLinhaUnica(this)" class="bg-green-600 p-2 rounded-lg hover:bg-green-500">✅</button>
-                            <button onclick="deletarProduto('${child.key}')" class="bg-red-900 p-2 rounded-lg hover:bg-red-700">🗑️</button>
-                         </div>
-                    </td>
-                </tr>`;
+                html += criarLinhaHTML(child.key, p);
             }
         });
         corpo.innerHTML = html || '<tr><td colspan="9" class="p-20 text-center text-red-500">Nada encontrado.</td></tr>';
@@ -177,7 +203,7 @@ function sincronizarFotosInteligente() {
             count++;
         }
     });
-    alert(`${count} fotos sincronizadas em .${ext.toUpperCase()}`);
+    alert(`${count} fotos sincronizadas.`);
 }
 
 function salvarLinhaUnica(btn) {
@@ -190,6 +216,7 @@ function salvarLinhaUnica(btn) {
         variacaoTipo: tr.querySelector('.edit-varTipo').value,
         opcoesPersonalizadas: tr.querySelector('.edit-opcoes').value,
         precoFinal: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
+        price: parseFloat(tr.querySelector('.edit-precoFinal').value) || 0,
         image: tr.querySelector('.edit-img').value,
         paused: tr.querySelector('.btn-status').classList.contains('status-off')
     };
@@ -203,12 +230,14 @@ function salvarAlteracoes() {
     const updates = {};
     document.querySelectorAll('#tabelaCorpo tr[data-id]').forEach(tr => {
         const id = tr.dataset.id;
+        const preco = parseFloat(tr.querySelector('.edit-precoFinal').value) || 0;
         updates[`/products/${id}/sku`] = tr.querySelector('.edit-sku').value.toUpperCase();
         updates[`/products/${id}/name`] = tr.querySelector('.edit-name').value;
         updates[`/products/${id}/category`] = tr.querySelector('.edit-cat').value;
         updates[`/products/${id}/variacaoTipo`] = tr.querySelector('.edit-varTipo').value;
         updates[`/products/${id}/opcoesPersonalizadas`] = tr.querySelector('.edit-opcoes').value;
-        updates[`/products/${id}/precoFinal`] = parseFloat(tr.querySelector('.edit-precoFinal').value) || 0;
+        updates[`/products/${id}/precoFinal`] = preco;
+        updates[`/products/${id}/price`] = preco;
         updates[`/products/${id}/image`] = tr.querySelector('.edit-img').value;
         updates[`/products/${id}/paused`] = tr.querySelector('.btn-status').classList.contains('status-off');
     });
@@ -228,7 +257,7 @@ function toggleStatus(btn) {
     btn.closest('tr').classList.toggle('is-paused', isActive);
 }
 
-function deletarProduto(id) { if(confirm("Deletar?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
+function deletarProduto(id) { if(confirm("Deletar permanentemente?")) db.ref('products/' + id).remove().then(() => carregarProdutos()); }
 
 carregarCategorias();
 </script>
