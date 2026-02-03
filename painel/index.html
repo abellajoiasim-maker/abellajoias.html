@@ -165,89 +165,7 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-function carregarTodosOsPedidos() {
-    const lista = document.getElementById('listaPedidos'); // Nome comum da div de pedidos
-    if(!lista) return;
-
-    // Tentamos ler dos dois caminhos mais comuns: 'orders' e 'pedidos'
-    const caminhos = ['orders', 'pedidos'];
-    
-    lista.innerHTML = '<p class="text-center opacity-50">Buscando histórico...</p>';
-
-    caminhos.forEach(caminho => {
-        db.ref(caminho).on('value', snapshot => {
-            if (snapshot.exists()) {
-                // Se encontrar pedidos, ele limpa o "Buscando..." e lista
-                if(lista.innerHTML.includes("Buscando")) lista.innerHTML = "";
-                
-                snapshot.forEach(child => {
-                    const p = child.val();
-                    const id = child.key;
-                    
-                    // Formatação para garantir que apareça mesmo se o dado for antigo
-                    const nome = p.cliente?.nome || p.nome || "Pedido Antigo";
-                    const total = p.total ? p.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : "Ver no editor";
-
-                    lista.innerHTML += `
-                        <div class="card mb-2 p-3 bg-[#111] border-l-2 border-[#caa85c] flex justify-between items-center">
-                            <div class="text-[11px]">
-                                <b class="gold-text uppercase">${nome}</b><br>
-                                <span class="text-gray-500">${p.data || 'Data não gravada'}</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs font-bold text-white mb-1">${total}</div>
-                                <button onclick="abrirPedido('${id}')" class="text-[9px] bg-[#222] border border-[#caa85c] gold-text px-2 py-1 rounded">ABRIR</button>
-                            </div>
-                        </div>`;
-                });
-            }
-        });
-    });
-}
-
-// Executa a busca
-carregarTodosOsPedidos();
-    // Função para listar os pedidos que o novo carrinho agora envia
-function monitorarPedidos() {
-    const container = document.getElementById('listaPedidos'); // Verifique se o ID da sua div de lista é este
-    if (!container) return;
-
-    db.ref('orders').on('value', snapshot => {
-        container.innerHTML = "";
-        
-        if (!snapshot.exists()) {
-            container.innerHTML = '<p class="text-center py-10 opacity-50">Nenhum pedido encontrado.</p>';
-            return;
-        }
-
-        snapshot.forEach(child => {
-            const id = child.key;
-            const p = child.val();
-            
-            // Tratamento de dados para não dar erro se algo vier vazio
-            const nome = p.cliente?.nome || p.nome || "Cliente s/ Nome";
-            const total = p.total ? p.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : "R$ 0,00";
-            const data = p.data || "Sem data";
-
-            container.innerHTML += `
-                <div class="card mb-3 p-4 bg-[#111] border border-[#222] rounded-xl flex justify-between items-center">
-                    <div>
-                        <div class="text-[#caa85c] font-bold uppercase text-xs">${nome}</div>
-                        <div class="text-[10px] text-gray-500">${data} | ${total}</div>
-                    </div>
-                    <button onclick="abrirPedido('${id}')" class="bg-[#caa85c] text-black text-[10px] px-4 py-2 rounded-lg font-bold">
-                        GERENCIAR
-                    </button>
-                </div>
-            `;
-        });
-    });
-}
-
-// Chama a função assim que o script carregar
-monitorarPedidos();
-    
-    /* NAVEGAÇÃO */
+/* NAVEGAÇÃO */
 function showTab(id, btn) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -256,9 +174,96 @@ function showTab(id, btn) {
 
   if (id === 'categorias') carregarCategorias();
   if (id === 'produtos') carregarProdutos();
-  if (id === 'pedidos') carregarPedidos();
+  if (id === 'pedidos') monitorarPedidos(); // Ajustado para a função correta
   if (id === 'empresa') carregarEmpresaSeExistir();
 }
+
+/* GESTÃO DE PEDIDOS (RESGATA ANTIGOS E NOVOS) */
+function monitorarPedidos() {
+    const lista = document.getElementById('listaPedidos');
+    if(!lista) return;
+
+    lista.innerHTML = '<p class="text-center py-10 opacity-50">Sincronizando banco de dados...</p>';
+
+    // Ouve 'orders' (novos) e 'pedidos' (antigos) simultaneamente
+    const caminhos = ['orders', 'pedidos'];
+    
+    // Limpamos o HTML apenas na primeira vez que um deles retornar dados
+    let primeiroCarregamento = true;
+
+    caminhos.forEach(caminho => {
+        db.ref(caminho).on('value', snapshot => {
+            if (snapshot.exists()) {
+                if(primeiroCarregamento) { lista.innerHTML = ""; primeiroCarregamento = false; }
+                
+                snapshot.forEach(child => {
+                    const p = child.val();
+                    const id = child.key;
+                    
+                    const nome = p.cliente?.nome || p.nome || p.cliente || "Pedido s/ Nome";
+                    const total = p.total ? fMoeda(p.total) : "Ver no editor";
+                    const data = p.data || "Data não gravada";
+
+                    // Removemos duplicatas se o ID já estiver na tela
+                    if(!document.getElementById(`card-${id}`)) {
+                        const card = document.createElement('div');
+                        card.id = `card-${id}`;
+                        card.className = "card border-l-4 border-[#caa85c] flex justify-between items-center bg-[#111] mb-2";
+                        card.innerHTML = `
+                            <div class="flex-1">
+                                <b class="text-[#caa85c] uppercase text-xs">${nome}</b>
+                                <br><small class="text-[10px] text-gray-500">${data} | ${total}</small>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn-gold text-[10px] py-1 px-3" onclick="abrirEditorPedido('${id}', '${caminho}')">GERENCIAR</button>
+                                <button class="btn bg-red-900 border-red-700 text-white text-[10px] py-1 px-3" onclick="deletarPedido('${id}', '${caminho}')">🗑️</button>
+                            </div>`;
+                        lista.prepend(card); // Adiciona os mais recentes no topo
+                    }
+                });
+            } else if (primeiroCarregamento && caminho === 'pedidos') {
+                 // Se terminar de checar e não houver nada
+                 lista.innerHTML = '<p class="text-center text-gray-500 py-10">Nenhum pedido encontrado.</p>';
+            }
+        });
+    });
+}
+
+// Atualize a função de deletar para aceitar o caminho (orders ou pedidos)
+function deletarPedido(id, caminho = 'orders') {
+  if (confirm("Excluir este pedido permanentemente?")) {
+      db.ref(`${caminho}/${id}`).remove().then(() => {
+          const el = document.getElementById(`card-${id}`);
+          if(el) el.remove();
+      });
+  }
+}
+
+// Atualize a função de abrir editor para saber de onde vem o dado
+function abrirEditorPedido(id, caminho = 'orders'){
+  db.ref(`${caminho}/${id}`).once('value', s => {
+    const p = s.val(); if (!p) return;
+    pedidoEditando = id;
+    caminhoEditando = caminho; // Variável global para saber onde salvar
+    
+    document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
+    document.getElementById('edClienteTel').value  = p.cliente?.telefone || p.whatsapp || '';
+    document.getElementById('edRua').value = p.entrega?.rua || p.endereco?.rua || '';
+    document.getElementById('edNum').value = p.entrega?.num || p.endereco?.num || '';
+    document.getElementById('edBairro').value = p.entrega?.bairro || p.endereco?.bairro || '';
+    document.getElementById('edCidade').value = p.entrega?.cidade || p.endereco?.cidade || '';
+    document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+    document.getElementById('edDescPix').value   = p.descontoPix || 0;
+    document.getElementById('edPesoTotalMostrador').value = p.pesoTotal || 0;
+    
+    document.getElementById('edItens').innerHTML='';
+    const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+    itens.forEach(i => addItemEditor(i));
+    document.getElementById('editorPedido').classList.remove('hidden');
+  });
+}
+
+let caminhoEditando = 'orders'; // Global para auxiliar o salvamento
 
 /* PRODUTOS */
 function carregarProdutos() {
