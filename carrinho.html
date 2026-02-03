@@ -248,14 +248,56 @@ function altQtd(i, d) {
 
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || !pagamento) return alert("Preencha Nome e Pagamento.");
-    
-    const totalTexto = fM(window.resumoFinal.total);
-    let msg = `Olá, meu nome é *${nome}*!\n\nAcabei de fazer um pedido pelo catálogo da Abella Joias.\n💰 *Total:* ${totalTexto}\n💳 *Pagamento:* ${pagamento}\n\nAguardando seu retorno para finalizar!`;
-    
-    localStorage.removeItem('carrinho');
-    window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+    const telefone = document.getElementById('telefoneCliente').value;
+    const nomeEntrega = document.getElementById('nomeEntrega').value;
+    const rua = document.getElementById('rua').value;
+    const num = document.getElementById('num').value;
+    const bairro = document.getElementById('bairro').value;
+    const cidade = document.getElementById('cidade').value;
+    const cep = document.getElementById('cepEntrega').value;
+
+    if(!nome || !pagamento) return alert("Preencha Nome e forma de Pagamento.");
+
+    const pedido = {
+        cliente: {
+            nome,
+            telefone
+        },
+        entrega: {
+            nomeEntrega,
+            rua,
+            num,
+            bairro,
+            cidade,
+            cep
+        },
+        pagamento,
+        itens: carrinho,
+        resumo: {
+            total: window.resumoFinal.total
+        },
+        data: new Date().toLocaleString('pt-BR'),
+        status: "Novo"
+    };
+
+    try {
+        // 🔥 SALVA O PEDIDO NO FIREBASE
+        await db.ref('orders').push(pedido);
+
+        // Mensagem WhatsApp
+        const totalTexto = fM(window.resumoFinal.total);
+        let msg = `Olá, meu nome é *${nome}*!\n\nAcabei de fazer um pedido pelo catálogo da Abella Joias.\n💰 *Total:* ${totalTexto}\n💳 *Pagamento:* ${pagamento}\n\nAguardando seu retorno para finalizar!`;
+
+        localStorage.removeItem('carrinho');
+
+        window.location.href = `https://api.whatsapp.com/send?phone=${foneLoja}&text=${encodeURIComponent(msg)}`;
+
+    } catch (erro) {
+        alert("Erro ao salvar pedido. Tente novamente.");
+        console.error(erro);
+    }
 }
+
 </script>
 </body>
 </html>
