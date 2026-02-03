@@ -165,7 +165,49 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-// Função para listar os pedidos que o novo carrinho agora envia
+function carregarTodosOsPedidos() {
+    const lista = document.getElementById('listaPedidos'); // Nome comum da div de pedidos
+    if(!lista) return;
+
+    // Tentamos ler dos dois caminhos mais comuns: 'orders' e 'pedidos'
+    const caminhos = ['orders', 'pedidos'];
+    
+    lista.innerHTML = '<p class="text-center opacity-50">Buscando histórico...</p>';
+
+    caminhos.forEach(caminho => {
+        db.ref(caminho).on('value', snapshot => {
+            if (snapshot.exists()) {
+                // Se encontrar pedidos, ele limpa o "Buscando..." e lista
+                if(lista.innerHTML.includes("Buscando")) lista.innerHTML = "";
+                
+                snapshot.forEach(child => {
+                    const p = child.val();
+                    const id = child.key;
+                    
+                    // Formatação para garantir que apareça mesmo se o dado for antigo
+                    const nome = p.cliente?.nome || p.nome || "Pedido Antigo";
+                    const total = p.total ? p.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : "Ver no editor";
+
+                    lista.innerHTML += `
+                        <div class="card mb-2 p-3 bg-[#111] border-l-2 border-[#caa85c] flex justify-between items-center">
+                            <div class="text-[11px]">
+                                <b class="gold-text uppercase">${nome}</b><br>
+                                <span class="text-gray-500">${p.data || 'Data não gravada'}</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-bold text-white mb-1">${total}</div>
+                                <button onclick="abrirPedido('${id}')" class="text-[9px] bg-[#222] border border-[#caa85c] gold-text px-2 py-1 rounded">ABRIR</button>
+                            </div>
+                        </div>`;
+                });
+            }
+        });
+    });
+}
+
+// Executa a busca
+carregarTodosOsPedidos();
+    // Função para listar os pedidos que o novo carrinho agora envia
 function monitorarPedidos() {
     const container = document.getElementById('listaPedidos'); // Verifique se o ID da sua div de lista é este
     if (!container) return;
