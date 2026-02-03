@@ -165,7 +165,47 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-/* NAVEGAÇÃO */
+// Função para listar os pedidos que o novo carrinho agora envia
+function monitorarPedidos() {
+    const container = document.getElementById('listaPedidos'); // Verifique se o ID da sua div de lista é este
+    if (!container) return;
+
+    db.ref('orders').on('value', snapshot => {
+        container.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+            container.innerHTML = '<p class="text-center py-10 opacity-50">Nenhum pedido encontrado.</p>';
+            return;
+        }
+
+        snapshot.forEach(child => {
+            const id = child.key;
+            const p = child.val();
+            
+            // Tratamento de dados para não dar erro se algo vier vazio
+            const nome = p.cliente?.nome || p.nome || "Cliente s/ Nome";
+            const total = p.total ? p.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : "R$ 0,00";
+            const data = p.data || "Sem data";
+
+            container.innerHTML += `
+                <div class="card mb-3 p-4 bg-[#111] border border-[#222] rounded-xl flex justify-between items-center">
+                    <div>
+                        <div class="text-[#caa85c] font-bold uppercase text-xs">${nome}</div>
+                        <div class="text-[10px] text-gray-500">${data} | ${total}</div>
+                    </div>
+                    <button onclick="abrirPedido('${id}')" class="bg-[#caa85c] text-black text-[10px] px-4 py-2 rounded-lg font-bold">
+                        GERENCIAR
+                    </button>
+                </div>
+            `;
+        });
+    });
+}
+
+// Chama a função assim que o script carregar
+monitorarPedidos();
+    
+    /* NAVEGAÇÃO */
 function showTab(id, btn) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
