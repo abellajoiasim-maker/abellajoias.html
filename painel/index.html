@@ -624,43 +624,50 @@ function fecharEditorPedido() { document.getElementById('editorPedido').classLis
 
 
 function salvarPedidoEditado(){
-
-  const itens=[]; let total=0, pesoTotal=0;
+  const itens=[]; 
+  let total=0, pesoTotal=0;
 
   document.querySelectorAll('#edItens .card').forEach(c=>{
-
     const ins = c.querySelectorAll('input');
-
-    const i={ sku:ins[0].value, name:ins[1].value, peso:+ins[2].value||0, price:+ins[3].value||0, quantidade:+ins[4].value||1 };
-
-    total+=(i.price*i.quantidade); pesoTotal += (i.peso * i.quantidade);
-
-
+    const i={ 
+      sku:ins[0].value, 
+      name:ins[1].value, 
+      peso:+ins[2].value||0, 
+      price:+ins[3].value||0, 
+      quantidade:+ins[4].value||1 
+    };
+    total+=(i.price*i.quantidade); 
+    pesoTotal += (i.peso * i.quantidade);
     itens.push(i);
-
   });
 
   const dp = +document.getElementById('edDescPromo').value||0;
-
   const dx = +document.getElementById('edDescPix').value||0;
 
   db.ref('orders/'+pedidoEditando).update({
-
-    cliente:{ nome:document.getElementById('edClienteNome').value, telefone:document.getElementById('edClienteTel').value },
-
-    entrega:{ rua:document.getElementById('edRua').value, num:document.getElementById('edNum').value, bairro:document.getElementById('edBairro').value, cidade:document.getElementById('edCidade').value },
-
-    itens,
-pesoTotal: Number(pesoTotal.toFixed(2)),
-descontoPromo: dp,
-descontoPix: dx,
-total: Number((total - dp - dx).toFixed(2)),
-, ajustadoManualmente:true
-
-  }).then(()=>{ alert("Salvo!"); fecharEditorPedido(); });
-
+    cliente:{ 
+      nome:document.getElementById('edClienteNome').value, 
+      telefone:document.getElementById('edClienteTel').value 
+    },
+    entrega:{ 
+      rua:document.getElementById('edRua').value, 
+      num:document.getElementById('edNum').value, 
+      bairro:document.getElementById('edBairro').value, 
+      cidade:document.getElementById('edCidade').value 
+    },
+    itens: itens,
+    pesoTotal: Number(pesoTotal.toFixed(2)),
+    descontoPromo: dp,
+    descontoPix: dx,
+    total: Number((total - dp - dx).toFixed(2)),
+    ajustadoManualmente: true
+  }).then(()=>{ 
+    alert("Salvo!"); 
+    fecharEditorPedido(); 
+  }).catch(err => {
+    alert("Erro ao salvar: " + err.message);
+  });
 }
-
 
 
 /* FUNÇÃO GERAR ROMANEIO (VERSÃO COMPLETA COM 3 TIPOS) */
