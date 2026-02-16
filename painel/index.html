@@ -674,12 +674,11 @@ function salvarPedidoEditado(){
 function gerarRomaneio(id, tipo = 1) {
   // Função interna para formatar peso: g para kg se > 1000
   const fmtPeso = (g) => {
-  const peso = Number(g || 0);
-  return peso >= 1000
-    ? `${(peso / 1000).toFixed(3).replace('.', ',')} kg`
-    : `${peso.toFixed(2).replace('.', ',')} g`;
-};
-
+    const peso = Number(g || 0);
+    return peso >= 1000
+      ? `${(peso / 1000).toFixed(3).replace('.', ',')} kg`
+      : `${peso.toFixed(2).replace('.', ',')} g`;
+  };
 
   db.ref('orders/' + id).once('value', s => {
     const p = s.val(); if (!p) return;
@@ -735,20 +734,28 @@ function gerarRomaneio(id, tipo = 1) {
         </tr>`;
       });
 
+      // Cálculos financeiros para exibição
+      const dPromo = Number(p.descontoPromo || 0);
+      const dPix = Number(p.descontoPix || 0);
+      const vFrete = Number(p.entrega?.valorFrete || p.valorFrete || 0);
+      const totalFinal = subtotalCalc - dPromo - dPix + vFrete;
+
       html += `</tbody></table>
         <div class="totais">
           <span>Qtd Total: <b>${qtdTotal}</b> pçs</span> | 
           <span>Peso Total: <b>${fmtPeso(pesoTotalCalc)}</b></span><br>`;
 
-      // Só mostra os valores em dinheiro se não for o Romaneio 1 (tipo 1)
       if (tipo > 1) {
         html += `
-          Subtotal: ${fMoeda(subtotalCalc)}<br>
-          Descontos: - ${fMoeda((p.descontoPromo||0) + (p.descontoPix||0))}<br>
-          <b style="font-size:16px; color:#A68966">
-          TOTAL: ${fMoeda(p.total ?? p.resumo?.total ?? subtotalCalc)}
-</b>
-`;
+          <div style="margin-top:10px; line-height:1.6">
+            Subtotal: ${fMoeda(subtotalCalc)}<br>
+            ${dPromo > 0 ? `Desconto Promo: - ${fMoeda(dPromo)}<br>` : ''}
+            ${dPix > 0 ? `Desconto Pix: - ${fMoeda(dPix)}<br>` : ''}
+            ${vFrete > 0 ? `Frete (${p.entrega?.frete || 'Envio'}): + ${fMoeda(vFrete)}<br>` : ''}
+            <b style="font-size:16px; color:#A68966; display:block; margin-top:5px; border-top:1px solid #eee; pt-2">
+              TOTAL: ${fMoeda(totalFinal)}
+            </b>
+          </div>`;
       }
       
       html += `</div></div>`;
