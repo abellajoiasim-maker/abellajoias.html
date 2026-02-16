@@ -18,8 +18,6 @@
         .btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px}
         input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff;outline:none}
         #mainModal.active { display: flex; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
         /* Estilos de Impressão */
         #print-area { display: none; }
@@ -40,7 +38,6 @@
     <button type="button" class="btn active" onclick="showTab('empresa', this)">Empresa</button>
     <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
     <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
-    <button type="button" class="btn" onclick="showTab('promocoes', this)">Promoções</button>
     <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
@@ -60,23 +57,11 @@
     </section>
 
     <section id="categorias">
-        <div class="card mb-4">
-            <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
-        </div>
         <div id="listaCategorias" class="grid gap-2"></div>
     </section>
 
     <section id="produtos">
         <div id="listaProdutos" class="grid gap-2"></div>
-    </section>
-
-    <section id="promocoes">
-        <div class="card mb-4 text-center">
-            <h2 class="text-[#caa85c] uppercase text-sm mb-4 tracking-widest">Configurações de Promoção</h2>
-            <button class="btn-gold w-full py-4 uppercase" onclick="abrirPainelPromocoes()">🎨 Configurar Etiquetas e Descontos</button>
-        </div>
-        <div id="listaPromocoes" class="grid gap-2"></div>
     </section>
 
     <section id="pedidos">
@@ -86,7 +71,7 @@
 
 <div id="editorPedido" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
     <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[90vh] border border-[#333]">
-        <h2 class="text-[#caa85c] font-bold text-lg mb-3 uppercase">Editar Pedido (Atacado)</h2>
+        <h2 class="text-[#caa85c] font-bold text-lg mb-3 uppercase">Editar Pedido</h2>
 
         <div class="grid md:grid-cols-2 gap-4">
             <div>
@@ -96,7 +81,6 @@
             </div>
             <div>
                 <h3 class="font-bold mb-2 text-xs text-gray-400">ENTREGA</h3>
-                <input id="edEntregaNome" placeholder="Local">
                 <input id="edRua" placeholder="Rua">
                 <div class="grid grid-cols-2 gap-2">
                     <input id="edNum" placeholder="Nº">
@@ -106,21 +90,21 @@
             </div>
         </div>
 
-        <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c]">ITENS DO PEDIDO</h3>
+        <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c]">ITENS</h3>
         <div id="edItens" class="space-y-2"></div>
         <button class="btn w-full mt-2 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ Adicionar Item</button>
 
         <div class="grid grid-cols-3 gap-3 mt-4">
             <div>
-                <label class="text-[10px] text-gray-400">DESC. PROMO (R$)</label>
+                <label class="text-[10px] text-gray-400 font-bold">DESC. PROMO (R$)</label>
                 <input id="edDescPromo" type="number" step="0.01" placeholder="0.00">
             </div>
             <div>
-                <label class="text-[10px] text-gray-400">DESC. PIX (R$)</label>
+                <label class="text-[10px] text-gray-400 font-bold">DESC. PIX (R$)</label>
                 <input id="edDescPix" type="number" step="0.01" placeholder="0.00">
             </div>
             <div>
-                <label class="text-[10px] text-gray-400">VALOR FRETE (R$)</label>
+                <label class="text-[10px] text-gray-400 font-bold">VALOR FRETE (R$)</label>
                 <input id="edValorFrete" type="number" step="0.01" placeholder="0.00">
             </div>
         </div>
@@ -128,25 +112,10 @@
         <div class="flex flex-wrap gap-2 justify-between mt-6 pt-4 border-t border-[#222]">
             <button class="btn px-6" onclick="fecharEditorPedido()">CANCELAR</button>
             <div class="flex gap-2">
-                <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
-                <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
-                <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
-                <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR</button>
+                <button class="btn bg-blue-900" onclick="gerarRomaneio(pedidoEditando, 1)">CONFERÊNCIA</button>
+                <button class="btn bg-blue-900" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO</button>
+                <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
             </div>
-        </div>
-    </div>
-</div>
-
-<div id="mainModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
-        <div class="p-4 border-b border-[#222] flex justify-between items-center">
-            <h3 id="modalTitle" class="text-[#caa85c] uppercase text-sm font-bold">Título</h3>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-white">&times;</button>
-        </div>
-        <div id="modalBody" class="p-6 max-h-[70vh] overflow-y-auto"></div>
-        <div class="p-4 border-t border-[#222] flex gap-3">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
-            <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Guardar Alterações</button>
         </div>
     </div>
 </div>
@@ -170,7 +139,6 @@ function showTab(id, btn) {
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     if (btn) btn.classList.add('active');
-
     if (id === 'categorias') carregarCategorias();
     if (id === 'produtos') carregarProdutos();
     if (id === 'pedidos') carregarPedidos();
@@ -191,28 +159,19 @@ function carregarPedidos() {
                     <div class="flex justify-between items-center">
                         <div>
                             <b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente || 'Sem Nome'}</b><br>
-                            <small>${p.data || ''}</small>
+                            <small>${p.data || ''} - ${fMoeda(p.total)}</small>
                         </div>
-                        <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
-                    </div>
-                    <div class="mt-2 text-right">
-                        <button onclick="excluirPedido('${ped.key}')" class="text-red-500 text-[10px] uppercase font-bold">🗑 Excluir</button>
+                        <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
                     </div>
                 </div>`;
         });
     });
 }
 
-function excluirPedido(id) {
-    if (confirm("Excluir este pedido permanentemente?")) db.ref('orders/' + id).remove();
-}
-
 function abrirEditorPedido(id) {
     db.ref('orders/' + id).once('value', s => {
         const p = s.val(); if (!p) return;
         pedidoEditando = id;
-        
-        // Dados do Cliente e Endereço
         document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
         document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
         document.getElementById('edRua').value = p.entrega?.rua || p.endereco?.rua || '';
@@ -220,7 +179,6 @@ function abrirEditorPedido(id) {
         document.getElementById('edBairro').value = p.entrega?.bairro || p.endereco?.bairro || '';
         document.getElementById('edCidade').value = p.entrega?.cidade || p.endereco?.cidade || '';
         
-        // --- AJUSTE AQUI: Carrega os descontos e frete salvos para ficarem visíveis ---
         document.getElementById('edDescPromo').value = p.descontoPromo || 0;
         document.getElementById('edDescPix').value = p.descontoPix || 0;
         document.getElementById('edValorFrete').value = p.entrega?.valorFrete || p.valorFrete || 0;
@@ -228,13 +186,13 @@ function abrirEditorPedido(id) {
         document.getElementById('edItens').innerHTML = '';
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
         itens.forEach(i => addItemEditor(i));
-        
         document.getElementById('editorPedido').classList.remove('hidden');
     });
+}
 
 function addItemEditor(i = {}) {
     const div = document.createElement('div');
-    div.className = "card bg-black/40 border-[#222]";
+    div.className = "card bg-black/40 border-[#222] mb-2";
     div.innerHTML = `
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
             <input placeholder="SKU" value="${i.sku || ''}">
@@ -243,7 +201,7 @@ function addItemEditor(i = {}) {
             <input type="number" placeholder="Preço" value="${i.price || i.precoFinal || 0}">
             <input type="number" placeholder="Qtd" value="${i.quantidade || i.qtd || 1}">
         </div>
-        <button class="text-red-500 text-[10px] uppercase font-bold mt-1" onclick="this.parentElement.remove()">Remover</button>`;
+        <button class="text-red-500 text-[10px] font-bold" onclick="this.parentElement.remove()">REMOVER ITEM</button>`;
     document.getElementById('edItens').appendChild(div);
 }
 
@@ -252,250 +210,108 @@ function fecharEditorPedido() { document.getElementById('editorPedido').classLis
 
 function salvarPedidoEditado() {
     const itens = []; 
-    let subtotalItens = 0, pesoTotal = 0;
-
+    let subtotal = 0, pesoTotal = 0;
     document.querySelectorAll('#edItens .card').forEach(c => {
         const ins = c.querySelectorAll('input');
         const i = {
-            sku: ins[0].value,
-            name: ins[1].value,
+            sku: ins[0].value, name: ins[1].value,
             peso: Number(ins[2].value) || 0,
             price: Number(ins[3].value) || 0,
             quantidade: Number(ins[4].value) || 1
         };
-        subtotalItens += (i.price * i.quantidade);
+        subtotal += (i.price * i.quantidade);
         pesoTotal += (i.peso * i.quantidade);
         itens.push(i);
     });
 
-    // Captura os valores dos inputs que você editou na tela
     const dp = Number(document.getElementById('edDescPromo').value) || 0;
     const dx = Number(document.getElementById('edDescPix').value) || 0;
     const vf = Number(document.getElementById('edValorFrete').value) || 0;
-    const novoTotal = subtotalItens - dp - dx + vf;
 
     db.ref('orders/' + pedidoEditando).update({
-        cliente: { 
-            nome: document.getElementById('edClienteNome').value, 
-            telefone: document.getElementById('edClienteTel').value 
-        },
-        entrega: { 
-            rua: document.getElementById('edRua').value, 
-            num: document.getElementById('edNum').value, 
-            bairro: document.getElementById('edBairro').value, 
-            cidade: document.getElementById('edCidade').value,
-            valorFrete: vf
-        },
-        itens: itens,
+        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
+        entrega: { rua: document.getElementById('edRua').value, num: document.getElementById('edNum').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value, valorFrete: vf },
+        itens,
         pesoTotal: Number(pesoTotal.toFixed(2)),
         descontoPromo: dp,
         descontoPix: dx,
-        total: Number(novoTotal.toFixed(2)),
-        ajustadoManualmente: true
-    }).then(() => { 
-        alert("Pedido atualizado com sucesso!"); 
-        fecharEditorPedido(); 
-    });
+        total: Number((subtotal - dp - dx + vf).toFixed(2))
+    }).then(() => { alert("Salvo!"); fecharEditorPedido(); });
 }
 
-/* FUNÇÃO ROMANEIO COMPLETA E CORRIGIDA */
 function gerarRomaneio(id, tipo = 1) {
-    // Função interna para formatar peso: g para kg se > 1000
-    const fmtPeso = (g) => {
-        const p = Number(g || 0);
-        return p >= 1000 ? `${(p / 1000).toFixed(3).replace('.', ',')} kg` : `${p.toFixed(2).replace('.', ',')} g`;
-    };
-
-    // Busca os dados do pedido no Firebase
+    const fmtPeso = g => g >= 1000 ? `${(g/1000).toFixed(3)}kg` : `${g.toFixed(2)}g`;
     db.ref('orders/' + id).once('value', s => {
         const p = s.val(); if (!p) return;
-        
-        // Busca os dados da empresa (nome, whats, etc)
         db.ref('settings/empresa').once('value', e => {
             const emp = e.val() || {};
-            
             let html = `<style>
-                .print-body { font-family: Arial, sans-serif; color:#000; padding:20px; font-size:11px; }
-                .lux-head { text-align:center; border-bottom:2px solid #A68966; padding-bottom:10px; margin-bottom:15px; }
-                .lux-head h1 { margin:0; color:#A68966; font-size:22px; }
-                .grid-dados { display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:15px; }
-                table { width:100%; border-collapse:collapse; margin-top:10px; font-size:11px; }
-                table th { background:#f5f5f5; text-align:left; border-bottom:1px solid #000; padding:4px; }
-                table td { border-bottom:1px solid #ddd; padding:4px; }
-                .totais-box { text-align:right; margin-top:15px; font-size:11px; border-top:1px solid #000; padding-top:10px; }
-                .img-mini { width:45px; height:45px; object-fit:cover; border-radius:4px; }
-                .linha-financeira { display: flex; justify-content: flex-end; gap: 15px; margin-bottom: 2px; }
+                body { font-family: Arial; font-size: 11px; padding: 20px; color: #000; }
+                .head { text-align: center; border-bottom: 2px solid #A68966; margin-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; }
+                th { background: #eee; text-align: left; padding: 5px; border: 1px solid #ddd; }
+                td { padding: 5px; border: 1px solid #ddd; }
+                .totais { margin-top: 15px; text-align: right; }
+                .linha { display: flex; justify-content: flex-end; gap: 20px; margin-top: 2px; }
             </style>
-            <div class="print-body">
-                <div class="lux-head">
-                    <h1>${emp.nome || 'Abella Joias'}</h1>
-                    <p>${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p>
-                </div>
-                <div class="grid-dados">
-                    <div><b>CLIENTE:</b> ${p.cliente?.nome || p.cliente || ''}<br>WhatsApp: ${p.cliente?.telefone || p.whatsapp || ''}</div>
-                    <div><b>ENTREGA:</b> ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}</div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            ${tipo === 3 ? '<th>Foto</th>' : ''}
-                            <th>SKU</th>
-                            <th>Produto</th>
-                            <th>Peso</th>
-                            ${tipo > 1 ? '<th>Preço</th>' : ''}
-                            <th>Qtd</th>
-                            ${tipo > 1 ? '<th>Subtotal</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>`;
+            <div class="head"><h1>${emp.nome || 'Abella Joias'}</h1><p>${emp.whats || ''}</p></div>
+            <p><b>CLIENTE:</b> ${p.cliente?.nome || ''} | <b>DATA:</b> ${p.data || ''}</p>
+            <table><thead><tr><th>SKU</th><th>Produto</th><th>Peso</th>${tipo > 1 ? '<th>Preço</th>' : ''}<th>Qtd</th>${tipo > 1 ? '<th>Subtotal</th>' : ''}</tr></thead><tbody>`;
 
-            let subCalc = 0, pesoCalc = 0, qtdCalc = 0;
-            const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-
-            itensArr.forEach(i => {
-                const pr = Number(i.price || i.precoFinal || 0);
-                const qt = Number(i.quantidade || i.qtd || 1);
-                const ps = Number(i.peso || i.weight || 0);
-                const subItem = pr * qt;
-                
-                subCalc += subItem;
-                pesoCalc += (ps * qt);
-                qtdCalc += qt;
-
-                html += `<tr>
-                    ${tipo === 3 ? `<td><img src="${i.image || ''}" class="img-mini"></td>` : ''}
-                    <td>${i.sku || '---'}</td>
-                    <td>${i.name || ''}</td>
-                    <td>${fmtPeso(ps)}</td>
-                    ${tipo > 1 ? `<td>${fMoeda(pr)}</td>` : ''}
-                    <td>${qt}</td>
-                    ${tipo > 1 ? `<td>${fMoeda(subItem)}</td>` : ''}
-                </tr>`;
+            let subC = 0, pesoC = 0, qtdC = 0;
+            const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            itens.forEach(i => {
+                const pr = i.price || 0; const qt = i.quantidade || 0;
+                subC += (pr * qt); pesoC += (i.peso * qt); qtdC += qt;
+                html += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${fmtPeso(i.peso)}</td>${tipo > 1 ? `<td>${fMoeda(pr)}</td>` : ''}<td>${qt}</td>${tipo > 1 ? `<td>${fMoeda(pr * qt)}</td>` : ''}</tr>`;
             });
 
-            // Recupera valores financeiros salvos no pedido
-            const dPromo = Number(p.descontoPromo || 0);
-            const dPix = Number(p.descontoPix || 0);
-            const vFrete = Number(p.entrega?.valorFrete || p.valorFrete || 0);
-            const economiaTotal = dPromo + dPix;
-            
-            // Cálculo Final para o Romaneio
-            const vFinal = subCalc - dPromo - dPix + vFrete;
+            const dp = p.descontoPromo || 0; const dx = p.descontoPix || 0; const vf = p.entrega?.valorFrete || 0;
+            const econ = dp + dx;
 
             html += `</tbody></table>
-            <div class="totais-box">
-                <div style="margin-bottom:8px;">
-                    Qtd Total: <b>${qtdCalc}</b> pçs | Peso Total: <b>${fmtPeso(pesoCalc)}</b>
-                </div>
-                
+            <div class="totais">
+                <p>Qtd: ${qtdC} | Peso: ${fmtPeso(pesoC)}</p>
                 ${tipo > 1 ? `
-                    <div style="display:inline-block; min-width:220px; border-top:1px solid #eee; padding-top:5px;">
-                        <div class="linha-financeira">
-                            <span>Subtotal Itens:</span> 
-                            <span>${fMoeda(subCalc)}</span>
-                        </div>
-                        
-                        ${dPromo > 0 ? `
-                        <div class="linha-financeira" style="color:#d32f2f;">
-                            <span>Desconto Promo:</span> 
-                            <span>- ${fMoeda(dPromo)}</span>
-                        </div>` : ''}
-                        
-                        ${dPix > 0 ? `
-                        <div class="linha-financeira" style="color:#d32f2f;">
-                            <span>Desconto Pix:</span> 
-                            <span>- ${fMoeda(dPix)}</span>
-                        </div>` : ''}
-                        
-                        ${vFrete > 0 ? `
-                        <div class="linha-financeira">
-                            <span>Frete:</span> 
-                            <span>+ ${fMoeda(vFrete)}</span>
-                        </div>` : ''}
-                        
-                        ${economiaTotal > 0 ? `
-                        <div class="linha-financeira" style="background: #fdf2f2; padding: 5px; border-radius: 4px; margin-top: 5px; border: 1px dashed #d32f2f;">
-                            <span style="color:#d32f2f; font-weight:bold; font-size:10px;">VOCÊ ECONOMIZOU:</span> 
-                            <span style="color:#d32f2f; font-weight:bold;">${fMoeda(economiaTotal)}</span>
-                        </div>
-                        ` : ''}
-                        
-                        <div class="linha-financeira" style="font-size:14px; font-weight:bold; margin-top:8px; border-top:1px double #000; padding-top:4px; color:#A68966;">
-                            <span>TOTAL A PAGAR:</span> 
-                            <span>${fMoeda(vFinal)}</span>
-                        </div>
-                    </div>
+                    <div class="linha"><span>Subtotal:</span><span>${fMoeda(subC)}</span></div>
+                    ${dp > 0 ? `<div class="linha" style="color:red"><span>Desconto Promo:</span><span>- ${fMoeda(dp)}</span></div>` : ''}
+                    ${dx > 0 ? `<div class="linha" style="color:red"><span>Desconto PIX:</span><span>- ${fMoeda(dx)}</span></div>` : ''}
+                    ${vf > 0 ? `<div class="linha"><span>Frete:</span><span>+ ${fMoeda(vf)}</span></div>` : ''}
+                    ${econ > 0 ? `<div class="linha" style="background:#f9f9f9; font-weight:bold; color:red; border:1px dashed red; padding:2px"><span>VOCÊ ECONOMIZOU:</span><span>${fMoeda(econ)}</span></div>` : ''}
+                    <div class="linha" style="font-size:14px; font-weight:bold; border-top:1px solid #000"><span>TOTAL:</span><span>${fMoeda(subC - dp - dx + vf)}</span></div>
                 ` : ''}
-            </div></div>`;
-
-            // Envia para a área de impressão e dispara a janela do navegador
+            </div>`;
             document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 500);
+            setTimeout(() => window.print(), 500);
         });
     });
 }
 
-/* OUTRAS FUNÇÕES DE SUPORTE */
 function carregarCategorias() {
-    const lista = document.getElementById('listaCategorias');
     db.ref('categories').once('value', s => {
-        lista.innerHTML = '';
-        s.forEach(child => {
-            lista.innerHTML += `<div class="card flex justify-between items-center mb-1"><b class="uppercase text-xs">${child.val().name}</b><button class="btn text-blue-400" onclick="editarCategoria('${child.key}', '${child.val().name}')">✎</button></div>`;
-        });
+        const l = document.getElementById('listaCategorias'); l.innerHTML = '';
+        s.forEach(c => { l.innerHTML += `<div class="card mb-1">${c.val().name}</div>`; });
     });
 }
 function carregarProdutos() {
-    const lista = document.getElementById('listaProdutos');
-    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
-    db.ref('categories').once('value', snapCats => {
-        db.ref('products').once('value', snapProds => {
-            const produtos = [];
-            snapProds.forEach(p => { produtos.push({ key: p.key, ...p.val() }); });
-            lista.innerHTML = '';
-            snapCats.forEach(cat => {
-                const prodsDaCat = produtos.filter(p => p.category === cat.key);
-                if (prodsDaCat.length > 0) {
-                    let htmlP = prodsDaCat.map(p => `<div class="card flex justify-between items-center py-2 px-3 text-[11px] bg-[#0d0d0d] mb-1"><span><b class="text-[#caa85c]">[${p.sku || '---'}]</b> ${p.name}</span><button onclick="editarProduto('${p.key}')">✎</button></div>`).join('');
-                    lista.innerHTML += `<div class="mb-4"><b class="text-xs uppercase text-[#caa85c] ml-2">${cat.val().name}</b><div class="mt-2">${htmlP}</div></div>`;
-                }
-            });
-        });
-    });
-}
-function editarProduto(id) {
-    db.ref('products/' + id).once('value', s => {
-        const p = s.val(); if (!p) return;
-        const nNome = prompt("Nome:", p.name);
-        const nPreco = prompt("Preço:", p.price);
-        if (nNome) db.ref('products/' + id).update({ name: nNome, price: Number(nPreco) }).then(carregarProdutos);
+    db.ref('products').once('value', s => {
+        const l = document.getElementById('listaProdutos'); l.innerHTML = '';
+        s.forEach(p => { l.innerHTML += `<div class="card mb-1">${p.val().name}</div>`; });
     });
 }
 function carregarEmpresaSeExistir() {
     db.ref('settings/empresa').once('value', s => {
-        const v = s.val(); if (!v) return;
+        const v = s.val() || {};
         document.getElementById('empNome').value = v.nome || '';
-        document.getElementById('empSub').value = v.subtitulo || '';
         document.getElementById('empWhats').value = v.whats || '';
-        document.getElementById('empDesc').value = v.descontoPix || 0;
-        document.getElementById('empParc').value = v.parcelas || 0;
     });
 }
 function salvarEmpresa() {
-    db.ref('settings/empresa').set({
+    db.ref('settings/empresa').update({
         nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
-        whats: document.getElementById('empWhats').value,
-        descontoPix: +document.getElementById('empDesc').value || 0,
-        parcelas: +document.getElementById('empParc').value || 0
-    }).then(() => alert('Empresa Atualizada!'));
+        whats: document.getElementById('empWhats').value
+    }).then(() => alert('Salvo!'));
 }
-function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
-
-window.addEventListener('DOMContentLoaded', () => {
-    const firstBtn = document.querySelector('nav button.active');
-    if (firstBtn) firstBtn.click();
-});
 </script>
 </body>
 </html>
