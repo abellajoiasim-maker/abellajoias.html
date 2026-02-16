@@ -13,9 +13,9 @@
         nav button.active{border-bottom:2px solid #caa85c;color:#caa85c}
         section{display:none}
         section.active{display:block}
-        .card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:16px}
+        .card{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:15px}
         .btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px;cursor:pointer}
-        input,select{background:#111;border:1px solid #333;padding:10px;border-radius:8px;width:100%;margin-bottom:10px;color:#fff}
+        input{background:#111;border:1px solid #333;padding:10px;border-radius:8px;width:100%;margin-bottom:10px;color:#fff}
         
         #print-area { display: none; }
         @media print {
@@ -27,46 +27,29 @@
 </head>
 <body>
 
-<header class="p-6 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
-    Abella Joias • Gestão Total
+<header class="p-4 text-center text-lg font-bold bg-black border-b border-[#222] text-[#caa85c] uppercase tracking-widest">
+    Abella Joias • Painel de Controle
 </header>
 
-<nav class="flex gap-2 p-3 bg-[#111] sticky top-0 z-50 overflow-x-auto justify-center">
-    <button class="px-4 py-2 text-xs uppercase font-bold active" onclick="showTab('empresa', this)">Configurações</button>
-    <button class="px-4 py-2 text-xs uppercase font-bold" onclick="showTab('categorias', this)">Categorias</button>
-    <button class="px-4 py-2 text-xs uppercase font-bold" onclick="showTab('produtos', this)">Produtos</button>
-    <button class="px-4 py-2 text-xs uppercase font-bold" onclick="showTab('pedidos', this)">Pedidos</button>
+<nav class="flex gap-4 p-3 bg-[#111] sticky top-0 z-50 justify-center border-b border-[#222]">
+    <button class="text-xs font-bold uppercase" onclick="showTab('empresa', this)">Empresa</button>
+    <button class="text-xs font-bold uppercase" onclick="showTab('categorias', this)">Categorias</button>
+    <button class="text-xs font-bold uppercase" onclick="showTab('produtos', this)">Produtos</button>
+    <button class="text-xs font-bold uppercase active" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
-<main class="p-6 max-w-5xl mx-auto">
-    <section id="empresa" class="active">
+<main class="p-4 max-w-5xl mx-auto">
+    <section id="empresa">
         <div class="card max-w-md mx-auto">
-            <h2 class="text-[#caa85c] font-bold mb-4 uppercase">Dados da Empresa</h2>
-            <input id="empNome" placeholder="Nome da Loja">
-            <input id="empWhats" placeholder="WhatsApp (ex: 19 98820-7658)">
-            <input id="empSub" placeholder="Slogan ou Endereço Curto">
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="text-[10px] text-gray-500">DESC. PIX %</label>
-                    <input id="empDesc" type="number">
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-500">PARCELAS MÁX</label>
-                    <input id="empParc" type="number">
-                </div>
-            </div>
-            <button class="btn-gold w-full mt-4" onclick="salvarEmpresa()">SALVAR CONFIGURAÇÕES</button>
+            <h2 class="text-[#caa85c] font-bold mb-4 uppercase text-sm">Dados da Loja para Romaneio</h2>
+            <input id="empNome" placeholder="Nome da Empresa">
+            <input id="empWhats" placeholder="WhatsApp da Loja">
+            <input id="empSub" placeholder="Subtítulo/Slogan">
+            <button class="btn-gold w-full mt-2" onclick="salvarEmpresa()">SALVAR DADOS</button>
         </div>
     </section>
 
     <section id="categorias">
-        <div class="card mb-6">
-            <h2 class="text-[#caa85c] font-bold mb-4 uppercase">Nova Categoria</h2>
-            <div class="flex gap-2">
-                <input id="newCatName" placeholder="Nome da Categoria" class="mb-0">
-                <button class="btn-gold" onclick="novaCategoria()">ADICIONAR</button>
-            </div>
-        </div>
         <div id="listaCategorias" class="grid gap-2"></div>
     </section>
 
@@ -74,57 +57,39 @@
         <div id="listaProdutos" class="grid gap-2"></div>
     </section>
 
-    <section id="pedidos">
+    <section id="pedidos" class="active">
         <div id="listaPedidos" class="grid gap-3"></div>
     </section>
 </main>
 
-<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div class="bg-[#141414] w-full max-w-4xl rounded-2xl p-6 overflow-auto max-h-[95vh] border border-[#caa85c]/30">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-[#caa85c] font-bold text-xl uppercase">Ajustes no Pedido</h2>
-            <button onclick="fecharEditorPedido()" class="text-white bg-red-900/20 px-4 py-1 rounded">FECHAR</button>
+<div id="editorPedido" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#111] w-full max-w-5xl rounded-xl p-6 overflow-auto max-h-[95vh] border border-[#333]">
+        <div class="flex justify-between items-center mb-6 border-b border-[#222] pb-4">
+            <h2 class="text-[#caa85c] font-bold text-lg uppercase">Negociação de Pedido</h2>
+            <button onclick="fecharEditorPedido()" class="bg-red-600 text-white px-4 py-1 rounded text-xs">FECHAR</button>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <div class="space-y-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase border-b border-[#222] pb-1">Cliente</h3>
-                <input id="edClienteNome" placeholder="Nome do Cliente">
-                <input id="edClienteTel" placeholder="WhatsApp">
-            </div>
-            <div class="space-y-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase border-b border-[#222] pb-1">Endereço</h3>
-                <input id="edRua" placeholder="Rua / Logradouro">
-                <div class="grid grid-cols-2 gap-2">
-                    <input id="edBairro" placeholder="Bairro">
-                    <input id="edCidade" placeholder="Cidade">
-                </div>
-            </div>
-        </div>
+        <div id="edItens" class="space-y-2 mb-6"></div>
 
-        <h3 class="text-xs font-bold text-[#caa85c] uppercase mb-3">Itens Selecionados</h3>
-        <div id="edItens" class="space-y-2 mb-4"></div>
-        <button class="btn-gold bg-transparent border border-dashed border-[#caa85c] text-[#caa85c] w-full mb-6" onclick="addItemEditor()">+ ADICIONAR ITEM MANUALMENTE</button>
-
-        <div class="grid grid-cols-3 gap-4 bg-black/50 p-4 rounded-xl">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/40 p-5 rounded-xl border border-[#222]">
             <div>
-                <label class="text-[10px] text-gray-400 font-bold uppercase">Desc. Promo (R$)</label>
-                <input id="edDescPromo" type="number" step="0.01" value="0">
+                <label class="text-[10px] text-[#caa85c] font-bold uppercase">Desconto Promoção (R$)</label>
+                <input id="edDescPromo" type="number" step="0.01" class="!mb-0 text-lg text-red-400 font-bold">
             </div>
             <div>
-                <label class="text-[10px] text-gray-400 font-bold uppercase">Desc. Pix (R$)</label>
-                <input id="edDescPix" type="number" step="0.01" value="0">
+                <label class="text-[10px] text-[#caa85c] font-bold uppercase">Desconto PIX (R$)</label>
+                <input id="edDescPix" type="number" step="0.01" class="!mb-0 text-lg text-red-400 font-bold">
             </div>
             <div>
-                <label class="text-[10px] text-gray-400 font-bold uppercase">Frete (R$)</label>
-                <input id="edValorFrete" type="number" step="0.01" value="0">
+                <label class="text-[10px] text-gray-400 font-bold uppercase">Valor do Frete (R$)</label>
+                <input id="edValorFrete" type="number" step="0.01" class="!mb-0 text-lg">
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 mt-8 justify-end">
-            <button class="btn-gold bg-blue-600 text-white border-none" onclick="gerarRomaneio(pedidoEditando, 1)">CONFERÊNCIA</button>
-            <button class="btn-gold bg-blue-800 text-white border-none" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO</button>
-            <button class="btn-gold bg-indigo-900 text-white border-none" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
+        <div class="flex flex-wrap gap-3 mt-8 justify-center">
+            <button class="btn-gold bg-blue-700 text-white border-none px-6" onclick="gerarRomaneio(pedidoEditando, 1)">CONFERÊNCIA</button>
+            <button class="btn-gold bg-blue-900 text-white border-none px-6" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO</button>
+            <button class="btn-gold bg-purple-900 text-white border-none px-6" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
             <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR E ATUALIZAR</button>
         </div>
     </div>
@@ -133,28 +98,23 @@
 <div id="print-area"></div>
 
 <script>
-/* FIREBASE */
+/* CONFIGURAÇÃO */
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-/* NAVEGAÇÃO */
+let pedidoEditando = null;
+
 function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
-    if (id === 'pedidos') carregarPedidos();
-    if (id === 'categorias') carregarCategorias();
-    if (id === 'produtos') carregarProdutos();
 }
-
-/* PEDIDOS */
-let pedidoEditando = null;
 
 function carregarPedidos() {
     db.ref('orders').on('value', s => {
@@ -168,190 +128,111 @@ function carregarPedidos() {
                         <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || p.cliente}</b><br>
                         <small class="text-gray-500">${p.data} • <b>Total: ${fMoeda(p.total)}</b></small>
                     </div>
-                    <div class="flex gap-2">
-                        <button class="btn-gold text-[10px] px-4" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
-                        <button class="bg-red-900/20 text-red-500 p-2 rounded-lg" onclick="excluirPedido('${ped.key}')">🗑</button>
-                    </div>
+                    <button class="btn-gold text-[10px] px-4" onclick="abrirEditorPedido('${ped.key}')">ABRIR NEGOCIAÇÃO</button>
                 </div>`;
         });
     });
 }
 
+/* ESTA É A FUNÇÃO QUE RECUPERA OS DESCONTOS */
 function abrirEditorPedido(id) {
     db.ref('orders/' + id).once('value', s => {
         const p = s.val(); if (!p) return;
         pedidoEditando = id;
         
-        document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
-        document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
-        document.getElementById('edRua').value = p.entrega?.rua || '';
-        document.getElementById('edBairro').value = p.entrega?.bairro || '';
-        document.getElementById('edCidade').value = p.entrega?.cidade || '';
-        
-        // RESTAURAÇÃO DOS VALORES DE DESCONTO
+        // Preenche os campos com o que está no banco (se estiver vazio, coloca 0)
         document.getElementById('edDescPromo').value = p.descontoPromo || 0;
         document.getElementById('edDescPix').value = p.descontoPix || 0;
-        document.getElementById('edValorFrete').value = p.entrega?.valorFrete || 0;
+        document.getElementById('edValorFrete').value = p.entrega?.valorFrete || p.valorFrete || 0;
 
         document.getElementById('edItens').innerHTML = '';
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-        itens.forEach(i => addItemEditor(i));
+        itens.forEach(i => {
+            const div = document.createElement('div');
+            div.className = "flex gap-2 p-2 bg-black/40 rounded border border-[#222]";
+            div.innerHTML = `<input class="flex-1 !mb-0" value="${i.name}" readonly> <input class="w-24 !mb-0 text-center" value="${fMoeda(i.price)}">`;
+            document.getElementById('edItens').appendChild(div);
+        });
         
         document.getElementById('editorPedido').classList.remove('hidden');
     });
 }
 
-function addItemEditor(i = {}) {
-    const div = document.createElement('div');
-    div.className = "flex flex-wrap gap-2 p-3 bg-black/30 rounded-lg border border-[#222]";
-    div.innerHTML = `
-        <input class="flex-1 !mb-0 !p-1 text-xs" placeholder="SKU" value="${i.sku || ''}">
-        <input class="flex-[3] !mb-0 !p-1 text-xs" placeholder="Produto" value="${i.name || ''}">
-        <input class="flex-1 !mb-0 !p-1 text-xs" placeholder="Peso" value="${i.peso || i.weight || 0}">
-        <input class="flex-1 !mb-0 !p-1 text-xs" placeholder="Preço" value="${i.price || i.precoFinal || 0}">
-        <input class="w-16 !mb-0 !p-1 text-xs text-center" placeholder="Qtd" value="${i.quantidade || i.qtd || 1}">
-        <input type="hidden" class="item-img" value="${i.image || ''}">
-        <button class="text-red-500 font-bold px-2" onclick="this.parentElement.remove()">×</button>`;
-    document.getElementById('edItens').appendChild(div);
-}
-
 function salvarPedidoEditado() {
-    const itens = [];
-    let subtotal = 0, pesoTotal = 0;
+    const dp = Number(document.getElementById('edDescPromo').value);
+    const dx = Number(document.getElementById('edDescPix').value);
+    const vf = Number(document.getElementById('edValorFrete').value);
 
-    document.querySelectorAll('#edItens > div').forEach(div => {
-        const inputs = div.querySelectorAll('input');
-        const i = {
-            sku: inputs[0].value,
-            name: inputs[1].value,
-            peso: Number(inputs[2].value) || 0,
-            price: Number(inputs[3].value) || 0,
-            quantidade: Number(inputs[4].value) || 1,
-            image: inputs[5].value
-        };
-        subtotal += (i.price * i.quantidade);
-        pesoTotal += (i.peso * i.quantidade);
-        itens.push(i);
+    // Lógica para recalcular o total no momento de salvar
+    db.ref('orders/' + pedidoEditando).once('value', s => {
+        const p = s.val();
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        const subtotal = itens.reduce((acc, i) => acc + (i.price * (i.quantidade || i.qtd || 1)), 0);
+        
+        db.ref('orders/' + pedidoEditando).update({
+            descontoPromo: dp,
+            descontoPix: dx,
+            "entrega/valorFrete": vf,
+            total: (subtotal - dp - dx + vf)
+        }).then(() => {
+            alert("Valores atualizados!");
+            fecharEditorPedido();
+        });
     });
-
-    const dp = Number(document.getElementById('edDescPromo').value) || 0;
-    const dx = Number(document.getElementById('edDescPix').value) || 0;
-    const vf = Number(document.getElementById('edValorFrete').value) || 0;
-
-    db.ref('orders/' + pedidoEditando).update({
-        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value, valorFrete: vf },
-        itens: itens,
-        descontoPromo: dp,
-        descontoPix: dx,
-        total: (subtotal - dp - dx + vf)
-    }).then(() => { alert("Pedido atualizado com sucesso!"); fecharEditorPedido(); });
 }
 
-/* ROMANEIO COM FOTO E DADOS DA EMPRESA */
 function gerarRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', s => {
         const p = s.val();
         db.ref('settings/empresa').once('value', e => {
-            const emp = e.val() || { nome: 'Abella Joias', whats: '' };
+            const emp = e.val() || { nome: 'Abella Joias', whats: '19 98820-7658' };
             
             let html = `
-            <div style="font-family: Arial; padding: 20px; color: #000; background: #fff;">
+            <div style="font-family: Arial; padding: 20px;">
                 <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-                    <h1 style="margin:0; font-size: 24px;">${emp.nome}</h1>
-                    <p style="margin:0; font-size: 12px;">WhatsApp: ${emp.whats} | ${emp.subtitulo || ''}</p>
+                    <h1 style="margin:0;">${emp.nome}</h1>
+                    <p style="margin:0;">WhatsApp: ${emp.whats} | ${emp.subtitulo || ''}</p>
                 </div>
-                
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 20px;">
-                    <div><b>CLIENTE:</b> ${p.cliente?.nome || p.cliente} <br> <b>TEL:</b> ${p.cliente?.telefone || ''}</div>
-                    <div style="text-align: right;"><b>DATA:</b> ${p.data} <br> <b>ENTREGA:</b> ${p.entrega?.cidade || ''}</div>
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-                    <thead>
-                        <tr style="background: #eee;">
-                            ${tipo === 3 ? '<th style="border:1px solid #000; padding:5px;">Foto</th>' : ''}
-                            <th style="border:1px solid #000; padding:5px;">SKU</th>
-                            <th style="border:1px solid #000; padding:5px; text-align:left;">Produto</th>
-                            <th style="border:1px solid #000; padding:5px;">Peso Un.</th>
-                            <th style="border:1px solid #000; padding:5px;">Preço</th>
-                            <th style="border:1px solid #000; padding:5px;">Qtd</th>
-                            <th style="border:1px solid #000; padding:5px;">Subtotal</th>
-                        </tr>
-                    </thead>
+                <h3>PEDIDO: ${p.cliente?.nome || p.cliente}</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead><tr style="background: #eee;">
+                        ${tipo === 3 ? '<th>Foto</th>' : ''}
+                        <th style="border: 1px solid #000; padding: 5px;">Produto</th>
+                        <th style="border: 1px solid #000; padding: 5px;">Qtd</th>
+                        <th style="border: 1px solid #000; padding: 5px;">Preço</th>
+                    </tr></thead>
                     <tbody>`;
 
-            let subC = 0, pesoC = 0;
             const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            
+            let subtotal = 0;
             itens.forEach(i => {
-                const totalI = (i.price || i.precoFinal) * (i.quantidade || i.qtd);
-                subC += totalI;
-                pesoC += (i.peso || 0) * (i.quantidade || 0);
-                
-                html += `
-                    <tr>
-                        ${tipo === 3 ? `<td style="border:1px solid #ddd; text-align:center;"><img src="${i.image}" style="height:40px; width:40px; object-fit:cover;"></td>` : ''}
-                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${i.sku || ''}</td>
-                        <td style="border:1px solid #ddd; padding:5px;">${i.name}</td>
-                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${i.peso || 0}g</td>
-                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${fMoeda(i.price || i.precoFinal)}</td>
-                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${i.quantidade || i.qtd}</td>
-                        <td style="border:1px solid #ddd; padding:5px; text-align:center;">${fMoeda(totalI)}</td>
-                    </tr>`;
+                subtotal += (i.price * (i.quantidade || i.qtd || 1));
+                html += `<tr>
+                    ${tipo === 3 ? `<td style="border: 1px solid #000; text-align:center;"><img src="${i.image}" style="width:50px;"></td>` : ''}
+                    <td style="border: 1px solid #000; padding: 5px;">${i.name}</td>
+                    <td style="border: 1px solid #000; padding: 5px; text-align:center;">${i.quantidade || i.qtd}</td>
+                    <td style="border: 1px solid #000; padding: 5px; text-align:center;">${fMoeda(i.price)}</td>
+                </tr>`;
             });
 
-            const dp = Number(p.descontoPromo || 0), dx = Number(p.descontoPix || 0), vf = Number(p.entrega?.valorFrete || 0);
-            
-            html += `
-                    </tbody>
-                </table>
+            const dp = p.descontoPromo || 0;
+            const dx = p.descontoPix || 0;
+            const vf = p.entrega?.valorFrete || 0;
 
-                <div style="margin-top: 20px; text-align: right; font-size: 12px;">
-                    <p style="margin:2px;">Subtotal Itens: ${fMoeda(subC)}</p>
-                    ${dp > 0 ? `<p style="margin:2px; color: red;">Desconto Promoção: - ${fMoeda(dp)}</p>` : ''}
-                    ${dx > 0 ? `<p style="margin:2px; color: red;">Desconto PIX: - ${fMoeda(dx)}</p>` : ''}
-                    ${vf > 0 ? `<p style="margin:2px;">Frete: + ${fMoeda(vf)}</p>` : ''}
-                    <h2 style="margin:10px 0 0 0; font-size: 18px; border-top: 1px solid #000; display: inline-block; padding-top: 5px;">
-                        TOTAL A PAGAR: ${fMoeda(subC - dp - dx + vf)}
-                    </h2>
-                    ${(dp+dx) > 0 ? `<p style="font-size: 10px; color: green;"><b>ECONOMIA TOTAL NESTE PEDIDO: ${fMoeda(dp+dx)}</b></p>` : ''}
+            html += `</tbody></table>
+                <div style="text-align: right;">
+                    <p>Subtotal: ${fMoeda(subtotal)}</p>
+                    <p style="color:red;">Desconto Promo: - ${fMoeda(dp)}</p>
+                    <p style="color:red;">Desconto PIX: - ${fMoeda(dx)}</p>
+                    <p>Frete: + ${fMoeda(vf)}</p>
+                    <hr>
+                    <h2>TOTAL: ${fMoeda(subtotal - dp - dx + vf)}</h2>
+                    <p style="color:green;"><b>Economia do Cliente: ${fMoeda(dp + dx)}</b></p>
                 </div>
             </div>`;
 
             document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 500);
-        });
-    });
-}
-
-/* OUTRAS FUNÇÕES (CATEGORIAS/PRODUTOS/EMPRESA) */
-function carregarCategorias() {
-    db.ref('categories').once('value', s => {
-        const l = document.getElementById('listaCategorias'); l.innerHTML = '';
-        s.forEach(c => {
-            l.innerHTML += `<div class="card flex justify-between items-center py-2">
-                <b class="uppercase text-xs">${c.val().name}</b>
-                <button class="text-red-500" onclick="db.ref('categories/${c.key}').remove().then(carregarCategorias)">🗑</button>
-            </div>`;
-        });
-    });
-}
-
-function novaCategoria() {
-    const n = document.getElementById('newCatName').value;
-    if(n) db.ref('categories').push({name: n}).then(() => { document.getElementById('newCatName').value = ''; carregarCategorias(); });
-}
-
-function carregarProdutos() {
-    db.ref('products').once('value', s => {
-        const l = document.getElementById('listaProdutos'); l.innerHTML = '';
-        s.forEach(p => {
-            const v = p.val();
-            l.innerHTML += `<div class="card flex justify-between items-center py-2 text-xs">
-                <span>[${v.sku}] <b>${v.name}</b> - ${fMoeda(v.price)}</span>
-                <button class="text-blue-400" onclick="editarProduto('${p.key}')">✎</button>
-            </div>`;
+            setTimeout(() => window.print(), 500);
         });
     });
 }
@@ -360,23 +241,19 @@ function salvarEmpresa() {
     db.ref('settings/empresa').update({
         nome: document.getElementById('empNome').value,
         whats: document.getElementById('empWhats').value,
-        subtitulo: document.getElementById('empSub').value,
-        descontoPix: Number(document.getElementById('empDesc').value),
-        parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert('Configurações salvas!'));
+        subtitulo: document.getElementById('empSub').value
+    }).then(() => alert("Dados da empresa salvos!"));
 }
 
-function excluirPedido(id) { if(confirm("Excluir este pedido permanentemente?")) db.ref('orders/'+id).remove(); }
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 
 window.onload = () => {
+    carregarPedidos();
     db.ref('settings/empresa').once('value', s => {
         const v = s.val() || {};
         document.getElementById('empNome').value = v.nome || '';
         document.getElementById('empWhats').value = v.whats || '';
         document.getElementById('empSub').value = v.subtitulo || '';
-        document.getElementById('empDesc').value = v.descontoPix || 0;
-        document.getElementById('empParc').value = v.parcelas || 0;
     });
 };
 </script>
