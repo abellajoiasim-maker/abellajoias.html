@@ -346,7 +346,7 @@ function salvarPedidoEditado(){
     const item = {
       sku: ins[0].value,
       name: ins[1].value,
-      peso: Number(ins[2].value) || 0, // sempre gramas
+      peso: Number(ins[2].value) || 0, // sempre em gramas
       price: Number(ins[3].value) || 0,
       quantidade: Number(ins[4].value) || 1
     };
@@ -358,21 +358,25 @@ function salvarPedidoEditado(){
     itens.push(item);
   });
 
-  const descontoPromo = parseFloat(
-  (Number(document.getElementById('edDescPromo').value) || 0).toFixed(2)
-);
+  /* ===== CONVERTE VALORES BR PARA NÚMERO ===== */
+  const descontoPromo = limparMoedaBR(
+    document.getElementById('edDescPromo').value
+  );
 
-const descontoPix = parseFloat(
-  (Number(document.getElementById('edDescPix').value) || 0).toFixed(2)
-);
+  const descontoPix = limparMoedaBR(
+    document.getElementById('edDescPix').value
+  );
 
-const frete = parseFloat(
-  (Number(document.getElementById('edFrete').value) || 0).toFixed(2)
-);
+  const frete = limparMoedaBR(
+    document.getElementById('edFrete').value
+  );
 
+  /* ===== CÁLCULO FINAL ===== */
+  let totalFinal = subtotal - descontoPromo - descontoPix + frete;
 
-  const totalFinal = subtotal - descontoPromo - descontoPix + frete;
-
+  /* ===== ARREDONDAMENTO SEGURO ===== */
+  subtotal      = Math.round(subtotal * 100) / 100;
+  totalFinal    = Math.round(totalFinal * 100) / 100;
 
   db.ref('orders/'+pedidoEditando).update({
     cliente:{
@@ -386,14 +390,14 @@ const frete = parseFloat(
       cidade:document.getElementById('edCidade').value
     },
     itens,
-    subtotal: Number(subtotal.toFixed(2)),
-    pesoTotal: Number(pesoTotal.toFixed(0)), // salvo em gramas
+    subtotal,
+    pesoTotal: Math.round(pesoTotal), // gramas
     totalPecas,
-    descontoPromo,
-    descontoPix,
-    frete,
-    total: Number(totalFinal.toFixed(2)),
-    ajustadoManualmente:true
+    descontoPromo: Math.round(descontoPromo * 100) / 100,
+    descontoPix:   Math.round(descontoPix * 100) / 100,
+    frete:         Math.round(frete * 100) / 100,
+    total: totalFinal,
+    ajustadoManualmente: true
   }).then(()=>{
     alert("Pedido atualizado com sucesso!");
     fecharEditorPedido();
@@ -507,8 +511,27 @@ function togglePromoStatus() {
     btn.innerText = isAtiva ? 'INATIVA' : 'ATIVA';
     btn.className = `px-4 py-1 rounded-full text-xs font-bold ${!isAtiva ? 'bg-green-600' : 'bg-red-600'}`;
 }
-    /* FORMATAÇÃO MOEDA BR */
-function moedaBR(input){
+/* ===== FORMATAÇÃO MOEDA BR COMPLETA ===== */
+
+// Converte número para formato brasileiro (2.116,23)
+function formatarMoedaBR(valor){
+  return Number(valor).toLocaleString('pt-BR',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+// Converte de "2.116,23" para 2116.23 (para salvar no banco)
+function limparMoedaBR(valor){
+  return Number(
+    String(valor)
+      .replace(/\./g,'')
+      .replace(',','.')
+  ) || 0;
+}
+
+// Máscara enquanto digita
+function aplicarMascaraMoeda(input){
   let v = input.value.replace(/\D/g,'');
   v = (Number(v)/100).toLocaleString('pt-BR',{
     minimumFractionDigits:2
@@ -516,20 +539,19 @@ function moedaBR(input){
   input.value = v;
 }
 
-/* ATIVA A MÁSCARA QUANDO O EDITOR ABRIR */
+/* Aplica automaticamente nos 3 campos */
 document.addEventListener('input', function(e){
-  if(e.target.id === 'edDescPromo' ||
-     e.target.id === 'edDescPix' ||
-     e.target.id === 'edFrete'){
-    moedaBR(e.target);
+  if(
+    e.target.id === 'edDescPromo' ||
+    e.target.id === 'edDescPix' ||
+    e.target.id === 'edFrete'
+  ){
+    aplicarMascaraMoeda(e.target);
   }
 });
+
 
 window.addEventListener('DOMContentLoaded', () => {
   const firstBtn = document.querySelector('nav button.active');
   if (firstBtn) firstBtn.click();
 });
-
-</script>
-</body>
-</html>
