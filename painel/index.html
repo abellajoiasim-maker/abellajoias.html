@@ -165,7 +165,9 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
 <div id="print-area"></div>
 
 <script>
+/* ===================== */
 /* FIREBASE */
+/* ===================== */
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -176,16 +178,58 @@ const db = firebase.database();
 const fMoeda = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 
 /* ===================== */
-/* PEDIDOS – CORE LOGIC */
+/* VARIÁVEIS GLOBAIS */
 /* ===================== */
-
 let pedidoEditando = null;
 
-/* 🔐 TRAVA DESCONTOS */
-function aplicarTravaDescontos(p) {
+/* ===================== */
+/* NAVEGAÇÃO */
+/* ===================== */
+function showTab(id, btn){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  btn?.classList.add('active');
+}
+
+/* ===================== */
+/* SEGURANÇA (PLACEHOLDERS) */
+/* ===================== */
+function salvarEmpresa(){}
+function novaCategoria(){}
+function abrirPainelPromocoes(){}
+
+/* ===================== */
+/* EDITOR DE PEDIDOS */
+/* ===================== */
+function fecharEditorPedido(){
+  document.getElementById('editorPedido').classList.add('hidden');
+}
+
+function addItemEditor(item = {}){
+  const div = document.createElement('div');
+  div.className = 'card grid grid-cols-5 gap-2';
+  div.innerHTML = `
+    <input placeholder="SKU" value="${item.sku||''}">
+    <input placeholder="Nome" value="${item.name||''}">
+    <input type="number" placeholder="Peso" value="${item.peso||0}">
+    <input type="number" placeholder="Preço" value="${item.price||0}">
+    <input type="number" placeholder="Qtd" value="${item.quantidade||1}">
+  `;
+  document.getElementById('edItens').appendChild(div);
+}
+
+function adicionarItemEditor(){
+  addItemEditor();
+}
+
+/* ===================== */
+/* TRAVA DE DESCONTOS */
+/* ===================== */
+function aplicarTravaDescontos(p){
   const dp = document.getElementById('edDescPromo');
   const dx = document.getElementById('edDescPix');
-  if (!dp || !dx) return;
+  if(!dp || !dx) return;
 
   const travado = p?.ajustadoManualmente !== true;
   dp.disabled = travado;
@@ -194,16 +238,21 @@ function aplicarTravaDescontos(p) {
   dx.style.opacity = travado ? 0.4 : 1;
 }
 
-/* 🧠 RECÁLCULO CENTRAL */
-function recalcularResumo(itens, dp, dx, frete) {
-  let subtotal = 0, peso = 0;
+/* ===================== */
+/* RECÁLCULO */
+/* ===================== */
+function recalcularResumo(itens, dp, dx, frete){
+  let subtotal = 0;
+  let peso = 0;
+
   itens.forEach(i=>{
-    const q = +i.quantidade||1;
-    const pr = +i.price||0;
-    const pe = +i.peso||0;
-    subtotal += pr*q;
-    peso += pe*q;
+    const q = +i.quantidade || 1;
+    const pr = +i.price || 0;
+    const pe = +i.peso || 0;
+    subtotal += pr * q;
+    peso += pe * q;
   });
+
   return {
     subtotalBruto: +subtotal.toFixed(2),
     descontoPromo: dp,
@@ -215,12 +264,13 @@ function recalcularResumo(itens, dp, dx, frete) {
 }
 
 /* ===================== */
-/* ABRIR EDITOR */
+/* ABRIR PEDIDO */
 /* ===================== */
-
 function abrirEditorPedido(id){
-  db.ref('orders/'+id).once('value',s=>{
-    const p=s.val(); if(!p) return;
+  db.ref('orders/'+id).once('value', s=>{
+    const p = s.val();
+    if(!p) return;
+
     pedidoEditando = id;
 
     edClienteNome.value = p.cliente?.nome || '';
@@ -230,81 +280,86 @@ function abrirEditorPedido(id){
     edBairro.value = p.entrega?.bairro || '';
     edCidade.value = p.entrega?.cidade || '';
 
-    edDescPromo.value = p.resumo?.descontoPromo || p.descontoPromo || 0;
-    edDescPix.value = p.resumo?.descontoPix || p.descontoPix || 0;
+    edDescPromo.value = p.resumo?.descontoPromo || 0;
+    edDescPix.value   = p.resumo?.descontoPix || 0;
     edFreteNome.value = p.freteNome || '';
-    edFreteValor.value = p.freteValor || 0;
+    edFreteValor.value= p.freteValor || 0;
 
-    edItens.innerHTML='';
-    const itens = Array.isArray(p.itens)?p.itens:Object.values(p.itens||{});
+    edItens.innerHTML = '';
+    const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens||{});
     itens.forEach(i=>addItemEditor(i));
 
     aplicarTravaDescontos(p);
-    editorPedido.classList.remove('hidden');
+    document.getElementById('editorPedido').classList.remove('hidden');
   });
 }
 
 /* ===================== */
 /* SALVAR PEDIDO */
 /* ===================== */
-
 function salvarPedidoEditado(){
-  const itens=[];
+  const itens = [];
   document.querySelectorAll('#edItens > div.card').forEach(c=>{
-    const ins=c.querySelectorAll('input');
+    const i = c.querySelectorAll('input');
     itens.push({
-      sku:ins[0].value,
-      name:ins[1].value,
-      peso:+ins[2].value||0,
-      price:+ins[3].value||0,
-      quantidade:+ins[4].value||1
+      sku: i[0].value,
+      name: i[1].value,
+      peso: +i[2].value || 0,
+      price:+i[3].value || 0,
+      quantidade:+i[4].value || 1
     });
   });
 
-  const dp=+edDescPromo.value||0;
-  const dx=+edDescPix.value||0;
-  const frete=+edFreteValor.value||0;
+  const dp = +edDescPromo.value || 0;
+  const dx = +edDescPix.value || 0;
+  const frete = +edFreteValor.value || 0;
 
-  const resumo=recalcularResumo(itens,dp,dx,frete);
+  const resumo = recalcularResumo(itens, dp, dx, frete);
 
   db.ref('orders/'+pedidoEditando).update({
-    cliente:{nome:edClienteNome.value,telefone:edClienteTel.value},
-    entrega:{rua:edRua.value,num:edNum.value,bairro:edBairro.value,cidade:edCidade.value},
+    cliente:{ nome:edClienteNome.value, telefone:edClienteTel.value },
+    entrega:{ rua:edRua.value, num:edNum.value, bairro:edBairro.value, cidade:edCidade.value },
     itens,
-    freteNome:edFreteNome.value,
-    freteValor:frete,
+    freteNome: edFreteNome.value,
+    freteValor: frete,
     resumo,
-    total:resumo.totalFinal,
-    ajustadoManualmente:false
+    total: resumo.totalFinal,
+    ajustadoManualmente: false
   }).then(()=>{
-    alert("Pedido salvo e travado!");
+    alert('Pedido salvo com sucesso');
     fecharEditorPedido();
   });
 }
 
 /* ===================== */
-/* 📄 ROMANEIO COM DESCONTOS */
+/* ROMANEIO */
 /* ===================== */
+function gerarRomaneio(id, tipo=1){
+  db.ref('orders/'+id).once('value', s=>{
+    const p = s.val();
+    if(!p) return;
 
-function gerarRomaneio(id){
-  db.ref('orders/'+id).once('value',s=>{
-    const p=s.val(); if(!p) return;
-    const r=p.resumo||{};
-    let html=`<h2>ROMANEIO</h2><hr>`;
+    const r = p.resumo || {};
+    let html = `<h2>ROMANEIO ${tipo}</h2><hr>`;
+
     (Array.isArray(p.itens)?p.itens:Object.values(p.itens||{})).forEach(i=>{
-      html+=`${i.quantidade}x ${i.name} — ${fMoeda(i.price)}<br>`;
+      html += `${i.quantidade}x ${i.name} — ${fMoeda(i.price)}<br>`;
     });
-    html+=`<hr>
-    Subtotal: ${fMoeda(r.subtotalBruto)}<br>
-    Desc. Promo: -${fMoeda(r.descontoPromo)}<br>
-    Desc. Pix: -${fMoeda(r.descontoPix)}<br>
-    Frete: ${fMoeda(r.frete)}<br>
-    <b>TOTAL: ${fMoeda(r.totalFinal)}</b>`;
-    print-area.innerHTML=html;
+
+    html += `<hr>
+      Subtotal: ${fMoeda(r.subtotalBruto||0)}<br>
+      Desc. Promo: -${fMoeda(r.descontoPromo||0)}<br>
+      Desc. Pix: -${fMoeda(r.descontoPix||0)}<br>
+      Frete: ${fMoeda(r.frete||0)}<br>
+      <b>TOTAL: ${fMoeda(r.totalFinal||0)}</b>
+    `;
+
+    document.getElementById('print-area').innerHTML = html;
     setTimeout(()=>window.print(),300);
   });
 }
 </script>
+
 
 </body>
 </html>
