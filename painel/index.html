@@ -124,32 +124,19 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
         <input id="edCidade" placeholder="Cidade">
       </div>
     </div>
-    
     <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c]">ITENS DO PEDIDO</h3>
     <div id="edItens" class="space-y-2"></div>
     <button class="btn w-full mt-2 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ Adicionar Item</button>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 p-4 bg-black/20 rounded-xl border border-[#222]">
-      <div class="space-y-2">
-          <h3 class="font-bold text-xs text-gray-400 uppercase">Ajustes de Frete</h3>
-          <input id="edFreteNome" placeholder="Ex: SEDEX, Transportadora, Motoboy">
-          <input id="edFreteValor" type="number" placeholder="Valor do Frete (0.00)">
+    <div class="grid grid-cols-2 gap-3 mt-4">
+      <div>
+          <label class="text-[10px] text-gray-400">DESC. PROMO (R$)</label>
+          <input id="edDescPromo" type="number" placeholder="0.00">
       </div>
-      <div class="space-y-2">
-          <h3 class="font-bold text-xs text-gray-400 uppercase">Descontos</h3>
-          <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-[9px] text-gray-500 uppercase">Desc. Promo (R$)</label>
-                <input id="edDescPromo" type="number" placeholder="0.00">
-              </div>
-              <div>
-                <label class="text-[9px] text-gray-500 uppercase">Desc. PIX (R$)</label>
-                <input id="edDescPix" type="number" placeholder="0.00">
-              </div>
-          </div>
+      <div>
+          <label class="text-[10px] text-gray-400">DESC. PIX (R$)</label>
+          <input id="edDescPix" type="number" placeholder="0.00">
       </div>
     </div>
-
     <div class="flex flex-wrap gap-2 justify-between mt-6 pt-4 border-t border-[#222]">
       <button class="btn px-6" onclick="fecharEditorPedido()">CANCELAR</button>
       <div class="flex gap-2">
@@ -165,9 +152,7 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
 <div id="print-area"></div>
 
 <script>
-/* ===================== */
-/* FIREBASE */
-/* ===================== */
+/* FIREBASE CONFIG */
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -175,191 +160,256 @@ if (!firebase.apps.length) {
   });
 }
 const db = firebase.database();
-const fMoeda = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-/* ===================== */
-/* VARIÁVEIS GLOBAIS */
-/* ===================== */
+/* NAVEGAÇÃO */
+function showTab(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'categorias') carregarCategorias();
+  if (id === 'produtos') carregarProdutos();
+  if (id === 'pedidos') carregarPedidos();
+  if (id === 'empresa') carregarEmpresaSeExistir();
+}
+
+/* PRODUTOS E CATEGORIAS */
+function carregarProdutos() {
+    const lista = document.getElementById('listaProdutos');
+    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
+    db.ref('categories').once('value', snapCats => {
+        db.ref('products').once('value', snapProds => {
+            const produtos = [];
+            snapProds.forEach(p => { produtos.push({ key: p.key, ...p.val() }); });
+            lista.innerHTML = '';
+            snapCats.forEach(cat => {
+                const prodsDaCat = produtos.filter(p => p.category === cat.key);
+                if (prodsDaCat.length > 0) {
+                    let htmlP = prodsDaCat.map(p => `
+                        <div class="card flex justify-between items-center py-2 px-3 text-[11px] bg-[#0d0d0d] mb-1">
+                            <div class="flex items-center gap-3">
+                                <img src="${p.image || 'https://via.placeholder.com/50'}" class="w-10 h-10 object-cover rounded border border-[#333]">
+                                <span><b class="text-[#caa85c]">[${p.sku || '---'}]</b> ${p.name}</span>
+                            </div>
+                            <button onclick="editarProduto('${p.key}')">✎</button>
+                        </div>`).join('');
+                    lista.innerHTML += `<div class="mb-4"><b class="text-xs uppercase text-[#caa85c] ml-2">${cat.val().name}</b><div class="mt-2">${htmlP}</div></div>`;
+                }
+            });
+        });
+    });
+}
+
+function carregarCategorias() {
+  const lista = document.getElementById('listaCategorias');
+  db.ref('categories').once('value', s => {
+    lista.innerHTML = '';
+    s.forEach(child => {
+      lista.innerHTML += `
+        <div class="card flex justify-between items-center mb-1">
+          <b class="uppercase text-xs">${child.val().name}</b>
+          <button class="btn text-blue-400" onclick="editarCategoria('${child.key}', '${child.val().name}')">✎</button>
+        </div>`;
+    });
+  });
+}
+
+function editarProduto(id) {
+  db.ref('products/' + id).once('value', s => {
+    const p = s.val(); if (!p) return;
+    const nNome = prompt("Nome:", p.name);
+    const nPreco = prompt("Preço:", p.price);
+    const nSku = prompt("SKU:", p.sku);
+    const nPeso = prompt("Peso (g):", p.peso || p.weight || "");
+    if (nNome !== null) {
+      db.ref('products/' + id).update({
+        name: nNome, price: Number(nPreco), sku: nSku,
+        peso: nPeso !== "" ? Number(nPeso) : null
+      }).then(carregarProdutos);
+    }
+  });
+}
+
+function editarCategoria(id, nome) {
+  const n = prompt("Novo nome:", nome);
+  if (n) db.ref('categories/'+id).update({name:n}).then(carregarCategorias);
+}
+
+function novaCategoria() {
+    const n = document.getElementById('newCatName').value;
+    if(n) db.ref('categories').push({name:n}).then(() => { document.getElementById('newCatName').value=''; carregarCategorias(); });
+}
+
+/* PEDIDOS */
 let pedidoEditando = null;
 
-/* ===================== */
-/* NAVEGAÇÃO */
-/* ===================== */
-function showTab(id, btn){
-  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  btn?.classList.add('active');
+function excluirPedido(id) {
+  if (!confirm("Tem certeza que deseja excluir este pedido?")) return;
+  db.ref('orders/' + id).remove().then(() => alert("Excluído!"));
 }
 
-/* ===================== */
-/* SEGURANÇA (PLACEHOLDERS) */
-/* ===================== */
-function salvarEmpresa(){}
-function novaCategoria(){}
-function abrirPainelPromocoes(){}
-
-/* ===================== */
-/* EDITOR DE PEDIDOS */
-/* ===================== */
-function fecharEditorPedido(){
-  document.getElementById('editorPedido').classList.add('hidden');
-}
-
-function addItemEditor(item = {}){
-  const div = document.createElement('div');
-  div.className = 'card grid grid-cols-5 gap-2';
-  div.innerHTML = `
-    <input placeholder="SKU" value="${item.sku||''}">
-    <input placeholder="Nome" value="${item.name||''}">
-    <input type="number" placeholder="Peso" value="${item.peso||0}">
-    <input type="number" placeholder="Preço" value="${item.price||0}">
-    <input type="number" placeholder="Qtd" value="${item.quantidade||1}">
-  `;
-  document.getElementById('edItens').appendChild(div);
-}
-
-function adicionarItemEditor(){
-  addItemEditor();
-}
-
-/* ===================== */
-/* TRAVA DE DESCONTOS */
-/* ===================== */
-function aplicarTravaDescontos(p){
-  const dp = document.getElementById('edDescPromo');
-  const dx = document.getElementById('edDescPix');
-  if(!dp || !dx) return;
-
-  const travado = p?.ajustadoManualmente !== true;
-  dp.disabled = travado;
-  dx.disabled = travado;
-  dp.style.opacity = travado ? 0.4 : 1;
-  dx.style.opacity = travado ? 0.4 : 1;
-}
-
-/* ===================== */
-/* RECÁLCULO */
-/* ===================== */
-function recalcularResumo(itens, dp, dx, frete){
-  let subtotal = 0;
-  let peso = 0;
-
-  itens.forEach(i=>{
-    const q = +i.quantidade || 1;
-    const pr = +i.price || 0;
-    const pe = +i.peso || 0;
-    subtotal += pr * q;
-    peso += pe * q;
+function carregarPedidos() {
+  db.ref('orders').on('value', s => {
+    const lista = document.getElementById('listaPedidos');
+    lista.innerHTML = '';
+    s.forEach(ped => {
+      const p = ped.val();
+      lista.innerHTML += `
+        <div class="card border-l-4 border-[#caa85c] mb-2">
+          <div class="flex justify-between items-center">
+            <div><b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b><br><small>${p.data || ''}</small></div>
+            <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
+          </div>
+          <div style="margin-top:10px;text-align:right;">
+            <button onclick="excluirPedido('${ped.key}')" style="background:#7f1d1d;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:11px;">🗑 Excluir Pedido</button>
+          </div>
+        </div>`;
+    });
   });
-
-  return {
-    subtotalBruto: +subtotal.toFixed(2),
-    descontoPromo: dp,
-    descontoPix: dx,
-    frete: frete,
-    totalFinal: +(subtotal - dp - dx + frete).toFixed(2),
-    pesoTotal: +peso.toFixed(2)
-  };
 }
 
-/* ===================== */
-/* ABRIR PEDIDO */
-/* ===================== */
 function abrirEditorPedido(id){
-  db.ref('orders/'+id).once('value', s=>{
-    const p = s.val();
-    if(!p) return;
-
+  db.ref('orders/'+id).once('value',s=>{
+    const p=s.val(); if(!p) return;
     pedidoEditando = id;
-
-    edClienteNome.value = p.cliente?.nome || '';
-    edClienteTel.value = p.cliente?.telefone || '';
-    edRua.value = p.entrega?.rua || '';
-    edNum.value = p.entrega?.num || '';
-    edBairro.value = p.entrega?.bairro || '';
-    edCidade.value = p.entrega?.cidade || '';
-
-    edDescPromo.value = p.resumo?.descontoPromo || 0;
-    edDescPix.value   = p.resumo?.descontoPix || 0;
-    edFreteNome.value = p.freteNome || '';
-    edFreteValor.value= p.freteValor || 0;
-
-    edItens.innerHTML = '';
-    const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens||{});
-    itens.forEach(i=>addItemEditor(i));
-
-    aplicarTravaDescontos(p);
+    document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
+    document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
+    document.getElementById('edRua').value = p.entrega?.rua || p.endereco?.rua || '';
+    document.getElementById('edNum').value = p.entrega?.num || p.endereco?.num || '';
+    document.getElementById('edBairro').value = p.entrega?.bairro || p.endereco?.bairro || '';
+    document.getElementById('edCidade').value = p.entrega?.cidade || p.endereco?.cidade || '';
+    document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+    document.getElementById('edDescPix').value = p.descontoPix || 0;
+    document.getElementById('edItens').innerHTML='';
+    const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+    itens.forEach(i => addItemEditor(i));
     document.getElementById('editorPedido').classList.remove('hidden');
   });
 }
 
-/* ===================== */
-/* SALVAR PEDIDO */
-/* ===================== */
+function addItemEditor(i={}){
+  const div = document.createElement('div');
+  div.className = "card bg-black/40 border-[#222] mb-2";
+  div.innerHTML = `
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <input placeholder="SKU" value="${i.sku||''}">
+        <input placeholder="Nome" value="${i.name||''}">
+        <input type="number" placeholder="Peso" value="${i.peso||i.weight||0}">
+        <input type="number" placeholder="Preço" value="${i.price||i.precoFinal||0}">
+        <input type="number" placeholder="Qtd" value="${i.quantidade||i.qtd||1}">
+    </div>
+    <button class="text-red-500 text-[10px] uppercase font-bold" onclick="this.parentElement.remove()">Remover</button>`;
+  document.getElementById('edItens').appendChild(div);
+}
+
+function adicionarItemEditor() { addItemEditor(); }
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+
 function salvarPedidoEditado(){
-  const itens = [];
+  const itens=[]; let total=0, pesoTotal=0;
   document.querySelectorAll('#edItens > div.card').forEach(c=>{
-    const i = c.querySelectorAll('input');
-    itens.push({
-      sku: i[0].value,
-      name: i[1].value,
-      peso: +i[2].value || 0,
-      price:+i[3].value || 0,
-      quantidade:+i[4].value || 1
-    });
+    const ins = c.querySelectorAll('input');
+    const i={ sku:ins[0].value, name:ins[1].value, peso:+ins[2].value||0, price:+ins[3].value||0, quantidade:+ins[4].value||1 };
+    total+=(i.price*i.quantidade); pesoTotal += (i.peso * i.quantidade);
+    itens.push(i);
   });
-
-  const dp = +edDescPromo.value || 0;
-  const dx = +edDescPix.value || 0;
-  const frete = +edFreteValor.value || 0;
-
-  const resumo = recalcularResumo(itens, dp, dx, frete);
-
+  const dp = +document.getElementById('edDescPromo').value||0;
+  const dx = +document.getElementById('edDescPix').value||0;
   db.ref('orders/'+pedidoEditando).update({
-    cliente:{ nome:edClienteNome.value, telefone:edClienteTel.value },
-    entrega:{ rua:edRua.value, num:edNum.value, bairro:edBairro.value, cidade:edCidade.value },
-    itens,
-    freteNome: edFreteNome.value,
-    freteValor: frete,
-    resumo,
-    total: resumo.totalFinal,
-    ajustadoManualmente: false
-  }).then(()=>{
-    alert('Pedido salvo com sucesso');
-    fecharEditorPedido();
-  });
+    cliente:{ nome:document.getElementById('edClienteNome').value, telefone:document.getElementById('edClienteTel').value },
+    entrega:{ rua:document.getElementById('edRua').value, num:document.getElementById('edNum').value, bairro:document.getElementById('edBairro').value, cidade:document.getElementById('edCidade').value },
+    itens, pesoTotal: Number(pesoTotal.toFixed(2)), descontoPromo: dp, descontoPix: dx,
+    total: Number((total - dp - dx).toFixed(2)), ajustadoManualmente:true
+  }).then(()=>{ alert("Salvo!"); fecharEditorPedido(); });
 }
 
-/* ===================== */
 /* ROMANEIO */
-/* ===================== */
-function gerarRomaneio(id, tipo=1){
-  db.ref('orders/'+id).once('value', s=>{
-    const p = s.val();
-    if(!p) return;
-
-    const r = p.resumo || {};
-    let html = `<h2>ROMANEIO ${tipo}</h2><hr>`;
-
-    (Array.isArray(p.itens)?p.itens:Object.values(p.itens||{})).forEach(i=>{
-      html += `${i.quantidade}x ${i.name} — ${fMoeda(i.price)}<br>`;
+function gerarRomaneio(id, tipo = 1) {
+  const fmtPeso = (g) => g >= 1000 ? `${(g/1000).toFixed(3)} kg` : `${g.toFixed(2)} g`;
+  db.ref('orders/' + id).once('value', s => {
+    const p = s.val(); if (!p) return;
+    db.ref('settings/empresa').once('value', e => {
+      const emp = e.val() || {};
+      let html = `<style>.print-body{font-family:Arial;padding:20px;font-size:11px}.lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #ddd;padding:4px;text-align:left}</style>
+      <div class="print-body">
+        <div class="lux-head"><h1>${emp.nome || 'Abella Joias'}</h1><p>${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p></div>
+        <p><b>CLIENTE:</b> ${p.cliente?.nome || p.cliente || ''} | <b>ENTREGA:</b> ${p.entrega?.cidade || ''}</p>
+        <table><thead><tr>${tipo === 3 ? '<th>Foto</th>' : ''}<th>SKU</th><th>Produto</th><th>Peso</th>${tipo > 1 ? '<th>Preço</th>' : ''}<th>Qtd</th>${tipo > 1 ? '<th>Subtotal</th>' : ''}</tr></thead><tbody>`;
+      let subT = 0, pesoT = 0, qtdT = 0;
+      const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+      itensArr.forEach(i => {
+        const preco = Number(i.price || 0), qtd = Number(i.quantidade || 0), peso = Number(i.peso || 0);
+        subT += (preco * qtd); pesoT += (peso * qtd); qtdT += qtd;
+        html += `<tr>${tipo === 3 ? `<td><img src="${i.image||''}" style="width:40px"></td>` : ''}<td>${i.sku||''}</td><td>${i.name||''}</td><td>${fmtPeso(peso)}</td>${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}<td>${qtd}</td>${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}</tr>`;
+      });
+      html += `</tbody></table><div style="text-align:right;margin-top:10px">Qtd: ${qtdT} | Peso: ${fmtPeso(pesoT)}<br>`;
+      if(tipo > 1) html += `Subtotal: ${fMoeda(subT)}<br>Descontos: -${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}<br><b>TOTAL: ${fMoeda(p.total || subT)}</b>`;
+      html += `</div></div>`;
+      document.getElementById('print-area').innerHTML = html;
+      setTimeout(() => window.print(), 500);
     });
-
-    html += `<hr>
-      Subtotal: ${fMoeda(r.subtotalBruto||0)}<br>
-      Desc. Promo: -${fMoeda(r.descontoPromo||0)}<br>
-      Desc. Pix: -${fMoeda(r.descontoPix||0)}<br>
-      Frete: ${fMoeda(r.frete||0)}<br>
-      <b>TOTAL: ${fMoeda(r.totalFinal||0)}</b>
-    `;
-
-    document.getElementById('print-area').innerHTML = html;
-    setTimeout(()=>window.print(),300);
   });
 }
+
+/* EMPRESA */
+function carregarEmpresaSeExistir() {
+  db.ref('settings/empresa').once('value', s => {
+    const v = s.val(); if (!v) return;
+    document.getElementById('empNome').value = v.nome || '';
+    document.getElementById('empSub').value = v.subtitulo || '';
+    document.getElementById('empWhats').value = v.whats || '';
+    document.getElementById('empDesc').value = v.descontoPix || 0;
+    document.getElementById('empParc').value = v.parcelas || 0;
+  });
+}
+
+function salvarEmpresa() {
+  db.ref('settings/empresa').set({
+    nome: document.getElementById('empNome').value, subtitulo: document.getElementById('empSub').value,
+    whats: document.getElementById('empWhats').value, descontoPix: +document.getElementById('empDesc').value || 0,
+    parcelas: +document.getElementById('empParc').value || 0
+  }).then(() => alert('Atualizado!'));
+}
+
+/* MODAL PROMOÇÕES */
+function abrirModal(titulo, conteudo, acaoSalvar) {
+    document.getElementById('modalTitle').innerText = titulo;
+    document.getElementById('modalBody').innerHTML = conteudo;
+    document.getElementById('mainModal').classList.add('active');
+    document.getElementById('modalSaveBtn').onclick = acaoSalvar;
+}
+function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
+
+async function abrirPainelPromocoes() {
+    const [snapPromo, snapCats] = await Promise.all([db.ref('settings/promocao').once('value'), db.ref('categories').once('value')]);
+    const promo = snapPromo.val() || { ativa: false, label: 'OFF', colorBg: '#ff0000', colorText: '#ffffff', porcentagemGeral: 0 };
+    let listaCats = '';
+    snapCats.forEach(cat => {
+        listaCats += `<div class="flex justify-between items-center mb-1"><span class="text-xs uppercase">${cat.val().name}</span><input type="number" id="promo_cat_${cat.key}" value="${cat.val().promoPct || 0}" class="w-16 text-xs bg-black p-1 border border-[#333]"></div>`;
+    });
+    const html = `<div class="space-y-4"><div class="flex justify-between items-center bg-[#1a1a1a] p-3 rounded"><span>Status</span><button onclick="togglePromoStatus()" id="btnStatusPromo" class="px-4 py-1 rounded-full text-xs font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">${promo.ativa ? 'ATIVA' : 'INATIVA'}</button></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[9px]">Label</label><input id="promoLabel" value="${promo.label}"></div><div><label class="text-[9px]">Geral %</label><input type="number" id="promoGeral" value="${promo.porcentagemGeral}"></div></div><div><label class="text-[10px] text-[#caa85c] block mb-2">Por Categoria</label>${listaCats}</div></div>`;
+    abrirModal('Promoções', html, () => {
+        const updates = {};
+        updates['settings/promocao/ativa'] = document.getElementById('btnStatusPromo').innerText === 'ATIVA';
+        updates['settings/promocao/label'] = document.getElementById('promoLabel').value;
+        updates['settings/promocao/porcentagemGeral'] = +document.getElementById('promoGeral').value || 0;
+        snapCats.forEach(cat => { updates['categories/' + cat.key + '/promoPct'] = +document.getElementById('promo_cat_'+cat.key).value || 0; });
+        db.ref().update(updates).then(() => { alert("Salvo!"); fecharModal(); });
+    });
+}
+
+function togglePromoStatus() {
+    const btn = document.getElementById('btnStatusPromo');
+    const isAtiva = btn.innerText === 'ATIVA';
+    btn.innerText = isAtiva ? 'INATIVA' : 'ATIVA';
+    btn.className = `px-4 py-1 rounded-full text-xs font-bold ${!isAtiva ? 'bg-green-600' : 'bg-red-600'}`;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const firstBtn = document.querySelector('nav button.active');
+  if (firstBtn) firstBtn.click();
+});
 </script>
-
-
 </body>
 </html>
