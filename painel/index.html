@@ -301,13 +301,14 @@ function abrirEditorPedido(id){
     document.getElementById('edBairro').value = p.entrega?.bairro || p.endereco?.bairro || '';
     document.getElementById('edCidade').value = p.entrega?.cidade || p.endereco?.cidade || '';
 document.getElementById('edDescPromo').value =
-  (Number(p.descontoPromo) || 0).toFixed(2);
+  formatarMoedaBR(p.descontoPromo || 0);
 
 document.getElementById('edDescPix').value =
-  (Number(p.descontoPix) || 0).toFixed(2);
+  formatarMoedaBR(p.descontoPix || 0);
 
 document.getElementById('edFrete').value =
-  (Number(p.frete) || 0).toFixed(2);
+  formatarMoedaBR(p.frete || 0);
+
     document.getElementById('edItens').innerHTML='';
     const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
     itens.forEach(i => addItemEditor(i));
@@ -447,7 +448,12 @@ if(tipo > 1){
 Desconto Promo: -${fMoeda(p.descontoPromo || 0)}<br>
 Desconto Pix: -${fMoeda(p.descontoPix || 0)}<br>
 Frete: ${fMoeda(p.frete || 0)}<br>
-<b style="font-size:14px">TOTAL FINAL: ${fMoeda(p.total || subT)}</b>
+<b style="font-size:14px">
+TOTAL FINAL: ${fMoeda(
+  p.total !== undefined ? p.total : subT
+)}
+</b>
+
   `;
 }
 
@@ -533,6 +539,10 @@ function limparMoedaBR(valor){
 // Máscara enquanto digita
 function aplicarMascaraMoeda(input){
   let v = input.value.replace(/\D/g,'');
+  if(!v) {
+    input.value = "0,00";
+    return;
+  }
   v = (Number(v)/100).toLocaleString('pt-BR',{
     minimumFractionDigits:2
   });
