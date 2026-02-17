@@ -294,8 +294,12 @@ const db = firebase.database();
 
 let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 let pagamento = '';
-let foneLoja = '';
-let configEmpresa = { descontoPix: 0, parcelas: 3, nomePromo: "OFERTA" };
+let foneLoja = ''; // coloque o número com DDI e DDD
+let configEmpresa = { 
+    descontoPix: 5, 
+    parcelas: 3, 
+    nomePromo: "OFERTA" 
+};
 
 function fM(v) {
     return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -340,15 +344,12 @@ function digitarQtd(i, valor) {
     carregarCarrinho();
 }
 
-function selecionarPagamento(tipo) {
-    pagamento = tipo;
-    carregarCarrinho();
-}
-
 function setPagamento(p, el) {
     pagamento = p;
+
     document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
+
     carregarCarrinho();
 }
 
@@ -420,14 +421,34 @@ function carregarCarrinho() {
     });
 
     const economiaPromo = bruto - comPromo;
-    const descPix = (pagamento === 'Pix') ? comPromo * (configEmpresa.descontoPix / 100) : 0;
+
+    const descPix = (pagamento === 'Pix')
+        ? comPromo * (configEmpresa.descontoPix / 100)
+        : 0;
+
     const valorFinal = comPromo - descPix;
 
+    // Atualiza resumo
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = fP(peso);
     document.getElementById('subtotalTxt').innerText = fM(bruto);
+    document.getElementById('descontoPromoTxt').innerText = fM(economiaPromo);
+    document.getElementById('descontoPixTxt').innerText = fM(descPix);
     document.getElementById('totalTxt').innerText = fM(valorFinal);
+
+    // Parcelamento cartão
+    let parcelamentoBox = document.getElementById('parcelamentoBox');
+    parcelamentoBox.innerHTML = '';
+
+    if (pagamento === 'Cartao' && valorFinal > 0) {
+        let parcelas = configEmpresa.parcelas || 3;
+        let valorParcela = valorFinal / parcelas;
+
+        parcelamentoBox.innerHTML = `
+            ou ${parcelas}x de <b>${fM(valorParcela)}</b> sem juros
+        `;
+    }
 
     window.resumoFinal = {
         subtotal: bruto,
