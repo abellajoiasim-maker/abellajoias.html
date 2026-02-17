@@ -20,12 +20,7 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
 #mainModal.active { display: flex; }
 .custom-scroll::-webkit-scrollbar { width: 4px; }
 .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
-#print-area { display: none; }
-@media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
-}
+
 </style>
 </head>
 <body>
@@ -145,10 +140,10 @@ input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px
       <button class="btn px-6" onclick="fecharEditorPedido()">CANCELAR</button>
      <div class="flex gap-2 flex-wrap">
     <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
-    <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
-    <button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
-   <button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_conferencia')">GRID CONFERÊNCIA</button>
-<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 'grid_cliente')">GRID CLIENTE</button>
+<button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
+<button class="btn bg-blue-900 border-blue-700" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
+<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 4)">GRID CONFERÊNCIA</button>
+<button class="btn bg-purple-900" onclick="gerarRomaneio(pedidoEditando, 5)">GRID CLIENTE</button>
     <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR</button>
     </div>
   </div>
@@ -423,9 +418,8 @@ function gerarRomaneio(id, tipo) {
   const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
   const fmtPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
 
-  // 1. Limpeza total da área para evitar duplicidade de folhas
   const printArea = document.getElementById('print-area');
-  printArea.innerHTML = "";
+  printArea.innerHTML = ""; // Limpa para evitar duplicidade
 
   db.ref('orders/' + id).once('value', s => {
     const p = s.val(); if (!p) return;
@@ -437,56 +431,52 @@ function gerarRomaneio(id, tipo) {
 
       let html = `
       <style>
-        .print-body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; color: #000; background: #fff; }
-        .lux-head { text-align: center; border-bottom: 2px solid #A68966; margin-bottom: 15px; padding-bottom: 10px; }
-        
-        /* Blocos de Informação */
-        .info-container { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
-        .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-        .info-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
-        .info-box p { margin: 2px 0; line-height: 1.4; }
-
-        /* Estilo Tabela (1, 2, 3) */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 6px; text-align: left; }
-        .foto-prod { width: 55px; height: 55px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; }
-
-        /* Estilo Grid (4, 5) */
-        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .item-card { border: 1px solid #000; padding: 8px; text-align: center; border-radius: 4px; break-inside: avoid; position: relative; }
-        .item-card b { display: block; color: #A68966; font-size: 10px; }
-        .qtd-box { font-weight: bold; font-size: 13px; margin-top: 5px; background: #000; color: #fff; padding: 3px; }
-        
-        @media print { 
-          body { background: #fff; } 
-          @page { margin: 0.5cm; size: portrait; }
+        /* CSS DE ISOLAMENTO - RESOLVE AS 2 FOLHAS */
+        @media print {
+          body * { visibility: hidden !important; }
+          #print-area, #print-area * { visibility: visible !important; }
+          #print-area { position: fixed !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+          @page { size: portrait; margin: 1cm; }
         }
+        .print-body { font-family: Arial, sans-serif; padding: 10px; color: #000; background: #fff; width: 100%; box-sizing: border-box; }
+        .lux-head { text-align: center; border-bottom: 2px solid #A68966; margin-bottom: 15px; padding-bottom: 10px; }
+        .info-container { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+        .info-box { flex: 1; border: 1px solid #ddd; padding: 8px; border-radius: 4px; font-size: 11px; }
+        .info-box h3 { margin: 0 0 5px 0; font-size: 9px; color: #A68966; text-transform: uppercase; border-bottom: 1px solid #eee; }
+
+        /* TABELA */
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f4f4f4; border: 1px solid #ddd; padding: 5px; font-size: 10px; }
+        td { border: 1px solid #ddd; padding: 5px; font-size: 10px; }
+        .foto-prod { width: 50px; height: 50px; object-fit: cover; }
+
+        /* GRID */
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .item-card { border: 1px solid #000; padding: 6px; text-align: center; border-radius: 4px; break-inside: avoid; }
+        .item-card b { display: block; color: #A68966; font-size: 10px; }
+        .qtd-box { font-weight: bold; font-size: 13px; margin-top: 5px; background: #000; color: #fff; padding: 2px; }
       </style>
 
       <div class="print-body">
         <div class="lux-head">
-          <h1 style="font-size:26px; font-family: Georgia; margin:0;">${emp.nome || 'ABELLA JOIAS'}</h1>
-          <div style="font-size:12px; color:#A68966;">${emp.subtitulo || ''}</div>
-          <div style="font-size:11px;">WhatsApp: ${emp.whats || ''}</div>
+          <h1 style="font-size:24px; font-family: Georgia; margin:0;">${emp.nome || 'ABELLA JOIAS'}</h1>
+          <div style="font-size:11px; color:#A68966;">${emp.subtitulo || ''} | WhatsApp: ${emp.whats || ''}</div>
         </div>
 
         <div class="info-container">
           <div class="info-box">
-            <h3>Dados do Cliente</h3>
-            <p><b>Nome:</b> ${p.cliente?.nome || p.cliente || ''}</p>
-            <p><b>WhatsApp:</b> ${p.cliente?.telefone || p.whatsapp || ''}</p>
+            <h3>Cliente</h3>
+            <p><b>${p.cliente?.nome || p.cliente || ''}</b></p>
+            <p>${p.cliente?.telefone || p.whatsapp || ''}</p>
           </div>
           <div class="info-box">
-            <h3>Local de Entrega</h3>
-            <p><b>Endereço:</b> ${p.entrega?.rua || '---'}, ${p.entrega?.num || ''}</p>
-            <p><b>Bairro:</b> ${p.entrega?.bairro || ''} | <b>Cidade:</b> ${p.entrega?.cidade || ''}</p>
+            <h3>Entrega</h3>
+            <p>${p.entrega?.rua || ''}, ${p.entrega?.num || ''}</p>
+            <p>${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}</p>
           </div>
         </div>`;
 
-      // --- RENDERIZAÇÃO ---
-
       if (tipo === 4 || tipo === 5) {
-        // MODO GRID (Conferência ou Cliente)
         html += `<div class="grid-container">`;
         itensArr.forEach(i => {
           const pr = Number(i.price || 0); const q = Number(i.quantidade || 0);
@@ -494,19 +484,18 @@ function gerarRomaneio(id, tipo) {
           html += `
             <div class="item-card">
               <b>${i.sku || '---'}</b>
-              <div style="font-size:9px; height:24px; overflow:hidden;">${i.name || ''}</div>
-              ${tipo === 5 ? `<div style="font-size:9px;">${fMoeda(pr)}</div>` : ''}
+              <div style="font-size:9px; height:22px; overflow:hidden;">${i.name || ''}</div>
+              ${tipo === 5 ? `<div style="font-size:9px; font-weight:bold;">${fMoeda(pr)}</div>` : ''}
               <div class="qtd-box">X${q}</div>
-              ${tipo === 5 ? `<div style="font-size:10px; font-weight:bold; border-top:1px solid #eee; margin-top:3px;">Total: ${fMoeda(pr*q)}</div>` : ''}
+              ${tipo === 5 ? `<div style="font-size:9px; font-weight:bold; border-top:1px solid #eee; margin-top:2px;">Total: ${fMoeda(pr*q)}</div>` : ''}
             </div>`;
         });
         html += `</div>`;
       } else {
-        // MODO TABELA (1: Conf, 2: Cliente, 3: Foto)
         html += `<table><thead><tr>
           ${tipo === 3 ? '<th>Foto</th>' : ''}
           <th>SKU</th><th>Produto</th><th>Peso</th>
-          ${tipo >= 2 ? '<th>Preço</th><th>Subtotal</th>' : ''}
+          ${tipo >= 2 ? '<th>Preço</th><th>Total</th>' : ''}
           <th>Qtd</th>
         </tr></thead><tbody>`;
 
@@ -514,31 +503,24 @@ function gerarRomaneio(id, tipo) {
           const pr = Number(i.price || 0); const q = Number(i.quantidade || 0);
           subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
           html += `<tr>
-            ${tipo === 3 ? `<td><img src="${i.image || ''}" class="foto-prod" onerror="this.src='https://via.placeholder.com/55'"></td>` : ''}
+            ${tipo === 3 ? `<td><img src="${i.image || ''}" class="foto-prod" onerror="this.src='https://via.placeholder.com/50'"></td>` : ''}
             <td><b>${i.sku || ''}</b></td>
             <td>${i.name || ''}</td>
             <td>${fmtPeso(i.peso)}</td>
             ${tipo >= 2 ? `<td>${fMoeda(pr)}</td><td>${fMoeda(pr*q)}</td>` : ''}
-            <td><b>${q}</b></td>
+            <td align="center"><b>${q}</b></td>
           </tr>`;
         });
         html += `</tbody></table>`;
       }
 
-      // --- RODAPÉ FINANCEIRO ---
-      const mostrarFin = (tipo === 2 || tipo === 3 || tipo === 5);
+      const mFin = (tipo === 2 || tipo === 3 || tipo === 5);
       html += `
-        <div style="text-align:right; margin-top:20px; border-top:2px solid #A68966; padding-top:10px;">
+        <div style="text-align:right; margin-top:15px; border-top:2px solid #A68966; padding-top:8px; font-size:11px;">
           <p>Itens: ${itensArr.length} | Peças: ${qtdT} | Peso Total: ${fmtPeso(pesoT)}</p>
-          ${mostrarFin ? `
-            <p>Subtotal: ${fMoeda(subT)}</p>
-            <p>Desc. Promo: -${fMoeda(p.descontoPromo || 0)}</p>
-            ${Number(p.descontoPix) > 0 ? `<p>Desc. Pix: -${fMoeda(p.descontoPix)}</p>` : ''}
-            <p>Frete: ${fMoeda(p.frete || 0)}</p>
-            <h2 style="color:#A68966; margin:5px 0;">TOTAL FINAL: ${fMoeda(p.total || subT)}</h2>
-          ` : ''}
-        </div>
-      </div>`;
+          ${mFin ? `<p>Subtotal: ${fMoeda(subT)} | Descontos: -${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))} | Frete: ${fMoeda(p.frete||0)}</p>
+          <h2 style="color:#A68966; margin:2px 0; font-size:16px;">TOTAL: ${fMoeda(p.total || subT)}</h2>` : ''}
+        </div></div>`;
 
       printArea.innerHTML = html;
       setTimeout(() => { window.print(); }, 800);
