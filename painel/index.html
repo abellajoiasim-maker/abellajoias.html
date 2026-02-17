@@ -413,57 +413,126 @@ function salvarPedidoEditado(){
 
 /* ROMANEIO */
 function gerarRomaneio(id, tipo = 1) {
-const fmtPeso = (g) => fPeso(g);
+  const fmtPeso = (g) => fPeso(g);
+
   db.ref('orders/' + id).once('value', s => {
-    const p = s.val(); if (!p) return;
+    const p = s.val(); 
+    if (!p) return;
+
     db.ref('settings/empresa').once('value', e => {
       const emp = e.val() || {};
-      let html = `<style>.print-body{font-family:Arial;padding:20px;font-size:11px}.lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #ddd;padding:4px;text-align:left}</style>
+
+      let html = `
+      <style>
+        .print-body{font-family:Arial;padding:20px;font-size:11px}
+        .lux-head{text-align:center;border-bottom:2px solid #A68966;margin-bottom:15px}
+        table{width:100%;border-collapse:collapse}
+        th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left}
+        .foto-prod{
+          width:55px;
+          height:55px;
+          object-fit:cover;
+          border:1px solid #ccc;
+          border-radius:4px;
+        }
+      </style>
+
       <div class="print-body">
       <div class="lux-head">
-  <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px;">
-    ${emp.nome || 'ABELLA JOIAS'}
-  </h1>
-  <div style="font-size:12px;">
-    ${emp.subtitulo || ''}<br>
-    WhatsApp: ${emp.whats || ''}
-  </div>
-</div>
+        <h1 style="font-size:24px;letter-spacing:2px;margin-bottom:4px;">
+          ${emp.nome || 'ABELLA JOIAS'}
+        </h1>
+        <div style="font-size:12px;">
+          ${emp.subtitulo || ''}<br>
+          WhatsApp: ${emp.whats || ''}
+        </div>
+      </div>
 
-        <p><b>CLIENTE:</b> ${p.cliente?.nome || p.cliente || ''} | <b>ENTREGA:</b> ${p.entrega?.cidade || ''}</p>
-        <table><thead><tr>${tipo === 3 ? '<th>Foto</th>' : ''}<th>SKU</th><th>Produto</th><th>Peso</th>${tipo > 1 ? '<th>Preço</th>' : ''}<th>Qtd</th>${tipo > 1 ? '<th>Subtotal</th>' : ''}</tr></thead><tbody>`;
+      <p>
+        <b>CLIENTE:</b> ${p.cliente?.nome || p.cliente || ''} | 
+        <b>ENTREGA:</b> ${p.entrega?.cidade || ''}
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            ${tipo === 3 ? '<th>Foto</th>' : ''}
+            <th>SKU</th>
+            <th>Produto</th>
+            <th>Peso</th>
+            ${tipo > 1 ? '<th>Preço</th>' : ''}
+            <th>Qtd</th>
+            ${tipo > 1 ? '<th>Subtotal</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+      `;
+
       let subT = 0, pesoT = 0, qtdT = 0;
-      const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+
+      const itensArr = Array.isArray(p.itens) 
+        ? p.itens 
+        : Object.values(p.itens || {});
+
       itensArr.forEach(i => {
-        const preco = Number(i.price || 0), qtd = Number(i.quantidade || 0), peso = Number(i.peso || 0);
-        subT += (preco * qtd); pesoT += (peso * qtd); qtdT += qtd;
-        html += `<tr>${tipo === 3 ? `<td><img src="${i.image||''}" style="width:40px"></td>` : ''}<td>${i.sku||''}</td><td>${i.name||''}</td><td>${fmtPeso(peso)}</td>${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}<td>${qtd}</td>${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}</tr>`;
+
+        const preco = Number(i.price || 0);
+        const qtd   = Number(i.quantidade || 0);
+        const peso  = Number(i.peso || 0);
+
+        subT  += (preco * qtd);
+        pesoT += (peso * qtd);
+        qtdT  += qtd;
+
+        // 🔥 GARANTE IMAGEM VÁLIDA
+        let imgSrc = i.image && i.image !== '' 
+          ? i.image 
+          : 'https://via.placeholder.com/55x55?text=Sem+Foto';
+
+        html += `
+          <tr>
+            ${tipo === 3 ? `
+              <td>
+                <img src="${imgSrc}" class="foto-prod">
+              </td>` : ''}
+            <td>${i.sku || ''}</td>
+            <td>${i.name || ''}</td>
+            <td>${fmtPeso(peso)}</td>
+            ${tipo > 1 ? `<td>${fMoeda(preco)}</td>` : ''}
+            <td>${qtd}</td>
+            ${tipo > 1 ? `<td>${fMoeda(preco*qtd)}</td>` : ''}
+          </tr>
+        `;
       });
+
       html += `
-</tbody></table>
-<div style="text-align:right;margin-top:10px">
-Itens (SKUs): ${itensArr.length}<br>
-Total Peças: ${qtdT}<br>
-Peso Total: ${fmtPeso(pesoT)}<br>
-`;
+        </tbody>
+      </table>
 
-if(tipo > 1){
-  html += `
-  Subtotal: ${fMoeda(p.subtotal || subT)}<br>
-Desconto Promo: -${fMoeda(p.descontoPromo || 0)}<br>
-Desconto Pix: -${fMoeda(p.descontoPix || 0)}<br>
-Frete: ${fMoeda(p.frete || 0)}<br>
-<b style="font-size:14px">
-TOTAL FINAL: ${fMoeda(
-  p.total !== undefined ? p.total : subT
-)}
-</b>
+      <div style="text-align:right;margin-top:10px">
+        Itens (SKUs): ${itensArr.length}<br>
+        Total Peças: ${qtdT}<br>
+        Peso Total: ${fmtPeso(pesoT)}<br>
+      `;
 
-  `;
-}
+      if(tipo > 1){
+        html += `
+          Subtotal: ${fMoeda(p.subtotal || subT)}<br>
+          Desconto Promo: -${fMoeda(p.descontoPromo || 0)}<br>
+          Desconto Pix: -${fMoeda(p.descontoPix || 0)}<br>
+          Frete: ${fMoeda(p.frete || 0)}<br>
+          <b style="font-size:14px">
+            TOTAL FINAL: ${fMoeda(
+              p.total !== undefined ? p.total : subT
+            )}
+          </b>
+        `;
+      }
 
       html += `</div></div>`;
+
       document.getElementById('print-area').innerHTML = html;
+
       setTimeout(() => window.print(), 500);
     });
   });
