@@ -519,20 +519,36 @@ function gerarRomaneio(id, tipo) {
       const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
       let subT = 0, pesoT = 0, qtdT = 0;
 
-      // SE FOR TIPO GRID
+// SE FOR TIPO GRID
       if (tipo === 'grid_conferencia' || tipo === 'grid_cliente') {
-        html += `<div class="grid-container">`;
+        html += `<div class="grid-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">`;
+        
         itensArr.forEach(i => {
           const pr = Number(i.price || 0);
           const q = Number(i.quantidade || 1);
           subT += (pr * q); pesoT += (Number(i.peso || 0) * q); qtdT += q;
           
           html += `
-          <div class="item-card">
-            <div class="sku-title">${i.sku || 'S/SKU'}</div>
-            <div class="item-name">${i.name || ''}</div>
-            <div class="qtd-line">X${q}</div>
-            ${tipo === 'grid_cliente' ? `<div style="font-size:7px; text-align:right; margin-top:2px;">Un: ${fMoeda(pr)} | Total: ${fMoeda(pr*q)}</div>` : ''}
+          <div class="item-card" style="border: 1.5px solid #000; padding: 8px; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; background: #fff; min-height: 80px;">
+            <div>
+              <div class="sku-title" style="font-weight: bold; font-size: 11px; color: #A68966; border-bottom: 1px solid #eee; margin-bottom: 4px; padding-bottom: 2px;">
+                ${i.sku || 'S/SKU'}
+              </div>
+              <div class="item-name" style="font-size: 9px; color: #333; line-height: 1.2; height: 22px; overflow: hidden; font-weight: 500;">
+                ${i.name || ''}
+              </div>
+            </div>
+            
+            <div style="margin-top: 6px;">
+              <div class="qtd-line" style="font-weight: 900; font-size: 14px; background: #000; color: #fff; text-align: center; padding: 2px 0; border-radius: 2px;">
+                X${q}
+              </div>
+              ${tipo === 'grid_cliente' ? `
+                <div style="font-size: 8px; text-align: center; margin-top: 4px; color: #000; font-weight: bold;">
+                  Total: ${fMoeda(pr * q)}
+                </div>
+              ` : ''}
+            </div>
           </div>`;
         });
         html += `</div>`;
