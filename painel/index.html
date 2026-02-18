@@ -21,50 +21,21 @@
         .btn-gold { background: var(--gold); color: #000; font-weight: 700; padding: 10px; border-radius: 8px; cursor: pointer; }
         input { background: #111; border: 1px solid #333; padding: 8px; border-radius: 8px; width: 100%; margin-bottom: 8px; color: #fff; outline: none; }
         
-        /* ÁREA DE IMPRESSÃO - OCULTA NA TELA */
         #print-area { display: none; }
 
-@media print {
-    /* Esconde absolutamente tudo do painel administrativo */
-    body * { visibility: hidden !important; }
-    /* Mostra apenas a área de impressão e remove fundos escuros */
-    #print-area, #print-area * { visibility: visible !important; }
-    #print-area { 
-        display: block !important; 
-        position: absolute !important; 
-        left: 0 !important; 
-        top: 0 !important; 
-        width: 100% !important; 
-        background: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    @page { size: portrait; margin: 1cm; }
-}
-
-        /* ESTILOS LUXO ROMANEIO */
-        .print-container { font-family: 'Inter', sans-serif; padding: 0; color: #000; }
-        .lux-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-        .lux-header h1 { font-family: 'Cinzel', serif; font-size: 28px; margin: 0; letter-spacing: 4px; }
-        .lux-header p { font-size: 12px; margin: 2px 0; text-transform: uppercase; }
-        
-        .box-container { display: flex; gap: 15px; margin-bottom: 15px; }
-        .info-box { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-        .info-box h3 { font-size: 10px; color: #666; margin: 0 0 5px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; }
-        .info-box p { font-size: 11px; margin: 2px 0; font-weight: 500; }
-
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
-        table th { background: #f5f5f5; border: 1px solid #000; padding: 6px; text-align: left; text-transform: uppercase; }
-        table td { border: 1px solid #ddd; padding: 6px; }
-
-        .grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .grid-item { border: 1px solid #ddd; padding: 8px; border-radius: 5px; page-break-inside: avoid; }
-        .grid-sku { font-weight: bold; font-size: 10px; color: #A68966; }
-        .grid-name { font-size: 10px; margin: 4px 0; height: 2.4em; overflow: hidden; }
-        .grid-qty { background: #f0f0f0; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; }
-
-        .footer-total { text-align: right; border-top: 2px solid #000; padding-top: 10px; font-size: 12px; }
-        .total-highlight { font-size: 18px; font-weight: bold; margin-top: 5px; }
+        @media print {
+            body * { visibility: hidden !important; }
+            #print-area, #print-area * { visibility: visible !important; }
+            #print-area { 
+                display: block !important; 
+                position: absolute !important; 
+                left: 0 !important; top: 0 !important; 
+                width: 100% !important; 
+                background: white !important;
+                color: black !important;
+            }
+            @page { size: portrait; margin: 1cm; }
+        }
     </style>
 </head>
 <body>
@@ -75,9 +46,6 @@
 
 <nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
     <button class="btn active" onclick="showTab('empresa', this)">Empresa</button>
-    <button class="btn" onclick="showTab('categorias', this)">Categorias</button>
-    <button class="btn" onclick="showTab('produtos', this)">Produtos</button>
-    <button class="btn" onclick="showTab('promocoes', this)">Promoções</button>
     <button class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
@@ -88,28 +56,8 @@
             <input id="empNome" placeholder="Nome da Empresa">
             <input id="empSub" placeholder="Slogan / Subtítulo">
             <input id="empWhats" placeholder="WhatsApp da Loja">
-            <div class="grid grid-cols-2 gap-2">
-                <input id="empDesc" type="number" placeholder="Desc. PIX %">
-                <input id="empParc" type="number" placeholder="Parcelas Máx">
-            </div>
             <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
         </div>
-    </section>
-
-    <section id="categorias">
-        <div class="card mb-4">
-            <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
-        </div>
-        <div id="listaCategorias" class="grid gap-2"></div>
-    </section>
-
-    <section id="produtos">
-        <div id="listaProdutos" class="grid gap-2"></div>
-    </section>
-
-    <section id="promocoes">
-        <div id="listaPromocoes" class="grid gap-2"></div>
     </section>
 
     <section id="pedidos">
@@ -129,6 +77,7 @@
                 <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Informações do Cliente</h3>
                 <input id="edClienteNome" placeholder="Nome do Cliente">
                 <input id="edClienteTel" placeholder="WhatsApp">
+                <input id="edLocal" placeholder="Local de Entrega (Ex: Residencial, Trabalho, Loja)">
             </div>
             <div class="card bg-black/40">
                 <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Endereço de Entrega</h3>
@@ -137,7 +86,10 @@
                     <input id="edNum" placeholder="Nº">
                     <input id="edBairro" class="col-span-2" placeholder="Bairro">
                 </div>
-                <input id="edCidade" placeholder="Cidade / Estado">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="edCidade" placeholder="Cidade / Estado">
+                    <input id="edCep" placeholder="CEP">
+                </div>
             </div>
         </div>
 
@@ -161,7 +113,7 @@
         </div>
 
         <div class="mt-8 flex flex-col gap-4">
-            <div class="flex flex-wrap gap-2 justify-center bg-[#1a1a1a] p-3 rounded-lg">
+            <div class="flex flex-wrap gap-2 justify-center bg-[#1a1a1a] p-3 rounded-lg border border-[#333]">
                 <button class="btn bg-blue-700" onclick="imprimir(1)">📄 Romaneio 1 (Conf.)</button>
                 <button class="btn bg-blue-800" onclick="imprimir(2)">📄 Romaneio 2 (Cliente)</button>
                 <button class="btn bg-blue-900" onclick="imprimir(3)">📸 Romaneio 3 (Fotos)</button>
@@ -170,7 +122,7 @@
             </div>
             <div class="flex gap-2">
                 <button class="btn flex-1 bg-gray-700" onclick="fecharEditorPedido()">CANCELAR</button>
-                <button class="btn-gold flex-1" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES NO BANCO</button>
+                <button class="btn-gold flex-1" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
             </div>
         </div>
     </div>
@@ -179,7 +131,7 @@
 <div id="print-area"></div>
 
 <script>
-/* CONFIGURAÇÃO FIREBASE */
+/* FIREBASE */
 if (!firebase.apps.length) {
     firebase.initializeApp({
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -191,7 +143,6 @@ let pedidoEditando = null;
 
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-/* NAVEGAÇÃO */
 function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -201,7 +152,6 @@ function showTab(id, btn) {
     if (id === 'empresa') carregarEmpresaSeExistir();
 }
 
-/* CARREGAR PEDIDOS */
 function carregarPedidos() {
     db.ref('orders').on('value', s => {
         const lista = document.getElementById('listaPedidos');
@@ -211,7 +161,7 @@ function carregarPedidos() {
             lista.innerHTML += `
                 <div class="card flex justify-between items-center">
                     <div>
-                        <b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b>
+                        <b class="text-[#caa85c] uppercase">${p.cliente?.nome || 'Cliente'}</b>
                         <p class="text-[10px] text-gray-400">${p.data || ''}</p>
                     </div>
                     <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
@@ -220,17 +170,18 @@ function carregarPedidos() {
     });
 }
 
-/* EDITOR DE PEDIDO */
 function abrirEditorPedido(id) {
     db.ref('orders/'+id).once('value', s => {
         const p = s.val(); if (!p) return;
         pedidoEditando = id;
-        document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
-        document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
+        document.getElementById('edLocal').value = p.entrega?.local || '';
         document.getElementById('edRua').value = p.entrega?.rua || '';
         document.getElementById('edNum').value = p.entrega?.num || '';
         document.getElementById('edBairro').value = p.entrega?.bairro || '';
         document.getElementById('edCidade').value = p.entrega?.cidade || '';
+        document.getElementById('edCep').value = p.entrega?.cep || '';
         
         document.getElementById('edDescPromo').value = (p.descontoPromo || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
         document.getElementById('edDescPix').value = (p.descontoPix || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
@@ -251,13 +202,13 @@ function addItemEditor(i = {}) {
     div.innerHTML = `
         <input placeholder="SKU" value="${i.sku || ''}">
         <input placeholder="Nome" value="${i.name || ''}" class="md:col-span-2">
-        <input type="number" placeholder="Peso (g)" value="${i.peso || 0}">
-        <input type="number" placeholder="Preço R$" value="${i.price || 0}">
+        <input type="number" placeholder="Peso" value="${i.peso || 0}">
+        <input type="number" placeholder="Preço" value="${i.price || 0}">
         <div class="flex items-center gap-2">
             <input type="number" placeholder="Qtd" value="${i.quantidade || 1}">
             <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 font-bold">✕</button>
         </div>
-        <input type="hidden" class="item-img" value="${i.image || ''}">
+        <input type="hidden" value="${i.image || ''}">
     `;
     document.getElementById('edItens').appendChild(div);
 }
@@ -265,7 +216,6 @@ function addItemEditor(i = {}) {
 function adicionarItemEditor() { addItemEditor(); }
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 
-/* SALVAR NO FIREBASE */
 function salvarPedidoEditado() {
     const itens = [];
     let subtotal = 0;
@@ -292,26 +242,19 @@ function salvarPedidoEditado() {
     const dPix = parseFloat(document.getElementById('edDescPix').value.replace('.','').replace(',','.')) || 0;
     const frete = parseFloat(document.getElementById('edFrete').value.replace('.','').replace(',','.')) || 0;
 
-    const total = subtotal - dPromo - dPix + frete;
-
     db.ref('orders/' + pedidoEditando).update({
         cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
         entrega: { 
+            local: document.getElementById('edLocal').value,
             rua: document.getElementById('edRua').value, 
             num: document.getElementById('edNum').value, 
             bairro: document.getElementById('edBairro').value, 
-            cidade: document.getElementById('edCidade').value 
+            cidade: document.getElementById('edCidade').value,
+            cep: document.getElementById('edCep').value
         },
-        itens,
-        subtotal,
-        descontoPromo: dPromo,
-        descontoPix: dPix,
-        frete,
-        total,
-        pesoTotal,
-        totalPecas: qtdPecas,
-        ajustadoManualmente: true
-    }).then(() => { alert("Pedido Salvo!"); });
+        itens, subtotal, descontoPromo: dPromo, descontoPix: dPix, frete, total: (subtotal - dPromo - dPix + frete),
+        pesoTotal, totalPecas: qtdPecas, ajustadoManualmente: true
+    }).then(() => alert("Pedido Atualizado!"));
 }
 
 function imprimir(tipo) {
@@ -323,99 +266,104 @@ function imprimir(tipo) {
             
             let html = `
             <style>
-                @media print {
-                    body * { visibility: hidden !important; }
-                    #print-area, #print-area * { visibility: visible !important; }
-                    #print-area { position: absolute; left: 0; top: 0; width: 100%; background: #fff; }
-                    @page { size: portrait; margin: 0.8cm; }
-                }
                 .p-container { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
-                .p-header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #000; padding-bottom: 10px; }
-                .p-header h1 { font-family: 'Georgia', serif; font-size: 22px; margin: 0; text-transform: uppercase; letter-spacing: 3px; }
+                .p-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                .p-header h1 { font-family: 'Cinzel', serif; font-size: 24px; margin: 0; }
+                .p-header .sub { font-weight: bold; font-size: 11px; text-transform: uppercase; margin: 2px 0; }
                 
                 .p-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-                .p-box { border: 1px solid #ddd; padding: 8px; border-radius: 4px; }
-                .p-box b { font-size: 8px; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; }
+                .p-box { border: 1px solid #000; padding: 8px; border-radius: 4px; }
+                .p-box b { font-size: 8px; color: #666; text-transform: uppercase; display: block; border-bottom: 1px solid #eee; margin-bottom: 4px; }
 
+                /* GRID LAYOUT */
+                .grid-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid #000; border-left: 1px solid #000; }
+                .grid-cell { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 6px; text-align: center; page-break-inside: avoid; }
+                
+                /* TABLE LAYOUT */
                 table { width: 100%; border-collapse: collapse; }
-                th { border-bottom: 1px solid #000; padding: 5px; text-align: left; font-size: 9px; text-transform: uppercase; }
-                td { border-bottom: 1px solid #eee; padding: 4px 5px; font-size: 10px; }
-                .img-mini { width: 35px; height: 35px; object-fit: cover; border-radius: 3px; border: 1px solid #eee; }
+                th { border-bottom: 1px solid #000; padding: 5px; text-align: left; font-size: 9px; }
+                td { border-bottom: 1px solid #eee; padding: 5px; }
+                .img-mini { width: 40px; height: 40px; object-fit: contain; background: white; border: 1px solid #eee; }
 
-                .p-footer { margin-top: 15px; text-align: right; border-top: 1px solid #000; padding-top: 8px; }
-                .p-total { font-size: 16px; font-weight: bold; margin-top: 5px; }
-                .text-gold { color: #caa85c; }
+                .p-footer { margin-top: 15px; text-align: right; border-top: 2px solid #000; padding-top: 8px; }
             </style>
 
             <div class="p-container">
                 <div class="p-header">
-                    <h1>${emp.nome || 'ABELLA JOIAS'}</h1>
-                    <div style="font-size:10px;">${emp.subtitulo || ''} | WhatsApp: ${emp.whats || ''}</div>
+                    <h1>Abella Joias</h1>
+                    <div class="sub">ATACADO DE JOIAS NO BRUTO</div>
+                    <div>Whatsapp: (19) 98820-7658</div>
                 </div>
 
                 <div class="p-info">
                     <div class="p-box">
                         <b>Dados do Cliente</b>
-                        <strong>${p.cliente?.nome || ''}</strong><br>
-                        ${p.cliente?.telefone || ''}
+                        <strong>${p.cliente?.nome || ''}</strong><br>${p.cliente?.telefone || ''}
                     </div>
                     <div class="p-box">
                         <b>Local de Entrega</b>
-                        ${p.entrega?.rua || ''}, ${p.entrega?.num || ''} ${p.entrega?.complemento ? '('+p.entrega.complemento+')' : ''}<br>
-                        ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''} - CEP: ${p.entrega?.cep || ''}
+                        <strong>${p.entrega?.local || 'Não Informado'}</strong><br>
+                        ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
+                        ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''} - ${p.entrega?.cep || ''}
                     </div>
-                </div>
+                </div>`;
 
-                <table>
+            if (tipo >= 4) {
+                html += `<div class="grid-wrapper">`;
+                itens.forEach(i => {
+                    html += `
+                    <div class="grid-cell">
+                        <div style="font-weight:bold; font-size:9px;">${i.sku}</div>
+                        <div style="font-size:8px; margin:2px 0;">${i.name}</div>
+                        <div style="font-size:12px; font-weight:900;">(X ${i.quantidade})</div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } else {
+                html += `<table>
                     <thead>
                         <tr>
                             ${tipo === 3 ? '<th>Foto</th>' : ''}
-                            <th>Ref/SKU</th>
-                            <th>Descrição do Produto</th>
-                            <th>Peso</th>
-                            ${tipo >= 2 ? '<th>Unit.</th><th>Total</th>' : ''}
-                            <th style="text-align:center">Qtd</th>
+                            <th>SKU</th><th>Produto</th><th>Peso</th>
+                            ${tipo >= 2 ? '<th>Unit.</th><th>Subtotal</th>' : ''}
+                            <th align="center">Qtd</th>
                         </tr>
                     </thead>
                     <tbody>`;
-
-            itens.forEach(i => {
-                const totalItem = (Number(i.price) * Number(i.quantidade));
-                html += `
+                itens.forEach(i => {
+                    html += `
                     <tr>
-                        ${tipo === 3 ? `<td><img src="${i.image || ''}" class="img-mini" onerror="this.src='https://via.placeholder.com/35'"></td>` : ''}
-                        <td style="font-weight:bold;">${i.sku || '---'}</td>
-                        <td>${i.name || ''}</td>
-                        <td>${i.peso || 0}g</td>
-                        ${tipo >= 2 ? `<td>${fMoeda(i.price)}</td><td>${fMoeda(totalItem)}</td>` : ''}
+                        ${tipo === 3 ? `<td><img src="${i.image}" class="img-mini" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/40?text=S/F'"></td>` : ''}
+                        <td><b>${i.sku}</b></td>
+                        <td>${i.name}</td>
+                        <td>${i.peso}g</td>
+                        ${tipo >= 2 ? `<td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
                         <td align="center"><b>${i.quantidade}</b></td>
                     </tr>`;
-            });
+                });
+                html += `</tbody></table>`;
+            }
 
-            html += `</tbody></table>
-
-                <div class="p-footer">
-                    <p>Itens: ${itens.length} | Peças: ${p.totalPecas || 0} | Peso Total: ${p.pesoTotal || 0}g</p>`;
-
+            html += `<div class="p-footer">
+                <p>Itens: ${itens.length} | Peças: ${p.totalPecas || 0} | Peso: ${p.pesoTotal || 0}g</p>`;
+            
             if (tipo === 2 || tipo === 3 || tipo === 5) {
                 html += `
-                    <p>Subtotal: ${fMoeda(p.subtotal)}</p>
-                    <p>Desconto Promocional: <span style="color:red;">- ${fMoeda(p.descontoPromo || 0)}</span></p>
-                    ${p.descontoPix > 0 ? `<p>Desconto PIX: - ${fMoeda(p.descontoPix)}</p>` : ''}
-                    <p>Frete: ${fMoeda(p.frete || 0)}</p>
-                    <div class="p-total">TOTAL FINAL: ${fMoeda(p.total)}</div>
-                `;
+                <p>Subtotal: ${fMoeda(p.subtotal)} | Frete: ${fMoeda(p.frete)}</p>
+                <p>Desconto Promocional: <span style="color:red">- ${fMoeda(p.descontoPromo)}</span></p>
+                ${p.descontoPix > 0 ? `<p>Desconto PIX: - ${fMoeda(p.descontoPix)}</p>` : ''}
+                <div style="font-size:16px; font-weight:bold;">TOTAL FINAL: ${fMoeda(p.total)}</div>`;
             }
 
             html += `</div></div>`;
-            
             document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 500);
+            
+            // Aguarda 1 segundo para garantir que as fotos carreguem antes de imprimir
+            setTimeout(() => { window.print(); }, 1000);
         });
     });
 }
 
-/* FUNÇÕES DE SUPORTE */
 function carregarEmpresaSeExistir() {
     db.ref('settings/empresa').once('value', s => {
         const v = s.val(); if (!v) return;
@@ -430,10 +378,9 @@ function salvarEmpresa() {
         nome: document.getElementById('empNome').value,
         subtitulo: document.getElementById('empSub').value,
         whats: document.getElementById('empWhats').value
-    }).then(() => alert("Dados da empresa salvos!"));
+    }).then(() => alert("Dados salvos!"));
 }
 
-// Máscara de Moeda Simples
 document.addEventListener('input', e => {
     if(e.target.classList.contains('money')) {
         let v = e.target.value.replace(/\D/g,'');
