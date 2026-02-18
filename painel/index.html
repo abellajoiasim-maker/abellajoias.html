@@ -1,351 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel Administrativo • Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body{background:#0b0b0b;color:#eee;font-family:Inter,Arial;margin:0}
-nav button.active{border-bottom:2px solid #caa85c;color:#caa85c}
-section{display:none;min-height:300px}
-section.active{display:block}
-.card{background:#141414;border:1px solid #2a2a2a;border-radius:16px;padding:14px}
-.btn{background:#222;border:1px solid #444;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer}
-.btn-gold{background:#caa85c;color:#000;font-weight:700;padding:10px;border-radius:8px;cursor:pointer}
-input,select{background:#111;border:1px solid #333;padding:8px;border-radius:8px;width:100%;margin-bottom:8px;color:#fff;outline:none}
-#mainModal.active { display: flex; }
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
-#print-area { display: none; }
-@media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
-}
-
-</style>
-</head>
-<body>
-
-<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
-    Abella Joias • Painel de Controle
-</header>
-
-<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
-    <button class="btn active" onclick="showTab('empresa', this)">Empresa</button>
-    <button class="btn" onclick="showTab('categorias', this)">Categorias</button>
-    <button class="btn" onclick="showTab('produtos', this)">Produtos</button>
-    <button class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
-</nav>
-
-<main class="p-6 max-w-4xl mx-auto">
-    <section id="empresa" class="active">
-        <div class="card space-y-3">
-            <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
-            <input id="empNome" placeholder="Nome da Empresa">
-            <input id="empSub" placeholder="Slogan / Subtítulo">
-            <input id="empWhats" placeholder="WhatsApp da Loja">
-            <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
-        </div>
-    </section>
-
-    <section id="categorias">
-        <div class="card mb-4">
-            <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
-        </div>
-        <div id="listaCategorias" class="grid gap-2"></div>
-    </section>
-
-    <section id="produtos">
-        <div id="listaProdutos" class="grid gap-2"></div>
-    </section>
-
-    <section id="pedidos">
-        <div id="listaPedidos" class="grid gap-4"></div>
-    </section>
-</main>
-
-<div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div class="bg-[#111] w-full max-w-5xl rounded-2xl p-6 overflow-auto max-h-[95vh] border border-[#333]">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-[#caa85c] font-bold text-xl uppercase">Gerenciar Pedido</h2>
-            <button onclick="fecharEditorPedido()" class="text-white text-2xl">&times;</button>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="card bg-black/40">
-                <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Informações do Cliente</h3>
-                <input id="edClienteNome" placeholder="Nome do Cliente">
-                <input id="edClienteTel" placeholder="WhatsApp">
-                <input id="edLocal" placeholder="Local de Entrega (Ex: Residencial, Loja)">
-            </div>
-            <div class="card bg-black/40">
-                <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Endereço de Entrega</h3>
-                <input id="edRua" placeholder="Rua / Logradouro">
-                <div class="grid grid-cols-3 gap-2">
-                    <input id="edNum" placeholder="Nº">
-                    <input id="edBairro" class="col-span-2" placeholder="Bairro">
-                </div>
-            </div>
-        </div>
-
-        <h3 class="font-bold mt-6 mb-2 text-xs text-[#caa85c] uppercase">Itens do Pedido</h3>
-        <div id="edItens" class="space-y-2 mb-4"></div>
-        <button class="btn w-full mb-6 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ ADICIONAR NOVO PRODUTO</button>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-black rounded-xl border border-[#222]">
-            <div><label class="text-[10px] text-gray-400">DESC. PROMO (R$)</label><input id="edDescPromo" class="money"></div>
-            <div><label class="text-[10px] text-gray-400">DESC. PIX (R$)</label><input id="edDescPix" class="money"></div>
-            <div><label class="text-[10px] text-gray-400">FRETE (R$)</label><input id="edFrete" class="money"></div>
-        </div>
-
-        <div class="mt-8 flex flex-col gap-4">
-            <div class="flex flex-wrap gap-2 justify-center bg-[#1a1a1a] p-3 rounded-lg border border-[#333]">
-                <button class="btn bg-blue-700" onclick="imprimir(1)">📄 Romaneio 1 (Conf.)</button>
-                <button class="btn bg-blue-800" onclick="imprimir(2)">📄 Romaneio 2 (Cliente)</button>
-                <button class="btn bg-blue-900" onclick="imprimir(3)">📸 Romaneio 3 (Fotos)</button>
-                <button class="btn bg-purple-900" onclick="imprimir(5)">🔳 Grid Itens</button>
-            </div>
-            <div class="flex gap-2">
-                <button class="btn-gold flex-1" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="print-area"></div>
-
-<script>
-if (!firebase.apps.length) {
-    firebase.initializeApp({
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    });
-}
-const db = firebase.database();
-let pedidoEditando = null;
-
-const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
-
-function showTab(id, btn) {
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if (btn) btn.classList.add('active');
-    if (id === 'pedidos') carregarPedidos();
-}
-
-function carregarPedidos() {
-    db.ref('orders').on('value', s => {
-        const lista = document.getElementById('listaPedidos');
-        lista.innerHTML = '';
-        s.forEach(ped => {
-            const p = ped.val();
-            lista.innerHTML += `
-                <div class="card flex justify-between items-center">
-                    <div><b>${p.cliente?.nome || 'S/N'}</b></div>
-                    <div class="flex gap-2">
-                        <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
-                        <button class="btn bg-red-900 text-[10px]" onclick="excluirPedido('${ped.key}')">EXCLUIR</button>
-                    </div>
-                </div>`;
-        });
-    });
-}
-
-function excluirPedido(id) {
-    if(confirm("Excluir pedido?")) db.ref('orders/' + id).remove();
-}
-
-function abrirEditorPedido(id) {
-    db.ref('orders/'+id).once('value', s => {
-        const p = s.val();
-        pedidoEditando = id;
-        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
-        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
-        document.getElementById('edLocal').value = p.entrega?.local || '';
-        document.getElementById('edRua').value = p.entrega?.rua || '';
-        document.getElementById('edNum').value = p.entrega?.num || '';
-        document.getElementById('edBairro').value = p.entrega?.bairro || '';
-        
-        document.getElementById('edDescPromo').value = (p.descontoPromo || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-        document.getElementById('edDescPix').value = (p.descontoPix || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-        document.getElementById('edFrete').value = (p.frete || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-
-        const container = document.getElementById('edItens');
-        container.innerHTML = '';
-        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-        itens.forEach(i => addItemEditor(i));
-        document.getElementById('editorPedido').classList.remove('hidden');
-    });
-}
-
-function addItemEditor(i = {}) {
-    const div = document.createElement('div');
-    div.className = "card bg-black/60 border-[#333] grid grid-cols-2 md:grid-cols-6 gap-2 items-center";
-    div.innerHTML = `
-        <input placeholder="SKU" value="${i.sku || ''}">
-        <input placeholder="Nome" value="${i.name || ''}" class="md:col-span-2">
-        <input type="number" placeholder="Peso" value="${i.peso || 0}">
-        <input type="number" placeholder="Preço" value="${i.price || 0}">
-        <div class="flex items-center gap-2">
-            <input type="number" placeholder="Qtd" value="${i.quantidade || 1}">
-            <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 font-bold">✕</button>
-        </div>
-        <input type="hidden" class="item-img-val" value="${i.image || ''}">
-    `;
-    document.getElementById('edItens').appendChild(div);
-}
-
-function adicionarItemEditor() { addItemEditor(); }
-function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
-
-function salvarPedidoEditado() {
-    const itens = [];
-    let subtotal = 0, pesoTotal = 0, qtdPecas = 0;
-    document.querySelectorAll('#edItens > div').forEach(div => {
-        const ins = div.querySelectorAll('input');
-        const item = {
-            sku: ins[0].value, name: ins[1].value, peso: Number(ins[2].value) || 0,
-            price: Number(ins[3].value) || 0, quantidade: Number(ins[4].value) || 0, image: ins[5].value
-        };
-        subtotal += (item.price * item.quantidade);
-        pesoTotal += (item.peso * item.quantidade);
-        qtdPecas += item.quantidade;
-        itens.push(item);
-    });
-
-    const dPromo = parseFloat(document.getElementById('edDescPromo').value.replace('.','').replace(',','.')) || 0;
-    const dPix = parseFloat(document.getElementById('edDescPix').value.replace('.','').replace(',','.')) || 0;
-    const frete = parseFloat(document.getElementById('edFrete').value.replace('.','').replace(',','.')) || 0;
-
-    db.ref('orders/' + pedidoEditando).update({
-        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { 
-            local: document.getElementById('edLocal').value, rua: document.getElementById('edRua').value, 
-            num: document.getElementById('edNum').value, bairro: document.getElementById('edBairro').value
-        },
-        itens, subtotal, descontoPromo: dPromo, descontoPix: dPix, frete, 
-        total: (subtotal - dPromo - dPix + frete), pesoTotal, totalPecas: qtdPecas
-    }).then(() => alert("Pedido Salvo!"));
-}
-
-async function imprimir(tipo) {
-    db.ref('orders/' + pedidoEditando).once('value', async s => {
-        const p = s.val();
-        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-        
-        let html = `
-        <style>
-            .p-container { font-family: Arial, sans-serif; color: #000; font-size: 11px; }
-            .p-header { text-align: center; border-bottom: 2px solid #000; padding: 10px; margin-bottom: 15px; }
-            .p-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #000; }
-            th { background: #eee; border: 1px solid #000; padding: 6px; text-transform: uppercase; font-size: 10px; }
-            td { border: 1px solid #000; padding: 6px; }
-            .img-romaneio { width: 45px; height: 45px; object-fit: contain; }
-            .footer-info { margin-top: 15px; border-top: 1px solid #000; padding-top: 10px; text-align: right; }
-            .grid-conferencia { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #000; }
-            .grid-item { border: 1px solid #000; padding: 8px; text-align: center; }
-        </style>
-
-        <div class="p-container">
-            <div class="p-header">
-                <h1 style="font-family:Cinzel; margin:0">ABELLA JOIAS</h1>
-                <small>ATACADO DE JOIAS NO BRUTO - (19) 98820-7658</small>
-            </div>
-
-            <div class="p-info">
-                <div><b>CLIENTE:</b><br>${p.cliente?.nome}<br>${p.cliente?.telefone}</div>
-                <div><b>ENTREGA:</b><br>${p.entrega?.local}<br>${p.entrega?.rua}, ${p.entrega?.num}</div>
-            </div>`;
-
-        if (tipo === 5) {
-            html += `<div class="grid-conferencia">`;
-            itens.forEach(i => {
-                html += `<div class="grid-item">
-                    <b>${i.sku}</b><br><small>${i.name}</small><br>
-                    <span style="font-size:14px; font-weight:bold;">Qtd: ${i.quantidade}</span>
-                </div>`;
-            });
-            html += `</div>`;
-        } else {
-            html += `<table><thead><tr>
-                ${tipo === 3 ? '<th>FOTO</th>' : ''}
-                <th>SKU</th><th>DESCRIÇÃO</th><th>PESO</th>
-                ${tipo >= 2 ? '<th>UNIT.</th><th>TOTAL</th>' : ''}
-                <th>QTD</th></tr></thead><tbody>`;
-            
-            itens.forEach(i => {
-                const img = i.image || "https://via.placeholder.com/50";
-                html += `<tr>
-                    ${tipo === 3 ? `<td><img src="${img}" class="img-romaneio" crossorigin="anonymous"></td>` : ''}
-                    <td><b>${i.sku}</b></td>
-                    <td>${i.name}</td>
-                    <td>${i.peso}g</td>
-                    ${tipo >= 2 ? `<td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
-                    <td align="center"><b>${i.quantidade}</b></td></tr>`;
-            });
-            html += `</tbody></table>`;
-        }
-
-        html += `<div class="footer-info">
-            <p>Peças: ${p.totalPecas || 0} | Peso: ${p.pesoTotal || 0}g</p>`;
-        if (tipo >= 2) {
-            html += `<p>Subtotal: ${fMoeda(p.subtotal)}</p>`;
-            if(p.descontoPromo > 0) html += `<p style="color:red">Desconto: -${fMoeda(p.descontoPromo)}</p>`;
-            if(p.descontoPix > 0) html += `<p style="color:green">Desc. PIX: -${fMoeda(p.descontoPix)}</p>`;
-            html += `<h2 style="margin:0">TOTAL: ${fMoeda(p.total)}</h2>`;
-        }
-        html += `</div></div>`;
-
-        document.getElementById('print-area').innerHTML = html;
-
-        // Aguarda carregamento de todas as imagens antes de imprimir
-        const imgs = document.getElementById('print-area').querySelectorAll('img');
-        const promises = Array.from(imgs).map(img => new Promise(res => {
-            img.onload = res;
-            img.onerror = res;
-        }));
-
-        await Promise.all(promises);
-        setTimeout(() => { window.print(); }, 500);
-    });
-}
-
-function carregarEmpresaSeExistir() {
-    db.ref('settings/empresa').once('value', s => {
-        const v = s.val(); if (!v) return;
-        document.getElementById('empNome').value = v.nome || '';
-        document.getElementById('empSub').value = v.subtitulo || '';
-        document.getElementById('empWhats').value = v.whats || '';
-    });
-}
-
-function salvarEmpresa() {
-    db.ref('settings/empresa').update({
-        nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
-        whats: document.getElementById('empWhats').value
-    }).then(() => alert("Salvo!"));
-}
-
-document.addEventListener('input', e => {
-    if(e.target.classList.contains('money')) {
-        let v = e.target.value.replace(/\D/g,'');
-        v = (v/100).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-        e.target.value = v;
-    }
-});
-window.onload = () => showTab('empresa');
-</script>
-</body>
-</html>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo • Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -354,13 +14,13 @@ window.onload = () => showTab('empresa');
         :root { --gold: #caa85c; --bg: #0b0b0b; --card: #141414; }
         body { background: var(--bg); color: #eee; font-family: 'Inter', sans-serif; margin: 0; }
         nav button.active { border-bottom: 2px solid var(--gold); color: var(--gold); }
-        section { display: none; }
+        section { display: none; min-height: 300px; }
         section.active { display: block; }
         .card { background: var(--card); border: 1px solid #2a2a2a; border-radius: 16px; padding: 14px; }
         .btn { background: #222; border: 1px solid #444; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; color: white; transition: 0.3s; }
         .btn:hover { background: #333; }
         .btn-gold { background: var(--gold); color: #000; font-weight: 700; padding: 10px; border-radius: 8px; cursor: pointer; }
-        input { background: #111; border: 1px solid #333; padding: 8px; border-radius: 8px; width: 100%; margin-bottom: 8px; color: #fff; outline: none; }
+        input, select { background: #111; border: 1px solid #333; padding: 8px; border-radius: 8px; width: 100%; margin-bottom: 8px; color: #fff; outline: none; }
         
         #print-area { display: none; }
 
@@ -417,11 +77,11 @@ window.onload = () => showTab('empresa');
     </section>
 
     <section id="produtos">
-        <div id="listaProdutos" class="grid gap-2"></div>
+        <div id="listaProdutos" class="grid gap-2">Gerencie seus produtos aqui...</div>
     </section>
 
     <section id="promocoes">
-        <div id="listaPromocoes" class="grid gap-2"></div>
+        <div id="listaPromocoes" class="grid gap-2">Configure promoções aqui...</div>
     </section>
 
     <section id="pedidos">
@@ -441,17 +101,17 @@ window.onload = () => showTab('empresa');
                 <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Informações do Cliente</h3>
                 <input id="edClienteNome" placeholder="Nome do Cliente">
                 <input id="edClienteTel" placeholder="WhatsApp">
-                <input id="edLocal" placeholder="Local de Entrega (Ex: Residencial, Loja)">
+                <input id="edLocal" placeholder="Local de Entrega">
             </div>
             <div class="card bg-black/40">
-                <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Endereço de Entrega</h3>
+                <h3 class="text-xs text-gray-500 font-bold mb-3 uppercase">Endereço</h3>
                 <input id="edRua" placeholder="Rua / Logradouro">
                 <div class="grid grid-cols-3 gap-2">
                     <input id="edNum" placeholder="Nº">
                     <input id="edBairro" class="col-span-2" placeholder="Bairro">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <input id="edCidade" placeholder="Cidade / Estado">
+                    <input id="edCidade" placeholder="Cidade">
                     <input id="edCep" placeholder="CEP">
                 </div>
             </div>
@@ -459,21 +119,19 @@ window.onload = () => showTab('empresa');
 
         <h3 class="font-bold mt-6 mb-2 text-xs text-[#caa85c] uppercase">Itens do Pedido</h3>
         <div id="edItens" class="space-y-2 mb-4"></div>
-        <button class="btn w-full mb-6 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ ADICIONAR NOVO PRODUTO</button>
+        <button class="btn w-full mb-6 border-dashed border-gray-600" onclick="adicionarItemEditor()">+ ADICIONAR ITEM</button>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-black rounded-xl border border-[#222]">
-            <div><label class="text-[10px] text-gray-400">DESC. PROMO (R$)</label><input id="edDescPromo" class="money"></div>
-            <div><label class="text-[10px] text-gray-400">DESC. PIX (R$)</label><input id="edDescPix" class="money"></div>
-            <div><label class="text-[10px] text-gray-400">FRETE (R$)</label><input id="edFrete" class="money"></div>
+        <div class="grid grid-cols-3 gap-4 p-4 bg-black rounded-xl border border-[#222]">
+            <div><label class="text-[10px] text-gray-400">DESC. PROMO</label><input id="edDescPromo" class="money"></div>
+            <div><label class="text-[10px] text-gray-400">DESC. PIX</label><input id="edDescPix" class="money"></div>
+            <div><label class="text-[10px] text-gray-400">FRETE</label><input id="edFrete" class="money"></div>
         </div>
 
         <div class="mt-8 flex flex-col gap-4">
             <div class="flex flex-wrap gap-2 justify-center bg-[#1a1a1a] p-3 rounded-lg border border-[#333]">
-                <button class="btn bg-blue-700" onclick="imprimir(1)">📄 Romaneio 1 (Conf.)</button>
-                <button class="btn bg-blue-800" onclick="imprimir(2)">📄 Romaneio 2 (Cliente)</button>
-                <button class="btn bg-blue-900" onclick="imprimir(3)">📸 Romaneio 3 (Fotos)</button>
-                <button class="btn bg-purple-700" onclick="imprimir(4)">🔳 Grid Conferência</button>
-                <button class="btn bg-purple-900" onclick="imprimir(5)">🔳 Grid Cliente</button>
+                <button class="btn bg-blue-700" onclick="imprimir(1)">📄 Romaneio 1</button>
+                <button class="btn bg-blue-800" onclick="imprimir(2)">📄 Romaneio 2</button>
+                <button class="btn bg-blue-900" onclick="imprimir(3)">📸 Romaneio Fotos</button>
                 <button class="btn bg-pink-800" onclick="imprimir(6)">📸 Grid com Fotos</button>
             </div>
             <div class="flex gap-2">
@@ -487,6 +145,7 @@ window.onload = () => showTab('empresa');
 <div id="print-area"></div>
 
 <script>
+// Inicialização Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp({
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
@@ -506,27 +165,6 @@ function showTab(id, btn) {
     if (id === 'pedidos') carregarPedidos();
 }
 
-/* CATEGORIAS */
-function carregarCategorias() {
-    db.ref('categories').on('value', s => {
-        const lista = document.getElementById('listaCategorias');
-        lista.innerHTML = '';
-        s.forEach(cat => {
-            lista.innerHTML += `
-                <div class="card flex justify-between items-center">
-                    <span>${cat.val().name}</span>
-                    <button class="text-red-500" onclick="removerCat('${cat.key}')">Excluir</button>
-                </div>`;
-        });
-    });
-}
-function novaCategoria() {
-    const name = document.getElementById('newCatName').value;
-    if(name) db.ref('categories').push({name}).then(() => document.getElementById('newCatName').value = '');
-}
-function removerCat(id) { if(confirm('Excluir categoria?')) db.ref('categories/'+id).remove(); }
-
-/* PEDIDOS */
 function carregarPedidos() {
     db.ref('orders').on('value', s => {
         const lista = document.getElementById('listaPedidos');
@@ -535,12 +173,9 @@ function carregarPedidos() {
             const p = ped.val();
             lista.innerHTML += `
                 <div class="card flex justify-between items-center">
-                    <div>
-                        <b class="text-[#caa85c] uppercase">${p.cliente?.nome || p.cliente}</b>
-                        <p class="text-[10px] text-gray-400">${p.data || ''}</p>
-                    </div>
+                    <div><b class="text-[#caa85c] uppercase">${p.cliente?.nome || 'S/N'}</b></div>
                     <div class="flex gap-2">
-                        <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR / ROMANEIO</button>
+                        <button class="btn-gold text-[10px]" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
                         <button class="btn bg-red-900 text-[10px]" onclick="excluirPedido('${ped.key}')">EXCLUIR</button>
                     </div>
                 </div>`;
@@ -548,18 +183,12 @@ function carregarPedidos() {
     });
 }
 
-function excluirPedido(id) {
-    if(confirm("Tem certeza que deseja excluir este pedido?")) {
-        db.ref('orders/' + id).remove();
-    }
-}
-
 function abrirEditorPedido(id) {
     db.ref('orders/'+id).once('value', s => {
         const p = s.val(); if (!p) return;
         pedidoEditando = id;
-        document.getElementById('edClienteNome').value = p.cliente?.nome || p.cliente || '';
-        document.getElementById('edClienteTel').value = p.cliente?.telefone || p.whatsapp || '';
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
         document.getElementById('edLocal').value = p.entrega?.local || '';
         document.getElementById('edRua').value = p.entrega?.rua || '';
         document.getElementById('edNum').value = p.entrega?.num || '';
@@ -575,7 +204,6 @@ function abrirEditorPedido(id) {
         container.innerHTML = '';
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
         itens.forEach(i => addItemEditor(i));
-
         document.getElementById('editorPedido').classList.remove('hidden');
     });
 }
@@ -592,7 +220,7 @@ function addItemEditor(i = {}) {
             <input type="number" placeholder="Qtd" value="${i.quantidade || 1}">
             <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 font-bold">✕</button>
         </div>
-        <input type="hidden" class="item-img" value="${i.image || ''}">
+        <input type="hidden" class="item-img-val" value="${i.image || ''}">
     `;
     document.getElementById('edItens').appendChild(div);
 }
@@ -615,24 +243,13 @@ function salvarPedidoEditado() {
         itens.push(item);
     });
 
-    const dPromo = parseFloat(document.getElementById('edDescPromo').value.replace('.','').replace(',','.')) || 0;
-    const dPix = parseFloat(document.getElementById('edDescPix').value.replace('.','').replace(',','.')) || 0;
-    const frete = parseFloat(document.getElementById('edFrete').value.replace('.','').replace(',','.')) || 0;
-
     db.ref('orders/' + pedidoEditando).update({
         cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { 
-            local: document.getElementById('edLocal').value, rua: document.getElementById('edRua').value, 
-            num: document.getElementById('edNum').value, bairro: document.getElementById('edBairro').value, 
-            cidade: document.getElementById('edCidade').value, cep: document.getElementById('edCep').value
-        },
-        itens, subtotal, descontoPromo: dPromo, descontoPix: dPix, frete, 
-        total: (subtotal - dPromo - dPix + frete), pesoTotal, totalPecas: qtdPecas, ajustadoManualmente: true
-    }).then(() => alert("Pedido Salvo!"));
+        entrega: { local: document.getElementById('edLocal').value, rua: document.getElementById('edRua').value, num: document.getElementById('edNum').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value, cep: document.getElementById('edCep').value },
+        itens, subtotal, totalPecas: qtdPecas, pesoTotal
+    }).then(() => alert("Salvo!"));
 }
 
-/* IMPRESSÃO */
-// Atualize a função imprimir para incluir o caso 'tipo 6'
 async function imprimir(tipo) {
     db.ref('orders/' + pedidoEditando).once('value', async s => {
         const p = s.val();
@@ -643,113 +260,50 @@ async function imprimir(tipo) {
             .p-container { font-family: Arial, sans-serif; color: #000; font-size: 11px; }
             .p-header { text-align: center; border-bottom: 2px solid #000; padding: 10px; margin-bottom: 15px; }
             .p-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
-            
-            /* ESTILO TABELA PLANILHA */
             table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
             th { background: #eee; border: 1px solid #000; padding: 6px; text-transform: uppercase; }
             td { border: 1px solid #000; padding: 6px; }
-
-            /* NOVO ESTILO: GRID COM FOTOS */
-            .photo-grid { 
-                display: grid; 
-                grid-template-columns: repeat(3, 1fr); 
-                gap: 0; 
-                border-top: 1px solid #000; 
-                border-left: 1px solid #000; 
-            }
-            .grid-card { 
-                border-right: 1px solid #000; 
-                border-bottom: 1px solid #000; 
-                padding: 10px; 
-                text-align: center; 
-                page-break-inside: avoid;
-            }
-            .img-grid { 
-                width: 100%; 
-                height: 120px; 
-                object-fit: contain; 
-                margin-bottom: 5px; 
-            }
-            .sku-tag { font-weight: bold; font-size: 12px; display: block; }
-            .qtd-tag { background: #000; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 14px; margin-top: 5px; display: inline-block; }
-            
-            .footer-info { margin-top: 15px; border-top: 1px solid #000; padding-top: 10px; text-align: right; }
+            .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
+            .grid-card { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 10px; text-align: center; }
+            .img-grid { width: 100%; height: 100px; object-fit: contain; }
+            .qtd-tag { background: #000; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         </style>
-
         <div class="p-container">
-            <div class="p-header">
-                <h1 style="font-family:Cinzel; margin:0">ABELLA JOIAS</h1>
-                <small>CATÁLOGO DE CONFERÊNCIA - (19) 98820-7658</small>
-            </div>
-
+            <div class="p-header"><h1>ABELLA JOIAS</h1></div>
             <div class="p-info">
                 <div><b>CLIENTE:</b> ${p.cliente?.nome}</div>
                 <div><b>DATA:</b> ${new Date().toLocaleDateString()}</div>
             </div>`;
 
         if (tipo === 6) {
-            // Lógica do Grid com Fotos
             html += `<div class="photo-grid">`;
             itens.forEach(i => {
-                const img = i.image || "https://via.placeholder.com/150?text=Sem+Foto";
-                html += `
-                <div class="grid-card">
+                const img = i.image || "https://via.placeholder.com/150";
+                html += `<div class="grid-card">
                     <img src="${img}" class="img-grid" crossorigin="anonymous">
-                    <span class="sku-tag">${i.sku}</span>
-                    <small style="display:block; height:24px; overflow:hidden;">${i.name}</small>
+                    <br><b>${i.sku}</b><br><small>${i.name}</small><br>
                     <div class="qtd-tag">QTD: ${i.quantidade}</div>
                 </div>`;
             });
             html += `</div>`;
         } else {
-            // (Mantém as outras lógicas de tabela aqui...)
+            html += `<table><thead><tr><th>SKU</th><th>DESCRIÇÃO</th><th>QTD</th></tr></thead><tbody>`;
+            itens.forEach(i => {
+                html += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.quantidade}</td></tr>`;
+            });
+            html += `</tbody></table>`;
         }
 
-        html += `<div class="footer-info">
-            <p>Total de Peças: <b>${p.totalPecas || 0}</b></p>
-        </div></div>`;
-
+        html += `</div>`;
         document.getElementById('print-area').innerHTML = html;
 
-        // Garante que as fotos carreguem antes de imprimir
         const imgs = document.getElementById('print-area').querySelectorAll('img');
-        await Promise.all(Array.from(imgs).map(img => new Promise(res => {
-            img.onload = res; img.onerror = res;
-        })));
-
+        await Promise.all(Array.from(imgs).map(img => new Promise(res => { img.onload = res; img.onerror = res; })));
         setTimeout(() => { window.print(); }, 500);
     });
 }
 
-function carregarEmpresaSeExistir() {
-    db.ref('settings/empresa').once('value', s => {
-        const v = s.val(); if (!v) return;
-        document.getElementById('empNome').value = v.nome || '';
-        document.getElementById('empSub').value = v.subtitulo || '';
-        document.getElementById('empWhats').value = v.whats || '';
-        document.getElementById('empDesc').value = v.pix || 0;
-        document.getElementById('empParc').value = v.parcelas || 0;
-    });
-}
-
-function salvarEmpresa() {
-    db.ref('settings/empresa').update({
-        nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
-        whats: document.getElementById('empWhats').value,
-        pix: document.getElementById('empDesc').value,
-        parcelas: document.getElementById('empParc').value
-    }).then(() => alert("Dados salvos!"));
-}
-
-document.addEventListener('input', e => {
-    if(e.target.classList.contains('money')) {
-        let v = e.target.value.replace(/\D/g,'');
-        v = (v/100).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-        e.target.value = v;
-    }
-});
-
+function excluirPedido(id) { if(confirm("Excluir?")) db.ref('orders/'+id).remove(); }
 window.onload = () => showTab('empresa');
 </script>
 </body>
