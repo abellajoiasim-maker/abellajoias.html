@@ -136,11 +136,11 @@ async function carregarProdutos() {
             grid.innerHTML += `
                 <div class="card-prod p-4 flex flex-col h-full" onclick='prepararAdd(${prodData})'>
                     <div class="img-container mb-4 rounded-xl relative">
-                    ${cnf.ativa && porcentagem > 0 ? `
+${cnf.ativa && porcentagem > 0 ? `
     <span style="
         position: absolute; 
-        top: 8px; 
-        right: 8px; 
+        top: 6px; 
+        left: 6px; 
         background: ${categoria.promoColor || '#caa85c'}; 
         color: ${categoria.promoTextColor || '#ffffff'}; 
         font-size: 10px; 
