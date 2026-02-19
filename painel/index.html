@@ -23,12 +23,27 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
         #print-area { display: none; }
-        @media print {
-            @page { size: A4; margin: 10mm; }
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
-        }
+ @media print {
+    @page { size: A4; margin: 10mm; }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
+    
+    /* Layout de Boxes do Cabeçalho */
+    .caixa-dados { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .caixa-dados td { border: 1px solid #000; padding: 8px; vertical-align: top; width: 50%; font-size: 11px; }
+    .titulo-box { font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px; border-bottom: 1px solid #eee; }
+
+    /* Layout Grid */
+    .grid-romaneio { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
+    .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
+    .grid-item img { max-width: 90px; max-height: 90px; object-fit: contain; margin-bottom: 5px; }
+
+    /* Layout Tabela */
+    .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
+    .tab-romaneio th { background: #f2f2f2; font-size: 10px; }
+}
     </style>
 </head>
 <body>
@@ -133,13 +148,20 @@
         <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
     </div>
 
-    <div class="flex flex-wrap gap-2 justify-between mt-6 pt-4 border-t border-[#222]">
-      <button class="btn px-6" onclick="fecharEditorPedido()">SAIR</button>
-      <div class="flex gap-2">
-          <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
-          <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
-          <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
-          <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+<div class="mt-6 pt-4 border-t border-[#222]">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
+        
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
+      </div>
+
+      <div class="flex flex-wrap gap-2 justify-between">
+        <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR SEM SALVAR</button>
+        <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES NO PEDIDO</button>
       </div>
     </div>
   </div>
@@ -367,66 +389,114 @@ function fecharEditorPedido() { document.getElementById('editorPedido').classLis
 function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
 
 /* IMPRESSÃO ROMANEIO */
-function gerarRomaneio(id, tipo) {
-    db.ref('orders/'+id).once('value', sPed => {
+function imprimirRomaneio(id, tipo) {
+    db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
         db.ref('settings/empresa').once('value', sEmp => {
             const emp = sEmp.val() || {};
-            let html = `<style>
-                .wrap{font-family:Arial;padding:20px;font-size:11px;color:#000}
-                .head{text-align:center;border-bottom:2px solid #caa85c;padding-bottom:10px;margin-bottom:15px}
-                table{width:100%;border-collapse:collapse;margin-top:10px}
-                th{background:#f4f4f4;text-align:left}
-                th,td{border-bottom:1px solid #eee;padding:6px}
-                .total-box{text-align:right;margin-top:15px;font-size:12px}
-            </style>
-            <div class="wrap">
-                <div class="head">
-                    <h1 style="margin:0;font-size:22px uppercase">${emp.nome || 'ABELLA JOIAS'}</h1>
-                    <p style="margin:2px 0">${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p>
-                </div>
-                <p><b>CLIENTE:</b> ${p.cliente?.nome || ''} | <b>CIDADE:</b> ${p.entrega?.cidade || ''}</p>
-                <table>
-                    <thead>
-                        <tr>
-                            ${tipo===3?'<th>FOTO</th>':''}
-                            <th>SKU</th><th>PRODUTO</th><th>PESO</th>
-                            ${tipo>1?'<th>PREÇO</th>':''}
-                            <th>QTD</th>
-                            ${tipo>1?'<th>TOTAL</th>':''}
-                        </tr>
-                    </thead>
-                    <tbody>`;
-            
             const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            itensArr.forEach(i => {
-                html += `<tr>
-                    ${tipo===3?`<td><img src="${i.image||''}" style="width:40px"></td>`:''}
-                    <td>${i.sku||''}</td>
-                    <td>${i.name||''}</td>
-                    <td>${fPeso(i.peso)}</td>
-                    ${tipo>1?`<td>${fMoeda(i.price)}</td>`:''}
-                    <td>${i.quantidade}</td>
-                    ${tipo>1?`<td>${fMoeda(i.price * i.quantidade)}</td>`:''}
-                </tr>`;
-            });
+            const isFinanceiro = [2, 3, 5, 6].includes(tipo);
 
-            html += `</tbody></table>
-                <div class="total-box">
-                    Total de Peças: ${p.totalPecas || ''}<br>
-                    Peso Total: ${fPeso(p.pesoTotal)}<br>`;
-            
-            if(tipo > 1) {
-                html += `Subtotal: ${fMoeda(p.subtotal)}<br>
-                         Desc. Promo: -${fMoeda(p.descontoPromo)}<br>
-                         Desc. PIX: -${fMoeda(p.descontoPix)}<br>
-                         Frete: ${fMoeda(p.frete)}<br>
-                         <b style="font-size:16px">VALOR FINAL: ${fMoeda(p.total)}</b>`;
+            let html = `
+            <div style="font-family: Arial; color: #000; padding: 10px;">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <h1 style="font-size: 38px; margin: 0; font-weight: 900; text-transform: uppercase;">${emp.nome || 'ABELLA JOIAS'}</h1>
+                    <p style="font-size: 14px; margin: 2px 0; font-weight: bold;">ATACADO DE JOIAS NO BRUTO</p>
+                    <p style="font-size: 13px; margin: 2px 0;">WHATSAPP: ${emp.whats || ''}</p>
+                </div>
+
+                <table class="caixa-dados">
+                    <tr>
+                        <td>
+                            <span class="titulo-box">Dados do Cliente</span>
+                            <b>Nome:</b> ${p.cliente?.nome || ''}<br>
+                            <b>Telefone:</b> ${p.cliente?.telefone || p.cliente?.tel || ''}
+                        </td>
+                        <td>
+                            <span class="titulo-box">Dados do Local de Entrega</span>
+                            <b>Nome:</b> ${p.cliente?.nome || ''}<br>
+                            <b>Rua:</b> ${p.entrega?.rua || ''}, <b>nº:</b> ${p.entrega?.n || 'S/N'}<br>
+                            <b>Bairro:</b> ${p.entrega?.bairro || ''}<br>
+                            <b>Cidade:</b> ${p.entrega?.cidade || ''}
+                        </td>
+                    </tr>
+                </table>`;
+
+            // CONTEÚDO: GRID (Tipos 4, 5, 6)
+            if (tipo >= 4) {
+                html += `<div class="grid-romaneio">`;
+                itensArr.forEach(i => {
+                    html += `
+                    <div class="grid-item">
+                        <img src="${i.image || i.foto || ''}" onerror="this.style.visibility='hidden'">
+                        <div style="border-top: 1px solid #eee; padding-top:4px">
+                            <b>${i.sku || 'S/SKU'}</b><br>
+                            ${isFinanceiro ? `<span style="font-size:8px">${i.name || ''}</span><br>
+                            <b>${(i.peso || 0).toFixed(2)}g | ${fMoeda(i.price)}</b><br>` : ''}
+                            <b style="font-size:12px">QTD: ${i.quantidade || 1}</b>
+                            ${isFinanceiro ? `<br><b style="color:#333">Total: ${fMoeda((i.price || 0) * (i.quantidade || 1))}</b>` : ''}
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } 
+            // CONTEÚDO: TABELA (Tipos 1, 2, 3)
+            else {
+                html += `<table class="tab-romaneio"><thead><tr>`;
+                if (tipo === 3) html += `<th>Foto</th>`;
+                html += `<th>SKU</th><th>Produto</th><th>Peso</th>`;
+                if (isFinanceiro) html += `<th>Preço</th><th>Subtotal</th>`;
+                html += `<th>Qtd</th></tr></thead><tbody>`;
+
+                itensArr.forEach(i => {
+                    html += `<tr>`;
+                    if (tipo === 3) html += `<td style="text-align:center"><img src="${i.image || i.foto || ''}" style="width:45px; height:45px; object-fit:contain"></td>`;
+                    html += `<td>${i.sku || ''}</td>`;
+                    html += `<td>${i.name || ''}</td>`;
+                    html += `<td>${(i.peso || 0).toFixed(2)}g</td>`;
+                    if (isFinanceiro) {
+                        html += `<td>${fMoeda(i.price)}</td>`;
+                        html += `<td>${fMoeda((i.price || 0) * (i.quantidade || 1))}</td>`;
+                    }
+                    html += `<td style="text-align:center"><b>${i.quantidade || 1}</b></td></tr>`;
+                });
+                html += `</tbody></table>`;
             }
 
+            // RODAPÉ FINANCEIRO CONDICIONAL
+            html += `<div style="margin-top: 15px; border: 1px solid #000; padding: 10px;">`;
+            
+            if (!isFinanceiro) {
+                // Rodapé Simplificado (Conferência)
+                html += `
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span><b>Qtd de Itens:</b> ${itensArr.length}</span>
+                    <span><b>Qtd de Peças:</b> ${p.totalPecas || 0}</span>
+                    <span><b>Peso Total:</b> ${(p.pesoTotal || 0).toFixed(2)}g</span>
+                </div>`;
+            } else {
+                // Rodapé Completo (Financeiro)
+                html += `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 12px;">
+                    <div>
+                        <b>Qtd de Itens:</b> ${itensArr.length}<br>
+                        <b>Qtd de Peças:</b> ${p.totalPecas || 0}<br>
+                        <b>Peso Total:</b> ${(p.pesoTotal || 0).toFixed(2)}g<br>
+                        <b>Pagamento:</b> ${p.metodoPagamento === 'cartao' ? `Cartão (${emp.parcelas || 1}x)` : 'PIX'}
+                    </div>
+                    <div style="text-align: right; line-height: 1.6;">
+                        Subtotal: ${fMoeda(p.subtotal)}<br>
+                        Desc. Promocional: - ${fMoeda(p.descontoPromo)}<br>
+                        ${p.descontoPix > 0 ? `Desc. PIX: - ${fMoeda(p.descontoPix)}<br>` : ''}
+                        Frete: ${fMoeda(p.frete)}<br>
+                        <b style="font-size: 18px;">TOTAL FINAL: ${fMoeda(p.total)}</b>
+                    </div>
+                </div>`;
+            }
             html += `</div></div>`;
+
             document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 500);
+            setTimeout(() => { window.print(); }, 800);
         });
     });
 }
