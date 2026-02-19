@@ -1,742 +1,477 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel Administrativo • Abella Joias</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Painel Administrativo • Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-<!-- Tailwind -->
-<script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body {
-  background:#0b0b0b;
-  color:#eee;
-  font-family:Inter,Arial,sans-serif;
-  margin:0;
-}
-
-nav button.active {
-  border-bottom:2px solid #caa85c;
-  color:#caa85c;
-}
-
-section { display:none; min-height:300px; }
-section.active { display:block; }
-
-.card {
-  background:#141414;
-  border:1px solid #2a2a2a;
-  border-radius:16px;
-  padding:14px;
-}
-
-.btn {
-  background:#222;
-  border:1px solid #444;
-  padding:8px 12px;
-  border-radius:8px;
-  font-size:12px;
-  cursor:pointer;
-}
-
-.btn-gold {
-  background:#caa85c;
-  color:#000;
-  font-weight:700;
-  padding:10px;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-input, select {
-  background:#111;
-  border:1px solid #333;
-  padding:8px;
-  border-radius:8px;
-  width:100%;
-  margin-bottom:8px;
-  color:#fff;
-  outline:none;
-}
-
-#mainModal.active { display:flex; }
-
-.custom-scroll::-webkit-scrollbar { width:4px; }
-.custom-scroll::-webkit-scrollbar-thumb {
-  background:#caa85c;
-  border-radius:10px;
-}
-
-/* ÁREA DE IMPRESSÃO */
-#print-area { display:none; }
-
-/* AJUSTE CRÍTICO DE IMPRESSÃO (SEM FOLHA EM BRANCO) */
-@media print {
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  #print-area, #print-area * {
-    visibility: visible;
-  }
-
-  #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    display: block;
-    background: #fff;
-    color: #000;
-    page-break-after: avoid;
-    page-break-before: avoid;
-  }
-}
-</style>
+    <style>
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
+        nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
+        section { display:none; min-height:300px; }
+        section.active { display:block; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
+        .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
+        .btn:hover { background:#333; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
+        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
+        #mainModal.active { display: flex; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
+        
+        #print-area { display: none; }
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
+        }
+    </style>
 </head>
-
 <body>
 
 <header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
-  Abella Joias • Painel de Controlo
+    Abella Joias • Gestão Total
 </header>
 
 <nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
-  <button class="btn active" onclick="showTab('empresa', this)">Empresa</button>
-  <button class="btn" onclick="showTab('categorias', this)">Categorias</button>
-  <button class="btn" onclick="showTab('produtos', this)">Produtos</button>
-  <button class="btn" onclick="showTab('promocoes', this)">Promoções</button>
-  <button class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
+    <button type="button" class="btn active" onclick="showTab('empresa', this)">Empresa</button>
+    <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
+    <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
+    <button type="button" class="btn" onclick="showTab('promocoes', this)">Promoções</button>
+    <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
 </nav>
 
 <main class="p-6 max-w-4xl mx-auto">
+    <section id="empresa" class="active">
+        <div class="card space-y-3">
+            <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
+            <input id="empNome" placeholder="Nome da Empresa">
+            <input id="empSub" placeholder="Slogan / Subtítulo">
+            <input id="empWhats" placeholder="WhatsApp da Loja">
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-gray-400">DESC. PIX %</label><input id="empDesc" type="number"></div>
+                <div><label class="text-[10px] text-gray-400">PARCELAS MÁX</label><input id="empParc" type="number"></div>
+            </div>
+            <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
+        </div>
+    </section>
 
-<!-- EMPRESA -->
-<section id="empresa" class="active">
-  <div class="card space-y-3">
-    <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
-    <input id="empNome" placeholder="Nome da Empresa">
-    <input id="empSub" placeholder="Slogan / Subtítulo">
-    <input id="empWhats" placeholder="WhatsApp da Loja">
-    <div class="grid grid-cols-2 gap-2">
-      <input id="empDesc" type="number" placeholder="Desc. PIX %">
-      <input id="empParc" type="number" placeholder="Parcelas Máx">
-    </div>
-    <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
-  </div>
-</section>
+    <section id="categorias">
+        <div class="card mb-4">
+            <input id="newCatName" placeholder="Nome da Nova Categoria">
+            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
+        </div>
+        <div id="listaCategorias" class="grid gap-2"></div>
+    </section>
 
-<!-- CATEGORIAS -->
-<section id="categorias">
-  <div class="card mb-4">
-    <input id="newCatName" placeholder="Nome da Nova Categoria">
-    <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
-  </div>
-  <div id="listaCategorias" class="grid gap-2"></div>
-</section>
+    <section id="produtos">
+        <div id="listaProdutos" class="grid gap-2"></div>
+    </section>
 
-<!-- PRODUTOS -->
-<section id="produtos">
-  <div id="listaProdutos" class="grid gap-2"></div>
-</section>
+    <section id="promocoes">
+        <div class="card mb-4 text-center">
+            <h2 class="text-[#caa85c] font-bold uppercase text-sm mb-4 tracking-widest">Painel de Ofertas</h2>
+            <button class="btn-gold w-full py-4 uppercase" onclick="abrirPainelPromocoes()">
+                🎨 Configurar Descontos por Categoria
+            </button>
+        </div>
+    </section>
 
-<!-- PROMOÇÕES -->
-<section id="promocoes">
-  <div class="card mb-4 text-center">
-    <h2 class="uppercase text-sm mb-4 tracking-widest text-[#caa85c] font-bold">
-      Configurações de Promoção
-    </h2>
-
-    <button class="btn-gold w-full py-4 uppercase"
-      onclick="abrirPainelPromocoes()">
-      🎨 Configurar Etiquetas e Descontos
-    </button>
-  </div>
-  <div id="listaPromocoes" class="grid gap-2"></div>
-</section>
-
-<!-- PEDIDOS -->
-<section id="pedidos">
-  <div id="listaPedidos" class="grid gap-4"></div>
-</section>
-
+    <section id="pedidos">
+        <div id="listaPedidos" class="grid gap-4"></div>
+    </section>
 </main>
 
-<!-- MODAL PADRÃO -->
 <div id="mainModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4">
-  <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
-    <div class="p-4 border-b border-[#222] flex justify-between items-center">
-      <h3 id="modalTitle" class="uppercase text-sm text-[#caa85c] font-bold">Título</h3>
-      <button onclick="fecharModal()" class="text-gray-500 hover:text-white">&times;</button>
+    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-4 border-b border-[#222] flex justify-between items-center">
+            <h3 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-sm">Título</h3>
+            <button onclick="fecharModal()" class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="modalBody" class="p-6 max-h-[70vh] overflow-y-auto"></div>
+        <div class="p-4 border-t border-[#222] flex gap-3">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
+            <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Salvar</button>
+        </div>
     </div>
-    <div id="modalBody" class="p-6 max-h-[70vh] overflow-y-auto"></div>
-    <div class="p-4 border-t border-[#222] flex gap-3">
-      <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase text-gray-500">Cancelar</button>
-      <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">
-        Guardar Alterações
-      </button>
-    </div>
-  </div>
 </div>
 
-<!-- EDITOR DE PEDIDO -->
 <div id="editorPedido" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-  <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[90vh] border border-[#333]">
-
-    <h2 class="text-[#caa85c] font-bold text-lg mb-3 uppercase">
-      Editar Pedido (Atacado)
-    </h2>
+  <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-[#caa85c] font-bold text-lg uppercase">Editar Pedido</h2>
+        <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-xl">R$ 0,00</div>
+    </div>
 
     <div class="grid md:grid-cols-2 gap-4">
-      <div>
-        <input id="edClienteNome" placeholder="Nome do Cliente">
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase">Dados do Cliente</h3>
+        <input id="edClienteNome" placeholder="Nome">
         <input id="edClienteTel" placeholder="WhatsApp">
       </div>
-      <div>
-        <input id="edRua" placeholder="Rua">
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase">Endereço de Entrega</h3>
+        <input id="edRua" placeholder="Rua e Número">
         <div class="grid grid-cols-2 gap-2">
-          <input id="edNum" placeholder="Nº">
-          <input id="edBairro" placeholder="Bairro">
+            <input id="edBairro" placeholder="Bairro">
+            <input id="edCidade" placeholder="Cidade">
         </div>
-        <input id="edCidade" placeholder="Cidade">
       </div>
     </div>
 
-    <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c]">ITENS DO PEDIDO</h3>
+    <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c] uppercase">Itens da Compra</h3>
     <div id="edItens" class="space-y-2"></div>
-    <button class="btn w-full mt-2 border-dashed border-gray-600"
-      onclick="adicionarItemEditor()">
-      + Adicionar Item
-    </button>
+    <button class="btn w-full mt-2 border-dashed border-gray-600 text-gray-400" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
 
-    <div class="grid md:grid-cols-2 gap-4 mt-6 p-4 bg-black/20 rounded-xl border border-[#222]">
-      <div>
-        <input id="edFreteNome" placeholder="Tipo de Frete">
-        <input id="edFreteValor" type="number" placeholder="Valor do Frete">
-      </div>
-      <div>
-        <input id="edDescPromo" type="number" placeholder="Desconto Promo (R$)">
-        <input id="edDescPix" type="number" placeholder="Desconto PIX (R$)">
-      </div>
+    <div class="grid grid-cols-3 gap-3 mt-6 p-4 bg-black/40 rounded-xl">
+        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
     </div>
 
     <div class="flex flex-wrap gap-2 justify-between mt-6 pt-4 border-t border-[#222]">
-      <button class="btn" onclick="fecharEditorPedido()">CANCELAR</button>
+      <button class="btn px-6" onclick="fecharEditorPedido()">SAIR</button>
       <div class="flex gap-2">
-        <button class="btn" onclick="gerarRomaneio(pedidoEditando)">ROMANEIO</button>
-        <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR</button>
+          <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800" onclick="gerarRomaneio(pedidoEditando, 1)">ROMANEIO 1</button>
+          <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800" onclick="gerarRomaneio(pedidoEditando, 2)">ROMANEIO 2</button>
+          <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800" onclick="gerarRomaneio(pedidoEditando, 3)">FOTOS</button>
+          <button class="btn-gold px-10" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- ÁREA DE IMPRESSÃO -->
 <div id="print-area"></div>
 
 <script>
-/* ===============================
-   🔥 FIREBASE CONFIG
-================================ */
+/* CONFIGURAÇÃO */
 const firebaseConfig = {
-  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-  authDomain: "catalogo-abella-joias.firebaseapp.com",
-  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
-  projectId: "catalogo-abella-joias",
-  storageBucket: "catalogo-abella-joias.firebasestorage.app",
-  messagingSenderId: "727568435294",
-  appId: "1:727568435294:web:442c0179ecf0686dff4ccf"
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ===============================
-   🔀 NAVEGAÇÃO
-================================ */
-function showTab(tab, btn){
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-/* ===============================
-   🪟 MODAL
-================================ */
-function abrirModal(titulo, conteudo, onSave){
-  modalTitle.innerText = titulo;
-  modalBody.innerHTML = conteudo;
-  mainModal.classList.add('active');
-  modalSaveBtn.onclick = onSave;
-}
-function fecharModal(){
-  mainModal.classList.remove('active');
-}
-
-/* ===============================
-   🏪 EMPRESA
-================================ */
-function salvarEmpresa(){
-  const data = {
-    nome: empNome.value,
-    sub: empSub.value,
-    whats: empWhats.value,
-    descPix: Number(empDesc.value || 0),
-    parcelas: Number(empParc.value || 1)
-  };
-  db.ref('empresa').set(data);
-  alert('Empresa salva');
-}
-
-db.ref('empresa').on('value', snap=>{
-  if(!snap.exists()) return;
-  const d = snap.val();
-  empNome.value = d.nome || '';
-  empSub.value = d.sub || '';
-  empWhats.value = d.whats || '';
-  empDesc.value = d.descPix || 0;
-  empParc.value = d.parcelas || 1;
-});
-
-/* ===============================
-   🗂️ CATEGORIAS
-================================ */
-function novaCategoria(){
-  if(!newCatName.value) return;
-  db.ref('categorias').push({ nome:newCatName.value });
-  newCatName.value='';
-}
-
-db.ref('categorias').on('value', snap=>{
-  listaCategorias.innerHTML='';
-  snap.forEach(cat=>{
-    listaCategorias.innerHTML+=`
-      <div class="card flex justify-between items-center">
-        <span>${cat.val().nome}</span>
-        <button class="btn" onclick="removerCategoria('${cat.key}')">Excluir</button>
-      </div>`;
-  });
-});
-
-function removerCategoria(id){
-  if(confirm('Excluir categoria?')){
-    db.ref('categorias/'+id).remove();
-  }
-}
-
-/* ===============================
-   💍 PRODUTOS
-================================ */
-db.ref('produtos').on('value', snap=>{
-  listaProdutos.innerHTML='';
-  snap.forEach(p=>{
-    const pr = p.val();
-    listaProdutos.innerHTML+=`
-      <div class="card">
-        <b>${pr.nome}</b>
-        <div class="text-xs text-gray-400">R$ ${pr.valor}</div>
-      </div>`;
-  });
-});
-
-/* ===============================
-   🎯 PROMOÇÕES
-================================ */
-function abrirPainelPromocoes(){
-  abrirModal(
-    'Promoções',
-    `
-    <input id="promoTexto" placeholder="Texto da Etiqueta">
-    <input id="promoDesc" type="number" placeholder="Desconto %">
-    `,
-    ()=>{
-      db.ref('promocao').set({
-        texto: promoTexto.value,
-        desconto: Number(promoDesc.value||0)
-      });
-      fecharModal();
-    }
-  );
-}
-
-db.ref('promocao').on('value', snap=>{
-  listaPromocoes.innerHTML='';
-  if(!snap.exists()) return;
-  const p = snap.val();
-  listaPromocoes.innerHTML=`
-    <div class="card">
-      <b>${p.texto}</b>
-      <div>${p.desconto}%</div>
-    </div>`;
-});
-
-/* ===============================
-   📦 PEDIDOS
-================================ */
 let pedidoEditando = null;
+const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+const fPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
 
-db.ref('pedidos').on('value', snap=>{
-  listaPedidos.innerHTML='';
-  snap.forEach(p=>{
-    const d = p.val();
-    listaPedidos.innerHTML+=`
-      <div class="card">
-        <b>${d.cliente?.nome || 'Cliente'}</b>
-        <div class="text-xs">Total: R$ ${d.total || 0}</div>
-        <button class="btn mt-2" onclick="abrirPedido('${p.key}')">Abrir</button>
-      </div>`;
-  });
-});
-
-function abrirPedido(id){
-  pedidoEditando = id;
-  db.ref('pedidos/'+id).once('value').then(snap=>{
-    const p = snap.val();
-    edClienteNome.value = p.cliente?.nome || '';
-    edClienteTel.value = p.cliente?.tel || '';
-    edDescPromo.value = p.descPromo || 0;
-    edDescPix.value = p.descPix || 0;
-    edItens.innerHTML='';
-    (p.itens||[]).forEach(addItemEditor);
-    editorPedido.classList.remove('hidden');
-  });
+/* NAVEGAÇÃO */
+function showTab(id, btn) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'categorias') carregarCategorias();
+    if (id === 'produtos') carregarProdutos();
+    if (id === 'pedidos') carregarPedidos();
+    if (id === 'empresa') carregarEmpresa();
 }
 
-function fecharEditorPedido(){
-  editorPedido.classList.add('hidden');
+/* EMPRESA */
+function carregarEmpresa() {
+    db.ref('settings/empresa').once('value', s => {
+        const v = s.val() || {};
+        document.getElementById('empNome').value = v.nome || '';
+        document.getElementById('empSub').value = v.subtitulo || '';
+        document.getElementById('empWhats').value = v.whats || '';
+        document.getElementById('empDesc').value = v.descontoPix || 0;
+        document.getElementById('empParc').value = v.parcelas || 0;
+    });
+}
+function salvarEmpresa() {
+    db.ref('settings/empresa').update({
+        nome: document.getElementById('empNome').value,
+        subtitulo: document.getElementById('empSub').value,
+        whats: document.getElementById('empWhats').value,
+        descontoPix: +document.getElementById('empDesc').value,
+        parcelas: +document.getElementById('empParc').value
+    }).then(() => alert('Configurações atualizadas!'));
 }
 
-function adicionarItemEditor(item={}){
-  edItens.innerHTML+=`
-    <div class="flex gap-2">
-      <input placeholder="Produto" value="${item.nome||''}">
-      <input type="number" placeholder="Qtd" value="${item.qtd||1}">
-      <input type="number" placeholder="Valor" value="${item.valor||0}">
+/* CATEGORIAS & PRODUTOS */
+function carregarCategorias() {
+    db.ref('categories').on('value', s => {
+        const lista = document.getElementById('listaCategorias');
+        lista.innerHTML = '';
+        s.forEach(c => {
+            lista.innerHTML += `<div class="card flex justify-between items-center">
+                <span class="uppercase text-xs font-bold">${c.val().name}</span>
+                <div class="flex gap-2">
+                    <button class="btn text-blue-400" onclick="editarCat('${c.key}','${c.val().name}')">✎</button>
+                    <button class="btn text-red-500" onclick="excluirCat('${c.key}')">🗑</button>
+                </div>
+            </div>`;
+        });
+    });
+}
+function novaCategoria() {
+    const n = document.getElementById('newCatName').value;
+    if(n) db.ref('categories').push({name:n}).then(() => document.getElementById('newCatName').value = '');
+}
+function excluirCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/'+id).remove(); }
+
+function carregarProdutos() {
+    const lista = document.getElementById('listaProdutos');
+    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
+    db.ref('categories').once('value', sCats => {
+        db.ref('products').once('value', sProds => {
+            lista.innerHTML = '';
+            sCats.forEach(cat => {
+                let htmlP = '';
+                sProds.forEach(p => {
+                    const prod = p.val();
+                    if(prod.category === cat.key) {
+                        htmlP += `<div class="card flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 text-[11px]">
+                            <div class="flex items-center gap-3">
+                                <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded border border-[#333]">
+                                <span><b class="text-[#caa85c]">[${prod.sku || '---'}]</b> ${prod.name}</span>
+                            </div>
+                            <button onclick="editarProduto('${p.key}')">✎</button>
+                        </div>`;
+                    }
+                });
+                if(htmlP) lista.innerHTML += `<div class="mb-4"><b class="text-[10px] text-[#caa85c] ml-1 uppercase">${cat.val().name}</b><div class="mt-1">${htmlP}</div></div>`;
+            });
+        });
+    });
+}
+
+function editarProduto(id) {
+    db.ref('products/'+id).once('value', s => {
+        const p = s.val();
+        const nNome = prompt("Nome:", p.name);
+        const nPreco = prompt("Preço:", p.price);
+        const nSku = prompt("SKU:", p.sku);
+        const nPeso = prompt("Peso (g):", p.peso || p.weight || 0);
+        if(nNome) db.ref('products/'+id).update({ name:nNome, price:Number(nPreco), sku:nSku, peso:Number(nPeso) }).then(carregarProdutos);
+    });
+}
+
+/* PEDIDOS */
+function carregarPedidos() {
+    db.ref('orders').on('value', s => {
+        const lista = document.getElementById('listaPedidos');
+        lista.innerHTML = '';
+        s.forEach(ped => {
+            const p = ped.val();
+            lista.innerHTML += `<div class="card border-l-4 border-[#caa85c]">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente'}</b><br>
+                        <small class="text-gray-500">${p.data || ''} | ${p.itens ? (Array.isArray(p.itens) ? p.itens.length : Object.keys(p.itens).length) : 0} itens</small>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-xs">${fMoeda(p.total)}</div>
+                        <div class="flex gap-1 mt-2">
+                             <button class="btn p-1 bg-blue-900" onclick="duplicarPedido('${ped.key}')" title="Duplicar">📑</button>
+                             <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
+                             <button class="btn p-1 bg-red-900" onclick="excluirPedido('${ped.key}')">🗑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    });
+}
+
+function abrirEditorPedido(id) {
+    pedidoEditando = id;
+    db.ref('orders/'+id).once('value', s => {
+        const p = s.val();
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
+        document.getElementById('edRua').value = p.entrega?.rua || '';
+        document.getElementById('edBairro').value = p.entrega?.bairro || '';
+        document.getElementById('edCidade').value = p.entrega?.cidade || '';
+        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+        document.getElementById('edDescPix').value = p.descontoPix || 0;
+        document.getElementById('edFrete').value = p.frete || 0;
+        document.getElementById('edItens').innerHTML = '';
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        itens.forEach(addItemEditor);
+        recalcularTotalEd();
+        document.getElementById('editorPedido').classList.remove('hidden');
+    });
+}
+
+function addItemEditor(i={}) {
+    const div = document.createElement('div');
+    div.className = "card bg-black/40 border-[#222] mb-2 p-2";
+    div.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <input placeholder="SKU" value="${i.sku||''}" class="!mb-0 text-[10px]">
+            <input placeholder="Nome" value="${i.name||''}" class="!mb-0 text-[10px]">
+            <input type="number" placeholder="Peso" value="${i.peso||i.weight||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Preço" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Qtd" value="${i.quantidade||i.qtd||1}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+        </div>
+        <button class="text-red-500 text-[9px] uppercase font-bold mt-1" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`;
+    document.getElementById('edItens').appendChild(div);
+}
+
+function recalcularTotalEd() {
+    let subtotal = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const inputs = div.querySelectorAll('input');
+        const preco = Number(inputs[3].value) || 0;
+        const qtd = Number(inputs[4].value) || 0;
+        subtotal += (preco * qtd);
+    });
+    const descP = Number(document.getElementById('edDescPromo').value) || 0;
+    const descX = Number(document.getElementById('edDescPix').value) || 0;
+    const frete = Number(document.getElementById('edFrete').value) || 0;
+    const total = subtotal - descP - descX + frete;
+    document.getElementById('totalPreview').innerText = fMoeda(total);
+}
+
+function salvarPedidoEditado() {
+    const itens = [];
+    let subtotal = 0, pesoTotal = 0, totalPecas = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const ins = div.querySelectorAll('input');
+        const item = { sku: ins[0].value, name: ins[1].value, peso: Number(ins[2].value), price: Number(ins[3].value), quantidade: Number(ins[4].value) };
+        subtotal += (item.price * item.quantidade);
+        pesoTotal += (item.peso * item.quantidade);
+        totalPecas += item.quantidade;
+        itens.push(item);
+    });
+    const dPromo = Number(document.getElementById('edDescPromo').value);
+    const dPix = Number(document.getElementById('edDescPix').value);
+    const frete = Number(document.getElementById('edFrete').value);
+
+    db.ref('orders/'+pedidoEditando).update({
+        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
+        entrega: { rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value },
+        itens, subtotal, pesoTotal, totalPecas, 
+        descontoPromo: dPromo, descontoPix: dPix, frete, 
+        total: (subtotal - dPromo - dPix + frete)
+    }).then(() => { alert("Pedido Salvo!"); fecharEditorPedido(); });
+}
+
+function duplicarPedido(id) {
+    if(!confirm("Duplicar este pedido?")) return;
+    db.ref('orders/'+id).once('value', s => {
+        const novo = s.val();
+        novo.data = new Date().toLocaleString();
+        db.ref('orders').push(novo).then(() => alert("Pedido duplicado!"));
+    });
+}
+
+function excluirPedido(id) { if(confirm("Excluir pedido permanentemente?")) db.ref('orders/'+id).remove(); }
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
+
+/* IMPRESSÃO ROMANEIO */
+function gerarRomaneio(id, tipo) {
+    db.ref('orders/'+id).once('value', sPed => {
+        const p = sPed.val();
+        db.ref('settings/empresa').once('value', sEmp => {
+            const emp = sEmp.val() || {};
+            let html = `<style>
+                .wrap{font-family:Arial;padding:20px;font-size:11px;color:#000}
+                .head{text-align:center;border-bottom:2px solid #caa85c;padding-bottom:10px;margin-bottom:15px}
+                table{width:100%;border-collapse:collapse;margin-top:10px}
+                th{background:#f4f4f4;text-align:left}
+                th,td{border-bottom:1px solid #eee;padding:6px}
+                .total-box{text-align:right;margin-top:15px;font-size:12px}
+            </style>
+            <div class="wrap">
+                <div class="head">
+                    <h1 style="margin:0;font-size:22px uppercase">${emp.nome || 'ABELLA JOIAS'}</h1>
+                    <p style="margin:2px 0">${emp.subtitulo || ''}<br>WhatsApp: ${emp.whats || ''}</p>
+                </div>
+                <p><b>CLIENTE:</b> ${p.cliente?.nome || ''} | <b>CIDADE:</b> ${p.entrega?.cidade || ''}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            ${tipo===3?'<th>FOTO</th>':''}
+                            <th>SKU</th><th>PRODUTO</th><th>PESO</th>
+                            ${tipo>1?'<th>PREÇO</th>':''}
+                            <th>QTD</th>
+                            ${tipo>1?'<th>TOTAL</th>':''}
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            itensArr.forEach(i => {
+                html += `<tr>
+                    ${tipo===3?`<td><img src="${i.image||''}" style="width:40px"></td>`:''}
+                    <td>${i.sku||''}</td>
+                    <td>${i.name||''}</td>
+                    <td>${fPeso(i.peso)}</td>
+                    ${tipo>1?`<td>${fMoeda(i.price)}</td>`:''}
+                    <td>${i.quantidade}</td>
+                    ${tipo>1?`<td>${fMoeda(i.price * i.quantidade)}</td>`:''}
+                </tr>`;
+            });
+
+            html += `</tbody></table>
+                <div class="total-box">
+                    Total de Peças: ${p.totalPecas || ''}<br>
+                    Peso Total: ${fPeso(p.pesoTotal)}<br>`;
+            
+            if(tipo > 1) {
+                html += `Subtotal: ${fMoeda(p.subtotal)}<br>
+                         Desc. Promo: -${fMoeda(p.descontoPromo)}<br>
+                         Desc. PIX: -${fMoeda(p.descontoPix)}<br>
+                         Frete: ${fMoeda(p.frete)}<br>
+                         <b style="font-size:16px">VALOR FINAL: ${fMoeda(p.total)}</b>`;
+            }
+
+            html += `</div></div>`;
+            document.getElementById('print-area').innerHTML = html;
+            setTimeout(() => { window.print(); }, 500);
+        });
+    });
+}
+
+/* PROMOÇÕES */
+async function abrirPainelPromocoes() {
+    const [snapPromo, snapCats] = await Promise.all([db.ref('settings/promocao').once('value'), db.ref('categories').once('value')]);
+    const promo = snapPromo.val() || { ativa: false, porcentagemGeral: 0 };
+    let listaCats = '';
+    snapCats.forEach(cat => {
+        listaCats += `<div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] uppercase font-bold">${cat.val().name}</span>
+            <input type="number" id="promo_cat_${cat.key}" value="${cat.val().promoPct || 0}" class="!w-20 !mb-0 text-xs bg-black p-1 border border-[#333]">
+        </div>`;
+    });
+    
+    const html = `<div class="space-y-4">
+        <div class="flex justify-between items-center bg-[#1a1a1a] p-3 rounded-xl">
+            <span class="text-sm font-bold">Status da Promoção</span>
+            <button onclick="togglePromoStatus()" id="btnStatusPromo" class="px-4 py-1 rounded-full text-[10px] font-bold ${promo.ativa ? 'bg-green-600' : 'bg-red-600'}">${promo.ativa ? 'ATIVA' : 'INATIVA'}</button>
+        </div>
+        <div>
+            <label class="text-[10px] text-[#caa85c] block mb-2 uppercase font-bold tracking-widest">Descontos por Categoria (%)</label>
+            <div class="card bg-black/30">${listaCats}</div>
+        </div>
     </div>`;
-}
 
-function salvarPedidoEditado(){
-  const itens = [...edItens.children].map(div=>{
-    const i = div.querySelectorAll('input');
-    return {
-      nome:i[0].value,
-      qtd:Number(i[1].value),
-      valor:Number(i[2].value)
+    document.getElementById('modalTitle').innerText = 'GERENCIAR PROMOÇÕES';
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('mainModal').classList.add('active');
+    document.getElementById('modalSaveBtn').onclick = () => {
+        const updates = {};
+        updates['settings/promocao/ativa'] = document.getElementById('btnStatusPromo').innerText === 'ATIVA';
+        snapCats.forEach(cat => { updates['categories/' + cat.key + '/promoPct'] = +document.getElementById('promo_cat_'+cat.key).value || 0; });
+        db.ref().update(updates).then(() => { alert("Promoções Atualizadas!"); fecharModal(); });
     };
-  });
-
-  const subtotal = itens.reduce((s,i)=>s+(i.qtd*i.valor),0);
-  const total = subtotal - Number(edDescPromo.value||0) - Number(edDescPix.value||0);
-
-  db.ref('pedidos/'+pedidoEditando).update({
-    cliente:{
-      nome:edClienteNome.value,
-      tel:edClienteTel.value
-    },
-    itens,
-    descPromo:Number(edDescPromo.value||0),
-    descPix:Number(edDescPix.value||0),
-    total
-  });
-
-  fecharEditorPedido();
+}
+function togglePromoStatus() {
+    const btn = document.getElementById('btnStatusPromo');
+    const isAtiva = btn.innerText === 'ATIVA';
+    btn.innerText = isAtiva ? 'INATIVA' : 'ATIVA';
+    btn.className = `px-4 py-1 rounded-full text-[10px] font-bold ${!isAtiva ? 'bg-green-600' : 'bg-red-600'}`;
 }
 
-/* ===============================
-   🖨️ ROMANEIO (BASE)
-================================ */
-function gerarRomaneio(id){
-  db.ref('pedidos/'+id).once('value').then(snap=>{
-    const p = snap.val();
-    let html = `<h2>ROMANEIO</h2>`;
-    html+= `<p>${p.cliente.nome}</p>`;
-    p.itens.forEach(i=>{
-      html+= `<div>${i.qtd}x ${i.nome} - R$ ${i.valor}</div>`;
-    });
-    html+= `<b>Total: R$ ${p.total}</b>`;
-    print-area.innerHTML = html;
-    window.print();
-  });
-}
-/* =====================================================
-   🧠 FUNÇÕES UTILITÁRIAS
-===================================================== */
-function calcularSubtotal(itens){
-  return itens.reduce((s,i)=>s+(i.qtd*i.valor),0);
-}
-
-function lerItensEditor(){
-  return [...edItens.children].map(div=>{
-    const i = div.querySelectorAll('input');
-    return {
-      nome: i[0].value,
-      qtd: Number(i[1].value||0),
-      valor: Number(i[2].value||0)
-    };
-  });
-}
-
-/* =====================================================
-   🔁 RECÁLCULO AUTOMÁTICO (AO EDITAR ITENS)
-===================================================== */
-edItens.addEventListener('input', ()=>{
-  if(!pedidoEditando) return;
-  const itens = lerItensEditor();
-  const subtotal = calcularSubtotal(itens);
-
-  // mantém descontos fixos (não recalcula desconto)
-  const descPromo = Number(edDescPromo.value||0);
-  const descPix   = Number(edDescPix.value||0);
-
-  const total = subtotal - descPromo - descPix;
-
-  // preview silencioso no Firebase (sem salvar)
-  db.ref('pedidos/'+pedidoEditando+'/preview').set({
-    subtotal,
-    total
-  });
-});
-
-/* =====================================================
-   🔐 TRAVAR DESCONTOS APÓS SALVAR
-===================================================== */
-function travarDescontos(){
-  edDescPromo.setAttribute('disabled', true);
-  edDescPix.setAttribute('disabled', true);
-  edDescPromo.classList.add('opacity-50');
-  edDescPix.classList.add('opacity-50');
-}
-
-function destravarDescontos(){
-  edDescPromo.removeAttribute('disabled');
-  edDescPix.removeAttribute('disabled');
-  edDescPromo.classList.remove('opacity-50');
-  edDescPix.classList.remove('opacity-50');
-}
-
-/* =====================================================
-   💾 SOBRESCREVE SALVAR PEDIDO (COM TRAVA)
-===================================================== */
-const salvarPedidoOriginal = salvarPedidoEditado;
-
-salvarPedidoEditado = function(){
-  const itens = lerItensEditor();
-  const subtotal = calcularSubtotal(itens);
-
-  const descPromo = Number(edDescPromo.value||0);
-  const descPix   = Number(edDescPix.value||0);
-
-  const total = subtotal - descPromo - descPix;
-
-  db.ref('pedidos/'+pedidoEditando).update({
-    itens,
-    subtotal,
-    descPromo,
-    descPix,
-    total,
-    descontosTravados: true,
-    atualizadoEm: Date.now()
-  });
-
-  travarDescontos();
-  fecharEditorPedido();
-};
-
-/* =====================================================
-   📥 VALIDAR PEDIDOS DO SITE
-===================================================== */
-db.ref('pedidos').on('child_added', snap=>{
-  const p = snap.val();
-  if(!p.origem){
-    db.ref('pedidos/'+snap.key+'/origem').set('painel');
-  }
-  if(p.origem === 'site'){
-    console.log('🛒 Pedido vindo do site:', snap.key);
-  }
-});
-
-/* =====================================================
-   📑 DUPLICAR PEDIDO
-===================================================== */
-function duplicarPedido(id){
-  db.ref('pedidos/'+id).once('value').then(snap=>{
-    const p = snap.val();
-    delete p.descontosTravados;
-    delete p.atualizadoEm;
-    p.status = 'duplicado';
-    p.criadoEm = Date.now();
-
-    db.ref('pedidos').push(p);
-    alert('Pedido duplicado com sucesso');
-  });
-}
-
-/* =====================================================
-   🧾 BOTÃO DUPLICAR NO PAINEL
-===================================================== */
-const pedidosObserver = new MutationObserver(()=>{
-  document.querySelectorAll('[data-dup]').forEach(btn=>{
-    btn.onclick = ()=>duplicarPedido(btn.dataset.dup);
-  });
-});
-
-pedidosObserver.observe(listaPedidos,{childList:true});
-
-/* =====================================================
-   🖨️ ROMANEIO COM DESCONTOS REAIS
-===================================================== */
-function gerarRomaneio(id){
-  db.ref('pedidos/'+id).once('value').then(snap=>{
-    const p = snap.val();
-
-    let html = `
-      <div style="font-family:Arial">
-        <h2>ROMANEIO</h2>
-        <p><b>Cliente:</b> ${p.cliente?.nome||''}</p>
-        <hr>
-    `;
-
-    p.itens.forEach(i=>{
-      html += `<div>${i.qtd}x ${i.nome} — R$ ${(i.qtd*i.valor).toFixed(2)}</div>`;
-    });
-
-    html += `
-      <hr>
-      <p>Subtotal: R$ ${p.subtotal?.toFixed(2)}</p>
-      <p>Desc. Promoção: R$ ${p.descPromo?.toFixed(2)}</p>
-      <p>Desc. PIX: R$ ${p.descPix?.toFixed(2)}</p>
-      <h3>Total: R$ ${p.total?.toFixed(2)}</h3>
-      </div>
-    `;
-
-    document.getElementById('print-area').innerHTML = html;
-    window.print();
-  });
-}
-/* =====================================================
-   🧾 CONFIGURAÇÃO DE IMPRESSÃO (ANTI FOLHA EM BRANCO)
-===================================================== */
-const stylePrint = document.createElement('style');
-stylePrint.innerHTML = `
-@media print {
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-  body * {
-    visibility: hidden;
-  }
-  #print-area, #print-area * {
-    visibility: visible;
-  }
-  #print-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    page-break-after: avoid;
-    page-break-before: avoid;
-    page-break-inside: avoid;
-  }
-}
-`;
-document.head.appendChild(stylePrint);
-
-/* =====================================================
-   📄 GERAR ROMANEIO EM PDF AUTOMÁTICO
-===================================================== */
-function exportarRomaneioPDF(id){
-  db.ref('pedidos/'+id).once('value').then(snap=>{
-    const p = snap.val();
-    if(!p) return alert('Pedido não encontrado');
-
-    let html = `
-      <div style="font-family:Arial;font-size:12px">
-        <h2 style="margin-bottom:4px">ROMANEIO</h2>
-        <p><b>Cliente:</b> ${p.cliente?.nome||''}</p>
-        <p><b>Telefone:</b> ${p.cliente?.telefone||''}</p>
-        <hr>
-        <table width="100%" cellspacing="0" cellpadding="4" border="0">
-          <thead>
-            <tr>
-              <th align="left">Qtd</th>
-              <th align="left">Produto</th>
-              <th align="right">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    p.itens.forEach(i=>{
-      html += `
-        <tr>
-          <td>${i.qtd}</td>
-          <td>${i.nome}</td>
-          <td align="right">R$ ${(i.qtd*i.valor).toFixed(2)}</td>
-        </tr>
-      `;
-    });
-
-    html += `
-          </tbody>
-        </table>
-        <hr>
-        <p>Subtotal: <b>R$ ${Number(p.subtotal||0).toFixed(2)}</b></p>
-        <p>Desc. Promoção: <b>- R$ ${Number(p.descPromo||0).toFixed(2)}</b></p>
-        <p>Desc. PIX: <b>- R$ ${Number(p.descPix||0).toFixed(2)}</b></p>
-        <h3>Total: R$ ${Number(p.total||0).toFixed(2)}</h3>
-      </div>
-    `;
-
-    const printArea = document.getElementById('print-area');
-    printArea.innerHTML = html;
-
-    // aguarda renderizar antes de imprimir
-    setTimeout(()=>{
-      window.print();
-    },300);
-  });
-}
-
-/* =====================================================
-   ➕ BOTÃO EXPORTAR PDF NO PAINEL
-===================================================== */
-function inserirBotaoPDF(){
-  document.querySelectorAll('[data-pdf]').forEach(btn=>{
-    btn.onclick = ()=>exportarRomaneioPDF(btn.dataset.pdf);
-  });
-}
-
-/* =====================================================
-   👀 OBSERVA LISTA DE PEDIDOS (AUTO ATIVA BOTÕES)
-===================================================== */
-const pdfObserver = new MutationObserver(()=>{
-  inserirBotaoPDF();
-});
-
-pdfObserver.observe(listaPedidos,{childList:true});
-
-/* =====================================================
-   📌 EXEMPLO DE BOTÕES NO CARD DO PEDIDO
-   (SEU HTML JÁ EXISTE — ISSO É SÓ REFERÊNCIA)
-===================================================== */
-/*
-<button data-pdf="ID_DO_PEDIDO">📄 PDF</button>
-<button data-dup="ID_DO_PEDIDO">📑 DUPLICAR</button>
-*/
+window.onload = () => carregarEmpresa();
 </script>
-
-
 </body>
 </html>
