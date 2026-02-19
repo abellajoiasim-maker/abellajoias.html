@@ -139,39 +139,57 @@
         document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
     }
 
-    function carregarCategorias() {
-        db.ref('settings/promocao').once('value', promoSnap => {
-            const cnf = promoSnap.val() || { ativa: false };
+function carregarCategorias() {
+    // 1. Primeiro verifica se a promoção geral está ligada no banco
+    db.ref('settings/promocao').once('value', promoSnap => {
+        const cnfGeral = promoSnap.val() || { ativa: false };
 
-            db.ref('categories').on('value', snap => {
-                const grid = document.getElementById('gridCategorias');
-                grid.innerHTML = '';
+        // 2. Carrega as categorias
+        db.ref('categories').on('value', snap => {
+            const grid = document.getElementById('gridCategorias');
+            grid.innerHTML = '';
+            
+            snap.forEach(s => {
+                const cat = s.val();
+                if (cat.paused) return;
                 
-                snap.forEach(s => {
-                    const cat = s.val();
-                    if (cat.paused) return;
-                    
-                    const temPromo = cnf.ativa && (cat.promoPct > 0);
+                // 3. LOGICA ANULADORA: 
+                // A promoção só aparece se o status geral estiver ATIVA 
+                // E se a categoria tiver uma porcentagem maior que zero.
+                const temPromo = cnfGeral.ativa && (cat.promoPct > 0);
 
-                    grid.innerHTML += `
-                        <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
-                      ${temPromo ? `
-                        <span style="position: absolute; top: 8px; right: 8px; background: ${cnf.colorBg || '#caa85c'}; color: ${cnf.colorText || '#000'}; font-size: 9px; padding: 2px 8px; border-radius: 4px; z-index: 10; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                      ${cnf.label}
-                       </span>
-                       ` : ''}
-                            <div class="img-container">
-                                <img src="${cat.image || 'https://via.placeholder.com/400?text=Abella+Joias'}" alt="${cat.name}" loading="lazy">
-                            </div>
-                            <div class="p-4 text-center mt-auto">
-                                <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
-                            </div>
-                        </a>
-                    `;
-                });
+                grid.innerHTML += `
+                    <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
+                        ${temPromo ? `
+                        <span style="
+                            position: absolute; 
+                            top: 8px; 
+                            right: 8px; 
+                            background: ${cat.promoColor || '#caa85c'}; 
+                            color: ${cat.promoTextColor || '#ffffff'}; 
+                            font-size: 9px; 
+                            padding: 2px 8px; 
+                            border-radius: 4px; 
+                            z-index: 10; 
+                            font-weight: bold; 
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                            text-transform: uppercase;
+                        ">
+                            ${cat.promoTag || 'OFERTA'}
+                        </span>
+                        ` : ''}
+                        <div class="img-container">
+                            <img src="${cat.image || 'https://via.placeholder.com/400?text=Abella+Joias'}" alt="${cat.name}" loading="lazy">
+                        </div>
+                        <div class="p-4 text-center mt-auto">
+                            <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
+                        </div>
+                    </a>
+                `;
             });
         });
-    }
+    });
+}
 
     window.onload = () => {
         carregarConfiguracoes();
