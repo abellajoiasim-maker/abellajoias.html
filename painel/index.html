@@ -514,6 +514,103 @@ function imprimirRomaneio(id, tipo) {
         html += `</tbody></table>`;
       }
 
+      function imprimirRomaneio(id, tipo) {
+  db.ref('orders/' + id).once('value', sPed => {
+    const p = sPed.val();
+    if (!p) return;
+
+    db.ref('settings/empresa').once('value', sEmp => {
+      const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
+
+      const itens = Array.isArray(p.itens)
+        ? p.itens
+        : Object.values(p.itens || {});
+
+      const isFin = [2, 3, 5, 6].includes(tipo);
+      const comFoto = [3, 6].includes(tipo);
+      const emGrid = tipo >= 4;
+
+      let html = `
+      <div style="padding:10mm; font-family:Arial; color:#000;">
+        
+        <!-- CABEÇALHO -->
+        <div style="text-align:center; margin-bottom:18px; border-bottom:2px solid #e5e5e5; padding-bottom:8px;">
+          <h1 style="margin:0; font-size:26px; letter-spacing:2px;">${emp.nome}</h1>
+          <div style="font-size:10px; font-weight:bold;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
+        </div>
+
+        <!-- DADOS -->
+        <table style="width:100%; border-collapse:separate; border-spacing:10px; margin-bottom:20px;">
+          <tr>
+            <td style="border:1px solid #ddd; border-radius:12px; padding:10px; width:50%;">
+              <b style="font-size:9px; color:#caa85c;">CLIENTE</b><br>
+              <b>${p.cliente?.nome || '-'}</b><br>
+              ${p.cliente?.telefone || ''}
+            </td>
+            <td style="border:1px solid #ddd; border-radius:12px; padding:10px; width:50%;">
+              <b style="font-size:9px; color:#caa85c;">ENTREGA</b><br>
+              ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
+              ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}<br>
+              ${p.entrega?.cep || ''}
+            </td>
+          </tr>
+        </table>
+      `;
+
+      /* ================= PRODUTOS ================= */
+
+      if (emGrid) {
+        html += `<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">`;
+
+        itens.forEach(i => {
+          html += `
+          <div style="border:1px solid #ddd; border-radius:14px; padding:10px; background:#fff;">
+            ${comFoto ? `
+              <img src="${i.image || i.foto || ''}"
+                   style="width:100%; height:90px; object-fit:contain; margin-bottom:6px; border-radius:8px;">
+            ` : ''}
+            <div style="font-size:11px; font-weight:bold;">${i.sku || ''}</div>
+            <div style="font-size:9px; min-height:28px;">${i.name || ''}</div>
+            <div style="margin-top:6px; font-size:11px; display:flex; justify-content:space-between;">
+              <b>QTD: ${i.quantidade}</b>
+              ${isFin ? `<b>${fMoeda(i.price * i.quantidade)}</b>` : ''}
+            </div>
+          </div>`;
+        });
+
+        html += `</div>`;
+      } else {
+        html += `
+        <table style="width:100%; border-collapse:collapse; font-size:11px;">
+          <thead>
+            <tr style="background:#f4f4f4;">
+              ${comFoto ? '<th style="border:1px solid #ddd;">Foto</th>' : ''}
+              <th style="border:1px solid #ddd;">SKU / Produto</th>
+              <th style="border:1px solid #ddd;">Qtd</th>
+              ${isFin ? '<th style="border:1px solid #ddd;">Total</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+        `;
+
+        itens.forEach(i => {
+          html += `
+          <tr>
+            ${comFoto ? `
+              <td style="border:1px solid #ddd; text-align:center;">
+                <img src="${i.image || ''}" style="width:45px; height:45px; object-fit:contain;">
+              </td>` : ''}
+            <td style="border:1px solid #ddd;">
+              <b>${i.sku}</b><br><small>${i.name}</small>
+            </td>
+            <td style="border:1px solid #ddd; text-align:center;">${i.quantidade}</td>
+            ${isFin ? `<td style="border:1px solid #ddd; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
+          </tr>`;
+        });
+
+        html += `</tbody></table>`;
+      }
+
       /* ================= RODAPÉ ================= */
 
       html += `
@@ -545,6 +642,14 @@ function imprimirRomaneio(id, tipo) {
       }
 
       html += `</div></div>`;
+
+      const area = document.getElementById('print-area');
+      area.innerHTML = html;
+      setTimeout(() => window.print(), 700);
+    });
+  });
+}
+
 
       const area = document.getElementById('print-area');
       area.innerHTML = html;
