@@ -421,116 +421,65 @@ function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
         db.ref('settings/empresa').once('value', sEmp => {
-            const emp = sEmp.val() || { nome: "Abella Joias", whats: "(xx) xxxxx-xxxx", parcelas: 3 };
+            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
             const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            
-            // Definições de Regras
-            const isFinanceiro = [2, 3, 5, 6].includes(tipo);
-            const mostrarFoto = [3, 6].includes(tipo); // Regra: 3 (Tabela) e 6 (Grid) com foto
+            const isFin = [2, 3, 5, 6].includes(tipo);
+            const comFoto = [3, 6].includes(tipo);
 
-            let html = `
-            <div id="print-area" style="font-family: Arial, sans-serif; color: #000; padding: 10px;">
-                
+            let html = `<div style="padding:10mm; color:#000;">
                 <div class="header-luxo">
                     <h1>${emp.nome}</h1>
-                    <div class="sub" style="font-size: 12px; letter-spacing: 3px; font-weight: bold; margin-bottom: 5px;">ATACADO DE JOIAS NO BRUTO</div>
-                    <div class="contato" style="font-size: 13px;">WHATSAPP: ${emp.whats}</div>
+                    <div style="letter-spacing:2px; font-size:10px;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
                 </div>
-
                 <table class="caixa-dados">
                     <tr>
-                        <td>
-                            <span class="titulo-box">Dados do Cliente</span>
-                            <b>Nome:</b> ${p.cliente?.nome || ''}<br>
-                            <b>Telefone:</b> ${p.cliente?.telefone || ''}
-                        </td>
-                        <td>
-                            <span class="titulo-box">Dados de Entrega</span>
-                            <b>Destinatário:</b> ${p.entrega?.nomeEntrega || p.cliente?.nome || 'Não informado'}<br>
-                            <b>Endereço:</b> ${p.entrega?.rua || ''}, ${p.entrega?.num || 'S/N'}<br>
-                            <b>Bairro/Cidade:</b> ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}
-                        </td>
+                        <td><span class="titulo-box">Cliente</span><b>${p.cliente?.nome}</b><br>${p.cliente?.telefone}</td>
+                        <td><span class="titulo-box">Entrega</span><b>Dest: ${p.entrega?.nomeEntrega || p.cliente?.nome}</b><br>${p.entrega?.rua}, ${p.entrega?.bairro}</td>
                     </tr>
                 </table>`;
 
-            // RENDERIZAÇÃO DE ITENS
-            if (tipo >= 4) {
-                // --- MODELO GRID (4, 5, 6) ---
+            if(tipo >= 4) {
+                // --- MODELO GRID (4, 5, 6) COM NOME DO PRODUTO ---
                 html += `<div class="grid-romaneio">`;
                 itensArr.forEach(i => {
-                    html += `
-                    <div class="grid-item">
-                        ${mostrarFoto ? `<img src="${i.image || i.foto || ''}">` : '<div style="height:10px"></div>'}
-                        <div style="padding-top:4px">
-                            <b style="font-size: 11px;">${i.sku || 'S/SKU'}</b><br>
-                            ${isFinanceiro ? `<span style="font-size:8px">${(i.peso || 0).toFixed(2)}g | ${fMoeda(i.price)}</span><br>` : ''}
-                            <b style="font-size:12px">QTD: ${i.quantidade || 1}</b>
-                            ${isFinanceiro ? `<br><b style="color:#000">Total: ${fMoeda((i.price || 0) * (i.quantidade || 1))}</b>` : ''}
+                    html += `<div class="grid-item" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 100px;">
+                        <div>
+                            ${comFoto ? `<img src="${i.image || ''}" style="max-height: 70px; margin-bottom: 5px;">` : ''}
+                            <div style="line-height: 1.1;">
+                                <b style="font-size: 10px;">${i.sku || 'S/SKU'}</b><br>
+                                <span style="font-size: 9px; text-transform: uppercase;">${i.name || ''}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 5px; border-top: 0.5px solid #eee; pt-2">
+                            <b style="font-size: 11px;">QTD: ${i.quantidade}</b>
+                            ${isFin ? `<br><b style="font-size: 10px;">${fMoeda(i.price * i.quantidade)}</b>` : ''}
                         </div>
                     </div>`;
                 });
                 html += `</div>`;
             } else {
                 // --- MODELO TABELA (1, 2, 3) ---
-                html += `<table class="tab-romaneio"><thead><tr>`;
-                if (mostrarFoto) html += `<th>Foto</th>`;
-                html += `<th>SKU</th><th>Produto</th><th>Peso</th>`;
-                if (isFinanceiro) html += `<th>Preço</th><th>Subtotal</th>`;
-                html += `<th>Qtd</th></tr></thead><tbody>`;
-
+                html += `<table class="tab-romaneio"><thead><tr>${comFoto?'<th>Foto</th>':''}<th>SKU</th><th>Produto</th><th>Qtd</th>${isFin?'<th>Total</th>':''}</tr></thead><tbody>`;
                 itensArr.forEach(i => {
-                    html += `<tr>`;
-                    if (mostrarFoto) html += `<td style="text-align:center"><img src="${i.image || i.foto || ''}" style="width:45px; height:45px; object-fit:contain;"></td>`;
-                    html += `<td><b>${i.sku || ''}</b></td>`;
-                    html += `<td>${i.name || ''}</td>`;
-                    html += `<td>${(i.peso || 0).toFixed(2)}g</td>`;
-                    if (isFinanceiro) {
-                        html += `<td>${fMoeda(i.price)}</td>`;
-                        html += `<td>${fMoeda((i.price || 0) * (i.quantidade || 1))}</td>`;
-                    }
-                    html += `<td style="text-align:center"><b>${i.quantidade || 1}</b></td></tr>`;
+                    html += `<tr>
+                        ${comFoto ? `<td><img src="${i.image||''}" style="width:40px"></td>` : ''}
+                        <td>${i.sku}</td><td>${i.name}</td><td style="text-align:center"><b>${i.quantidade}</b></td>
+                        ${isFin ? `<td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                    </tr>`;
                 });
                 html += `</tbody></table>`;
             }
 
-            // RODAPÉ COM MOLDURA DOURADA
-            html += `<div style="margin-top: 20px; border: 1.5px solid #d4af37; padding: 15px; border-radius: 10px;">`;
-            if (!isFinanceiro) {
-                // Rodapé de Conferência (Simples)
-                html += `
-                <div style="display: flex; justify-content: space-around; font-size: 13px; font-weight: bold; text-transform: uppercase;">
-                    <span>Modelos: ${itensArr.length}</span>
-                    <span>Total Peças: ${p.totalPecas || 0}</span>
-                    <span>Peso Total: ${(p.pesoTotal || 0).toFixed(2)}g</span>
-                </div>`;
-            } else {
-                // Rodapé Financeiro (Detalhado)
-                const total = p.total || 0;
-                const parcelasStr = p.pagamento === 'Cartão' ? ` (${emp.parcelas}x de ${fMoeda(total / emp.parcelas)})` : '';
-                
-                html += `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 12px;">
-                    <div>
-                        <b style="color:#d4af37; text-transform: uppercase;">Resumo do Pedido</b><br>
-                        Itens: ${itensArr.length} | Peças: ${p.totalPecas || 0}<br>
-                        Peso: ${(p.pesoTotal || 0).toFixed(2)}g<br>
-                        <b>Pagamento:</b> ${p.pagamento || 'A combinar'}${parcelasStr}
-                    </div>
-                    <div style="text-align: right; line-height: 1.6;">
-                        Subtotal: ${fMoeda(p.subtotal)}<br>
-                        Desc. Promo: - ${fMoeda(p.descontoPromo)}<br>
-                        ${p.descontoPix > 0 ? `Desc. PIX: - ${fMoeda(p.descontoPix)}<br>` : ''}
-                        Frete: ${fMoeda(p.frete)}<br>
-                        <b style="font-size: 20px; border-top: 1px solid #d4af37; padding-top: 5px; display: inline-block; margin-top: 5px;">TOTAL: ${fMoeda(total)}</b>
-                    </div>
-                </div>`;
-            }
-            html += `</div></div>`;
+            // RODAPÉ FINAL
+            html += `<div style="margin-top:20px; border:1.5px solid #d4af37; padding:15px; border-radius:10px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 11px;">
+                    <b>Modelos:</b> ${itensArr.length} | <b>Total Peças:</b> ${p.totalPecas || 0} | <b>Peso:</b> ${(p.pesoTotal || 0).toFixed(2)}g
+                </div>
+                ${isFin ? `<div style="text-align: right;"><span style="font-size: 10px;">TOTAL DO PEDIDO:</span><br><b style="font-size: 22px; color: #000;">${fMoeda(p.total)}</b></div>` : ''}
+            </div></div>`;
 
-            // Execução da Impressão
-            const printWin = document.getElementById('print-area');
-            printWin.innerHTML = html;
-            setTimeout(() => { window.print(); }, 800);
+            document.getElementById('print-area').innerHTML = html;
+            setTimeout(() => { window.print(); }, 700);
         });
     });
 }
