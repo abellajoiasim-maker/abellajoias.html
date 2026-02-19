@@ -421,65 +421,128 @@ function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
         db.ref('settings/empresa').once('value', sEmp => {
-            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
+            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---", parcelas: 3 };
             const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            
+            // Regras: Financeiro (2,3,5,6) | Fotos (3,6)
             const isFin = [2, 3, 5, 6].includes(tipo);
             const comFoto = [3, 6].includes(tipo);
 
-            let html = `<div style="padding:10mm; color:#000;">
+            let html = `
+            <div style="padding:10mm; color:#000; font-family: Arial, sans-serif;">
                 <div class="header-luxo">
                     <h1>${emp.nome}</h1>
-                    <div style="letter-spacing:2px; font-size:10px;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
+                    <div style="letter-spacing:2px; font-size:10px; font-weight:bold;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
                 </div>
+
                 <table class="caixa-dados">
                     <tr>
-                        <td><span class="titulo-box">Cliente</span><b>${p.cliente?.nome}</b><br>${p.cliente?.telefone}</td>
-                        <td><span class="titulo-box">Entrega</span><b>Dest: ${p.entrega?.nomeEntrega || p.cliente?.nome}</b><br>${p.entrega?.rua}, ${p.entrega?.bairro}</td>
+                        <td>
+                            <span class="titulo-box">Dados do Cliente</span>
+                            <b>Nome:</b> ${p.cliente?.nome || ''}<br>
+                            <b>Telefone:</b> ${p.cliente?.telefone || ''}
+                        </td>
+                        <td>
+                            <span class="titulo-box">Dados de Entrega</span>
+                            <b>Destinatário:</b> ${p.entrega?.nomeEntrega || p.cliente?.nome || 'Não informado'}<br>
+                            <b>Endereço:</b> ${p.entrega?.rua || ''}, ${p.entrega?.num || 'S/N'}<br>
+                            <b>Bairro/Cidade:</b> ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}
+                        </td>
                     </tr>
                 </table>`;
 
-            if(tipo >= 4) {
-                // --- MODELO GRID (4, 5, 6) COM NOME DO PRODUTO ---
+            if (tipo >= 4) {
+                // --- LAYOUT GRID (4, 5, 6) ---
                 html += `<div class="grid-romaneio">`;
                 itensArr.forEach(i => {
-                    html += `<div class="grid-item" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 100px;">
+                    html += `
+                    <div class="grid-item" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 120px; padding: 5px;">
                         <div>
-                            ${comFoto ? `<img src="${i.image || ''}" style="max-height: 70px; margin-bottom: 5px;">` : ''}
-                            <div style="line-height: 1.1;">
+                            ${comFoto ? `<img src="${i.image || i.foto || ''}" style="max-height: 65px; margin-bottom: 3px; display: block; margin-left: auto; margin-right: auto;">` : ''}
+                            <div style="line-height: 1.1; margin-top: 2px;">
                                 <b style="font-size: 10px;">${i.sku || 'S/SKU'}</b><br>
-                                <span style="font-size: 9px; text-transform: uppercase;">${i.name || ''}</span>
+                                <div style="font-size: 8.5px; text-transform: uppercase; color: #333;">${i.name || ''}</div>
                             </div>
                         </div>
-                        <div style="margin-top: 5px; border-top: 0.5px solid #eee; pt-2">
-                            <b style="font-size: 11px;">QTD: ${i.quantidade}</b>
-                            ${isFin ? `<br><b style="font-size: 10px;">${fMoeda(i.price * i.quantidade)}</b>` : ''}
+                        <div style="margin-top: 4px; border-top: 0.5px solid #ddd; padding-top: 3px;">
+                            <b style="font-size: 11px;">QTD: ${i.quantidade || 1}</b>
+                            ${isFin ? `<br><b style="font-size: 10px;">${fMoeda((i.price || 0) * (i.quantidade || 1))}</b>` : ''}
                         </div>
                     </div>`;
                 });
                 html += `</div>`;
             } else {
-                // --- MODELO TABELA (1, 2, 3) ---
-                html += `<table class="tab-romaneio"><thead><tr>${comFoto?'<th>Foto</th>':''}<th>SKU</th><th>Produto</th><th>Qtd</th>${isFin?'<th>Total</th>':''}</tr></thead><tbody>`;
+                // --- LAYOUT TABELA (1, 2, 3) ---
+                html += `<table class="tab-romaneio">
+                    <thead>
+                        <tr>
+                            ${comFoto ? '<th>Foto</th>' : ''}
+                            <th>SKU</th>
+                            <th>Produto</th>
+                            <th>Peso</th>
+                            ${isFin ? '<th>Unit.</th><th>Total</th>' : ''}
+                            <th>Qtd</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
                 itensArr.forEach(i => {
-                    html += `<tr>
-                        ${comFoto ? `<td><img src="${i.image||''}" style="width:40px"></td>` : ''}
-                        <td>${i.sku}</td><td>${i.name}</td><td style="text-align:center"><b>${i.quantidade}</b></td>
-                        ${isFin ? `<td>${fMoeda(i.price * i.quantidade)}</td>` : ''}
+                    html += `
+                    <tr>
+                        ${comFoto ? `<td style="text-align:center"><img src="${i.image || i.foto || ''}" style="width:40px; height:40px; object-fit:contain;"></td>` : ''}
+                        <td><b>${i.sku || ''}</b></td>
+                        <td style="font-size: 10px;">${i.name || ''}</td>
+                        <td>${(i.peso || 0).toFixed(2)}g</td>
+                        ${isFin ? `<td>${fMoeda(i.price)}</td><td>${fMoeda((i.price || 0) * (i.quantidade || 1))}</td>` : ''}
+                        <td style="text-align:center"><b>${i.quantidade || 1}</b></td>
                     </tr>`;
                 });
                 html += `</tbody></table>`;
             }
 
-            // RODAPÉ FINAL
-            html += `<div style="margin-top:20px; border:1.5px solid #d4af37; padding:15px; border-radius:10px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 11px;">
-                    <b>Modelos:</b> ${itensArr.length} | <b>Total Peças:</b> ${p.totalPecas || 0} | <b>Peso:</b> ${(p.pesoTotal || 0).toFixed(2)}g
-                </div>
-                ${isFin ? `<div style="text-align: right;"><span style="font-size: 10px;">TOTAL DO PEDIDO:</span><br><b style="font-size: 22px; color: #000;">${fMoeda(p.total)}</b></div>` : ''}
-            </div></div>`;
+            // --- RODAPÉ COM DETALHES FINANCEIROS COMPLETOS ---
+            html += `<div style="margin-top: 20px; border: 1.5px solid #d4af37; padding: 15px; border-radius: 10px;">`;
+            
+            if (!isFin) {
+                // Rodapé Simples (Conferência 1 e 4)
+                html += `
+                <div style="display: flex; justify-content: space-around; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                    <span>Modelos: ${itensArr.length}</span>
+                    <span>Total Peças: ${p.totalPecas || 0}</span>
+                    <span>Peso Total: ${(p.pesoTotal || 0).toFixed(2)}g</span>
+                </div>`;
+            } else {
+                // Rodapé Financeiro Detalhado (2, 3, 5, 6)
+                const total = p.total || 0;
+                const parcelasStr = p.pagamento === 'Cartão' ? ` (${emp.parcelas}x de ${fMoeda(total / emp.parcelas)})` : '';
 
-            document.getElementById('print-area').innerHTML = html;
-            setTimeout(() => { window.print(); }, 700);
+                html += `
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; font-size: 11px;">
+                    <div>
+                        <b style="color:#d4af37; text-transform: uppercase; font-size: 12px;">Resumo do Pedido</b><br>
+                        <div style="margin-top: 5px; line-height: 1.5;">
+                            Modelos: ${itensArr.length} | Peças: ${p.totalPecas || 0}<br>
+                            Peso Total: ${(p.pesoTotal || 0).toFixed(2)}g<br>
+                            <b>Forma de Pagto:</b> ${p.pagamento || 'A combinar'}${parcelasStr}
+                        </div>
+                    </div>
+                    <div style="text-align: right; line-height: 1.4;">
+                        Subtotal: ${fMoeda(p.subtotal)}<br>
+                        Desc. Promo: - ${fMoeda(p.descontoPromo)}<br>
+                        ${p.descontoPix > 0 ? `Desc. PIX: - ${fMoeda(p.descontoPix)}<br>` : ''}
+                        Frete: ${fMoeda(p.frete)}<br>
+                        <div style="margin-top: 5px; border-top: 1px solid #d4af37; padding-top: 5px;">
+                            <span style="font-size: 10px; font-weight: bold;">VALOR TOTAL</span><br>
+                            <b style="font-size: 20px;">${fMoeda(total)}</b>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            html += `</div></div>`;
+
+            // Comando de Impressão
+            const printWin = document.getElementById('print-area');
+            printWin.innerHTML = html;
+            setTimeout(() => { window.print(); }, 800);
         });
     });
 }
