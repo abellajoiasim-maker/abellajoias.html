@@ -426,12 +426,10 @@ function imprimirRomaneio(id, tipo) {
             const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
             const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
             
-            // Definições de exibição
-            const isFin = [2, 3, 5, 6].includes(tipo); // Tipos que mostram preços
-            const comFoto = [3, 6].includes(tipo);    // Tipos que mostram fotos
-            const emGrid = tipo >= 4;                  // Tipos em formato Grid
+            const isFin = [2, 3, 5, 6].includes(tipo); 
+            const comFoto = [3, 6].includes(tipo);    
+            const emGrid = tipo >= 4;                  
 
-            // Cálculo dos valores (Garantindo que são números)
             const subtotal = itens.reduce((acc, i) => acc + ((Number(i.price) || 0) * (Number(i.quantidade) || 0)), 0);
             const descPromo = Number(p.descontoPromo || 0);
             const descPix = Number(p.descontoPix || 0);
@@ -439,7 +437,7 @@ function imprimirRomaneio(id, tipo) {
             const totalFinal = subtotal - descPromo - descPix + frete;
 
             let html = `
-            <div style="padding:10mm; font-family: 'Poppins', Arial, sans-serif; color:#000; background:#fff;">
+            <div style="padding:10mm; font-family:Arial, sans-serif; color:#000; background:#fff;">
                 <div style="text-align:center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
                     <h1 style="margin:0; font-size:26px; text-transform:uppercase; letter-spacing:2px;">${emp.nome}</h1>
                     <div style="font-size:10px; font-weight:bold; color: #666;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
@@ -449,31 +447,30 @@ function imprimirRomaneio(id, tipo) {
                     <tr>
                         <td style="width:50%; border: 1px solid #ddd; border-radius: 12px; padding:12px; vertical-align:top; font-size:11px;">
                             <b style="color:#caa85c; font-size:9px; text-transform:uppercase;">Identificação Cliente</b><br>
-                            <b>Nome:</b> ${p.cliente?.nome || '---'}<br>
-                            <b>WhatsApp:</b> ${p.cliente?.telefone || '---'}
+                            <b>${p.cliente?.nome || '---'}</b><br>
+                            ${p.cliente?.telefone || '---'}
                         </td>
                         <td style="width:50%; border: 1px solid #ddd; border-radius: 12px; padding:12px; vertical-align:top; font-size:11px;">
                             <b style="color:#caa85c; font-size:9px; text-transform:uppercase;">Dados de Entrega</b><br>
-                            <b>Destinatário:</b> ${p.entrega?.nomeEntrega || p.cliente?.nome}<br>
-                            ${p.entrega?.rua || 'Endereço não informado'}<br>
-                            ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}
+                            <b>${p.entrega?.nomeEntrega || p.cliente?.nome}</b><br>
+                            ${p.entrega?.rua || ''} - ${p.entrega?.bairro || ''}<br>${p.entrega?.cidade || ''}
                         </td>
                     </tr>
                 </table>`;
 
-            // --- CORPO: PRODUTOS ---
             if (emGrid) {
                 html += `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">`;
                 itens.forEach(i => {
                     html += `
-                    <div style="border: 1px solid #e0e0e0; border-radius: 12px; padding: 10px; background:#fff; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="border: 1px solid #ddd; border-radius: 12px; padding: 10px; background:#fff; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid;">
                         <div>
-                            ${comFoto ? `<img src="${i.image || ''}" style="width: 100%; height: 80px; object-fit: contain; margin-bottom: 8px; border-radius: 6px;">` : ''}
+                            ${comFoto ? `<img src="${i.image || ''}" style="width: 100%; height: 85px; object-fit: contain; margin-bottom: 8px; border-radius: 6px;">` : ''}
                             <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px;">${i.sku || 'S/SKU'}</div>
-                            <div style="font-size: 9px; color: #555; text-transform: uppercase; margin-top: 4px; height: 24px; overflow: hidden;">${i.name || ''}</div>
+                            <div style="font-size: 9px; color: #444; text-transform: uppercase; margin-top: 4px; line-height:1.2;">${i.name || ''}</div>
+                            <div style="font-size: 9px; color: #888; margin-top: 2px;">Peso Unit: <b>${(i.peso || 0).toFixed(2)}g</b></div>
                         </div>
                         <div style="margin-top: 10px; background: #f8f8f8; padding: 6px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size: 11px; font-weight: bold;">QTD: ${i.quantidade}</span>
+                            <span style="font-size: 10px; font-weight: bold;">QTD: ${i.quantidade}</span>
                             ${isFin ? `<span style="font-size: 11px; font-weight: bold; color:#b08d3e;">${fMoeda(i.price * i.quantidade)}</span>` : ''}
                         </div>
                     </div>`;
@@ -486,6 +483,7 @@ function imprimirRomaneio(id, tipo) {
                         <tr>
                             ${comFoto ? '<th style="padding:8px; border:1px solid #ddd;">Foto</th>' : ''}
                             <th style="padding:8px; border:1px solid #ddd; text-align:left;">Produto</th>
+                            <th style="padding:8px; border:1px solid #ddd; text-align:center;">Peso U.</th>
                             <th style="padding:8px; border:1px solid #ddd; text-align:center;">Qtd</th>
                             ${isFin ? '<th style="padding:8px; border:1px solid #ddd; text-align:right;">Total</th>' : ''}
                         </tr>
@@ -494,58 +492,46 @@ function imprimirRomaneio(id, tipo) {
                 itens.forEach(i => {
                     html += `<tr>
                         ${comFoto ? `<td style="padding:5px; border:1px solid #ddd; text-align:center;"><img src="${i.image || ''}" style="width:40px; height:40px; object-fit:contain;"></td>` : ''}
-                        <td style="padding:8px; border:1px solid #ddd;"><b>${i.sku}</b> - ${i.name}</td>
-                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${i.quantidade}</td>
+                        <td style="padding:8px; border:1px solid #ddd;"><b>${i.sku}</b><br><small>${i.name}</small></td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;">${(i.peso || 0).toFixed(2)}g</td>
+                        <td style="padding:8px; border:1px solid #ddd; text-align:center;"><b>${i.quantidade}</b></td>
                         ${isFin ? `<td style="padding:8px; border:1px solid #ddd; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
                     </tr>`;
                 });
                 html += `</tbody></table>`;
             }
 
-            // --- RODAPÉ FINANCEIRO CORRIGIDO ---
-            html += `<div style="margin-top: 25px; border: 2px solid #caa85c; padding: 15px; border-radius: 12px; background: #fff; page-break-inside: avoid;">`;
-            
-            if (!isFin) {
-                // Rodapé simples para conferência
-                html += `
-                <div style="display: flex; justify-content: space-around; font-weight: bold; font-size: 13px;">
-                    <span>MODELOS: ${itens.length}</span>
-                    <span>TOTAL PEÇAS: ${p.totalPecas || 0}</span>
-                    <span>PESO TOTAL: ${(p.pesoTotal || 0).toFixed(2)}g</span>
-                </div>`;
-            } else {
-                // Rodapé detalhado para financeiro
-                html += `
+            // --- RODAPÉ ---
+            html += `<div style="margin-top: 25px; border: 2px solid #caa85c; padding: 15px; border-radius: 12px; background: #fff; page-break-inside: avoid;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="font-size: 11px; line-height: 1.6;">
-                        <b style="color:#caa85c; font-size:12px;">RESUMO FINANCEIRO</b><br>
-                        Peças: ${p.totalPecas || 0} | Peso: ${(p.pesoTotal || 0).toFixed(2)}g<br>
-                        <b>Forma de Pagto:</b> ${p.pagamento || 'A combinar'}<br>
-                        ${p.parcelas ? `<b>Parcelamento:</b> ${p.parcelas}x` : ''}
-                    </div>
+                        <b style="color:#caa85c; font-size:12px;">RESUMO DO PEDIDO</b><br>
+                        Modelos: ${itens.length} | Peças: ${p.totalPecas || 0}<br>
+                        <b>Peso Total: ${(p.pesoTotal || 0).toFixed(2)}g</b><br>
+                        Pagamento: ${p.pagamento || 'A combinar'}
+                    </div>`;
+            
+            if (isFin) {
+                html += `
                     <div style="text-align: right; min-width: 250px;">
                         <div style="font-size: 11px; color:#555;">
-                            Subtotal: ${fMoeda(subtotal)}<br>
-                            Descontos: -${fMoeda(descPromo + descPix)}<br>
+                            Subtotal: ${fMoeda(subtotal)} | Descontos: -${fMoeda(descPromo + descPix)}<br>
                             Frete: ${fMoeda(frete)}
                         </div>
                         <div style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px;">
-                            <span style="font-size: 10px; font-weight: bold; color: #666; text-transform:uppercase;">Valor Total do Pedido</span><br>
-                            <b style="font-size: 22px; color: #000;">${fMoeda(totalFinal)}</b>
+                            <span style="font-size: 10px; font-weight: bold; color: #666;">VALOR TOTAL</span><br>
+                            <b style="font-size: 24px; color: #000;">${fMoeda(totalFinal)}</b>
                         </div>
-                    </div>
-                </div>`;
+                    </div>`;
             }
-            html += `</div></div>`;
+            html += `</div></div></div>`;
 
-            // Executa a impressão
             const area = document.getElementById('print-area');
             area.innerHTML = html;
             setTimeout(() => { window.print(); }, 700);
         });
     });
 }
-
 /* PROMOÇÕES */
 async function abrirPainelPromocoes() {
     const [snapPromo, snapCats] = await Promise.all([db.ref('settings/promocao').once('value'), db.ref('categories').once('value')]);
