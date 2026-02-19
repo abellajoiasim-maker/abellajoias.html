@@ -418,123 +418,141 @@ function fecharModal() { document.getElementById('mainModal').classList.remove('
 
 /* IMPRESSÃO ROMANEIO ATUALIZADA - ABELLA JOIAS LUXO */
 function imprimirRomaneio(id, tipo) {
-    db.ref('orders/' + id).once('value', sPed => {
-        const p = sPed.val();
-        db.ref('settings/empresa').once('value', sEmp => {
-            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---", parcelas: 3 };
-            const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            
-            const isFin = [2, 3, 5, 6].includes(tipo);
-            const comFoto = [3, 6].includes(tipo);
+  db.ref('orders/' + id).once('value', sPed => {
+    const p = sPed.val();
+    if (!p) return;
 
-            let html = `
-            <div style="padding:10mm; color:#000; font-family: 'Poppins', Arial, sans-serif;">
-                <div style="text-align:center; margin-bottom:20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                    <h1 style="margin:0; font-size:26px; text-transform:uppercase; letter-spacing:2px;">${emp.nome}</h1>
-                    <div style="font-size:10px; font-weight:bold; color: #666;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
-                </div>
+    db.ref('settings/empresa').once('value', sEmp => {
+      const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
 
-                <table style="width:100%; border-collapse: collapse; margin-bottom:20px; font-size: 11px;">
-                    <tr>
-                        <td style="width:48%; border: 1px solid #e0e0e0; border-radius: 8px; padding:10px; vertical-align:top;">
-                            <b style="font-size:9px; color:#caa85c; text-transform:uppercase;">Identificação</b><br>
-                            <b>Cliente:</b> ${p.cliente?.nome || 'Não informado'}<br>
-                            <b>WhatsApp:</b> ${p.cliente?.telefone || '---'}
-                        </td>
-                        <td style="width:4%;"></td>
-                        <td style="width:48%; border: 1px solid #e0e0e0; border-radius: 8px; padding:10px; vertical-align:top;">
-                            <b style="font-size:9px; color:#caa85c; text-transform:uppercase;">Entrega (Checkout)</b><br>
-                            <b>Dest:</b> ${p.entrega?.nomeEntrega || p.cliente?.nome}<br>
-                            ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
-                            ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''} | ${p.entrega?.cep || ''}
-                        </td>
-                    </tr>
-                </table>`;
+      const itens = Array.isArray(p.itens)
+        ? p.itens
+        : Object.values(p.itens || {});
 
-            if (tipo >= 4) {
-                // --- MODELO GRID COM MOLDURAS E CANTOS ARREDONDADOS ---
-                html += `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">`;
-                itensArr.forEach(i => {
-                    html += `
-                    <div style="border: 1px solid #d1d1d1; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; background:#fff; overflow: hidden;">
-                        <div>
-                            ${comFoto ? `<img src="${i.image || i.foto || ''}" style="width: 100%; height: 80px; object-fit: contain; margin-bottom: 8px; border-radius: 6px;">` : ''}
-                            <div style="line-height: 1.3;">
-                                <div style="font-size: 11px; font-weight: 700; color: #000; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px; margin-bottom: 3px;">${i.sku || 'S/SKU'}</div>
-                                <div style="font-size: 9px; text-transform: uppercase; color: #555; height: 22px; overflow: hidden;">${i.name || ''}</div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 8px; background: #f8f8f8; padding: 5px; border-radius: 6px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size: 11px; font-weight: bold;">QTD: ${i.quantidade}</span>
-                                ${isFin ? `<span style="font-size: 10px; font-weight: bold; color:#d4af37;">${fMoeda(i.price * i.quantidade)}</span>` : ''}
-                            </div>
-                        </div>
-                    </div>`;
-                });
-                html += `</div>`;
-            } else {
-                // --- MODELO TABELA (1, 2, 3) ---
-                html += `<table style="width:100%; border-collapse:collapse; font-size:11px;">
-                    <thead style="background:#f4f4f4;">
-                        <tr>
-                            ${comFoto ? '<th style="padding:8px; border:1px solid #ddd;">Foto</th>' : ''}
-                            <th style="padding:8px; border:1px solid #ddd; text-align:left;">SKU / Produto</th>
-                            <th style="padding:8px; border:1px solid #ddd; text-align:center;">Qtd</th>
-                            ${isFin ? '<th style="padding:8px; border:1px solid #ddd; text-align:right;">Total</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>`;
-                itensArr.forEach(i => {
-                    html += `<tr>
-                        ${comFoto ? `<td style="padding:5px; border:1px solid #ddd; text-align:center;"><img src="${i.image||''}" style="width:45px; height:45px; object-fit:contain; border-radius:4px;"></td>` : ''}
-                        <td style="padding:8px; border:1px solid #ddd;"><b>${i.sku}</b><br><small>${i.name}</small></td>
-                        <td style="padding:8px; border:1px solid #ddd; text-align:center;"><b>${i.quantidade}</b></td>
-                        ${isFin ? `<td style="padding:8px; border:1px solid #ddd; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
-                    </tr>`;
-                });
-                html += `</tbody></table>`;
-            }
+      const isFin = [2, 3, 5, 6].includes(tipo);
+      const comFoto = [3, 6].includes(tipo);
+      const emGrid = tipo >= 4;
 
-            // --- RODAPÉ FINANCEIRO ---
-            html += `<div style="margin-top: 25px; border: 2px solid #d4af37; padding: 15px; border-radius: 12px; background: #fff;">`;
-            
-            if (!isFin) {
-                html += `
-                <div style="display: flex; justify-content: space-around; font-weight: bold; font-size: 12px; color: #333;">
-                    <span>MODELOS: ${itensArr.length}</span>
-                    <span>TOTAL PEÇAS: ${p.totalPecas || 0}</span>
-                    <span>PESO: ${(p.pesoTotal || 0).toFixed(2)}g</span>
-                </div>`;
-            } else {
-                html += `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 11px; line-height: 1.6;">
-                        <b style="color:#d4af37; font-size:12px; text-transform:uppercase;">Resumo Geral</b><br>
-                        Itens: ${itensArr.length} | Peças: ${p.totalPecas || 0} | Peso: ${(p.pesoTotal || 0).toFixed(2)}g<br>
-                        <b>Pagamento:</b> ${p.pagamento || 'A definir'}
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 10px; color:#777; margin-bottom: 5px;">
-                            Subtotal: ${fMoeda(p.subtotal)} | 
-                            Desc: -${fMoeda((p.descontoPromo||0) + (p.descontoPix||0))} | 
-                            Frete: ${fMoeda(p.frete || 0)}
-                        </div>
-                        <div style="border-top: 1px solid #eee; padding-top: 5px;">
-                            <span style="font-size: 10px; font-weight: bold; color: #666;">TOTAL DO PEDIDO</span><br>
-                            <b style="font-size: 24px; color: #000;">${fMoeda(p.total)}</b>
-                        </div>
-                    </div>
-                </div>`;
-            }
-            html += `</div></div>`;
+      let html = `
+      <div style="padding:10mm; font-family:Arial; color:#000;">
+        
+        <!-- CABEÇALHO -->
+        <div style="text-align:center; margin-bottom:18px; border-bottom:2px solid #e5e5e5; padding-bottom:8px;">
+          <h1 style="margin:0; font-size:26px; letter-spacing:2px;">${emp.nome}</h1>
+          <div style="font-size:10px; font-weight:bold;">ATACADO DE JOIAS NO BRUTO | ${emp.whats}</div>
+        </div>
 
-            const area = document.getElementById('print-area');
-            area.innerHTML = html;
-            setTimeout(() => { window.print(); }, 1000);
+        <!-- DADOS -->
+        <table style="width:100%; border-collapse:separate; border-spacing:10px; margin-bottom:20px;">
+          <tr>
+            <td style="border:1px solid #ddd; border-radius:12px; padding:10px; width:50%;">
+              <b style="font-size:9px; color:#caa85c;">CLIENTE</b><br>
+              <b>${p.cliente?.nome || '-'}</b><br>
+              ${p.cliente?.telefone || ''}
+            </td>
+            <td style="border:1px solid #ddd; border-radius:12px; padding:10px; width:50%;">
+              <b style="font-size:9px; color:#caa85c;">ENTREGA</b><br>
+              ${p.entrega?.rua || ''}, ${p.entrega?.num || ''}<br>
+              ${p.entrega?.bairro || ''} - ${p.entrega?.cidade || ''}<br>
+              ${p.entrega?.cep || ''}
+            </td>
+          </tr>
+        </table>
+      `;
+
+      /* ================= PRODUTOS ================= */
+
+      if (emGrid) {
+        html += `<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">`;
+
+        itens.forEach(i => {
+          html += `
+          <div style="border:1px solid #ddd; border-radius:14px; padding:10px; background:#fff;">
+            ${comFoto ? `
+              <img src="${i.image || i.foto || ''}"
+                   style="width:100%; height:90px; object-fit:contain; margin-bottom:6px; border-radius:8px;">
+            ` : ''}
+            <div style="font-size:11px; font-weight:bold;">${i.sku || ''}</div>
+            <div style="font-size:9px; min-height:28px;">${i.name || ''}</div>
+            <div style="margin-top:6px; font-size:11px; display:flex; justify-content:space-between;">
+              <b>QTD: ${i.quantidade}</b>
+              ${isFin ? `<b>${fMoeda(i.price * i.quantidade)}</b>` : ''}
+            </div>
+          </div>`;
         });
+
+        html += `</div>`;
+      } else {
+        html += `
+        <table style="width:100%; border-collapse:collapse; font-size:11px;">
+          <thead>
+            <tr style="background:#f4f4f4;">
+              ${comFoto ? '<th style="border:1px solid #ddd;">Foto</th>' : ''}
+              <th style="border:1px solid #ddd;">SKU / Produto</th>
+              <th style="border:1px solid #ddd;">Qtd</th>
+              ${isFin ? '<th style="border:1px solid #ddd;">Total</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+        `;
+
+        itens.forEach(i => {
+          html += `
+          <tr>
+            ${comFoto ? `
+              <td style="border:1px solid #ddd; text-align:center;">
+                <img src="${i.image || ''}" style="width:45px; height:45px; object-fit:contain;">
+              </td>` : ''}
+            <td style="border:1px solid #ddd;">
+              <b>${i.sku}</b><br><small>${i.name}</small>
+            </td>
+            <td style="border:1px solid #ddd; text-align:center;">${i.quantidade}</td>
+            ${isFin ? `<td style="border:1px solid #ddd; text-align:right;">${fMoeda(i.price * i.quantidade)}</td>` : ''}
+          </tr>`;
+        });
+
+        html += `</tbody></table>`;
+      }
+
+      /* ================= RODAPÉ ================= */
+
+      html += `
+      <div style="margin-top:25px; border:2px solid #d4af37; border-radius:14px; padding:14px;">
+      `;
+
+      if (!isFin) {
+        html += `
+        <div style="display:flex; justify-content:space-around; font-weight:bold;">
+          <span>MODELOS: ${itens.length}</span>
+          <span>PEÇAS: ${p.totalPecas || 0}</span>
+          <span>PESO: ${(p.pesoTotal || 0).toFixed(2)}g</span>
+        </div>`;
+      } else {
+        html += `
+        <div style="display:flex; justify-content:space-between;">
+          <div style="font-size:11px;">
+            Modelos: ${itens.length}<br>
+            Peças: ${p.totalPecas || 0}<br>
+            Peso: ${(p.pesoTotal || 0).toFixed(2)}g
+          </div>
+          <div style="text-align:right; font-size:11px;">
+            Subtotal: ${fMoeda(p.subtotal)}<br>
+            Descontos: -${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}<br>
+            Frete: ${fMoeda(p.frete||0)}<br>
+            <b style="font-size:18px;">TOTAL: ${fMoeda(p.total)}</b>
+          </div>
+        </div>`;
+      }
+
+      html += `</div></div>`;
+
+      const area = document.getElementById('print-area');
+      area.innerHTML = html;
+      setTimeout(() => window.print(), 700);
     });
+  });
 }
+
 /* PROMOÇÕES */
 async function abrirPainelPromocoes() {
     const [snapPromo, snapCats] = await Promise.all([db.ref('settings/promocao').once('value'), db.ref('categories').once('value')]);
