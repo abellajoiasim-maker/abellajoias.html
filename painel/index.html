@@ -23,7 +23,7 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
         #print-area { display: none; }
- @media print {
+@media print {
     @page { size: A4; margin: 10mm; }
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; }
@@ -31,8 +31,8 @@
     
     /* Layout de Boxes do Cabeçalho */
     .caixa-dados { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .caixa-dados td { border: 1px solid #000; padding: 8px; vertical-align: top; width: 50%; font-size: 11px; }
-    .titulo-box { font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px; border-bottom: 1px solid #eee; }
+    .caixa-dados td { border: 1px solid #000; padding: 8px; vertical-align: top; width: 50%; font-size: 11px; line-height: 1.5; }
+    .titulo-box { font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px; border-bottom: 1px solid #000; }
 
     /* Layout Grid */
     .grid-romaneio { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
@@ -44,7 +44,7 @@
     .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
     .tab-romaneio th { background: #f2f2f2; font-size: 10px; }
 }
-    </style>
+</style>
 </head>
 <body>
 
@@ -150,25 +150,24 @@
 
 <div class="mt-6 pt-4 border-t border-[#222]">
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
-        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
-        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 hover:bg-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
         
-        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
-        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
-        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[10px]" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 hover:bg-blue-800 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
       </div>
 
       <div class="flex flex-wrap gap-2 justify-between">
-        <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR SEM SALVAR</button>
-        <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES NO PEDIDO</button>
+        <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR</button>
+        <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
       </div>
     </div>
   </div>
 </div>
 
 <div id="print-area"></div>
-
 <script>
 /* CONFIGURAÇÃO */
 const firebaseConfig = {
@@ -393,42 +392,42 @@ function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
         db.ref('settings/empresa').once('value', sEmp => {
-            const emp = sEmp.val() || {};
+            const emp = sEmp.val() || { nome: "Abella Joias", whats: "(xx) xxxxx-xxxx", parcelas: 3 };
             const itensArr = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
             const isFinanceiro = [2, 3, 5, 6].includes(tipo);
 
             let html = `
             <div style="font-family: Arial; color: #000; padding: 10px;">
                 <div style="text-align: center; margin-bottom: 10px;">
-                    <h1 style="font-size: 38px; margin: 0; font-weight: 900; text-transform: uppercase;">${emp.nome || 'ABELLA JOIAS'}</h1>
+                    <h1 style="font-size: 38px; margin: 0; font-weight: 900; text-transform: uppercase;">${emp.nome}</h1>
                     <p style="font-size: 14px; margin: 2px 0; font-weight: bold;">ATACADO DE JOIAS NO BRUTO</p>
-                    <p style="font-size: 13px; margin: 2px 0;">WHATSAPP: ${emp.whats || ''}</p>
+                    <p style="font-size: 13px; margin: 2px 0;">WHATSAPP: ${emp.whats}</p>
                 </div>
 
                 <table class="caixa-dados">
                     <tr>
                         <td>
-                            <span class="titulo-box">Dados do Cliente</span>
+                            <span class="titulo-box">DADOS DO CLIENTE</span>
                             <b>Nome:</b> ${p.cliente?.nome || ''}<br>
-                            <b>Telefone:</b> ${p.cliente?.telefone || p.cliente?.tel || ''}
+                            <b>Telefone:</b> ${p.cliente?.telefone || ''}
                         </td>
                         <td>
-                            <span class="titulo-box">Dados do Local de Entrega</span>
-                            <b>Nome:</b> ${p.cliente?.nome || ''}<br>
-                            <b>Rua:</b> ${p.entrega?.rua || ''}, <b>nº:</b> ${p.entrega?.n || 'S/N'}<br>
-                            <b>Bairro:</b> ${p.entrega?.bairro || ''}<br>
+                            <span class="titulo-box">DADOS DO LOCAL DE ENTREGA</span>
+                            <b>Nome:</b> ${p.entrega?.nomeEntrega || p.cliente?.nome || ''}<br>
+                            <b>Rua:</b> ${p.entrega?.rua || ''}<br>
+                            <b>nº:</b> ${p.entrega?.num || 'S/N'} &nbsp;&nbsp; <b>Bairro:</b> ${p.entrega?.bairro || ''}<br>
                             <b>Cidade:</b> ${p.entrega?.cidade || ''}
                         </td>
                     </tr>
                 </table>`;
 
-            // CONTEÚDO: GRID (Tipos 4, 5, 6)
+            // RENDERIZAÇÃO DE ITENS (GRID OU TABELA)
             if (tipo >= 4) {
                 html += `<div class="grid-romaneio">`;
                 itensArr.forEach(i => {
                     html += `
                     <div class="grid-item">
-                        <img src="${i.image || i.foto || ''}" onerror="this.style.visibility='hidden'">
+                        <img src="${i.image || i.foto || ''}">
                         <div style="border-top: 1px solid #eee; padding-top:4px">
                             <b>${i.sku || 'S/SKU'}</b><br>
                             ${isFinanceiro ? `<span style="font-size:8px">${i.name || ''}</span><br>
@@ -439,9 +438,7 @@ function imprimirRomaneio(id, tipo) {
                     </div>`;
                 });
                 html += `</div>`;
-            } 
-            // CONTEÚDO: TABELA (Tipos 1, 2, 3)
-            else {
+            } else {
                 html += `<table class="tab-romaneio"><thead><tr>`;
                 if (tipo === 3) html += `<th>Foto</th>`;
                 html += `<th>SKU</th><th>Produto</th><th>Peso</th>`;
@@ -450,7 +447,7 @@ function imprimirRomaneio(id, tipo) {
 
                 itensArr.forEach(i => {
                     html += `<tr>`;
-                    if (tipo === 3) html += `<td style="text-align:center"><img src="${i.image || i.foto || ''}" style="width:45px; height:45px; object-fit:contain"></td>`;
+                    if (tipo === 3) html += `<td style="text-align:center"><img src="${i.image || i.foto || ''}" style="width:45px"></td>`;
                     html += `<td>${i.sku || ''}</td>`;
                     html += `<td>${i.name || ''}</td>`;
                     html += `<td>${(i.peso || 0).toFixed(2)}g</td>`;
@@ -463,11 +460,10 @@ function imprimirRomaneio(id, tipo) {
                 html += `</tbody></table>`;
             }
 
-            // RODAPÉ FINANCEIRO CONDICIONAL
+            // RESUMO FINANCEIRO (LÓGICA DO CARRINHO)
             html += `<div style="margin-top: 15px; border: 1px solid #000; padding: 10px;">`;
             
             if (!isFinanceiro) {
-                // Rodapé Simplificado (Conferência)
                 html += `
                 <div style="display: flex; justify-content: space-between; font-size: 13px;">
                     <span><b>Qtd de Itens:</b> ${itensArr.length}</span>
@@ -475,21 +471,23 @@ function imprimirRomaneio(id, tipo) {
                     <span><b>Peso Total:</b> ${(p.pesoTotal || 0).toFixed(2)}g</span>
                 </div>`;
             } else {
-                // Rodapé Completo (Financeiro)
+                const total = p.total || 0;
+                const parcelasStr = p.pagamento === 'Cartão' ? ` (${emp.parcelas}x de ${fMoeda(total / emp.parcelas)})` : '';
+                
                 html += `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 12px;">
                     <div>
                         <b>Qtd de Itens:</b> ${itensArr.length}<br>
                         <b>Qtd de Peças:</b> ${p.totalPecas || 0}<br>
                         <b>Peso Total:</b> ${(p.pesoTotal || 0).toFixed(2)}g<br>
-                        <b>Pagamento:</b> ${p.metodoPagamento === 'cartao' ? `Cartão (${emp.parcelas || 1}x)` : 'PIX'}
+                        <b>Pagamento:</b> ${p.pagamento || 'A combinar'}${parcelasStr}
                     </div>
                     <div style="text-align: right; line-height: 1.6;">
-                        Subtotal: ${fMoeda(p.subtotal)}<br>
+                        Subtotal Bruto: ${fMoeda(p.subtotal)}<br>
                         Desc. Promocional: - ${fMoeda(p.descontoPromo)}<br>
                         ${p.descontoPix > 0 ? `Desc. PIX: - ${fMoeda(p.descontoPix)}<br>` : ''}
                         Frete: ${fMoeda(p.frete)}<br>
-                        <b style="font-size: 18px;">TOTAL FINAL: ${fMoeda(p.total)}</b>
+                        <b style="font-size: 18px;">TOTAL FINAL: ${fMoeda(total)}</b>
                     </div>
                 </div>`;
             }
@@ -500,7 +498,6 @@ function imprimirRomaneio(id, tipo) {
         });
     });
 }
-
 /* PROMOÇÕES */
 async function abrirPainelPromocoes() {
     const [snapPromo, snapCats] = await Promise.all([db.ref('settings/promocao').once('value'), db.ref('categories').once('value')]);
