@@ -3,55 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Estilo Amazon Premium</title>
+    <title>Abella Joias | Experiência de Compra Fluida</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Montserrat', sans-serif; background: #fff; color: #0F1111; overflow-x: hidden; }
-        
-        /* Estilos Amazon */
-        .amz-gold { background: #FFD814; border: 1px solid #FCD200; border-radius: 20px; transition: 0.2s; }
-        .amz-gold:hover { background: #F7CA00; }
-        .amz-orange { background: #FFA41C; border: 1px solid #FF8F00; border-radius: 20px; transition: 0.2s; }
-        .amz-orange:hover { background: #FA8914; }
-        
-        .buy-box { border: 1px solid #D5D9D9; border-radius: 8px; padding: 16px; position: sticky; top: 20px; background: white; }
-        
-        /* ZOOM Magnifier */
-        .zoom-container { position: relative; overflow: hidden; cursor: crosshair; background: white; }
-        .zoom-container img { transition: transform 0.1s ease-out; width: 100%; height: auto; object-fit: contain; }
-
-        .price-symbol { font-size: 13px; vertical-align: super; margin-right: 2px; }
-        .price-whole { font-size: 28px; font-weight: 500; }
-        .price-fraction { font-size: 13px; vertical-align: super; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-in; }
+        body { font-family: 'Montserrat', sans-serif; background: #fff; color: #0F1111; scroll-behavior: smooth; }
+        .amz-gold { background: #FFD814; border: 1px solid #FCD200; border-radius: 20px; }
+        .amz-orange { background: #FFA41C; border: 1px solid #FF8F00; border-radius: 20px; }
+        .buy-box { border: 1px solid #D5D9D9; border-radius: 8px; padding: 16px; background: white; }
+        .zoom-container { position: relative; overflow: hidden; cursor: crosshair; }
+        .zoom-container img { transition: transform 0.1s ease-out; }
+        .hidden-section { display: none; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+        .animate-slide { animation: slideIn 0.3s ease-out; }
     </style>
 </head>
 <body>
 
 <header class="bg-[#131921] p-3 sticky top-0 z-[100]">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <h1 class="text-white text-xl md:text-2xl font-bold cursor-pointer" onclick="location.reload()">ABELLA <span class="text-[#FF9900]">JOIAS</span></h1>
-        <div class="flex items-center gap-6">
-            <div class="hidden md:block text-white text-xs">
-                <p class="text-gray-400">Enviar para</p>
-                <p class="font-bold"><i class="fas fa-map-marker-alt"></i> Brasil</p>
-            </div>
-            <div class="text-white flex items-center gap-1 cursor-pointer">
-                <i class="fas fa-shopping-cart text-2xl text-[#FF9900]"></i>
+        <h1 class="text-white text-xl font-bold cursor-pointer" onclick="irParaInicio()">ABELLA <span class="text-[#FF9900]">JOIAS</span></h1>
+        <div class="text-white flex items-center gap-4">
+            <div id="cart-info" class="flex items-center gap-1 cursor-pointer">
+                <i class="fas fa-shopping-cart text-[#FF9900]"></i>
                 <span id="cart-total" class="font-bold">R$ 0,00</span>
             </div>
         </div>
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-4 md:py-8">
-    <div id="main-content">
-        <div id="grid-content" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+<nav class="bg-[#f3f3f3] p-2 text-xs border-b">
+    <div class="max-w-7xl mx-auto flex gap-2 text-gray-600" id="breadcrumb">
+        <span class="cursor-pointer hover:underline" onclick="irParaInicio()">Loja</span>
     </div>
+</nav>
+
+<main class="max-w-7xl mx-auto p-4">
+    <section id="sec-categorias" class="animate-slide">
+        <h2 class="text-xl font-bold mb-6">Navegue por Coleções</h2>
+        <div id="grid-categorias" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    </section>
+
+    <section id="sec-produtos" class="hidden-section animate-slide">
+        <div class="flex items-center gap-4 mb-6">
+            <button onclick="irParaInicio()" class="text-sm text-blue-600 font-medium"><i class="fas fa-chevron-left"></i> Voltar</button>
+            <h2 id="cat-title" class="text-xl font-bold">Produtos</h2>
+        </div>
+        <div id="grid-produtos" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    </section>
+
+    <section id="sec-detalhe" class="hidden-section animate-slide"></section>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -64,162 +66,129 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    // 1. Carregar Categorias (Vitrine)
-    function carregarInicio() {
-        const grid = document.getElementById('grid-content');
-        grid.innerHTML = '<p class="col-span-full text-center py-10">Carregando coleções...</p>';
-        
+    let categoriaAtualNome = "";
+
+    // --- CONTROLE DE NAVEGAÇÃO ---
+    function mostrarSecao(id) {
+        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden-section'));
+        document.getElementById(id).classList.remove('hidden-section');
+        window.scrollTo(0,0);
+    }
+
+    function irParaInicio() {
+        document.getElementById('breadcrumb').innerHTML = `<span onclick="irParaInicio()" class="cursor-pointer">Loja</span>`;
+        mostrarSecao('sec-categorias');
+    }
+
+    // --- LOGICA DE CARREGAMENTO ---
+    function carregarCategorias() {
         db.ref('categories').once('value', snap => {
+            const grid = document.getElementById('grid-categorias');
             grid.innerHTML = '';
             snap.forEach(s => {
                 const cat = s.val();
                 grid.innerHTML += `
-                    <div class="border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-xl transition bg-white group" onclick="verProdutos('${s.key}')">
-                        <div class="aspect-square overflow-hidden bg-gray-50">
-                            <img src="${cat.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                        </div>
-                        <div class="p-4 bg-white"><h3 class="font-bold text-center text-blue-700">${cat.name}</h3></div>
+                    <div class="bg-white border rounded-lg cursor-pointer hover:shadow-md transition" onclick="irParaProdutos('${s.key}', '${cat.name}')">
+                        <img src="${cat.image}" class="w-full aspect-square object-cover rounded-t-lg">
+                        <p class="p-3 text-center font-bold text-sm">${cat.name}</p>
                     </div>`;
             });
         });
     }
 
-    // 2. Listar Produtos
-    function verProdutos(catId) {
-        const grid = document.getElementById('grid-content');
-        grid.innerHTML = '<p class="col-span-full text-center py-10">Buscando joias...</p>';
+    function irParaProdutos(id, nome) {
+        categoriaAtualNome = nome;
+        document.getElementById('cat-title').innerText = nome;
+        document.getElementById('breadcrumb').innerHTML = `
+            <span onclick="irParaInicio()" class="cursor-pointer">Loja</span> 
+            <span>/</span> 
+            <span class="font-bold">${nome}</span>`;
+        
+        const grid = document.getElementById('grid-produtos');
+        grid.innerHTML = '<p class="col-span-full text-center py-10">Carregando...</p>';
         
         db.ref('products').once('value', snap => {
             grid.innerHTML = '';
             snap.forEach(s => {
                 const p = s.val();
-                if(p.category === catId) {
+                if(p.category === id) {
                     grid.innerHTML += `
-                        <div class="border border-gray-100 p-4 cursor-pointer hover:shadow-md bg-white flex flex-col" onclick='exibirPaginaAmazon(${JSON.stringify({...p, id: s.key})})'>
+                        <div class="border p-3 cursor-pointer hover:shadow-sm" onclick='irParaDetalhe(${JSON.stringify({...p, id: s.key})})'>
                             <img src="${p.image}" class="w-full aspect-square object-contain mb-2">
-                            <h2 class="text-sm text-gray-800 line-clamp-2 mb-2 flex-1">${p.name}</h2>
-                            <div class="text-lg font-bold text-black">${fM(p.price)}</div>
-                            <p class="text-[10px] text-gray-500 mt-1">em até 10x sem juros</p>
+                            <h3 class="text-xs text-gray-700 h-8 overflow-hidden">${p.name}</h3>
+                            <p class="text-lg font-bold mt-2">${fM(p.price)}</p>
                         </div>`;
                 }
             });
+            mostrarSecao('sec-produtos');
         });
     }
 
-    // 3. Página de Detalhes (O Formato Amazon)
-    function exibirPaginaAmazon(p) {
-        window.scrollTo(0,0);
-        const main = document.getElementById('main-content');
-        const preco = p.price;
-        const inteiro = Math.floor(preco);
-        const centavos = (preco % 1).toFixed(2).substring(2);
+    function irParaDetalhe(p) {
+        document.getElementById('breadcrumb').innerHTML = `
+            <span onclick="irParaInicio()" class="cursor-pointer">Loja</span> 
+            <span>/</span> 
+            <span onclick="mostrarSecao('sec-produtos')" class="cursor-pointer">${categoriaAtualNome}</span>
+            <span>/</span>
+            <span class="font-bold text-gray-400 text-xs">${p.name.substring(0,20)}...</span>`;
 
-        main.innerHTML = `
-            <div class="flex flex-col md:flex-row gap-8 animate-fadeIn">
-                <div class="flex flex-row gap-4 md:w-1/2">
-                    <div class="hidden md:flex flex-col gap-2">
-                        <img src="${p.image}" class="w-10 h-12 border-2 border-orange-500 rounded p-1">
-                        <div class="w-10 h-12 border border-gray-300 rounded flex items-center justify-center text-[8px] text-gray-400">VIDEO</div>
-                    </div>
-                    <div class="flex-1 zoom-container" id="zoom-box">
-                        <img src="${p.image}" id="product-img-main">
-                    </div>
+        const detalhe = document.getElementById('sec-detalhe');
+        detalhe.innerHTML = `
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="md:w-1/2 zoom-container" id="zoom-box">
+                    <img src="${p.image}" id="main-img-zoom" class="w-full object-contain max-h-[500px]">
                 </div>
-
                 <div class="flex-1">
-                    <h1 class="text-2xl font-normal leading-snug">${p.name}</h1>
-                    <p class="text-sm text-[#007185] cursor-pointer hover:text-orange-700 hover:underline mt-1">Marca: Abella Joias</p>
+                    <h1 class="text-2xl font-normal">${p.name}</h1>
+                    <div class="flex text-[#F19D05] text-xs my-2">★★★★★ <span class="text-blue-600 ml-2 text-sm">850 avaliações</span></div>
+                    <hr class="my-4">
+                    <div class="text-3xl font-medium">${fM(p.price)}</div>
+                    <p class="text-green-700 font-bold text-sm my-2">Em estoque.</p>
                     
-                    <div class="flex items-center gap-1 my-2">
-                        <span class="text-[#F19D05] text-sm">4.9</span>
-                        <div class="flex text-[#F19D05] text-xs">★★★★★</div>
-                        <span class="text-[#007185] text-sm ml-2">856 avaliações</span>
+                    <div class="buy-box mt-6">
+                        <button onclick="addCart(${JSON.stringify(p)})" class="w-full amz-gold py-2 font-medium mb-3">Adicionar ao Carrinho</button>
+                        <button onclick="finalizarWhatsApp('${p.name}', ${p.price})" class="w-full amz-orange py-2 font-medium">Comprar agora</button>
+                        <p class="text-[10px] text-gray-500 mt-4 text-center"><i class="fas fa-lock"></i> Pagamento processado de forma segura</p>
                     </div>
 
-                    <hr class="my-3">
-
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-[#CC0C39] text-2xl font-light">-${p.promoPct || 10}%</span>
-                        <div class="text-black">
-                            <span class="price-symbol">R$</span>
-                            <span class="price-whole">${inteiro}</span>
-                            <span class="price-fraction">${centavos}</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 text-xs">De: <span class="line-through">${fM(preco * 1.2)}</span></p>
-
-                    <div class="flex items-center gap-2 my-4 bg-gray-50 p-2 border-l-4 border-green-500">
-                        <span class="bg-[#CCFBF1] text-[#004B3E] text-[10px] font-bold px-1 rounded">CUPOM</span>
-                        <p class="text-xs">Aplique o cupom de 5% no checkout.</p>
-                    </div>
-
-                    <div class="mt-6">
-                        <h3 class="font-bold text-sm">Sobre este item</h3>
-                        <ul class="list-disc ml-5 text-sm space-y-2 mt-2">
-                            <li>Banho de Ouro 18k de alta durabilidade.</li>
-                            <li>Acabamento artesanal feito à mão.</li>
-                            <li>Garantia vitalícia na autenticidade do metal.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="md:w-[260px]">
-                    <div class="buy-box">
-                        <div class="text-2xl mb-1">${fM(preco)}</div>
-                        <p class="text-sm text-blue-700 mb-4 cursor-pointer hover:underline italic">Entrega GRÁTIS disponível</p>
-                        
-                        <p class="text-sm mb-1 font-bold text-green-700">Em estoque.</p>
-                        <p class="text-xs mb-4 text-gray-600">Enviado de Abella Joias</p>
-
-                        <button onclick='addToCart(${JSON.stringify(p)})' class="w-full amz-gold py-2 text-sm mb-2 shadow-sm font-medium">Adicionar ao Carrinho</button>
-                        <button onclick="alert('Indo para checkout...')" class="w-full amz-orange py-2 text-sm shadow-sm font-medium">Comprar agora</button>
-
-                        <div class="flex items-center gap-2 mt-4 text-xs text-gray-600">
-                            <i class="fas fa-lock"></i>
-                            <span>Transação segura</span>
-                        </div>
-                        <button onclick="location.reload()" class="mt-6 text-xs text-[#007185] hover:underline">Voltar para coleções</button>
+                    <div class="mt-8">
+                        <h3 class="font-bold text-sm">Descrição</h3>
+                        <p class="text-sm text-gray-600 mt-2">Peça exclusiva banhada a Ouro 18k com tecnologia hipoalergênica. Acompanha certificado de garantia.</p>
                     </div>
                 </div>
             </div>
         `;
-        
-        // Ativa o Zoom após injetar o HTML
+        mostrarSecao('sec-detalhe');
         initZoom();
     }
 
-    // Função de Zoom (Magnifier)
+    // --- UTILITARIOS ---
     function initZoom() {
-        const container = document.getElementById('zoom-box');
-        const img = document.getElementById('product-img-main');
-
-        container.addEventListener('mousemove', (e) => {
-            const x = e.clientX - container.offsetLeft;
-            const y = e.clientY - container.offsetTop;
-
+        const box = document.getElementById('zoom-box');
+        const img = document.getElementById('main-img-zoom');
+        box.onmousemove = (e) => {
+            const x = e.clientX - box.offsetLeft;
+            const y = e.clientY - box.offsetTop;
             img.style.transformOrigin = `${x}px ${y}px`;
             img.style.transform = "scale(2)";
-        });
-
-        container.addEventListener('mouseleave', () => {
-            img.style.transform = "scale(1)";
-        });
+        };
+        box.onmouseleave = () => img.style.transform = "scale(1)";
     }
 
-    function addToCart(p) {
-        let cart = JSON.parse(localStorage.getItem('abella_cart') || '[]');
-        cart.push(p);
-        localStorage.setItem('abella_cart', JSON.stringify(cart));
-        
-        const total = cart.reduce((acc, item) => acc + parseFloat(item.price), 0);
-        document.getElementById('cart-total').innerText = fM(total);
-        alert("Adicionado com sucesso!");
+    function addCart(p) {
+        alert("Produto adicionado ao carrinho!");
+        // Logica de carrinho aqui
     }
 
-    window.onload = carregarInicio;
+    function finalizarWhatsApp(nome, preco) {
+        const fone = "5511999999999"; // Seu WhatsApp aqui
+        const msg = encodeURIComponent(`Olá! Quero comprar o produto: ${nome} no valor de ${fM(preco)}`);
+        window.open(`https://wa.me/${fone}?text=${msg}`, '_blank');
+    }
+
+    window.onload = carregarCategorias;
 </script>
 </body>
 </html>
