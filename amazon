@@ -26,14 +26,14 @@
         .btn-add { background: var(--navy); color: #fff; width: 100%; padding: 14px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; transition: 0.3s; margin-top: auto; }
         .btn-add:hover { background: var(--accent); }
 
-         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-         .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
 <body>
 
 <header class="bg-white border-b border-gray-100 p-6 text-center sticky top-0 z-50">
-    <h1 class="serif text-4xl" id="store-name">LUARY <span class="text-[#d4af37]">SHOP</span></h1>
+    <h1 class="serif text-4xl cursor-pointer" onclick="carregarInicio()">LUARY <span class="text-[#d4af37]">SHOP</span></h1>
     <div class="flex justify-center gap-8 mt-4">
         <button onclick="carregarInicio()" class="text-[11px] font-bold uppercase hover:text-[#d4af37]">Coleções</button>
         <a href="carrinho.html" class="text-[11px] font-bold uppercase text-[#d4af37]">Carrinho (<span id="cart-total">R$ 0,00</span>)</a>
@@ -56,16 +56,23 @@
     const db = firebase.database();
     let configLoja = {};
 
+    // Função auxiliar para formatar moeda
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
     function carregarConfig() {
         db.ref('settings').on('value', snap => {
             configLoja = snap.val() || {};
             carregarInicio();
+            atualizarTotalCarrinho();
         });
     }
 
     function carregarInicio() {
+        const grid = document.getElementById('grid-content');
+        grid.classList.remove('grid-cols-1');
+        grid.classList.add('grid-cols-2', 'md:grid-cols-4');
+        
         db.ref('categories').on('value', snap => {
-            const grid = document.getElementById('grid-content');
             grid.innerHTML = '';
             snap.forEach(s => {
                 const cat = s.val();
@@ -77,155 +84,98 @@
             });
         });
     }
-function exibirDetalhesProduto(p, sKey) {
-    const grid = document.getElementById('grid-content');
-    const descPix = configLoja.empresa?.descPix || 0;
-    const precoPix = p.price * (1 - (descPix/100));
 
-    // Limpa a tela e monta o layout Amazon
-    grid.classList.remove('grid-cols-2', 'md:grid-cols-4');
-    grid.classList.add('grid-cols-1'); 
-    
-    grid.innerHTML = `
-        <div class="flex flex-col md:flex-row gap-8 bg-white p-4 animate-fadeIn">
-            <div class="flex flex-row gap-4 md:w-1/2">
-                <div class="flex flex-col gap-2 w-16">
-                    <img src="${p.image}" class="border border-[#c5a059] rounded p-1 cursor-pointer opacity-100 hover:opacity-80">
-                    <div class="border border-gray-200 rounded p-1 w-full aspect-square bg-gray-50 text-[8px] flex items-center justify-center text-center">MAIS FOTOS</div>
-                </div>
-                <div class="flex-1">
-                    <img src="${p.image}" class="w-full object-contain max-h-[500px]" id="main-img">
-                </div>
-            </div>
-
-            <div class="flex-1 border-b md:border-b-0 pb-6">
-                <h1 class="text-2xl font-medium leading-tight mb-1">${p.name}</h1>
-                <p class="text-sm text-blue-600 hover:underline cursor-pointer mb-2">Marca: Abella Joias</p>
-                <div class="flex items-center gap-1 mb-4 text-[#FFA41C]">
-                    <span class="text-sm font-bold">4.8</span> <span>★★★★★</span>
-                    <span class="text-blue-600 text-sm ml-2 underline">128 avaliações</span>
-                </div>
-                <hr class="my-4">
-                
-                <div class="flex items-baseline gap-2">
-                    <span class="text-red-600 text-2xl font-light">-${p.promoPct || 0}%</span>
-                    <span class="text-3xl font-semibold">${fM(p.price)}</span>
-                </div>
-                <p class="text-gray-500 text-xs uppercase mb-4">De: <span class="line-through">${fM(p.price * 1.2)}</span></p>
-
-                <div class="flex items-center gap-2 bg-orange-50 border border-orange-200 p-2 rounded w-fit mb-6">
-                    <input type="checkbox" class="w-4 h-4 accent-orange-600">
-                    <span class="text-sm">Aplicar cupom de <span class="font-bold text-green-700">R$ 10,00</span></span>
-                </div>
-
-                <h3 class="font-bold text-sm mb-2">Sobre este item:</h3>
-                <ul class="list-disc ml-5 text-sm space-y-1 text-gray-800">
-                    <li>Semijoia banhada a ouro 18k.</li>
-                    <li>Tecnologia antialérgica de alta qualidade.</li>
-                    <li>Garantia de 12 meses no banho.</li>
-                </ul>
-            </div>
-
-            <div class="w-full md:w-[260px] border border-gray-300 rounded-xl p-4 shadow-sm h-fit">
-                <div class="text-2xl font-medium mb-1">${fM(p.price)}</div>
-                <p class="text-sm text-green-700 font-bold mb-4 italic">Entrega GRÁTIS na sua primeira compra</p>
-                
-                <p class="text-sm mb-1">Entrega <span class="font-bold">24 - 25 de Fev.</span></p>
-                <p class="text-xs text-blue-600 mb-4 flex items-center gap-1">📍 Enviar para Bela Vista 01319</p>
-                
-                <div class="text-lg text-green-600 font-bold mb-4">Em estoque.</div>
-
-                <div class="mb-4">
-                    <label class="text-xs">Quantidade:</label>
-                    <select class="w-full bg-gray-100 border border-gray-300 rounded-lg text-sm p-1 shadow-sm">
-                        <option>1</option><option>2</option><option>3</option>
-                    </select>
-                </div>
-
-                <button onclick='addCart(${JSON.stringify(p)})' class="w-full bg-[#FFD814] hover:bg-[#F7CA00] py-2 rounded-full mb-2 text-sm shadow-sm transition">Adicionar ao Carrinho</button>
-                <button class="w-full bg-[#FFA41C] hover:bg-[#FA8914] py-2 rounded-full text-sm shadow-sm transition font-medium">Comprar agora</button>
-                
-                <div class="text-[11px] mt-4 space-y-1">
-                    <div class="flex justify-between text-gray-500"><span>Enviado por</span><span class="text-black">Abella Joias</span></div>
-                    <div class="flex justify-between text-gray-500"><span>Vendido por</span><span class="text-black">Abella Joias</span></div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function verProdutos(catId, catName) {
-    db.ref('products').once('value', snap => {
+    function exibirDetalhesProduto(p) {
+        window.scrollTo({top: 0, behavior: 'smooth'});
         const grid = document.getElementById('grid-content');
-        grid.innerHTML = '';
-        const promoAtiva = configLoja.promocoes?.ativa || false;
+        
+        grid.classList.remove('grid-cols-2', 'md:grid-cols-4');
+        grid.classList.add('grid-cols-1'); 
+        
+        grid.innerHTML = `
+            <button onclick="carregarInicio()" class="mb-4 text-sm text-gray-500 hover:text-navy flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Voltar para a loja
+            </button>
+            <div class="flex flex-col md:flex-row gap-8 bg-white p-4 animate-fadeIn">
+                <div class="flex flex-row gap-4 md:w-1/2">
+                    <div class="flex flex-col gap-2 w-16">
+                        <img src="${p.image}" class="border border-[#d4af37] rounded p-1 cursor-pointer">
+                    </div>
+                    <div class="flex-1">
+                        <img src="${p.image}" class="w-full object-contain max-h-[500px]" id="main-img">
+                    </div>
+                </div>
 
-        snap.forEach(s => {
-            const p = s.val();
-            if(p.category === catId) {
-                // Trata múltiplas imagens (separadas por vírgula no admin)
-                const fotos = p.image.split(',').map(img => img.trim());
-                
-                db.ref(`categories/${catId}`).once('value', catSnap => {
-                    const catData = catSnap.val() || {};
+                <div class="flex-1 border-b md:border-b-0 pb-6">
+                    <h1 class="text-2xl font-medium leading-tight mb-1 text-navy">${p.name}</h1>
+                    <p class="text-sm text-blue-600 hover:underline cursor-pointer mb-2 italic">Visite a loja Abella Joias</p>
+                    <div class="flex items-center gap-1 mb-4 text-[#FFA41C]">
+                        <span class="text-sm font-bold">4.8</span> <span>★★★★★</span>
+                        <span class="text-blue-600 text-sm ml-2 underline">128 avaliações</span>
+                    </div>
+                    <hr class="my-4">
                     
-                    // Lógica de Desconto: Prioriza o desconto individual do produto, se não houver, usa o da categoria
-                    let desconto = promoAtiva ? (p.promoPct || catData.promoPct || 0) : 0;
-                    
-                    const precoOriginal = p.price;
-                    const precoComDesconto = precoOriginal * (1 - (desconto/100));
-                    const numParcelas = configLoja.empresa?.parcelas || 1;
-                    const descPix = configLoja.empresa?.descPix || 0;
-                    const precoPix = precoComDesconto * (1 - (descPix/100));
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-red-600 text-2xl font-light">-${p.promoPct || 0}%</span>
+                        <span class="text-3xl font-semibold">${fM(p.price)}</span>
+                    </div>
+                    <p class="text-gray-500 text-xs uppercase mb-4">De: <span class="line-through">${fM(p.price * 1.25)}</span></p>
 
-                    let carouselHtml = '';
-                    fotos.forEach(f => {
-                        carouselHtml += `<div class="carousel-item"><img src="${f}"></div>`;
-                    });
+                    <div class="flex items-center gap-2 bg-orange-50 border border-orange-200 p-2 rounded w-fit mb-6">
+                        <input type="checkbox" class="w-4 h-4 accent-orange-600">
+                        <span class="text-sm">Aplicar cupom de <span class="font-bold text-green-700">R$ 5,00</span></span>
+                    </div>
 
-                    grid.innerHTML += `
-                        <div class="card-luary p-4">
-                            ${desconto > 0 ? `
-                                <span class="badge-promo" style="background:${catData.promoColor || '#d4af37'}; color:${catData.promoTextColor || '#ffffff'}">
-                                    ${catData.promoTag || 'OFERTA'}
-                                </span>` : ''}
+                    <h3 class="font-bold text-sm mb-2">Sobre este item:</h3>
+                    <ul class="list-disc ml-5 text-sm space-y-1 text-gray-800">
+                        <li>Alta qualidade e acabamento Premium.</li>
+                        <li>Design exclusivo Luary Shop.</li>
+                        <li>Ideal para presentear quem você ama.</li>
+                    </ul>
+                </div>
 
-                            <div class="carousel-container">${carouselHtml}</div>
-                            
-                            ${fotos.length > 1 ? '<div class="indicator"><div class="dot"></div><div class="dot"></div></div>' : ''}
-                            
-                            <div class="flex-1 mt-2 px-1">
-                                <h3 class="text-[11px] font-bold uppercase h-8 overflow-hidden leading-tight text-navy">${p.name}</h3>
-                                
-                                <div class="mb-3 mt-1">
-                                    ${desconto > 0 ? `
-                                        <span class="text-[10px] line-through text-gray-400 block mb-[-4px]">
-                                            ${precoOriginal.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
-                                        </span>` : ''}
-                                    
-                                    <div class="text-xl font-black text-navy">
-                                        ${precoComDesconto.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
-                                    </div>
-                                    
-                                    <div class="text-[10px] font-medium text-gray-500">
-                                        ou ${numParcelas}x de ${(precoComDesconto/numParcelas).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
-                                    </div>
+                <div class="w-full md:w-[260px] border border-gray-300 rounded-xl p-4 shadow-sm h-fit">
+                    <div class="text-2xl font-medium mb-1">${fM(p.price)}</div>
+                    <p class="text-sm text-green-700 font-bold mb-4 italic">Entrega GRÁTIS disponível</p>
+                    <p class="text-sm mb-1">Entrega <span class="font-bold">2 a 5 dias úteis</span></p>
+                    <div class="text-lg text-green-600 font-bold mb-4">Em estoque.</div>
+                    <button onclick='addCart(${JSON.stringify(p)})' class="w-full bg-[#FFD814] hover:bg-[#F7CA00] py-2 rounded-full mb-2 text-sm shadow-sm transition">Adicionar ao Carrinho</button>
+                    <button class="w-full bg-[#FFA41C] hover:bg-[#FA8914] py-2 rounded-full text-sm shadow-sm transition font-medium">Comprar agora</button>
+                </div>
+            </div>`;
+    }
 
-                                    <div class="text-[10px] font-bold text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded border border-green-100">
-                                        ✨ ${precoPix.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} no PIX
-                                    </div>
+    function verProdutos(catId, catName) {
+        db.ref('products').once('value', snap => {
+            const grid = document.getElementById('grid-content');
+            grid.innerHTML = '';
+            const promoAtiva = configLoja.promocoes?.ativa || false;
+
+            snap.forEach(s => {
+                const p = s.val();
+                if(p.category === catId) {
+                    db.ref(`categories/${catId}`).once('value', catSnap => {
+                        const catData = catSnap.val() || {};
+                        let desconto = promoAtiva ? (p.promoPct || catData.promoPct || 0) : 0;
+                        const precoComDesconto = p.price * (1 - (desconto/100));
+
+                        grid.innerHTML += `
+                            <div class="card-luary p-4 cursor-pointer" onclick='exibirDetalhesProduto(${JSON.stringify({...p, price: precoComDesconto, id: s.key})})'>
+                                <div class="carousel-container">
+                                    <div class="carousel-item"><img src="${p.image}"></div>
                                 </div>
-                            </div>
-
-                            <button onclick='addCart(${JSON.stringify({...p, price: precoComDesconto, id: s.key})})' class="btn-add">
-                                Eu quero!
-                            </button>
-                        </div>`;
-                });
-            }
+                                <div class="flex-1 mt-2 px-1 text-center">
+                                    <h3 class="text-[11px] font-bold uppercase h-8 overflow-hidden text-navy">${p.name}</h3>
+                                    <div class="text-xl font-black text-navy mt-2">${fM(precoComDesconto)}</div>
+                                </div>
+                                <button class="btn-add mt-4">Ver Detalhes</button>
+                            </div>`;
+                    });
+                }
+            });
         });
-    });
-}
+    }
+
     function addCart(p) {
         let cart = JSON.parse(localStorage.getItem('luary_cart') || '[]');
         cart.push(p);
@@ -237,7 +187,7 @@ function verProdutos(catId, catName) {
     function atualizarTotalCarrinho() {
         const cart = JSON.parse(localStorage.getItem('luary_cart') || '[]');
         const total = cart.reduce((acc, item) => acc + parseFloat(item.price), 0);
-        document.getElementById('cart-total').innerText = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        document.getElementById('cart-total').innerText = fM(total);
     }
 
     window.onload = carregarConfig;
