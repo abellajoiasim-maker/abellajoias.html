@@ -3,123 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Atacado Premium</title>
+    <title>Abella Joias | Ultra Performance</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f4f7f6; color: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
         .serif { font-family: 'Cinzel', serif; }
-        .gold-brand { color: #b89552; }
-        .bg-gold { background: #b89552; }
         
-        /* Enterprise Light Cards */
+        /* Otimização de Renderização */
+        #gridLoja { content-visibility: auto; contain-intrinsic-size: 300px; }
+
         .card-enterprise { 
-            background: #ffffff; 
-            border-radius: 20px;
-            border: 1px solid #e5e7eb; 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
+            background: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .card-enterprise:hover { 
-            transform: translateY(-5px); 
-            border-color: #b89552; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-        }
+        .card-enterprise:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.05); }
         
-        .img-box {
-            width: 100%;
-            aspect-ratio: 1/1;
-            background: #f9fafb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
-        .card-enterprise:hover img { transform: scale(1.08); }
+        .img-box { aspect-ratio: 1/1; background: #f8fafc; border-radius: 12px; margin: 8px; overflow: hidden; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Sidebar Clean */
-        .sidebar-nav { position: sticky; top: 100px; max-height: calc(100vh - 120px); overflow-y: auto; }
-        .cat-btn { 
-            text-align: left; padding: 10px 15px; border-radius: 12px; font-size: 13px; 
-            font-weight: 500; color: #6b7280; transition: 0.3s;
-        }
-        .cat-btn:hover, .cat-btn.active { background: white; color: #b89552; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-
-        /* Modal Light */
-        .modal-overlay { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-        .modal-content { background: white; border-radius: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); border: 1px solid #f3f4f6; }
-
-        .btn-qty { width: 45px; height: 45px; border-radius: 15px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-qty:hover { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+        /* Esconder scrollbar mas manter funcionalidade */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .active-cat { background: white; color: #b89552; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-color: #b89552 !important; }
     </style>
 </head>
 <body>
 
-<header class="sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-gray-100">
+<header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-slate-100">
     <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
         <div>
-            <h1 class="serif text-xl font-bold tracking-tighter uppercase">ABELLA <span class="gold-brand">ATACADO</span></h1>
-            <p class="text-[9px] font-bold text-gray-400 tracking-[3px] uppercase">Joias no Bruto Premium</p>
+            <h1 class="serif text-xl font-bold tracking-tighter uppercase">ABELLA <span class="text-[#b89552]">ATACADO</span></h1>
+            <p id="statusInfo" class="text-[9px] font-bold text-slate-400 tracking-[2px] uppercase">Carregando catálogo...</p>
         </div>
 
-        <div class="flex items-center gap-6">
-            <div class="hidden md:flex flex-col items-end border-r pr-6 border-gray-100">
-                <span class="text-[9px] font-bold text-gray-400 uppercase">Status do Carrinho</span>
-                <span id="resumoTotal" class="text-sm font-black text-gray-900">R$ 0,00</span>
+        <div class="flex items-center gap-4">
+            <div id="resumoCart" class="hidden md:flex flex-col items-end pr-4 border-r border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400">SEU PEDIDO</span>
+                <span id="valorTotalHeader" class="text-sm font-black tracking-tighter">R$ 0,00</span>
             </div>
-            <button onclick="window.location.href='carrinho.html'" class="bg-black text-white px-6 py-3 rounded-2xl font-bold text-xs flex items-center gap-3 hover:bg-amber-700 transition shadow-lg shadow-gray-200">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="hidden sm:inline">FINALIZAR</span>
+            <button onclick="window.location.href='carrinho.html'" class="bg-slate-900 text-white p-3 md:px-6 rounded-2xl flex items-center gap-2 hover:bg-[#b89552] transition-all">
+                <i class="fas fa-shopping-bag text-sm"></i>
+                <span class="hidden md:block font-bold text-xs uppercase tracking-widest">Finalizar</span>
             </button>
         </div>
     </div>
 </header>
 
 <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row p-6 gap-8">
-    <aside class="w-full lg:w-64 sidebar-nav hidden lg:block">
-        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Categorias</h3>
-        <nav id="menuLateral" class="flex flex-col gap-1">
-            </nav>
+    <aside class="w-full lg:w-64 shrink-0">
+        <div class="sticky top-28">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Categorias</h3>
+            <nav id="menuLateral" class="flex flex-row lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-4 lg:pb-0">
+                </nav>
+        </div>
     </aside>
 
     <main class="flex-1">
-        <div class="bg-white p-4 rounded-2xl mb-8 border border-gray-100 flex items-center justify-between">
-            <div class="flex-1 pr-8">
-                <div class="flex justify-between text-[10px] font-bold mb-1 uppercase tracking-tighter">
-                    <span>Progresso Pedido Mínimo</span>
-                    <span id="txtFalta">Faltam R$ 800,00</span>
-                </div>
-                <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div id="barraMin" class="h-full bg-gold-brand transition-all duration-700 w-0" style="background-color: #b89552;"></div>
-                </div>
-            </div>
-            <i class="fas fa-info-circle text-gray-300"></i>
+        <div id="gridLoja" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
+            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
+            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
+            <div class="h-64 bg-white animate-pulse rounded-2xl"></div>
         </div>
 
-        <div id="gridLoja" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-            </div>
+        <div id="loadMore" class="h-20 flex items-center justify-center mt-10 text-slate-400 text-xs font-bold uppercase tracking-widest">
+            <i class="fas fa-circle-notch animate-spin mr-2"></i> Buscando mais produtos...
+        </div>
     </main>
 </div>
 
-<div id="modalCompra" class="fixed inset-0 z-[200] modal-overlay hidden flex items-center justify-center p-4">
-    <div class="modal-content w-full max-w-sm p-8 text-center animate-in fade-in zoom-in duration-300">
-        <div id="mImg" class="w-40 h-40 mx-auto rounded-3xl bg-gray-50 overflow-hidden mb-6 border border-gray-100"></div>
-        <h3 id="mNome" class="serif text-lg font-bold text-gray-900 uppercase">Nome do Produto</h3>
-        <p id="mPreco" class="text-amber-600 font-bold text-xl mt-1">R$ 0,00</p>
+<div id="modalCompra" class="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl scale-95 transition-transform duration-300">
+        <div id="mImg" class="w-full aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-6 border border-slate-100"></div>
+        <h3 id="mNome" class="serif text-lg font-bold text-slate-900 uppercase tracking-tight">Nome</h3>
+        <p id="mPreco" class="text-[#b89552] font-black text-2xl mt-1">R$ 0,00</p>
         
-        <div class="flex items-center justify-center gap-6 my-8">
-            <button onclick="mudarQtd(-1)" class="btn-qty text-xl"><i class="fas fa-minus"></i></button>
-            <span id="mVal" class="text-3xl font-black w-10">1</span>
-            <button onclick="mudarQtd(1)" class="btn-qty text-xl"><i class="fas fa-plus"></i></button>
+        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-2xl my-6">
+            <button onclick="mudarQtd(-1)" class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center active:scale-90 transition"><i class="fas fa-minus"></i></button>
+            <span id="mVal" class="text-2xl font-black">1</span>
+            <button onclick="mudarQtd(1)" class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center active:scale-90 transition"><i class="fas fa-plus"></i></button>
         </div>
         
-        <div class="flex flex-col gap-3">
-            <button id="btnAdd" class="w-full bg-black text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-amber-600 transition shadow-xl shadow-gray-200">Adicionar ao Pedido</button>
-            <button onclick="fecharModal()" class="text-gray-400 text-[10px] uppercase font-bold mt-2">Voltar ao catálogo</button>
-        </div>
+        <button id="btnAdd" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#b89552] transition-colors shadow-lg">Adicionar ao Carrinho</button>
+        <button onclick="fecharModal()" class="w-full text-slate-400 text-[10px] uppercase font-bold mt-4">Fechar</button>
     </div>
 </div>
 
@@ -128,132 +98,157 @@
 
 <script>
     const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const firebaseConfig = {
+    firebase.initializeApp({
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    };
-    firebase.initializeApp(firebaseConfig);
+    });
     const db = firebase.database();
 
-    let produtosBase = [];
-    let itemSelecionado = null;
-    const MIN_VAL = 800.00;
+    let dbItems = [];
+    let displayedItems = [];
+    let itemsPerPage = 20;
+    let currentPage = 1;
 
-    // --- FORÇA BRUTA DE CARREGAMENTO ---
-    function iniciar() {
-        console.log("Iniciando varredura Abella Joias...");
-        
-        // Categorias
-        db.ref('categories').on('value', snap => {
+    // --- CARREGAMENTO OTIMIZADO ---
+    async function init() {
+        // Categorias (Carrega uma vez)
+        db.ref('categories').once('value', snap => {
             const menu = document.getElementById('menuLateral');
-            menu.innerHTML = `<button onclick="renderizar(produtosBase)" class="cat-btn active">Todos os Brutos</button>`;
+            menu.innerHTML = `<button onclick="filterCat('all')" id="cat-all" class="cat-btn active-cat border border-transparent whitespace-nowrap">Todos os Brutos</button>`;
             snap.forEach(s => {
                 const c = s.val();
                 if(!c.paused) {
-                    menu.innerHTML += `<button onclick="filtrarCat('${s.key}')" class="cat-btn">${c.name}</button>`;
+                    menu.innerHTML += `<button onclick="filterCat('${s.key}')" id="cat-${s.key}" class="cat-btn border border-slate-100 lg:border-transparent whitespace-nowrap lg:w-full">${c.name}</button>`;
                 }
             });
         });
 
-        // Produtos
+        // Produtos (Busca os dados mas não renderiza todos de uma vez)
         db.ref('products').on('value', snap => {
-            produtosBase = [];
-            snap.forEach(s => {
-                produtosBase.push({id: s.key, ...s.val()});
-            });
-            renderizar(produtosBase);
-            atualizarContadores();
+            dbItems = [];
+            snap.forEach(s => dbItems.push({id: s.key, ...s.val()}));
+            document.getElementById('statusInfo').innerText = `${dbItems.length} Peças Disponíveis`;
+            resetAndRender();
+        });
+
+        // Listener de Scroll para Infinite Scroll
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                loadMoreItems();
+            }
         });
     }
 
-    function renderizar(lista) {
-        const grid = document.getElementById('gridLoja');
-        grid.innerHTML = ''; // Força a limpeza
-        
-        if(lista.length === 0) {
-            grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">Nenhum produto encontrado nesta coleção.</div>`;
-            return;
-        }
+    function resetAndRender() {
+        currentPage = 1;
+        document.getElementById('gridLoja').innerHTML = '';
+        renderPage();
+    }
 
-        lista.map(p => {
-            grid.innerHTML += `
-                <div class="card-enterprise flex flex-col cursor-pointer" onclick="abrirCompra('${p.id}')">
-                    <div class="img-box relative">
-                        ${p.promoPct > 0 ? `<span class="absolute top-3 right-3 bg-red-500 text-white text-[9px] px-2 py-1 rounded-lg font-bold">-${p.promoPct}% OFF</span>` : ''}
-                        <img src="${p.image}" loading="lazy">
-                    </div>
-                    <div class="p-5 text-center flex-1">
-                        <p class="text-[9px] text-gray-300 font-bold mb-1">REF: ${p.id.substring(0,6)}</p>
-                        <h3 class="text-[11px] font-bold text-gray-700 uppercase leading-tight h-8 overflow-hidden mb-4">${p.name}</h3>
-                        <div class="flex flex-col items-center">
-                            <span class="text-lg font-black text-gray-900 tracking-tighter">${fM(p.price)}</span>
-                            <span class="text-[9px] text-gray-400 font-medium">PREÇO NO BRUTO</span>
-                        </div>
-                    </div>
+    function renderPage() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageItems = dbItems.slice(start, end);
+        
+        const grid = document.getElementById('gridLoja');
+        
+        pageItems.forEach(p => {
+            const div = document.createElement('div');
+            div.className = "card-enterprise flex flex-col cursor-pointer";
+            div.onclick = () => abrirCompra(p.id);
+            div.innerHTML = `
+                <div class="img-box relative">
+                    <img src="${p.image}" loading="lazy">
+                </div>
+                <div class="p-4 pt-0 text-center">
+                    <p class="text-[8px] text-slate-400 font-bold uppercase mb-1">Ref: ${p.id.substring(0,6)}</p>
+                    <h3 class="text-[10px] font-bold text-slate-700 uppercase leading-tight h-8 overflow-hidden mb-2">${p.name}</h3>
+                    <span class="text-base font-black text-slate-900 tracking-tight">${fM(p.price)}</span>
                 </div>
             `;
+            grid.appendChild(div);
         });
+
+        if (end >= dbItems.length) {
+            document.getElementById('loadMore').classList.add('hidden');
+        } else {
+            document.getElementById('loadMore').classList.remove('hidden');
+        }
+    }
+
+    function loadMoreItems() {
+        if ((currentPage * itemsPerPage) < dbItems.length) {
+            currentPage++;
+            renderPage();
+        }
     }
 
     // --- DINÂMICA DE COMPRA ---
     function abrirCompra(id) {
-        const p = produtosBase.find(x => x.id === id);
-        itemSelecionado = p;
+        const p = dbItems.find(x => x.id === id);
         document.getElementById('mNome').innerText = p.name;
         document.getElementById('mPreco').innerText = fM(p.price);
         document.getElementById('mImg').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
         document.getElementById('mVal').innerText = "1";
         
-        document.getElementById('btnAdd').onclick = () => confirmarInclusao(p);
+        document.getElementById('btnAdd').onclick = () => {
+            const qtd = parseInt(document.getElementById('mVal').innerText);
+            let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+            const idx = cart.findIndex(i => i.id === p.id);
+            if(idx > -1) cart[idx].quantidade += qtd;
+            else cart.push({...p, quantidade: qtd});
+            localStorage.setItem('carrinho', JSON.stringify(cart));
+            fecharModal();
+            atualizarHeader();
+        };
+        
         document.getElementById('modalCompra').classList.remove('hidden');
+        setTimeout(() => document.querySelector('#modalCompra > div').classList.replace('scale-95', 'scale-100'), 10);
     }
 
     function mudarQtd(v) {
         let el = document.getElementById('mVal');
-        let n = parseInt(el.innerText) + v;
-        el.innerText = Math.max(1, n);
+        el.innerText = Math.max(1, parseInt(el.innerText) + v);
     }
 
     function fecharModal() {
-        document.getElementById('modalCompra').classList.add('hidden');
+        document.querySelector('#modalCompra > div').classList.replace('scale-100', 'scale-95');
+        setTimeout(() => document.getElementById('modalCompra').classList.add('hidden'), 200);
     }
 
-    function confirmarInclusao(p) {
-        const qtd = parseInt(document.getElementById('mVal').innerText);
-        let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
-        const idx = cart.findIndex(i => i.id === p.id);
-        
-        if(idx > -1) cart[idx].quantidade += qtd;
-        else cart.push({...p, quantidade: qtd});
-        
-        localStorage.setItem('carrinho', JSON.stringify(cart));
-        fecharModal();
-        atualizarContadores();
+    function filterCat(catId) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active-cat'));
+        document.getElementById('cat-' + catId).classList.add('active-cat');
+
+        if(catId === 'all') {
+            db.ref('products').once('value', snap => {
+                dbItems = [];
+                snap.forEach(s => dbItems.push({id: s.key, ...s.val()}));
+                resetAndRender();
+            });
+        } else {
+            db.ref('products').once('value', snap => {
+                dbItems = [];
+                snap.forEach(s => {
+                    const p = s.val();
+                    if(p.category === catId) dbItems.push({id: s.key, ...p});
+                });
+                resetAndRender();
+            });
+        }
     }
 
-    function atualizarContadores() {
+    function atualizarHeader() {
         const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
         const total = cart.reduce((acc, i) => acc + (i.price * i.quantidade), 0);
-        
-        document.getElementById('resumoTotal').innerText = fM(total);
-        
-        const falta = Math.max(0, MIN_VAL - total);
-        const perc = Math.min((total / MIN_VAL) * 100, 100);
-        
-        document.getElementById('barraMin').style.width = perc + '%';
-        document.getElementById('txtFalta').innerText = falta > 0 ? `Faltam ${fM(falta)}` : 'Pedido Mínimo Atingido!';
-        document.getElementById('txtFalta').style.color = falta > 0 ? '#ef4444' : '#10b981';
+        document.getElementById('valorTotalHeader').innerText = fM(total);
+        if(total > 0) document.getElementById('resumoCart').classList.remove('hidden');
     }
 
-    function filtrarCat(id) {
-        const filtrados = produtosBase.filter(p => p.category === id);
-        renderizar(filtrados);
-        // Atualiza estilo dos botões
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-    }
-
-    window.onload = iniciar;
+    window.onload = () => {
+        init();
+        atualizarHeader();
+    };
 </script>
 </body>
 </html>
