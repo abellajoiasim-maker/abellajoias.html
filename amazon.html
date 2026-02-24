@@ -3,213 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Catálogo Enterprise</title>
-    
+    <title>Abella Joias | Business Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <style>
-        :root { --gold: #caa85c; --dark: #1a1a1a; --light: #f8f9fa; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--light); color: var(--dark); }
+        :root { --gold: #b89552; --pix: #32bcad; }
+        body { font-family: 'Inter', sans-serif; background: #fcfcfc; color: #1a1a1a; }
         .serif { font-family: 'Cinzel', serif; }
+        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05); }
+        .btn-gold { background: linear-gradient(135deg, #d4af37 0%, #b89552 100%); }
         
-        .app-container { display: grid; grid-template-columns: 280px 1px 1fr; min-height: 100vh; }
-        .sidebar { position: sticky; top: 80px; height: calc(100vh - 80px); overflow-y: auto; }
+        /* Transições */
+        .page-transition { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Estilo das Imagens para garantir que apareçam */
-        .img-wrapper { 
-            width: 100%; 
-            aspect-ratio: 1/1; 
-            background: #f1f1f1; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            overflow: hidden;
-            border-radius: 1.5rem;
-        }
-        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        /* Estilo da Imagem */
+        .img-zoom { overflow: hidden; border-radius: 1rem; aspect-ratio: 1/1; background: #f8f8f8; }
+        .img-zoom img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+        .card-hover:hover img { transform: scale(1.1); }
         
-        .product-card:hover img { transform: scale(1.1); }
-
-        .cat-link { 
-            padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 500; 
-            color: #666; transition: 0.3s; display: flex; align-items: center; gap: 12px;
-            margin-bottom: 6px; border: 1px solid transparent;
-        }
-        .cat-link img { width: 35px; height: 35px; border-radius: 8px; object-fit: cover; background: #eee; }
-        .cat-link:hover, .cat-link.active { background: #fff; color: var(--gold); border-color: #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
-
-        .qty-control { display: grid; grid-template-columns: 35px 1fr 35px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; }
-        .qty-btn { height: 38px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer; }
-        .qty-btn:hover { background: var(--dark); color: #fff; }
+        .badge-discount { background: #ef4444; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
     </style>
 </head>
-<body>
+<body class="pb-32">
 
-<header class="h-[80px] bg-white border-b border-gray-100 sticky top-0 z-[200] px-6">
-    <div class="max-w-[1800px] mx-auto h-full flex items-center justify-between">
-        <div class="flex flex-col">
-            <span class="serif text-xl font-bold tracking-[3px] text-gray-900 uppercase">Abella Joias</span>
-            <span class="text-[9px] tracking-[4px] text-gray-400 font-bold uppercase">Joias no Bruto Premium</span>
+<header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="cursor-pointer" onclick="voltarHome()">
+            <h1 class="serif text-xl font-bold tracking-tighter">ABELLA <span class="text-[#b89552]">JOIAS</span></h1>
+            <p class="text-[9px] font-bold text-gray-400 tracking-[3px] uppercase italic">Atacado no Bruto</p>
         </div>
 
-        <div class="flex items-center gap-6">
-            <div class="bg-black text-white px-6 py-3 rounded-2xl flex items-center gap-3">
-                <i class="fas fa-shopping-bag text-[#caa85c]"></i>
-                <span id="header-total" class="text-xs font-bold">R$ 0,00</span>
+        <div class="hidden md:flex flex-1 max-w-md mx-10 relative">
+            <input type="text" id="mainSearch" oninput="executarBusca()" placeholder="Buscar por nome ou referência..." 
+                   class="w-full bg-gray-100 border-none rounded-2xl px-5 py-2.5 text-sm focus:ring-2 focus:ring-[#b89552] outline-none">
+            <i class="fas fa-search absolute right-4 top-3.5 text-gray-300"></i>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <span class="text-[10px] text-gray-400 font-bold block">SUBTOTAL</span>
+                <span id="totalHeader" class="font-black text-gray-900">R$ 0,00</span>
             </div>
+            <button onclick="window.location.href='carrinho.html'" class="bg-black text-white p-3 rounded-2xl relative">
+                <i class="fas fa-shopping-bag"></i>
+                <span id="cartBadge" class="absolute -top-1 -right-1 bg-[#b89552] text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+            </button>
         </div>
     </div>
 </header>
 
-<div class="max-w-[1800px] mx-auto app-container">
-    <aside class="sidebar p-6 bg-[#fafafa]">
-        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Coleções</h3>
-        <nav id="listCategorias">
-            </nav>
-    </aside>
-
-    <div class="bg-gray-200/50 w-[1px]"></div>
-
-    <main class="p-8 pb-32">
-        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+<main class="max-w-7xl mx-auto p-6">
+    <div id="viewCategorias" class="page-transition">
+        <h2 class="serif text-2xl font-bold mb-8 flex items-center gap-3 text-gray-800">
+            <span class="w-8 h-[2px] bg-[#b89552]"></span> Coleções
+        </h2>
+        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-6">
             </div>
-    </main>
-</div>
-
-<footer class="fixed bottom-0 w-full bg-white border-t border-gray-100 p-6 z-[300] shadow-lg">
-    <div class="max-w-[1800px] mx-auto flex items-center justify-between">
-        <div class="flex flex-col">
-            <span class="text-[10px] text-gray-400 font-bold uppercase">Investimento Total</span>
-            <span id="footer-total" class="text-2xl font-black text-[#caa85c]">R$ 0,00</span>
-        </div>
-        <button id="btn-whats" onclick="enviarWhatsApp()" class="bg-black text-white px-10 py-4 rounded-2xl font-bold uppercase text-[11px] tracking-widest hover:bg-[#caa85c] transition-all">
-            Finalizar via WhatsApp
-        </button>
     </div>
-</footer>
+
+    <div id="viewProdutos" class="page-transition hidden">
+        <div class="flex items-center gap-4 mb-8">
+            <button onclick="voltarHome()" class="text-gray-400 hover:text-black transition"><i class="fas fa-arrow-left"></i></button>
+            <h2 id="currentCatTitle" class="serif text-2xl font-bold text-gray-800 uppercase tracking-tight">Nome da Categoria</h2>
+        </div>
+        <div id="gridProds" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            </div>
+    </div>
+</main>
+
+<div id="modalQtd" class="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+        <div class="flex flex-col md:flex-row">
+            <div id="modalImg" class="w-full md:w-1/2 aspect-square bg-gray-50"></div>
+            <div class="p-8 flex-1">
+                <h3 id="modalNome" class="serif text-lg font-bold text-gray-900 mb-2 uppercase">Nome do Produto</h3>
+                <p id="modalRef" class="text-[10px] text-gray-400 font-bold mb-6">REF: 000000</p>
+                
+                <div id="variacoesArea" class="mb-6">
+                    </div>
+
+                <div class="bg-gray-50 p-4 rounded-2xl mb-6">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Quantidade no Atacado</label>
+                    <div class="flex items-center justify-between">
+                        <button onclick="mudarQtd(-1)" class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition">-</button>
+                        <span id="qtdVal" class="text-2xl font-black">1</span>
+                        <button onclick="mudarQtd(1)" class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition">+</button>
+                    </div>
+                </div>
+
+                <button id="btnConfirmarAdd" class="w-full btn-gold text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-gold/20">
+                    Adicionar ao Pedido
+                </button>
+                <button onclick="fecharModal()" class="w-full text-gray-400 text-[10px] font-bold mt-4 uppercase">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    let allProducts = [];
-    let cart = JSON.parse(localStorage.getItem('abella_cart') || '{}');
-    const IMG_FALLBACK = "https://via.placeholder.com/400?text=Abella+Joias";
+let state = {
+    allProducts: [],
+    allCats: {},
+    cart: JSON.parse(localStorage.getItem('abella_cart') || '[]'),
+    selectedProduct: null,
+    currentQtd: 1
+};
 
-    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    function init() {
-        carregarCategorias();
-        carregarProdutos();
-        atualizarUI();
-    }
+// 1. CARREGAMENTO INICIAL
+function init() {
+    db.ref('categories').on('value', snap => {
+        state.allCats = snap.val() || {};
+        renderCats();
+    });
 
-    function carregarCategorias() {
-        db.ref('categories').on('value', snap => {
-            const container = document.getElementById('listCategorias');
-            container.innerHTML = `<a href="javascript:void(0)" onclick="filtrar('all')" class="cat-link active" id="cat-all">
-                <div class="w-[35px] h-[35px] bg-gray-200 rounded-lg flex items-center justify-center text-[10px] font-bold">ALL</div>
-                <span>Todos os Brutos</span>
-            </a>`;
-            
-            snap.forEach(s => {
-                const cat = s.val();
-                if (cat.paused) return;
+    db.ref('products').on('value', snap => {
+        state.allProducts = [];
+        snap.forEach(s => state.allProducts.push({id: s.key, ...s.val()}));
+        atualizarHeader();
+    });
+}
+
+// 2. RENDER CATEGORIAS
+function renderCats() {
+    const grid = document.getElementById('gridCats');
+    grid.innerHTML = Object.entries(state.allCats).map(([id, cat]) => {
+        if(cat.paused) return '';
+        return `
+            <div onclick="verCategoria('${id}', '${cat.name}')" class="group cursor-pointer">
+                <div class="img-zoom mb-4 card-shadow">
+                    <img src="${cat.image || 'https://via.placeholder.com/400'}" loading="lazy">
+                </div>
+                <h3 class="serif text-sm font-bold text-center uppercase tracking-widest group-hover:text-[#b89552] transition">${cat.name}</h3>
+            </div>
+        `;
+    }).join('');
+}
+
+// 3. RENDER PRODUTOS (COM DADOS FINANCEIROS COMPLETOS)
+function verCategoria(catId, nome) {
+    document.getElementById('viewCategorias').classList.add('hidden');
+    document.getElementById('viewProdutos').classList.remove('hidden');
+    document.getElementById('currentCatTitle').innerText = nome;
+    
+    const prods = state.allProducts.filter(p => p.category === catId);
+    renderProds(prods);
+}
+
+function renderProds(lista) {
+    const grid = document.getElementById('gridProds');
+    grid.innerHTML = lista.map(p => {
+        // CÁLCULOS FINANCEIROS
+        const precoOriginal = p.price || 0;
+        const precoPromo = p.promoPct > 0 ? precoOriginal * (1 - p.promoPct/100) : precoOriginal;
+        const precoPix = precoPromo * 0.95; // 5% Desconto Pix padrão
+        const parcelas = precoPromo / 3; // 3x sem juros padrão
+
+        return `
+            <div class="bg-white rounded-[2rem] p-5 card-hover card-shadow border border-gray-50 flex flex-col">
+                <div class="relative mb-5">
+                    <div class="img-zoom">
+                        <img src="${p.image}" loading="lazy">
+                    </div>
+                    ${p.promoPct > 0 ? `<span class="absolute top-3 right-3 badge-discount">-${p.promoPct}% OFF</span>` : ''}
+                </div>
                 
-                // Forçamos o uso do campo 'image' da categoria
-                const imgUrl = cat.image || cat.imageUrl || IMG_FALLBACK;
+                <h3 class="text-[11px] font-extrabold text-gray-800 uppercase mb-1 line-clamp-1">${p.name}</h3>
+                <p class="text-[9px] text-gray-400 font-bold mb-4 tracking-tighter">REF: ${p.id.substring(0,8)}</p>
                 
-                container.innerHTML += `
-                    <a href="javascript:void(0)" onclick="filtrar('${s.key}')" class="cat-link" id="cat-${s.key}">
-                        <img src="${imgUrl}" onerror="this.src='${IMG_FALLBACK}'">
-                        <span class="truncate">${cat.name}</span>
-                    </a>`;
-            });
-        });
-    }
-
-    function carregarProdutos() {
-        db.ref('products').on('value', snap => {
-            allProducts = [];
-            snap.forEach(s => {
-                const p = s.val();
-                allProducts.push({id: s.key, ...p});
-            });
-            renderizar(allProducts);
-        });
-    }
-
-    function renderizar(items) {
-        const grid = document.getElementById('product-grid');
-        grid.innerHTML = items.map(p => {
-            // Verifica o campo exato da imagem no seu banco
-            const imgUrl = p.image || p.imageUrl || p.thumb || IMG_FALLBACK;
-            
-            return `
-                <div class="product-card bg-white p-4 rounded-[2rem] border border-gray-50 group">
-                    <div class="img-wrapper mb-5">
-                        <img src="${imgUrl}" onerror="this.src='${IMG_FALLBACK}'" loading="lazy">
+                <div class="space-y-2 border-t border-dashed border-gray-100 pt-4">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[10px] text-gray-400 font-bold uppercase">No Atacado:</span>
+                        <span class="text-lg font-black text-gray-900 tracking-tighter">${fM(precoPromo)}</span>
                     </div>
                     
-                    <h3 class="text-xs font-bold text-gray-800 uppercase line-clamp-1 mb-1">${p.name}</h3>
-                    <p class="text-[9px] text-gray-400 font-bold mb-4 tracking-widest">REF: ${p.id.substring(0,8).toUpperCase()}</p>
-                    
-                    <div class="flex items-center justify-between">
-                        <span class="text-base font-black text-gray-900">${fM(p.price || 0)}</span>
-                        
-                        <div class="qty-control w-24">
-                            <button onclick="updateCart('${p.id}', -1, ${p.price}, '${p.name.replace(/'/g, "")}')" class="qty-btn"><i class="fas fa-minus text-[9px]"></i></button>
-                            <div class="flex items-center justify-center text-xs font-black">${cart[p.id]?.qty || 0}</div>
-                            <button onclick="updateCart('${p.id}', 1, ${p.price}, '${p.name.replace(/'/g, "")}')" class="qty-btn"><i class="fas fa-plus text-[9px]"></i></button>
-                        </div>
+                    <div class="flex justify-between items-center text-[#32bcad] bg-emerald-50/50 p-2 rounded-xl">
+                        <span class="text-[9px] font-bold uppercase">À vista no PIX (-5%):</span>
+                        <span class="text-sm font-black">${fM(precoPix)}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-gray-500">
+                        <span class="text-[9px] font-medium italic">Ou 3x de ${fM(parcelas)} sem juros</span>
+                        <i class="fas fa-credit-card text-[10px]"></i>
                     </div>
                 </div>
-            `;
-        }).join('');
+
+                <button onclick="abrirModal('${p.id}')" class="mt-5 w-full bg-black text-white py-3.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#b89552] transition">
+                    Adicionar Peças
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+// 4. LÓGICA DO MODAL (VARIEDADES E QUANTIDADE)
+function abrirModal(id) {
+    const p = state.allProducts.find(x => x.id === id);
+    state.selectedProduct = p;
+    state.currentQtd = 1;
+
+    document.getElementById('modalNome').innerText = p.name;
+    document.getElementById('modalRef').innerText = `REF: ${p.id.substring(0,8)}`;
+    document.getElementById('modalImg').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
+    document.getElementById('qtdVal').innerText = "1";
+
+    // Lógica para variações (exemplo: se existir campo p.variations no seu banco)
+    const varArea = document.getElementById('variacoesArea');
+    if(p.variations) {
+        varArea.innerHTML = `<label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Selecione o Tamanho/Opção</label>
+            <div class="flex flex-wrap gap-2">
+                ${p.variations.map(v => `<button onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('bg-black','text-white')); this.classList.add('bg-black','text-white')" class="px-4 py-2 border rounded-xl text-xs font-bold transition">${v}</button>`).join('')}
+            </div>`;
+    } else {
+        varArea.innerHTML = '';
     }
 
-    function updateCart(id, delta, price, name) {
-        if(!cart[id]) cart[id] = { qty: 0, price, name };
-        cart[id].qty = Math.max(0, cart[id].qty + delta);
-        if(cart[id].qty === 0) delete cart[id];
-        
-        localStorage.setItem('abella_cart', JSON.stringify(cart));
-        atualizarUI();
-        renderizar(allProducts);
-    }
+    document.getElementById('btnConfirmarAdd').onclick = adicionarAoCarrinho;
+    document.getElementById('modalQtd').classList.remove('hidden');
+}
 
-    function atualizarUI() {
-        let total = 0;
-        for(let k in cart) total += cart[k].qty * cart[k].price;
-        document.getElementById('header-total').innerText = fM(total);
-        document.getElementById('footer-total').innerText = fM(total);
-    }
+function mudarQtd(v) {
+    state.currentQtd = Math.max(1, state.currentQtd + v);
+    document.getElementById('qtdVal').innerText = state.currentQtd;
+}
 
-    function filtrar(catId) {
-        document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
-        document.getElementById('cat-'+catId).classList.add('active');
-        
-        if(catId === 'all') renderizar(allProducts);
-        else renderizar(allProducts.filter(p => p.category === catId));
-    }
+function adicionarAoCarrinho() {
+    const p = state.selectedProduct;
+    const item = {
+        id: p.id,
+        name: p.name,
+        price: p.promoPct > 0 ? p.price * (1 - p.promoPct/100) : p.price,
+        image: p.image,
+        qty: state.currentQtd
+    };
 
-    function enviarWhatsApp() {
-        let msg = `*PEDIDO ABELLA JOIAS*\n\n`;
-        for(let k in cart) msg += `• ${cart[k].qty}x ${cart[k].name}\n`;
-        msg += `\n*TOTAL: ${document.getElementById('footer-total').innerText}*`;
-        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(msg)}`);
-    }
+    const index = state.cart.findIndex(i => i.id === p.id);
+    if(index > -1) state.cart[index].qty += state.currentQtd;
+    else state.cart.push(item);
 
-    window.onload = init;
+    localStorage.setItem('abella_cart', JSON.stringify(state.cart));
+    fecharModal();
+    atualizarHeader();
+}
+
+function fecharModal() {
+    document.getElementById('modalQtd').classList.add('hidden');
+}
+
+// 5. UTILITÁRIOS
+function voltarHome() {
+    document.getElementById('viewProdutos').classList.add('hidden');
+    document.getElementById('viewCategorias').classList.remove('hidden');
+}
+
+function executarBusca() {
+    const termo = document.getElementById('mainSearch').value.toLowerCase();
+    if(termo.length > 2) {
+        document.getElementById('viewCategorias').classList.add('hidden');
+        document.getElementById('viewProdutos').classList.remove('hidden');
+        document.getElementById('currentCatTitle').innerText = "Resultado da Busca";
+        const filtrados = state.allProducts.filter(p => p.name.toLowerCase().includes(termo) || p.id.toLowerCase().includes(termo));
+        renderProds(filtrados);
+    }
+}
+
+function atualizarHeader() {
+    const total = state.cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+    const count = state.cart.reduce((acc, i) => acc + i.qty, 0);
+    document.getElementById('totalHeader').innerText = fM(total);
+    document.getElementById('cartBadge').innerText = count;
+}
+
+window.onload = init;
 </script>
 </body>
 </html>
