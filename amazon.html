@@ -2,396 +2,244 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Business Intelligence</title>
+    <title>Abella Joias | Catálogo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { --gold: #b89552; --pix: #32bcad; }
-        body { font-family: 'Inter', sans-serif; background: #fcfcfc; color: #1a1a1a; }
-        .serif { font-family: 'Cinzel', serif; }
-        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05); }
-        .btn-gold { background: linear-gradient(135deg, #d4af37 0%, #b89552 100%); }
-        
-        /* Transições */
-        .page-transition { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-        /* Estilo da Imagem */
-        .img-zoom { overflow: hidden; border-radius: 1rem; aspect-ratio: 1/1; background: #f8f8f8; }
-        .img-zoom img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
-        .card-hover:hover img { transform: scale(1.1); }
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-text { color: #caa85c; }
+        .gold-bg { background: #caa85c; }
+        header { background: #000; border-bottom: 1px solid #222; }
         
-        .badge-discount { background: #ef4444; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        /* Utilitários de Transição */
+        .view { display: none; opacity: 0; transition: opacity 0.4s ease; }
+        .view.active { display: block; opacity: 1; }
+
+        /* Estilo dos Cards */
+        .card-lux { background: #141414; border: 1px solid #2a2a2a; border-radius: 15px; transition: .3s; overflow: hidden; cursor: pointer; }
+        .card-lux:hover { border-color: #caa85c; transform: translateY(-3px); }
+        .img-container { width:100%; aspect-ratio:1/1; background:#1a1a1a; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .img-container img { width:100%; height:100%; object-fit:cover; transition: 0.5s; }
+        .card-lux:hover img { transform: scale(1.05); }
+
+        /* Modal */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding: 20px; backdrop-blur: 5px; }
+        .modal.active { display:flex; }
+        .modal-content { background:#141414; border: 1px solid #2a2a2a; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; text-align: center; }
+        
+        .grid-vars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .item-var { background: #0b0b0b; border: 1px solid #333; border-radius: 10px; padding: 8px; }
+        .item-var span { display: block; font-size: 10px; color: #caa85c; font-weight: bold; margin-bottom: 4px; }
+        .item-var input { background: transparent; border: none; color: #fff; text-align: center; width: 100%; font-weight: bold; }
     </style>
 </head>
-<body class="pb-32">
+<body>
 
-<header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="cursor-pointer" onclick="voltarHome()">
-            <h1 class="serif text-xl font-bold tracking-tighter">ABELLA <span class="text-[#b89552]">JOIAS</span></h1>
-            <p class="text-[9px] font-bold text-gray-400 tracking-[3px] uppercase italic">Atacado no Bruto</p>
-        </div>
-
-        <div class="hidden md:flex flex-1 max-w-md mx-10 relative">
-            <input type="text" id="mainSearch" oninput="executarBusca()" placeholder="Buscar por nome ou referência..." 
-                   class="w-full bg-gray-100 border-none rounded-2xl px-5 py-2.5 text-sm focus:ring-2 focus:ring-[#b89552] outline-none">
-            <i class="fas fa-search absolute right-4 top-3.5 text-gray-300"></i>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <div class="text-right hidden sm:block">
-                <span class="text-[10px] text-gray-400 font-bold block">SUBTOTAL</span>
-                <span id="totalHeader" class="font-black text-gray-900">R$ 0,00</span>
-            </div>
-            <button onclick="window.location.href='carrinho.html'" class="bg-black text-white p-3 rounded-2xl relative">
-                <i class="fas fa-shopping-bag"></i>
-                <span id="cartBadge" class="absolute -top-1 -right-1 bg-[#b89552] text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
-            </button>
+<header class="sticky top-0 z-50 shadow-lg text-center bg-black/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <h1 class="serif text-2xl gold-text tracking-widest uppercase" id="nomeLoja">Abella Joias</h1>
+        <p class="text-[9px] tracking-[4px] text-gray-500 font-light mt-1 mb-4 uppercase" id="sloganLoja">Atacado de Joias no Bruto</p>
+        
+        <div class="flex gap-2 justify-center items-center flex-wrap">
+            <button onclick="showCategorias()" class="px-4 py-1.5 rounded-full border border-[#caa85c] gold-text text-[10px] font-bold uppercase">Categorias</button>
+            <a href="galvanicas.html" class="px-4 py-1.5 rounded-full border border-dashed border-[#caa85c] gold-text text-[10px] font-bold">✨ GALVÂNICAS</a>
+            <a href="carrinho.html" class="px-4 py-1.5 rounded-full border border-[#caa85c] gold-text text-[10px] font-bold flex items-center gap-2">
+                🛒 <span id="contadorCarrinho">R$ 0,00</span>
+            </a>
         </div>
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto p-6">
-    <div id="viewCategorias" class="page-transition">
-        <h2 class="serif text-2xl font-bold mb-8 flex items-center gap-3 text-gray-800">
-            <span class="w-8 h-[2px] bg-[#b89552]"></span> Coleções
-        </h2>
-        <div id="gridCats" class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            </div>
-    </div>
+<main class="max-w-7xl mx-auto p-6 pb-20">
+    <section id="viewCategorias" class="view active">
+        <h2 class="serif text-center mb-8 text-lg gold-text tracking-widest uppercase">Coleções</h2>
+        <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
+    </section>
 
-    <div id="viewProdutos" class="page-transition hidden">
-        <div class="flex items-center gap-4 mb-8">
-            <button onclick="voltarHome()" class="text-gray-400 hover:text-black transition"><i class="fas fa-arrow-left"></i></button>
-            <h2 id="currentCatTitle" class="serif text-2xl font-bold text-gray-800 uppercase tracking-tight">Nome da Categoria</h2>
-        </div>
-        <div id="gridProds" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            </div>
-    </div>
+    <section id="viewProdutos" class="view">
+        <button onclick="showCategorias()" class="mb-6 text-[10px] font-bold gold-text uppercase">← Voltar para Categorias</button>
+        <h2 id="tituloCategoria" class="serif text-xl mb-8 gold-text uppercase tracking-widest">...</h2>
+        <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
+    </section>
 </main>
 
-<div id="modalQtd" class="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-        <div class="flex flex-col md:flex-row">
-            <div id="modalImg" class="w-full md:w-1/2 aspect-square bg-gray-50"></div>
-            <div class="p-8 flex-1">
-                <h3 id="modalNome" class="serif text-lg font-bold text-gray-900 mb-2 uppercase">Nome do Produto</h3>
-                <p id="modalRef" class="text-[10px] text-gray-400 font-bold mb-6">REF: 000000</p>
-                
-                <div id="variacoesArea" class="mb-6">
-                    </div>
-
-                <div class="bg-gray-50 p-4 rounded-2xl mb-6">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Quantidade no Atacado</label>
-                    <div class="flex items-center justify-between">
-                        <button onclick="mudarQtd(-1)" class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition">-</button>
-                        <span id="qtdVal" class="text-2xl font-black">1</span>
-                        <button onclick="mudarQtd(1)" class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition">+</button>
-                    </div>
-                </div>
-
-                <button id="btnConfirmarAdd" class="w-full btn-gold text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-gold/20">
-                    Adicionar ao Pedido
-                </button>
-                <button onclick="fecharModal()" class="w-full text-gray-400 text-[10px] font-bold mt-4 uppercase">Cancelar</button>
-            </div>
+<div id="modalQtd" class="modal">
+    <div class="modal-content">
+        <h3 class="serif gold-text text-lg mb-4" id="modalNomeProd">Produto</h3>
+        <img id="modalImgProd" class="w-full max-w-[200px] aspect-square object-cover rounded-xl mx-auto mb-4 border border-[#333]">
+        <div id="containerOpcoes"></div>
+        <div class="flex gap-2 mt-8">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-[10px] font-bold text-gray-500 uppercase">Voltar</button>
+            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">Confirmar</button>
         </div>
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
-firebase.initializeApp(firebaseConfig);
+// CONFIGURAÇÃO
+if (!firebase.apps.length) {
+    firebase.initializeApp({
+        apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+        databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+    });
+}
 const db = firebase.database();
-
 let state = {
     allProducts: [],
-    allCats: {},
-    cart: JSON.parse(localStorage.getItem('abella_cart') || '[]'),
-    selectedProduct: null,
-    currentQtd: 1
+    settings: {},
+    currentCat: null
 };
 
+// UTILITÁRIOS
 const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-// 1. CARREGAMENTO INICIAL
-function init() {
-    // Carrega categorias e armazena o nome delas para busca alternativa
-    db.ref('categories').on('value', snap => {
-        state.allCats = snap.val() || {};
-        renderCats();
+function atualizarContador() {
+    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    const total = carrinho.reduce((acc, i) => acc + (parseFloat(i.precoFinal || i.price) * (i.quantidade || 1)), 0);
+    document.getElementById('contadorCarrinho').innerText = fM(total);
+}
+
+// NAVEGAÇÃO
+function showCategorias() {
+    document.getElementById('viewProdutos').classList.remove('active');
+    document.getElementById('viewCategorias').classList.add('active');
+    window.scrollTo(0,0);
+}
+
+function showProdutos(catId, catName, catPromo) {
+    state.currentCat = { id: catId, name: catName, promo: catPromo };
+    document.getElementById('tituloCategoria').innerText = catName;
+    renderProdutos();
+    document.getElementById('viewCategorias').classList.remove('active');
+    document.getElementById('viewProdutos').classList.add('active');
+    window.scrollTo(0,0);
+}
+
+// DADOS
+async function init() {
+    // Carregar Settings
+    db.ref('settings').on('value', s => {
+        const val = s.val();
+        state.settings = val;
+        if(val.empresa) {
+            document.getElementById('nomeLoja').innerText = val.empresa.nome;
+            document.getElementById('sloganLoja').innerText = val.empresa.subtitulo;
+        }
     });
 
-    // Carrega produtos
+    // Carregar Categorias
+    db.ref('categories').on('value', snap => {
+        const grid = document.getElementById('gridCategorias');
+        grid.innerHTML = '';
+        snap.forEach(s => {
+            const c = s.val();
+            if(c.paused) return;
+            grid.innerHTML += `
+                <div class="card-lux flex flex-col" onclick="showProdutos('${s.key}', '${c.name}', ${c.promoPct || 0})">
+                    <div class="img-container"><img src="${c.image}"></div>
+                    <div class="p-4 text-center"><span class="serif text-[11px] gold-text uppercase font-bold">${c.name}</span></div>
+                </div>`;
+        });
+    });
+
+    // Carregar Produtos em cache
     db.ref('products').on('value', snap => {
         state.allProducts = [];
         snap.forEach(s => {
-            const data = s.val();
-            state.allProducts.push({ id: s.key, ...data });
+            state.allProducts.push({ key: s.key, ...s.val() });
         });
-        console.log("Total de produtos carregados:", state.allProducts.length);
-        atualizarHeader();
-    });
-}
-
-// 2. RENDER CATEGORIAS
-function renderCats() {
-    const grid = document.getElementById('gridCats');
-    grid.innerHTML = Object.entries(state.allCats).map(([id, cat]) => {
-        if(cat.paused) return '';
-        return `
-            <div onclick="verCategoria('${id}', '${cat.name}')" class="group cursor-pointer">
-                <div class="img-zoom mb-4 card-shadow">
-                    <img src="${cat.image || 'https://via.placeholder.com/400'}" loading="lazy">
-                </div>
-                <h3 class="serif text-sm font-bold text-center uppercase tracking-widest group-hover:text-[#b89552] transition">${cat.name}</h3>
-            </div>
-        `;
-    }).join('');
-}
-
-// 3. RENDER PRODUTOS (COM DADOS FINANCEIROS COMPLETOS)
-// ... (mantenha o início do script igual)
-
-// 3. RENDER PRODUTOS (CORREÇÃO DE FILTRO)
-function verCategoria(catId, nomeCat) {
-    console.log("Tentando filtrar produtos para:", nomeCat, " (ID:", catId, ")");
-    
-    document.getElementById('viewCategorias').classList.add('hidden');
-    document.getElementById('viewProdutos').classList.remove('hidden');
-    document.getElementById('currentCatTitle').innerText = nomeCat;
-    
-    window.scrollTo(0, 0);
-
-    // FILTRO MULTI-CAMADA
-    const prodsFiltrados = state.allProducts.filter(p => {
-        // 1. Tenta pelo ID exato (comum no Firebase)
-        const matchID = String(p.category) === String(catId) || String(p.categoryId) === String(catId);
-        
-        // 2. Tenta pelo Nome da Categoria (caso seu banco salve o texto em vez do ID)
-        const matchNome = String(p.category).toLowerCase() === String(nomeCat).toLowerCase();
-        
-        return matchID || matchNome;
+        if(state.currentCat) renderProdutos();
     });
 
-    console.log("Produtos encontrados:", prodsFiltrados.length);
-
-    const grid = document.getElementById('gridProds');
-    if (prodsFiltrados.length === 0) {
-        grid.innerHTML = `
-            <div class="col-span-full py-20 text-center">
-                <div class="mb-4 text-gray-200">
-                    <i class="fas fa-search text-6xl"></i>
-                </div>
-                <h3 class="text-gray-500 font-bold">Nenhum produto vinculado a "${nomeCat}"</h3>
-                <p class="text-gray-400 text-sm mb-6">Verifique se os produtos estão associados corretamente a esta categoria no banco de dados.</p>
-                <button onclick="voltarHome()" class="px-6 py-2 border-2 border-[#b89552] text-[#b89552] rounded-full text-xs font-bold uppercase">Voltar para Coleções</button>
-            </div>`;
-    } else {
-        renderProds(prodsFiltrados);
-    }
+    atualizarContador();
 }
 
-function renderProds(lista) {
-    const grid = document.getElementById('gridProds');
-    grid.innerHTML = lista.map(p => {
-        // Lógica de preços (Modus Operandi)
-        const precoOriginal = parseFloat(p.price || 0);
+function renderProdutos() {
+    const grid = document.getElementById('gridProdutos');
+    grid.innerHTML = '';
+    
+    const prods = state.allProducts.filter(p => String(p.category) === String(state.currentCat.id) && !p.paused);
+    
+    prods.forEach(p => {
+        const pct = state.currentCat.promo || p.promoPct || 0;
+        const precoFinal = pct > 0 ? p.price * (1 - pct/100) : p.price;
         
-        // Verifica se há promoção na categoria ou no produto
-        const promoAtiva = p.promoPct > 0;
-        const precoPromo = promoAtiva ? precoOriginal * (1 - (p.promoPct / 100)) : precoOriginal;
-        
-        const precoPix = precoPromo * 0.95;
-        const parcelas = precoPromo / 3;
-        const imgUrl = p.image || p.imageUrl || 'https://via.placeholder.com/400?text=Abella+Joias';
-
-        return `
-            <div class="bg-white rounded-[2rem] p-5 card-hover card-shadow border border-gray-50 flex flex-col h-full">
-                <div class="relative mb-5">
-                    <div class="img-zoom">
-                        <img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/400?text=Imagem+Indisponivel'" loading="lazy">
-                    </div>
-                    ${promoAtiva ? `<span class="absolute top-3 right-3 badge-discount">-${p.promoPct}%</span>` : ''}
+        grid.innerHTML += `
+            <div class="card-lux p-4 flex flex-col h-full" onclick='abrirModal(${JSON.stringify({...p, precoFinal}).replace(/'/g,"&apos;")})'>
+                <div class="img-container mb-4 rounded-xl relative">
+                    <img src="${p.image}">
                 </div>
-                
                 <div class="flex-1">
-                    <h3 class="text-[11px] font-extrabold text-gray-800 uppercase mb-1 line-clamp-2 h-8">${p.name}</h3>
-                    <p class="text-[9px] text-gray-400 font-bold mb-4 tracking-tighter uppercase">REF: ${p.id.substring(0,8)}</p>
-                    
-                    <div class="space-y-2 border-t border-dashed border-gray-100 pt-4">
-                        <div class="flex justify-between items-baseline">
-                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Atacado:</span>
-                            <span class="text-lg font-black text-gray-900 tracking-tighter">${fM(precoPromo)}</span>
-                        </div>
-                        
-                        <div class="flex justify-between items-center text-[#32bcad] bg-emerald-50/50 p-2 rounded-xl">
-                            <div class="flex flex-col">
-                                <span class="text-[8px] font-black uppercase leading-none">PIX</span>
-                                <span class="text-[7px] font-bold uppercase">5% OFF</span>
-                            </div>
-                            <span class="text-sm font-black">${fM(precoPix)}</span>
-                        </div>
-
-                        <div class="flex justify-between items-center text-gray-400">
-                            <span class="text-[9px] font-medium italic">3x de ${fM(parcelas)} s/ juros</span>
-                            <i class="fas fa-credit-card text-[10px]"></i>
-                        </div>
-                    </div>
+                    <h3 class="text-[10px] font-bold uppercase mb-2 leading-tight h-8 overflow-hidden">${p.name}</h3>
+                    <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
                 </div>
-
-                <button onclick="abrirModal('${p.id}')" class="mt-5 w-full bg-black text-white py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#b89552] transition-all active:scale-95 shadow-lg shadow-black/5">
-                    Adicionar Peças
-                </button>
-            </div>
-        `;
-    }).join('');
-}
-// ... (mantenha o restante das funções)
-// 4. LÓGICA DO MODAL (VARIEDADES E QUANTIDADE)
-function abrirModal(id) {
-    const p = state.allProducts.find(x => x.id === id);
-    if (!p) return;
-    
-    state.selectedProduct = p;
-    state.currentQtd = 1;
-    state.selectedVariation = null; // Reinicia a variação selecionada
-
-    document.getElementById('modalNome').innerText = p.name;
-    document.getElementById('modalRef').innerText = `REF: ${p.id.substring(0,8).toUpperCase()}`;
-    document.getElementById('modalImg').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
-    document.getElementById('qtdVal').innerText = "1";
-
-    const varArea = document.getElementById('variacoesArea');
-    
-    // Tenta encontrar as variações em diversos nomes de campos possíveis
-    const listaVariacoes = p.variations || p.sizes || p.opcoes || p.letras || p.modelos || null;
-
-    if (listaVariacoes && Array.isArray(listaVariacoes)) {
-        varArea.innerHTML = `
-            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-3">Escolha uma opção (Letra/Tamanho)</label>
-            <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-2 custom-scroll">
-                ${listaVariacoes.map(v => `
-                    <button onclick="selecionarVariacao(this, '${v}')" 
-                            class="var-btn border border-gray-200 rounded-lg py-2 text-[11px] font-bold hover:border-black transition-all">
-                        ${v}
-                    </button>
-                `).join('')}
-            </div>
-        `;
-    } else if (listaVariacoes && typeof listaVariacoes === 'string') {
-        // Caso as variações venham como string separada por vírgula (ex: "A,B,C")
-        const arrayVars = listaVariacoes.split(',');
-        varArea.innerHTML = `
-            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-3">Selecione a Letra/Opção</label>
-            <div class="grid grid-cols-5 gap-2">
-                ${arrayVars.map(v => `
-                    <button onclick="selecionarVariacao(this, '${v.trim()}')" 
-                            class="var-btn border border-gray-200 rounded-lg py-2 text-[11px] font-bold hover:border-black transition-all">
-                        ${v.trim()}
-                    </button>
-                `).join('')}
-            </div>
-        `;
-    } else {
-        varArea.innerHTML = `<p class="text-[10px] text-gray-300 italic">Produto sem variações de tamanho.</p>`;
-    }
-
-    document.getElementById('modalQtd').classList.remove('hidden');
-}
-
-// Função auxiliar para marcar o botão selecionado
-function selecionarVariacao(btn, valor) {
-    // Remove estilo de todos os botões no modal
-    document.querySelectorAll('.var-btn').forEach(b => {
-        b.classList.remove('bg-black', 'text-white', 'border-black');
-        b.classList.add('border-gray-200');
+                <button class="w-full gold-bg text-black py-2 rounded-lg text-[9px] font-bold uppercase mt-3">Comprar</button>
+            </div>`;
     });
-    
-    // Adiciona estilo ao selecionado
-    btn.classList.add('bg-black', 'text-white', 'border-black');
-    state.selectedVariation = valor;
 }
 
-function mudarQtd(v) {
-    state.currentQtd = Math.max(1, state.currentQtd + v);
-    document.getElementById('qtdVal').innerText = state.currentQtd;
-}
+// LÓGICA DO MODAL (VARIAÇÕES)
+let produtoParaAdd = null;
 
-function adicionarAoCarrinho() {
-    const p = state.selectedProduct;
+function abrirModal(p) {
+    produtoParaAdd = p;
+    document.getElementById('modalNomeProd').innerText = p.name;
+    document.getElementById('modalImgProd').src = p.image;
     
-    // Verifica se tem variações mas nada foi selecionado
-    const listaVariacoes = p.variations || p.sizes || p.opcoes || p.letras || p.modelos;
-    if (listaVariacoes && !state.selectedVariation) {
-        alert("Por favor, selecione uma variação (Letra ou Tamanho) antes de adicionar.");
-        return;
-    }
+    const container = document.getElementById('containerOpcoes');
+    container.innerHTML = '';
 
-    const item = {
-        id: p.id,
-        name: p.name,
-        variation: state.selectedVariation || '', // Salva a letra ou tamanho
-        price: p.promoPct > 0 ? p.price * (1 - p.promoPct/100) : p.price,
-        image: p.image,
-        qty: state.currentQtd
-    };
+    let opcoes = [];
+    if (p.variacaoTipo === 'Aro') opcoes = ["10", "12", "14", "16", "18", "20", "22", "24", "26"];
+    else if (p.opcoesPersonalizadas) opcoes = p.opcoesPersonalizadas.split(',').map(o => o.trim());
 
-    // No carrinho, diferenciamos itens pela ID + Variação
-    const itemKey = p.id + (state.selectedVariation || '');
-    const index = state.cart.findIndex(i => (i.id + (i.variation || '')) === itemKey);
-
-    if(index > -1) {
-        state.cart[index].qty += state.currentQtd;
+    if (opcoes.length > 0) {
+        let html = '<div class="grid-vars">';
+        opcoes.forEach(opt => {
+            html += `<div class="item-var"><span>${opt}</span><input type="number" min="0" value="0" data-var="${opt}" class="input-var"></div>`;
+        });
+        container.innerHTML = html + '</div>';
     } else {
-        state.cart.push(item);
+        container.innerHTML = `<input type="number" id="qtdSimples" value="1" min="1" class="w-20 p-3 text-center gold-bg text-black rounded-xl font-bold">`;
+    }
+    document.getElementById('modalQtd').classList.add('active');
+}
+
+document.getElementById('btnConfirmarAdd').onclick = () => {
+    let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    const inputs = document.querySelectorAll('.input-var');
+    let added = false;
+
+    if (inputs.length > 0) {
+        inputs.forEach(i => {
+            const q = parseInt(i.value);
+            if (q > 0) {
+                carrinho.push({ ...produtoParaAdd, name: `${produtoParaAdd.name} (${i.dataset.var})`, quantidade: q });
+                added = true;
+            }
+        });
+    } else {
+        const q = parseInt(document.getElementById('qtdSimples').value);
+        if (q > 0) {
+            carrinho.push({ ...produtoParaAdd, quantidade: q });
+            added = true;
+        }
     }
 
-    localStorage.setItem('abella_cart', JSON.stringify(state.cart));
-    fecharModal();
-    atualizarHeader();
-    
-    // Pequeno feedback visual
-    const btn = document.getElementById('btnConfirmarAdd');
-    btn.innerText = "ADICIONADO!";
-    setTimeout(() => { btn.innerText = "Adicionar ao Pedido"; }, 1500);
-}
-function fecharModal() {
-    document.getElementById('modalQtd').classList.add('hidden');
-}
-
-// 5. UTILITÁRIOS
-function voltarHome() {
-    document.getElementById('viewProdutos').classList.add('hidden');
-    document.getElementById('viewCategorias').classList.remove('hidden');
-}
-
-function executarBusca() {
-    const termo = document.getElementById('mainSearch').value.toLowerCase();
-    if(termo.length > 2) {
-        document.getElementById('viewCategorias').classList.add('hidden');
-        document.getElementById('viewProdutos').classList.remove('hidden');
-        document.getElementById('currentCatTitle').innerText = "Resultado da Busca";
-        const filtrados = state.allProducts.filter(p => p.name.toLowerCase().includes(termo) || p.id.toLowerCase().includes(termo));
-        renderProds(filtrados);
+    if(added) {
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        atualizarContador();
+        fecharModal();
+        alert("Adicionado!");
     }
-}
+};
 
-function atualizarHeader() {
-    const total = state.cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    const count = state.cart.reduce((acc, i) => acc + i.qty, 0);
-    document.getElementById('totalHeader').innerText = fM(total);
-    document.getElementById('cartBadge').innerText = count;
-}
+function fecharModal() { document.getElementById('modalQtd').classList.remove('active'); }
 
 window.onload = init;
 </script>
