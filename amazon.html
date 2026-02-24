@@ -260,27 +260,66 @@ function renderProds(lista) {
 // 4. LÓGICA DO MODAL (VARIEDADES E QUANTIDADE)
 function abrirModal(id) {
     const p = state.allProducts.find(x => x.id === id);
+    if (!p) return;
+    
     state.selectedProduct = p;
     state.currentQtd = 1;
+    state.selectedVariation = null; // Reinicia a variação selecionada
 
     document.getElementById('modalNome').innerText = p.name;
-    document.getElementById('modalRef').innerText = `REF: ${p.id.substring(0,8)}`;
+    document.getElementById('modalRef').innerText = `REF: ${p.id.substring(0,8).toUpperCase()}`;
     document.getElementById('modalImg').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
     document.getElementById('qtdVal').innerText = "1";
 
-    // Lógica para variações (exemplo: se existir campo p.variations no seu banco)
     const varArea = document.getElementById('variacoesArea');
-    if(p.variations) {
-        varArea.innerHTML = `<label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Selecione o Tamanho/Opção</label>
-            <div class="flex flex-wrap gap-2">
-                ${p.variations.map(v => `<button onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('bg-black','text-white')); this.classList.add('bg-black','text-white')" class="px-4 py-2 border rounded-xl text-xs font-bold transition">${v}</button>`).join('')}
-            </div>`;
+    
+    // Tenta encontrar as variações em diversos nomes de campos possíveis
+    const listaVariacoes = p.variations || p.sizes || p.opcoes || p.letras || p.modelos || null;
+
+    if (listaVariacoes && Array.isArray(listaVariacoes)) {
+        varArea.innerHTML = `
+            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-3">Escolha uma opção (Letra/Tamanho)</label>
+            <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-2 custom-scroll">
+                ${listaVariacoes.map(v => `
+                    <button onclick="selecionarVariacao(this, '${v}')" 
+                            class="var-btn border border-gray-200 rounded-lg py-2 text-[11px] font-bold hover:border-black transition-all">
+                        ${v}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    } else if (listaVariacoes && typeof listaVariacoes === 'string') {
+        // Caso as variações venham como string separada por vírgula (ex: "A,B,C")
+        const arrayVars = listaVariacoes.split(',');
+        varArea.innerHTML = `
+            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-3">Selecione a Letra/Opção</label>
+            <div class="grid grid-cols-5 gap-2">
+                ${arrayVars.map(v => `
+                    <button onclick="selecionarVariacao(this, '${v.trim()}')" 
+                            class="var-btn border border-gray-200 rounded-lg py-2 text-[11px] font-bold hover:border-black transition-all">
+                        ${v.trim()}
+                    </button>
+                `).join('')}
+            </div>
+        `;
     } else {
-        varArea.innerHTML = '';
+        varArea.innerHTML = `<p class="text-[10px] text-gray-300 italic">Produto sem variações de tamanho.</p>`;
     }
 
-    document.getElementById('btnConfirmarAdd').onclick = adicionarAoCarrinho;
     document.getElementById('modalQtd').classList.remove('hidden');
+}
+
+// Função auxiliar para marcar o botão selecionado
+function selecionarVariacao(btn, valor) {
+    // Remove estilo de todos os botões no modal
+    document.querySelectorAll('.var-btn').forEach(b => {
+        b.classList.remove('bg-black', 'text-white', 'border-black');
+        b.classList.add('border-gray-200');
+    });
+    
+    // Adiciona estilo ao selecionado
+    btn.classList.add('bg-black', 'text-white', 'border-black');
+    state.selectedVariation = valor;
 }
 
 function mudarQtd(v) {
@@ -290,23 +329,42 @@ function mudarQtd(v) {
 
 function adicionarAoCarrinho() {
     const p = state.selectedProduct;
+    
+    // Verifica se tem variações mas nada foi selecionado
+    const listaVariacoes = p.variations || p.sizes || p.opcoes || p.letras || p.modelos;
+    if (listaVariacoes && !state.selectedVariation) {
+        alert("Por favor, selecione uma variação (Letra ou Tamanho) antes de adicionar.");
+        return;
+    }
+
     const item = {
         id: p.id,
         name: p.name,
+        variation: state.selectedVariation || '', // Salva a letra ou tamanho
         price: p.promoPct > 0 ? p.price * (1 - p.promoPct/100) : p.price,
         image: p.image,
         qty: state.currentQtd
     };
 
-    const index = state.cart.findIndex(i => i.id === p.id);
-    if(index > -1) state.cart[index].qty += state.currentQtd;
-    else state.cart.push(item);
+    // No carrinho, diferenciamos itens pela ID + Variação
+    const itemKey = p.id + (state.selectedVariation || '');
+    const index = state.cart.findIndex(i => (i.id + (i.variation || '')) === itemKey);
+
+    if(index > -1) {
+        state.cart[index].qty += state.currentQtd;
+    } else {
+        state.cart.push(item);
+    }
 
     localStorage.setItem('abella_cart', JSON.stringify(state.cart));
     fecharModal();
     atualizarHeader();
+    
+    // Pequeno feedback visual
+    const btn = document.getElementById('btnConfirmarAdd');
+    btn.innerText = "ADICIONADO!";
+    setTimeout(() => { btn.innerText = "Adicionar ao Pedido"; }, 1500);
 }
-
 function fecharModal() {
     document.getElementById('modalQtd').classList.add('hidden');
 }
