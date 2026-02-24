@@ -3,87 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abella Joias | Exclusive Brutos</title>
+    <title>Abella Joias | Business Intelligence Atacado</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
-        :root { --accent: #b89552; --bg: #ffffff; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #000; overflow-x: hidden; }
-        .logo-font { font-family: 'Syncopate', sans-serif; letter-spacing: -1px; }
+        body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-text { color: #caa85c; }
+        .bg-gold { background: #caa85c; }
         
-        /* Modern Glassmorphism & Blurs */
-        .glass-nav { background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        /* Enterprise Card Mix */
+        .card-lux { 
+            background: #141414; 
+            border: 1px solid #2a2a2a; 
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            overflow: hidden;
+        }
+        .card-lux:hover { 
+            transform: translateY(-8px); 
+            border-color: #caa85c; 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }
         
-        /* Product Card - Estilo "Boutique" */
-        .boutique-card { position: relative; transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
-        .boutique-card:hover { transform: scale(1.02); }
-        .image-container { position: relative; overflow: hidden; border-radius: 2px; background: #f8f8f8; aspect-ratio: 3/4; }
-        .image-container img { transition: transform 1.2s ease; width: 100%; height: 100%; object-fit: cover; }
-        .boutique-card:hover img { transform: scale(1.1); }
+        .img-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            background: #000;
+        }
+        .img-container img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.8s;
+        }
+        .card-lux:hover img { transform: scale(1.1); }
 
-        /* Custom Buttons */
-        .btn-add { background: #000; color: #fff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; opacity: 0; transform: translateY(10px); }
-        .boutique-card:hover .btn-add { opacity: 1; transform: translateY(0); }
-        .btn-add:hover { background: var(--accent); transform: scale(1.1) !important; }
+        /* Sidebar Enterprise Style */
+        .sidebar { height: calc(100vh - 120px); position: sticky; top: 100px; }
+        
+        /* Modal Style */
+        .modal-blur { backdrop-filter: blur(8px); background: rgba(0,0,0,0.8); }
 
-        /* Categorias Modernas (Pills) */
-        .cat-pill { white-space: nowrap; padding: 8px 20px; border-radius: 100px; border: 1px solid #eee; font-size: 13px; font-weight: 600; transition: 0.3s; cursor: pointer; }
-        .cat-pill:hover, .cat-pill.active { background: #000; color: #fff; border-color: #000; }
-
-        /* Skeleton Loading Luxo */
-        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<header class="glass-nav h-20 fixed top-0 w-full z-[100] px-8 flex items-center justify-between">
-    <div class="logo-font text-2xl font-bold uppercase">Abella<span class="text-gray-400">.</span></div>
-    
-    <div class="hidden md:flex gap-8 text-[11px] font-black uppercase tracking-[2px]">
-        <a href="#" onclick="location.reload()" class="hover:text-amber-600 transition">Início</a>
-        <a href="#vitrine" class="hover:text-amber-600 transition">Atacado</a>
-        <a href="#" class="hover:text-amber-600 transition">Sobre o Bruto</a>
-    </div>
+<header class="sticky top-0 z-[100] bg-black/95 border-b border-[#222] backdrop-blur-md">
+    <div class="max-w-[1600px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="serif text-2xl gold-text tracking-widest uppercase" id="nomeLoja">Abella Joias</h1>
+            <p class="text-[9px] tracking-[3px] text-gray-500 uppercase font-light" id="sloganLoja">Atacado de Joias no Bruto</p>
+        </div>
 
-    <div class="flex items-center gap-6">
-        <div id="search-trigger" class="cursor-pointer text-lg"><i class="ph-bold ph-magnifying-glass"></i></div>
-        <div class="relative cursor-pointer" onclick="toggleCart()">
-            <span class="text-[10px] font-bold">CARRINHO</span>
-            <span id="cart-count" class="absolute -top-2 -right-4 bg-amber-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+        <div class="flex items-center gap-4">
+            <div class="hidden lg:block text-right mr-4 border-r border-gray-800 pr-4">
+                <p class="text-[9px] text-gray-500 uppercase">Faturamento Mínimo</p>
+                <div class="w-32 h-1 bg-gray-900 rounded-full mt-1">
+                    <div id="progressoMin" class="h-full bg-gold w-0 transition-all duration-700"></div>
+                </div>
+            </div>
+            <button onclick="abrirCarrinho()" class="bg-[#caa85c] text-black px-6 py-2 rounded-full font-bold text-xs flex items-center gap-2 hover:scale-105 transition">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="contadorCarrinho">R$ 0,00</span>
+            </button>
         </div>
     </div>
 </header>
 
-<main class="pt-32 px-8 max-w-[1600px] mx-auto">
-    <section class="mb-16">
-        <h2 class="text-6xl font-light mb-8 tracking-tighter">Joias no <span class="italic font-serif">Bruto.</span></h2>
-        <div id="cat-scroll" class="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-            <div class="cat-pill active">Todas as Peças</div>
+<div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row px-6 py-8 gap-8">
+    
+    <aside class="sidebar w-full lg:w-72 hidden lg:block">
+        <h3 class="serif gold-text text-sm tracking-widest mb-6 uppercase">Coleções</h3>
+        <nav id="menuCategorias" class="flex flex-col gap-2">
+            </nav>
+        
+        <div class="mt-10 p-6 border border-[#2a2a2a] rounded-2xl">
+            <h4 class="text-[10px] gold-text font-bold uppercase mb-2">Suporte Direto</h4>
+            <p class="text-[11px] text-gray-500 mb-4">Dúvidas sobre o pedido mínimo ou banho?</p>
+            <a href="#" class="text-xs font-bold border-b border-[#caa85c] pb-1">Chamar Consultor</a>
         </div>
-    </section>
+    </aside>
 
-    <div id="vitrine" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
-        <div class="image-container skeleton"></div>
-        <div class="image-container skeleton"></div>
-        <div class="image-container skeleton"></div>
-        <div class="image-container skeleton"></div>
-    </div>
-</main>
+    <main class="flex-1">
+        <div id="bannerPromo" class="hidden mb-8 p-4 bg-gradient-to-r from-amber-900 to-black rounded-2xl border border-amber-600/30 flex justify-between items-center">
+            <div>
+                <h4 class="gold-text font-bold text-sm uppercase">Campanha Atacado Ativa</h4>
+                <p class="text-[11px] text-gray-300">Descontos aplicados automaticamente no carrinho.</p>
+            </div>
+            <i class="fas fa-bolt text-amber-500 animate-pulse"></i>
+        </div>
 
-<div id="checkout-bar" class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-lg bg-black text-white p-4 rounded-2xl shadow-2xl z-[150] flex items-center justify-between translate-y-32 transition-transform duration-500">
-    <div>
-        <p class="text-[10px] text-gray-400 font-bold uppercase">Subtotal Atacado</p>
-        <p id="total-val" class="text-xl font-bold">R$ 0,00</p>
-    </div>
-    <button onclick="enviarWhats()" class="bg-white text-black px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition">Finalizar</button>
+        <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            </div>
+    </main>
 </div>
 
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<div id="modalQtd" class="fixed inset-0 z-[200] modal-blur hidden flex items-center justify-center p-4">
+    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-sm rounded-3xl p-8 text-center">
+        <div id="modalImg" class="w-32 h-32 mx-auto rounded-2xl mb-4 bg-black overflow-hidden border border-gray-800"></div>
+        <h3 id="modalNome" class="serif gold-text text-lg mb-1 uppercase tracking-widest">Produto</h3>
+        <p id="modalPreco" class="text-gray-400 text-sm mb-6">R$ 0,00</p>
+        
+        <div class="flex items-center justify-center gap-6 mb-8">
+            <button onclick="alterarModalQtd(-1)" class="w-12 h-12 rounded-full border border-[#2a2a2a] flex items-center justify-center hover:bg-[#caa85c] hover:text-black transition text-xl">-</button>
+            <span id="modalVal" class="text-3xl font-bold">1</span>
+            <button onclick="alterarModalQtd(1)" class="w-12 h-12 rounded-full border border-[#2a2a2a] flex items-center justify-center hover:bg-[#caa85c] hover:text-black transition text-xl">+</button>
+        </div>
+        
+        <div class="flex flex-col gap-3">
+            <button id="btnConfirmar" class="w-full bg-[#caa85c] text-black py-4 rounded-2xl font-bold uppercase tracking-widest text-xs">Confirmar Peças</button>
+            <button onclick="fecharModal()" class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
+    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const firebaseConfig = {
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
         databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -91,89 +134,130 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let products = [];
-    let cart = {};
-    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    let allProducts = [];
+    let configGeral = {};
+    let produtoEmEdicao = null;
+    const PEDIDO_MINIMO = 800;
 
-    function init() {
-        // Forçar carga de Categorias
+    async function init() {
+        await carregarConfig();
+        carregarCategorias();
+        carregarProdutos();
+        atualizarResumo();
+    }
+
+    async function carregarConfig() {
+        const snap = await db.ref('settings').get();
+        configGeral = snap.val() || {};
+        if(configGeral.empresa?.nome) document.getElementById('nomeLoja').innerText = configGeral.empresa.nome;
+        if(configGeral.promocao?.ativa) document.getElementById('bannerPromo').classList.remove('hidden');
+    }
+
+    function carregarCategorias() {
         db.ref('categories').on('value', snap => {
-            const container = document.getElementById('cat-scroll');
-            container.innerHTML = `<div onclick="filter('todos')" class="cat-pill active">Todas as Peças</div>`;
+            const side = document.getElementById('menuCategorias');
+            side.innerHTML = `<button onclick="renderGrid(allProducts)" class="text-left px-4 py-2 text-[11px] font-bold gold-text bg-white/5 rounded-lg border border-[#caa85c]/30 mb-2 uppercase tracking-widest">Ver Tudo</button>`;
             snap.forEach(s => {
-                container.innerHTML += `<div onclick="filter('${s.key}')" class="cat-pill">${s.val().name}</div>`;
+                const cat = s.val();
+                if(cat.paused) return;
+                side.innerHTML += `
+                    <button onclick="filtrar('${s.key}')" class="text-left px-4 py-2 text-[11px] text-gray-500 hover:text-[#caa85c] hover:bg-white/5 rounded-lg transition uppercase tracking-widest">
+                        ${cat.name}
+                    </button>`;
             });
         });
+    }
 
-        // Forçar carga de Produtos
+    function carregarProdutos() {
         db.ref('products').on('value', snap => {
-            products = [];
-            snap.forEach(s => products.push({id: s.key, ...s.val()}));
-            render(products);
+            allProducts = [];
+            snap.forEach(s => allProducts.push({id: s.key, ...s.val()}));
+            renderGrid(allProducts);
         });
     }
 
-    function render(list) {
-        const grid = document.getElementById('vitrine');
-        grid.innerHTML = list.map(p => `
-            <div class="boutique-card">
-                <div class="image-container">
-                    <img src="${p.image}" loading="lazy">
-                    <div class="absolute bottom-4 right-4">
-                        <button onclick="addToCart('${p.id}', ${p.price}, '${p.name}')" class="btn-add">
-                            <i class="ph-bold ph-plus text-lg"></i>
-                        </button>
+    function renderGrid(list) {
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = list.map(p => {
+            const temPromo = configGeral.promocao?.ativa && p.promoPct > 0;
+            return `
+                <div class="card-lux rounded-2xl flex flex-col cursor-pointer" onclick="abrirModalCompra('${p.id}')">
+                    <div class="img-container relative">
+                        ${temPromo ? `<span class="absolute top-3 right-3 bg-[#caa85c] text-black text-[9px] px-2 py-1 rounded font-bold z-10">-${p.promoPct}%</span>` : ''}
+                        <img src="${p.image}" loading="lazy">
+                    </div>
+                    <div class="p-4 text-center flex-1 flex flex-col justify-between">
+                        <div>
+                            <p class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-1">Ref: ${p.id.substring(0,6)}</p>
+                            <h3 class="serif text-[11px] gold-text uppercase leading-tight h-8 overflow-hidden">${p.name}</h3>
+                        </div>
+                        <div class="mt-4">
+                            <span class="text-xs text-gray-500 line-through block">${temPromo ? fM(p.price * 1.3) : ''}</span>
+                            <span class="text-lg font-black tracking-tighter">${fM(p.price)}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-4 flex justify-between items-start">
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">${p.name}</h3>
-                        <p class="text-[10px] text-gray-400 font-medium">Ref: ${p.id.substring(0,8)}</p>
-                    </div>
-                    <p class="font-bold text-sm">${fM(p.price)}</p>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
-    function addToCart(id, price, name) {
-        if(!cart[id]) cart[id] = { qty: 0, price, name };
-        cart[id].qty++;
-        updateUI();
-    }
-
-    function updateUI() {
-        let total = 0;
-        let count = 0;
-        for(let k in cart) {
-            total += cart[k].qty * cart[k].price;
-            count += cart[k].qty;
-        }
+    // DINAMICA DE MODAL (MODUS OPERANDI SOLICITADO)
+    function abrirModalCompra(id) {
+        const p = allProducts.find(x => x.id === id);
+        produtoEmEdicao = p;
+        document.getElementById('modalNome').innerText = p.name;
+        document.getElementById('modalPreco').innerText = fM(p.price);
+        document.getElementById('modalImg').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
+        document.getElementById('modalVal').innerText = "1";
         
-        document.getElementById('cart-count').innerText = count;
-        document.getElementById('total-val').innerText = fM(total);
+        document.getElementById('btnConfirmar').onclick = () => {
+            const qtd = parseInt(document.getElementById('modalVal').innerText);
+            adicionarAoCarrinho(p, qtd);
+        };
         
-        const bar = document.getElementById('checkout-bar');
-        if(total > 0) bar.classList.remove('translate-y-32');
-        else bar.classList.add('translate-y-32');
+        document.getElementById('modalQtd').classList.remove('hidden');
     }
 
-    function filter(id) {
-        // Atualiza UI dos botões
-        document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
-        if(id === 'todos') render(products);
-        else render(products.filter(p => p.category === id));
+    function alterarModalQtd(v) {
+        let atual = parseInt(document.getElementById('modalVal').innerText);
+        atual = Math.max(1, atual + v);
+        document.getElementById('modalVal').innerText = atual;
     }
 
-    function enviarWhats() {
-        let msg = `*NOVO PEDIDO ABELLA JOIAS*\n\n`;
-        for(let k in cart) msg += `• ${cart[k].qty}x ${cart[k].name}\n`;
-        msg += `\n*TOTAL: ${document.getElementById('total-val').innerText}*`;
-        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(msg)}`);
+    function fecharModal() {
+        document.getElementById('modalQtd').classList.add('hidden');
+    }
+
+    // LOGICA DE CARRINHO (COMPATÍVEL COM O SEU CÓDIGO)
+    function adicionarAoCarrinho(p, qtd) {
+        let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        const index = carrinho.findIndex(item => item.id === p.id);
+        
+        if(index > -1) carrinho[index].quantidade += qtd;
+        else carrinho.push({...p, quantidade: qtd});
+        
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        fecharModal();
+        atualizarResumo();
+    }
+
+    function atualizarResumo() {
+        const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        const total = carrinho.reduce((acc, item) => acc + (item.price * item.quantidade), 0);
+        
+        document.getElementById('contadorCarrinho').innerText = fM(total);
+        
+        // Barra de progresso do pedido mínimo
+        const perc = Math.min((total / PEDIDO_MINIMO) * 100, 100);
+        document.getElementById('progressoMin').style.width = perc + '%';
+    }
+
+    function filtrar(catId) {
+        const filtrados = allProducts.filter(p => p.category === catId);
+        renderGrid(filtrados);
     }
 
     window.onload = init;
 </script>
-
 </body>
 </html>
