@@ -17,12 +17,14 @@
         header { background: #000; border-bottom: 1px solid #222; }
         .btn-nav { border: 1px solid #caa85c; color: #caa85c; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; text-transform: uppercase; }
         .btn-nav:hover { background: #caa85c; color: #000; }
-        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; cursor: pointer; /* Indica que o quadro todo é clicável */ }
+        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; cursor: pointer; }
         .card-prod:hover { border-color: #caa85c; transform: translateY(-3px); }
         .img-container { width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; background:#1a1a1a; overflow:hidden; position:relative; }
         .img-container img { width:100%; height:100%; object-fit:cover; }
 
-        /* Estilos do Modal de Variações */
+        /* Banner de Atacado */
+        #bannerAtacado { background: linear-gradient(90deg, #141414, #1a1a1a); border: 1px border-[#caa85c]/30; border-radius: 12px; padding: 12px; margin-bottom: 25px; text-align: center; border-left: 4px solid #caa85c; }
+
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal.active { display:flex; }
         .modal-content { background:#141414; border: 1px solid #2a2a2a; padding: 24px; border-radius: 20px; width: 100%; max-width: 450px; text-align: center; max-height: 90vh; overflow-y: auto; }
@@ -34,8 +36,6 @@
         input[type="number"] { background: #000; border: 1px solid #333; color: #fff; outline: none; text-align: center; width: 100%; border-radius: 6px; }
 
         @media (max-width: 640px) {
-            .img-container img { padding: 4px !important; }
-            .card-prod { border-radius: 10px !important; }
             .grid-variacoes { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -58,6 +58,11 @@
 </header>
 
 <main class="max-w-7xl mx-auto p-6">
+    <div id="bannerAtacado" class="hidden">
+        <p class="text-[10px] uppercase tracking-widest gold-text font-bold mb-1">Vantagem de Atacado Ativa</p>
+        <p class="text-xs text-gray-400" id="msgAtacado">Quanto mais você compra, maior o seu desconto!</p>
+    </div>
+
     <h2 id="tituloCategoria" class="serif text-center text-xl mb-8 gold-text uppercase tracking-widest">...</h2>
     <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
 </main>
@@ -65,15 +70,14 @@
 <div id="modalQtd" class="modal">
     <div class="modal-content">
         <h3 class="serif gold-text text-lg mb-1" id="modalNomeProd">Produto</h3>
-        <img id="modalImgProd" class="w-full max-w-[250px] aspect-square object-cover rounded-xl mx-auto mb-4 border border-[#333] shadow-lg">
-        <p class="text-[10px] text-gray-500 uppercase mb-4" id="instrucaoModal">Escolha as quantidades</p>
+        <img id="modalImgProd" class="w-full max-w-[200px] aspect-square object-cover rounded-xl mx-auto mb-4 border border-[#333]">
+        <p class="text-[10px] text-gray-500 uppercase mb-4">Selecione as quantidades</p>
         
-        <div id="containerOpcoes">
-            </div>
+        <div id="containerOpcoes"></div>
         
         <div class="flex gap-2 mt-6">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-[10px] font-bold text-gray-500 uppercase">Voltar</button>
-            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase shadow-lg">Confirmar</button>
+            <button onclick="fecharModal()" class="flex-1 py-3 text-[10px] font-bold text-gray-500 uppercase">Cancelar</button>
+            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">Adicionar</button>
         </div>
     </div>
 </div>
@@ -87,17 +91,18 @@ if (!firebase.apps.length) {
 }
 const db = firebase.database();
 let produtoAtualParaAdd = null;
+let configEmpresa = { descontoPix: 5 };
 
-const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fM = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 function atualizarContador() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const totalValor = carrinho.reduce((acc, item) => {
+    const totalBruto = carrinho.reduce((acc, item) => {
         const preco = parseFloat(item.precoFinal || item.price || 0);
         const qtd = parseInt(item.quantidade || 1);
         return acc + (preco * qtd);
     }, 0);
-    document.getElementById('contadorCarrinho').innerText = fM(totalValor);
+    document.getElementById('contadorCarrinho').innerText = fM(totalBruto);
 }
 
 async function carregarProdutos() {
@@ -105,18 +110,24 @@ async function carregarProdutos() {
     const catId = params.get('id');
     if(!catId) { window.location.href = 'index.html'; return; }
 
-    const [empSnap, catSnap, promoSnap] = await Promise.all([
+    const [empSnap, catSnap, atacadoSnap] = await Promise.all([
         db.ref('settings/empresa').once('value'),
         db.ref('categories/' + catId).once('value'),
-        db.ref('settings/promocao').once('value')
+        db.ref('settings/promocoesValor').once('value')
     ]);
 
-    const v = empSnap.val() || { nome: "Abella Joias", descontoPix: 5, parcelas: 3 };
+    const v = empSnap.val() || { nome: "Abella Joias", descontoPix: 5 };
+    configEmpresa = v;
     const categoria = catSnap.val() || {};
-    const cnf = promoSnap.val() || { ativa: false };
+    const atacado = atacadoSnap.val();
 
     document.getElementById('nomeLoja').innerText = v.nome || "Abella Joias";
     document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
+
+    // Mostra banner se atacado estiver ativo
+    if(atacado && atacado.status === 'ATIVA') {
+        document.getElementById('bannerAtacado').classList.remove('hidden');
+    }
 
     db.ref('products').on('value', snap => {
         const grid = document.getElementById('gridProdutos');
@@ -126,49 +137,34 @@ async function carregarProdutos() {
             if (p.category !== catId || p.paused) return;
 
             const porcentagem = categoria.promoPct || p.promoPct || 0;
-            const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem / 100) : p.price;
+            const precoFinal = p.price * (1 - porcentagem / 100);
             const valorPix = precoFinal * (1 - (v.descontoPix / 100));
-            const pesoExibicao = p.peso || p.weight ? parseFloat(p.peso || p.weight).toFixed(2) : null;
+            const pesoExibicao = (p.peso || p.weight) ? parseFloat(p.peso || p.weight).toFixed(2) : null;
 
-            // Criamos o objeto do produto para passar no clique
             const prodData = JSON.stringify({ ...p, key: s.key, precoFinal }).replace(/'/g,"&apos;");
 
             grid.innerHTML += `
                 <div class="card-prod p-4 flex flex-col h-full" onclick='prepararAdd(${prodData})'>
                     <div class="img-container mb-4 rounded-xl relative">
-${cnf.ativa && porcentagem > 0 ? `
-    <span style="
-        position: absolute; 
-        top: 6px; 
-        left: 6px; 
-        background: ${categoria.promoColor || '#caa85c'}; 
-        color: ${categoria.promoTextColor || '#ffffff'}; 
-        font-size: 10px; 
-        font-weight: bold; 
-        padding: 2px 8px; 
-        border-radius: 4px; 
-        z-index: 10;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        text-transform: uppercase;
-    ">
-        ${categoria.promoTag || 'OFERTA'}
-    </span>
-` : ''}
+                        ${porcentagem > 0 ? `
+                            <span style="position: absolute; top: 8px; left: 8px; background: ${categoria.promoColor || '#caa85c'}; color: ${categoria.promoTextColor || '#fff'}; font-size: 9px; font-weight: bold; padding: 3px 10px; border-radius: 50px; z-index: 10; text-transform: uppercase;">
+                                ${categoria.promoTag || 'OFERTA'}
+                            </span>` : ''}
                         <img src="${p.image || 'https://via.placeholder.com/400'}" loading="lazy">
                     </div>
                     <div class="flex-1">
-                        <div class="text-[9px] text-gray-500 font-bold uppercase">SKU: ${p.sku || '---'}</div>
+                        <div class="text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">SKU: ${p.sku || '---'}</div>
                         <h3 class="text-[11px] font-bold uppercase mb-1 leading-tight h-8 overflow-hidden">${p.name}</h3>
-                        ${pesoExibicao ? `<div class="text-[10px] text-gray-400 mb-3 italic">Peso Médio: ${pesoExibicao}g</div>` : ''}
+                        ${pesoExibicao ? `<div class="text-[9px] text-gray-400 mb-2 italic">Peso: ${pesoExibicao}g</div>` : ''}
                         
                         <div class="mb-4">
                             ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
-                            <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
-                            <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
+                            <div class="text-base font-bold gold-text">${fM(precoFinal)}</div>
+                            <div class="text-[10px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
                         </div>
                     </div>
-                    <button class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase hover:opacity-80">
-                        Adicionar
+                    <button class="w-full border border-[#caa85c]/30 text-[#caa85c] py-2 rounded-lg text-[9px] font-bold uppercase">
+                        Ver Opções
                     </button>
                 </div>`;
         });
@@ -179,38 +175,27 @@ function prepararAdd(p) {
     produtoAtualParaAdd = p;
     document.getElementById('modalNomeProd').innerText = p.name;
     document.getElementById('modalImgProd').src = p.image || 'https://via.placeholder.com/300';
-        const container = document.getElementById('containerOpcoes');
+    const container = document.getElementById('containerOpcoes');
     container.innerHTML = '';
 
     if (p.variacaoTipo === 'Lista' && p.opcoesPersonalizadas) {
         const opcoes = p.opcoesPersonalizadas.split(',').map(o => o.trim());
         let html = '<div class="grid-variacoes">';
         opcoes.forEach(opt => {
-            html += `
-                <div class="item-variacao">
-                    <span>${opt}</span>
-                    <input type="number" min="0" value="0" data-var="${opt}" class="input-var-qtd p-2">
-                </div>`;
+            html += `<div class="item-variacao"><span>${opt}</span><input type="number" min="0" value="0" data-var="${opt}" class="input-var-qtd p-2"></div>`;
         });
         html += '</div>';
         container.innerHTML = html;
     } else if (p.variacaoTipo === 'Aro') {
-        const aros = ["10", "12", "14", "16", "18", "20", "22", "24", "26"];
+        const aros = ["12", "14", "16", "18", "20", "22", "24"];
         let html = '<div class="grid-variacoes">';
         aros.forEach(aro => {
-            html += `
-                <div class="item-variacao">
-                    <span>Aro ${aro}</span>
-                    <input type="number" min="0" value="0" data-var="${aro}" class="input-var-qtd p-2">
-                </div>`;
+            html += `<div class="item-variacao"><span>Aro ${aro}</span><input type="number" min="0" value="0" data-var="${aro}" class="input-var-qtd p-2"></div>`;
         });
         html += '</div>';
         container.innerHTML = html;
     } else {
-        container.innerHTML = `
-            <div class="mt-4">
-                <input type="number" id="inputQtdSimples" value="1" min="1" class="w-24 p-3 text-center text-xl font-bold border border-[#caa85c] rounded-xl">
-            </div>`;
+        container.innerHTML = `<div class="mt-4"><input type="number" id="inputQtdSimples" value="1" min="1" class="w-24 p-3 text-center text-xl font-bold border border-[#caa85c] rounded-xl bg-black text-white"></div>`;
     }
     document.getElementById('modalQtd').classList.add('active');
 }
@@ -224,11 +209,7 @@ document.getElementById('btnConfirmarAdd').onclick = () => {
         inputsVar.forEach(input => {
             const qtd = parseInt(input.value);
             if (qtd > 0) {
-                carrinho.push({
-                    ...produtoAtualParaAdd,
-                    name: `${produtoAtualParaAdd.name} (${input.dataset.var})`,
-                    quantidade: qtd
-                });
+                carrinho.push({ ...produtoAtualParaAdd, name: `${produtoAtualParaAdd.name} (${input.dataset.var})`, quantidade: qtd });
                 adicionouAlgo = true;
             }
         });
@@ -244,9 +225,6 @@ document.getElementById('btnConfirmarAdd').onclick = () => {
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         atualizarContador();
         fecharModal();
-        alert("Adicionado ao carrinho!");
-    } else {
-        alert("Selecione pelo menos 1 unidade.");
     }
 };
 
