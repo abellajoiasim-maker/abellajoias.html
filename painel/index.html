@@ -195,15 +195,32 @@ function showTab(id, btn) {
 async function abrirPainelPromocoes() {
     try {
         const snapshot = await db.ref('categories').once('value');
+        const settingsSnap = await db.ref('settings/promocao').once('value');
+        const configGeral = settingsSnap.val() || { ativa: false };
+
         const modalBody = document.getElementById('modalBody');
         document.getElementById('modalTitle').innerText = "PROMOÇÕES POR CATEGORIA";
-        modalBody.innerHTML = '';
+        
+        let html = `
+            <div class="card mb-6 border-emerald-500/30 bg-emerald-950/10 flex justify-between items-center">
+                <div>
+                    <b class="text-emerald-500 uppercase text-xs">Exibição de Etiquetas</b>
+                    <p class="text-[9px] text-gray-500">Ative para mostrar as etiquetas de oferta nos produtos.</p>
+                </div>
+                <button id="statusGlobalBtn" onclick="toggleGlobalPromo(this)" 
+                        class="px-6 py-2 rounded-full text-[10px] font-bold ${configGeral.ativa ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}">
+                    ${configGeral.ativa ? 'ATIVADO' : 'DESATIVADO'}
+                </button>
+            </div>
+            <div class="space-y-4">
+        `;
+
         snapshot.forEach(cat => {
             const c = cat.val();
             const id = cat.key;
             const isAtiva = c.promoStatus === 'ATIVA';
-            modalBody.innerHTML += `
-                <div class="card mb-4 border-[#222] bg-black/40">
+            html += `
+                <div class="card border-[#222] bg-black/40">
                     <div class="flex justify-between items-center mb-4">
                         <b class="text-[#caa85c] uppercase text-xs">${c.name}</b>
                         <button onclick="togglePromoStatus('${id}', this)" 
@@ -212,26 +229,27 @@ async function abrirPainelPromocoes() {
                         </button>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div><label class="text-[9px] text-gray-500 uppercase">Nome da Promoção</label><input id="p_name_${id}" value="${c.promoName || ''}"></div>
-                        <div><label class="text-[9px] text-gray-500 uppercase">Texto da Etiqueta</label><input id="p_tag_${id}" value="${c.promoTag || ''}"></div>
+                        <div class="col-span-2"><label class="text-[9px] text-gray-500 uppercase">Texto da Etiqueta</label><input id="p_tag_${id}" value="${c.promoTag || ''}"></div>
                         <div><label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label><input type="number" id="p_pct_${id}" value="${c.promoPct || 0}"></div>
                         <div><label class="text-[9px] text-gray-500 uppercase">Cor Etiqueta</label><input type="color" id="p_color_${id}" value="${c.promoColor || '#caa85c'}" class="h-10"></div>
-                        <div class="col-span-2"><label class="text-[9px] text-gray-500 uppercase">Cor do Texto</label><input type="color" id="p_tcolor_${id}" value="${c.promoTextColor || '#000000'}" class="h-10"></div>
                     </div>
                 </div>`;
         });
+
+        modalBody.innerHTML = html + `</div>`;
         document.getElementById('mainModal').classList.add('active');
+
         document.getElementById('modalSaveBtn').onclick = () => {
             const updates = {};
+            const isGlobalAtiva = document.getElementById('statusGlobalBtn').innerText === 'ATIVADO';
+            updates['settings/promocao/ativa'] = isGlobalAtiva;
             snapshot.forEach(cat => {
                 const id = cat.key;
-                updates[`categories/${id}/promoName`] = document.getElementById(`p_name_${id}`).value;
                 updates[`categories/${id}/promoTag`] = document.getElementById(`p_tag_${id}`).value;
                 updates[`categories/${id}/promoPct`] = Number(document.getElementById(`p_pct_${id}`).value);
                 updates[`categories/${id}/promoColor`] = document.getElementById(`p_color_${id}`).value;
-                updates[`categories/${id}/promoTextColor`] = document.getElementById(`p_tcolor_${id}`).value;
             });
-            db.ref().update(updates).then(() => { alert("Configurações salvas!"); fecharModal(); });
+            db.ref().update(updates).then(() => { alert("Salvo!"); fecharModal(); });
         };
     } catch (e) { console.error(e); }
 }
@@ -243,6 +261,11 @@ function togglePromoStatus(id, btn) {
         btn.innerText = newStatus;
         btn.className = `px-4 py-1 rounded-full text-[9px] font-bold ${newStatus === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
     });
+}
+    function toggleGlobalPromo(btn) {
+    const isAtiva = btn.innerText === 'ATIVADO';
+    btn.innerText = isAtiva ? 'DESATIVADO' : 'ATIVADO';
+    btn.className = `px-6 py-2 rounded-full text-[10px] font-bold ${!isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
 }
 
 /* --- AJUSTE CIRÚRGICO: PROMOÇÕES POR VALOR COM BOTÃO ATIVAR/DESATIVAR --- */
