@@ -7,150 +7,278 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
     <style>
         body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
+        .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
         .gold-bg { background: #caa85c; }
         .card { background: #141414; border-radius: 18px; border: 1px solid #2a2a2a; padding: 20px; margin-bottom: 20px; }
-        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; }
+        input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; }
         .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .pay-btn.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); }
-        .progress-fill { background: #caa85c; height: 100%; transition: width 0.6s ease; width: 0%; }
+        .btn-excluir { color: #ff4d4d; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .btn-excluir:hover { transform: scale(1.1); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
 
-<header class="sticky top-0 z-50 bg-black/95 p-4 border-b border-[#222] flex justify-between items-center">
-    <button onclick="history.back()" class="text-[10px] font-bold gold-text uppercase">← Voltar</button>
-    <h1 class="text-sm font-bold gold-text uppercase">Meu Carrinho</h1>
+<header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-[#222]">
+    <div class="max-w-xl mx-auto p-4 flex justify-between items-center">
+        <button onclick="history.back()" class="text-[10px] font-bold uppercase gold-text">← Voltar</button>
+        <h1 class="serif gold-text uppercase text-sm tracking-widest">Finalizar Pedido</h1>
+    </div>
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-40">
-    <div class="card border-dashed border-[#caa85c]">
-        <div class="flex justify-between mb-2">
-            <span id="labelProgresso" class="text-[10px] font-bold gold-text uppercase">Progresso</span>
-            <span id="pctAtual" class="text-xs font-bold">0%</span>
-        </div>
-        <div class="w-full bg-[#222] h-2 rounded-full overflow-hidden">
-            <div id="barraProgresso" class="progress-fill"></div>
-        </div>
-    </div>
-
-    <div id="listaItens" class="space-y-4 mb-6"></div>
-
     <div class="card">
-        <h2 class="text-center gold-text font-bold text-xs uppercase mb-4">Resumo Financeiro</h2>
-        <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span>Subtotal:</span> <span id="subtotalTxt">R$ 0,00</span></div>
-            <div id="linhaAtacado" class="flex justify-between text-emerald-500 hidden"><span>Desconto Atacado:</span> <span id="valorAtacado">- R$ 0,00</span></div>
-            <div class="flex justify-between border-t border-gray-800 pt-2 text-lg font-bold gold-text">
-                <span>Total:</span> <span id="totalFinalTxt">R$ 0,00</span>
+        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest opacity-70 text-center">Revisão do Pedido</h2>
+        <div id="listaItens" class="space-y-4"></div>
+
+        <div class="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-[#222]">
+            <div class="bg-black p-3 rounded-xl border border-[#222] text-center">
+                <span class="block text-[8px] uppercase text-gray-500 font-bold mb-1">Modelos</span>
+                <b id="totalSkus" class="text-white">0</b>
+            </div>
+            <div class="bg-black p-3 rounded-xl border border-[#222] text-center">
+                <span class="block text-[8px] uppercase text-gray-500 font-bold mb-1">Peças</span>
+                <b id="totalPecas" class="text-white">0</b>
+            </div>
+            <div class="bg-black p-3 rounded-xl border border-[#caa85c]/20 text-center">
+                <span class="block text-[8px] uppercase gold-text font-bold mb-1">Peso Total</span>
+                <b id="pesoTotal" class="text-white text-xs">0,00g</b>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h2 class="text-[10px] gold-text font-bold uppercase mb-4 text-center">Pagamento</h2>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="pay-btn" onclick="setPagamento('Pix', this)"><b>PIX</b><br><span class="text-[9px] text-emerald-500">BÔNUS EXTRA</span></div>
-            <div class="pay-btn" onclick="setPagamento('Cartão', this)"><b>CARTÃO</b><br><span class="text-[9px] text-gray-500">SEM JUROS</span></div>
+        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Identificação</h2>
+        <input id="nomeCliente" placeholder="Seu Nome Completo *">
+        <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
+    </div>
+
+    <div class="card">
+        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Local de Entrega</h2>
+        <input id="nomeEntrega" placeholder="Nome do Destinatário">
+        <input id="rua" placeholder="Rua / Avenida">
+        <div class="grid grid-cols-4 gap-2">
+            <input id="num" placeholder="Nº">
+            <input id="bairro" placeholder="Bairro" class="col-span-3">
+        </div>
+        <input id="cidade" placeholder="Cidade">
+        <input id="cepEntrega" placeholder="CEP">
+    </div>
+
+    <div class="card">
+        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2 text-center">Forma de Pagamento</h2>
+        <div class="grid grid-cols-2 gap-4" id="gradePagamento">
+            <div class="pay-btn" id="btnPix" onclick="setPagamento('Pix', this)">
+                <span class="block text-white font-bold">PIX</span>
+                <span id="labelTxtPix" class="text-[10px] text-green-500 font-bold uppercase">Com Desconto</span>
+            </div>
+            <div class="pay-btn" onclick="setPagamento('Cartão', this)">
+                <span class="block text-white font-bold">CARTÃO</span>
+                <span id="labelTxtCartao" class="text-[10px] text-blue-400 font-bold uppercase">Parcelado</span>
+            </div>
         </div>
     </div>
 
     <div class="card">
-        <input id="nomeCliente" placeholder="Seu Nome Completo">
-        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase shadow-lg">Finalizar no WhatsApp</button>
+        <h2 class="serif gold-text uppercase text-[10px] mb-6 tracking-widest text-center border-b border-[#222] pb-2">Resumo Financeiro</h2>
+        <div class="space-y-4">
+            <div class="flex justify-between text-gray-500 text-sm">
+                <span>Subtotal Itens</span>
+                <b id="subtotalTxt" class="text-white">R$ 0,00</b>
+            </div>
+            <div id="containerDescontos" class="space-y-3 pt-3 border-t border-dashed border-[#333]">
+                <div id="linhaDescontoPromo" class="flex justify-between text-emerald-500 italic text-sm hidden">
+                    <span id="labelPromo">Desconto Atacado</span>
+                    <b id="valorDescontoPromo">- R$ 0,00</b>
+                </div>
+                <div id="linhaCondicao" class="flex justify-between text-blue-300 italic text-sm hidden">
+                    <span id="labelCondicao">Bônus Pix</span>
+                    <b id="valorCondicao">- R$ 0,00</b>
+                </div>
+            </div>
+            <div class="mt-6 pt-6 border-t-2 border-[#caa85c] flex flex-col items-end">
+                <div id="totalTxt" class="text-3xl font-bold gold-text">R$ 0,00</div>
+            </div>
+        </div>
     </div>
 </main>
 
+<footer class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50 text-center">
+    <div class="max-w-xl mx-auto">
+        <button onclick="finalizarPedido()" class="w-full gold-bg text-black py-5 rounded-2xl font-bold uppercase tracking-widest shadow-lg">
+            Finalizar via WhatsApp
+        </button>
+    </div>
+</footer>
+
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+const firebaseConfig = {
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
 let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 let pagamento = '';
-let configEmpresa = { whats: '' };
+let configEmpresa = { descontoPix: 0, parcelas: 3, fone: '' };
 
 const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+async function inicializar() {
+    const snapEmp = await db.ref('settings/empresa').once('value');
+    if(snapEmp.exists()){
+        const d = snapEmp.val();
+        configEmpresa.descontoPix = Number(d.descontoPix) || 0;
+        configEmpresa.parcelas = Number(d.parcelas) || 3;
+        configEmpresa.fone = d.whats || '';
+    }
+    
+    // REGRA SOLICITADA: Oculta card do Pix se desconto for 0
+    if(configEmpresa.descontoPix <= 0) {
+        document.getElementById('btnPix').style.display = 'none';
+        document.getElementById('gradePagamento').classList.replace('grid-cols-2', 'grid-cols-1');
+    } else {
+        document.getElementById('labelTxtPix').innerText = `${configEmpresa.descontoPix}% de Desconto`;
+    }
+    
+    document.getElementById('labelTxtCartao').innerText = `Até ${configEmpresa.parcelas}x s/ juros`;
+    carregarCarrinho();
+}
+
+function excluirItem(index) {
+    if(confirm("Deseja remover este item?")) {
+        carrinho.splice(index, 1);
+        localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        carregarCarrinho();
+    }
+}
 
 function setPagamento(p, el) {
     pagamento = p;
     document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
+    carregarCarrinho();
 }
 
-async function render() {
-    const box = document.getElementById('listaItens');
+async function carregarCarrinho() {
+    let box = document.getElementById('listaItens');
     box.innerHTML = '';
-    let bruto = 0;
+    let bruto = 0, pesoTotal = 0, pecas = 0;
+
+    if(carrinho.length === 0) {
+        box.innerHTML = '<p class="text-center text-gray-500 py-10">Carrinho vazio</p>';
+    }
 
     carrinho.forEach((item, index) => {
-        let p = parseFloat(item.precoFinal || item.price);
-        bruto += (p * item.quantidade);
+        let q = parseInt(item.quantidade) || 1;
+        let p = Number(item.precoFinal || item.price || 0); // Mantém valor com desconto de categoria
+        let sku = item.sku || '---';
+        let pesoUnit = Number(item.peso || item.weight || 0);
+        
+        bruto += (p * q);
+        pecas += q;
+        pesoTotal += (pesoUnit * q);
+
         box.innerHTML += `
-            <div class="flex items-center gap-4 bg-[#141414] p-3 rounded-xl border border-[#222]">
-                <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg">
-                <div class="flex-1">
-                    <h4 class="text-[10px] font-bold uppercase">${item.name}</h4>
-                    <div class="flex items-center gap-2 mt-2">
-                        <button onclick="alterarQtd(${index},-1)" class="w-6 h-6 bg-[#222] border border-[#333] rounded">-</button>
-                        <span class="text-xs font-bold">${item.quantidade}</span>
-                        <button onclick="alterarQtd(${index},1)" class="w-6 h-6 bg-[#222] border border-[#333] rounded">+</button>
-                    </div>
+        <div class="flex items-center gap-3 py-4 border-b border-[#222]">
+            <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
+            <div class="flex-1">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
+                    <span class="btn-excluir text-[12px]" onclick="excluirItem(${index})">✕</span>
                 </div>
-                <div class="text-right font-bold text-sm">${fM(p * item.quantidade)}</div>
-            </div>`;
+                <div class="text-[9px] text-gray-500 mt-0.5">SKU: ${sku} | Peso: ${pesoUnit.toFixed(2)}g</div>
+                <div class="text-[#caa85c] text-xs font-bold mt-1">${q}x ${fM(p)}</div>
+            </div>
+            <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
+        </div>`;
     });
 
-    const snap = await db.ref('settings/promocaoValor').once('value');
-    let economia = 0;
-    if(snap.exists()){
-        const regras = Object.values(snap.val()).sort((a,b) => a.minimo - b.minimo);
-        let regraAtiva = [...regras].reverse().find(r => bruto >= r.minimo);
-        let proxima = regras.find(r => bruto < r.minimo);
-        
-        if(regraAtiva) {
-            economia = bruto * (regraAtiva.porcentagem / 100);
-            document.getElementById('linhaAtacado').classList.remove('hidden');
-            document.getElementById('valorAtacado').innerText = "- " + fM(economia);
-        }
+    // BUSCA REGRAS DE DESCONTO PROGRESSIVO (ATACADO)
+    const snapRegras = await db.ref('settings/promocaoValor').once('value');
+    let economiaPromo = 0;
 
-        if(proxima){
-            let falta = proxima.minimo - bruto;
-            document.getElementById('labelProgresso').innerText = `Faltam ${fM(falta)} para ${proxima.porcentagem}% OFF`;
-            document.getElementById('barraProgresso').style.width = (bruto / proxima.minimo * 100) + "%";
-            document.getElementById('pctAtual').innerText = (regraAtiva ? regraAtiva.porcentagem : 0) + "%";
-        } else {
-            document.getElementById('barraProgresso').style.width = "100%";
-            document.getElementById('labelProgresso').innerText = "Vantagem Máxima!";
-            document.getElementById('pctAtual').innerText = "100%";
+    if (snapRegras.exists()) {
+        const regras = Object.values(snapRegras.val()).sort((a, b) => b.minimo - a.minimo);
+        for (let r of regras) {
+            if (bruto >= r.minimo) {
+                economiaPromo = bruto * (Number(r.porcentagem) / 100);
+                break; 
+            }
         }
     }
 
-    document.getElementById('subtotalTxt').innerText = fM(bruto);
-    document.getElementById('totalFinalTxt').innerText = fM(bruto - economia);
-    window.finalVal = bruto - economia;
-}
+    const subtotalAposPromo = bruto - economiaPromo;
+    const descPix = (pagamento === 'Pix') ? (subtotalAposPromo * (configEmpresa.descontoPix / 100)) : 0;
+    const totalFinal = subtotalAposPromo - descPix;
 
-function alterarQtd(idx, d) {
-    carrinho[idx].quantidade += d;
-    if(carrinho[idx].quantidade <= 0) carrinho.splice(idx, 1);
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    render();
+    // Interface Atualização
+    document.getElementById('totalSkus').innerText = carrinho.length;
+    document.getElementById('totalPecas').innerText = pecas;
+    document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
+    document.getElementById('subtotalTxt').innerText = fM(bruto);
+
+    if (economiaPromo > 0) {
+        document.getElementById('linhaDescontoPromo').classList.remove('hidden');
+        document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaPromo);
+    } else {
+        document.getElementById('linhaDescontoPromo').classList.add('hidden');
+    }
+
+    if (descPix > 0) {
+        document.getElementById('linhaCondicao').classList.remove('hidden');
+        document.getElementById('labelCondicao').innerText = "Bônus Pix (" + configEmpresa.descontoPix + "%)";
+        document.getElementById('valorCondicao').innerText = "- " + fM(descPix);
+    } else if (pagamento === 'Cartão') {
+        document.getElementById('linhaCondicao').classList.remove('hidden');
+        document.getElementById('labelCondicao').innerText = `${configEmpresa.parcelas}x no Cartão`;
+        document.getElementById('valorCondicao').innerText = `${fM(totalFinal / configEmpresa.parcelas)} p/ mês`;
+    } else {
+        document.getElementById('linhaCondicao').classList.add('hidden');
+    }
+
+    document.getElementById('totalTxt').innerText = fM(totalFinal);
+    window.resumoFinal = { bruto, economiaPromo, descPix, totalFinal, pecas, pesoTotal };
 }
 
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if(!nome || !pagamento) return alert("Preencha nome e pagamento.");
-    const snap = await db.ref('settings/empresa').once('value');
-    const fone = snap.val().whats;
-    let msg = `Olá! Pedido de *${nome}*.\nTotal: ${fM(window.finalVal)}\nPagamento: ${pagamento}`;
-    localStorage.removeItem('carrinho'); // LIMPA CARRINHO APÓS SUCESSO
-    window.location.href = `https://api.whatsapp.com/send?phone=${fone}&text=${encodeURIComponent(msg)}`;
+    if (!nome || !pagamento) return alert("Por favor, preencha seu nome e escolha o pagamento.");
+    if (carrinho.length === 0) return alert("Seu carrinho está vazio.");
+
+    const pedido = {
+        cliente: { nome, telefone: document.getElementById('telefoneCliente').value },
+        entrega: {
+            nomeEntrega: document.getElementById('nomeEntrega').value,
+            rua: document.getElementById('rua').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value
+        },
+        pagamento,
+        itens: carrinho,
+        total: window.resumoFinal.totalFinal,
+        data: new Date().toLocaleString('pt-BR'),
+        status: "Novo"
+    };
+
+    try {
+        await db.ref('orders').push(pedido);
+        let msg = `Olá! Sou *${nome}*.\nFinalizei um pedido:\n\n*Total:* ${fM(window.resumoFinal.totalFinal)}\n*Pagamento:* ${pagamento}`;
+        localStorage.removeItem('carrinho');
+        window.location.href = `https://api.whatsapp.com/send?phone=${configEmpresa.fone}&text=${encodeURIComponent(msg)}`;
+    } catch (e) {
+        alert("Erro ao enviar pedido.");
+    }
 }
 
-window.onload = render;
+inicializar();
 </script>
 </body>
 </html>
