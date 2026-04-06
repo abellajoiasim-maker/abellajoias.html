@@ -22,8 +22,7 @@
         .img-container { width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; background:#1a1a1a; overflow:hidden; position:relative; }
         .img-container img { width:100%; height:100%; object-fit:cover; }
 
-        /* Banner de Atacado */
-        #bannerAtacado { background: linear-gradient(90deg, #141414, #1a1a1a); border: 1px border-[#caa85c]/30; border-radius: 12px; padding: 12px; margin-bottom: 25px; text-align: center; border-left: 4px solid #caa85c; }
+        #bannerAtacado { background: linear-gradient(90deg, #141414, #1a1a1a); border: 1px solid rgba(202, 168, 92, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 25px; text-align: center; border-left: 4px solid #caa85c; }
 
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal.active { display:flex; }
@@ -63,7 +62,7 @@
         <p class="text-xs text-gray-400" id="msgAtacado">Quanto mais você compra, maior o seu desconto!</p>
     </div>
 
-    <h2 id="tituloCategoria" class="serif text-center text-xl mb-8 gold-text uppercase tracking-widest">...</h2>
+    <h2 id="tituloCategoria" class="serif text-center text-xl mb-8 gold-text uppercase tracking-widest">Carregando...</h2>
     <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
 </main>
 
@@ -103,19 +102,17 @@ async function atualizarContador() {
         return acc + (preco * qtd);
     }, 0);
 
-    // Busca regras de atacado para ver se há desconto disponível
-    const promoSnap = await db.ref('settings/promocoesValor').once('value');
-    const regras = promoSnap.val() || [];
-    regras.sort((a, b) => b.min - a.min); // Maior para o menor
+    const promoSnap = await db.ref('settings/promocaoValor').once('value');
+    const regrasRaw = promoSnap.val() || {};
+    const regras = Object.values(regrasRaw).sort((a, b) => b.minimo - a.minimo);
     
-    const regraAtiva = regras.find(r => subtotal >= r.min);
-    let totalExibicao = subtotal;
-
+    let economia = 0;
+    const regraAtiva = regras.find(r => subtotal >= r.minimo);
     if (regraAtiva) {
-        totalExibicao = subtotal * (1 - (regraAtiva.desc / 100));
+        economia = subtotal * (Number(regraAtiva.porcentagem) / 100);
     }
 
-    document.getElementById('contadorCarrinho').innerText = fM(totalExibicao);
+    document.getElementById('contadorCarrinho').innerText = fM(subtotal - economia);
 }
 
 async function carregarProdutos() {
@@ -123,39 +120,37 @@ async function carregarProdutos() {
     const catId = params.get('id');
     if(!catId) { window.location.href = 'index.html'; return; }
 
-    const [empSnap, catSnap, atacadoSnap] = await Promise.all([
+    // Carrega Configurações da Empresa, Categoria específica e Status Global de Promoção
+    const [empSnap, catSnap, promoCnfSnap] = await Promise.all([
         db.ref('settings/empresa').once('value'),
         db.ref('categories/' + catId).once('value'),
-        db.ref('settings/promocoesValor').once('value')
+        db.ref('settings/promocao').once('value')
     ]);
 
     const v = empSnap.val() || { nome: "Abella Joias", descontoPix: 5 };
     configEmpresa = v;
     const categoria = catSnap.val() || {};
-    const atacado = atacadoSnap.val();
+    const promoCnf = promoCnfSnap.val() || { ativa: false };
 
     document.getElementById('nomeLoja').innerText = v.nome || "Abella Joias";
     document.getElementById('tituloCategoria').innerText = categoria.name || "Produtos";
 
-    // Mostra banner se atacado estiver ativo
-    if(atacado && atacado.status === 'ATIVA') {
-        document.getElementById('bannerAtacado').classList.remove('hidden');
-    }
-
-db.ref('products').on('value', snap => {
+    db.ref('products').on('value', snap => {
         const grid = document.getElementById('gridProdutos');
         grid.innerHTML = '';
+        let encontrou = false;
+
         snap.forEach(s => {
             const p = s.val();
             if (p.category !== catId || p.paused) return;
+            encontrou = true;
 
-            // LÓGICA CORRIGIDA: Só aplica se cnf.ativa for verdadeiro
-            const temPromoAtiva = cnf.ativa === true; 
+            const temPromoAtiva = promoCnf.ativa === true && categoria.promoStatus === "ATIVA"; 
             const porcentagem = temPromoAtiva ? (categoria.promoPct || p.promoPct || 0) : 0;
             
             const precoFinal = porcentagem > 0 ? p.price * (1 - porcentagem / 100) : p.price;
             const valorPix = precoFinal * (1 - (v.descontoPix / 100));
-            const pesoExibicao = p.peso || p.weight ? parseFloat(p.peso || p.weight).toFixed(2) : null;
+            const pesoExibicao = (p.peso || p.weight) ? parseFloat(p.peso || p.weight).toFixed(2) : null;
 
             const prodData = JSON.stringify({ ...p, key: s.key, precoFinal }).replace(/'/g,"&apos;");
 
@@ -163,20 +158,7 @@ db.ref('products').on('value', snap => {
                 <div class="card-prod p-4 flex flex-col h-full" onclick='prepararAdd(${prodData})'>
                     <div class="img-container mb-4 rounded-xl relative">
                         ${temPromoAtiva && porcentagem > 0 ? `
-                            <span style="
-                                position: absolute; 
-                                top: 6px; 
-                                left: 6px; 
-                                background: ${categoria.promoColor || '#caa85c'}; 
-                                color: ${categoria.promoTextColor || '#ffffff'}; 
-                                font-size: 10px; 
-                                font-weight: bold; 
-                                padding: 2px 8px; 
-                                border-radius: 4px; 
-                                z-index: 10;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                                text-transform: uppercase;
-                            ">
+                            <span style="position: absolute; top: 6px; left: 6px; background: ${categoria.promoColor || '#caa85c'}; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px; z-index: 10; text-transform: uppercase;">
                                 ${categoria.promoTag || 'OFERTA'}
                             </span>
                         ` : ''}
@@ -186,18 +168,21 @@ db.ref('products').on('value', snap => {
                         <div class="text-[9px] text-gray-500 font-bold uppercase">SKU: ${p.sku || '---'}</div>
                         <h3 class="text-[11px] font-bold uppercase mb-1 leading-tight h-8 overflow-hidden">${p.name}</h3>
                         ${pesoExibicao ? `<div class="text-[10px] text-gray-400 mb-3 italic">Peso Médio: ${pesoExibicao}g</div>` : ''}
-                        
                         <div class="mb-4">
                             ${porcentagem > 0 ? `<div class="text-[10px] text-gray-500 line-through">${fM(p.price)}</div>` : ''}
                             <div class="text-lg font-bold gold-text">${fM(precoFinal)}</div>
                             <div class="text-[11px] text-green-500 font-bold uppercase mt-1">Pix: ${fM(valorPix)}</div>
                         </div>
                     </div>
-                    <button class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase hover:opacity-80">
+                    <button class="w-full gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">
                         Adicionar
                     </button>
                 </div>`;
         });
+
+        if (!encontrou) {
+            grid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-10">Nenhum produto encontrado nesta categoria.</p>';
+        }
     });
 }
 
@@ -255,6 +240,7 @@ document.getElementById('btnConfirmarAdd').onclick = () => {
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
         atualizarContador();
         fecharModal();
+        alert("Adicionado!");
     }
 };
 
