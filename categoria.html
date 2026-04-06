@@ -13,188 +13,239 @@
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
         .gold-bg { background: #caa85c; }
-        #bannerProgressoAtacado { background: #1a1a1a; border-bottom: 2px solid #caa85c; padding: 12px; text-align: center; position: sticky; top: 0; z-index: 60; display: none; }
-        .card-prod { background:#141414; border-radius:15px; border:1px solid #2a2a2a; transition:.3s; display:flex; flex-direction:column; height:100%; overflow:hidden; position: relative; cursor: pointer; }
-        .tag-atacado-flash { position: absolute; top: 8px; right: 8px; background: linear-gradient(45deg, #caa85c, #f1d592); color: #000; font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 6px; z-index: 20; animation: pulse-gold 2s infinite; }
-        @keyframes pulse-gold { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; padding: 20px; }
-        .modal.active { display:flex; }
-        .grid-variacoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        input[type="number"] { background: #000; border: 1px solid #333; color: #fff; text-align: center; width: 100%; border-radius: 6px; padding: 5px; }
-        .price-old { text-decoration: line-through; color: #666; font-size: 0.75rem; }
-        /* Destaque para Informações Técnicas */
-        .info-tecnica { font-size: 0.85rem; color: #bbb; background: #1a1a1a; padding: 4px 8px; border-radius: 6px; border: 1px solid #333; margin-top: 4px; display: inline-block; }
+        
+        /* BANNER DE PROGRESSO */
+        #bannerProgressoAtacado { 
+            background: #1a1a1a; 
+            border-bottom: 2px solid #caa85c; 
+            padding: 12px; 
+            text-align: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 60; 
+            display: none; /* Inicia oculto, JS ativa se houver promo */
+        }
+        .barra-bg { background: #333; height: 8px; border-radius: 10px; margin-top: 8px; overflow: hidden; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; }
+        #barraProgressoTopo { background: #caa85c; height: 100%; width: 0%; transition: 0.5s; }
+
+        .product-card { background: #141414; border: 1px solid #2a2a2a; border-radius: 20px; transition: 0.3s; position: relative; overflow: hidden; }
+        .tag-atacado-flash { position: absolute; top: 10px; right: 10px; background: #caa85c; color: #000; font-size: 9px; font-weight: bold; padding: 3px 8px; border-radius: 5px; z-index: 10; }
+        .info-tecnica { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .price-old { text-decoration: line-through; color: #666; font-size: 11px; }
+
+        /* MODAL ADD */
+        #modalAdd { position: fixed; bottom: 0; left: 0; width: 100%; background: #141414; border-top: 2px solid #caa85c; z-index: 100; padding: 20px; transform: translateY(100%); transition: 0.4s; border-radius: 30px 30px 0 0; }
+        #modalAdd.active { transform: translateY(0); }
+        .btn-qty { background: #222; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid #444; }
+
+        /* MENU INFERIOR */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #666; text-decoration: none; }
+        .nav-item.active { color: #caa85c; }
+        .cart-count { position: absolute; top: -5px; right: -8px; background: #caa85c; color: #000; font-size: 9px; width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="bannerProgressoAtacado">
-    <div class="max-w-xl mx-auto">
-        <p id="msgAtacadoTopo" class="text-[10px] font-bold gold-text uppercase mb-1"></p>
-        <div class="w-full bg-[#333] h-1.5 rounded-full overflow-hidden">
-            <div id="barraProgressoTopo" class="gold-bg h-full transition-all duration-500" style="width: 0%"></div>
-        </div>
+    <div id="msgAtacadoTopo" class="text-[11px] font-medium">Carregando ofertas...</div>
+    <div class="barra-bg">
+        <div id="barraProgressoTopo"></div>
     </div>
 </div>
 
-<header class="bg-black/90 p-6 text-center border-b border-[#222]">
-    <h1 class="serif text-3xl gold-text uppercase" id="nomeLoja">Abella Joias</h1>
-    <div class="flex gap-3 justify-center mt-4">
-        <a href="index.html" class="px-4 py-1 border border-[#caa85c] gold-text text-[10px] font-bold rounded-full">VOLTAR</a>
-        <a href="carrinho.html" class="gold-bg text-black px-4 py-1 rounded-full font-bold text-[10px] flex items-center gap-2">
-            CARRINHO: <span id="contadorCarrinho">R$ 0,00</span>
-        </a>
-    </div>
+<header class="p-6 pb-2 text-center">
+    <h1 class="serif gold-text text-2xl tracking-widest uppercase">Abella Joias</h1>
+    <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Ouro 18k & Pedrarias Luxo</p>
 </header>
 
-<main class="max-w-7xl mx-auto p-4">
-    <div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-</main>
+<div id="catContainer" class="flex overflow-x-auto gap-3 px-6 py-4 no-scrollbar">
+    <button onclick="filtrar('TUDO')" class="flex-shrink-0 bg-white text-black px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-tighter">Tudo</button>
+</div>
 
-<div id="modalQtd" class="modal">
-    <div class="bg-[#141414] p-6 rounded-2xl w-full max-w-sm border border-[#2a2a2a] text-center">
-        <img id="modalImgProd" src="" class="w-24 h-24 object-cover mx-auto rounded-lg mb-3 border border-[#333]">
-        <h3 id="modalNomeProd" class="gold-text font-bold mb-4 uppercase text-xs">Produto</h3>
-        <div id="containerOpcoes"></div>
-        <div class="flex gap-2 mt-6">
-            <button onclick="document.getElementById('modalQtd').classList.remove('active')" class="flex-1 text-gray-500 text-[10px] uppercase font-bold">Cancelar</button>
-            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">Confirmar</button>
+<div id="listaProdutos" class="grid grid-cols-2 gap-4 px-4 pb-20">
+    </div>
+
+<div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+        <svg class="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+        Início
+    </a>
+    <a href="produtos.html" class="nav-item active">
+        <svg class="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>
+        Catálogo
+    </a>
+    <a href="carrinho.html" class="nav-item relative">
+        <div id="cartCount" class="cart-count">0</div>
+        <svg class="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        Carrinho
+    </a>
+</div>
+
+<div id="overlay" class="fixed inset-0 bg-black/80 hidden z-[90]" onclick="fecharAdd()"></div>
+<div id="modalAdd">
+    <div id="infoProdAdd" class="flex gap-4 mb-6"></div>
+    <div class="flex items-center justify-between bg-[#000] p-4 rounded-2xl border border-[#222]">
+        <span class="text-xs font-bold uppercase">Quantidade</span>
+        <div class="flex items-center gap-4">
+            <button onclick="mudarQtd(-1)" class="btn-qty">-</button>
+            <span id="qtdVal" class="font-bold text-lg">1</span>
+            <button onclick="mudarQtd(1)" class="btn-qty">+</button>
         </div>
     </div>
+    <button onclick="confirmarAdd()" class="w-full gold-bg text-black font-bold py-4 rounded-2xl mt-6 uppercase text-xs tracking-widest">Adicionar ao Carrinho</button>
 </div>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+// CONFIGURAÇÃO FIREBASE
+const firebaseConfig = {
+    apiKey: "AIzaSyB...",
+    authDomain: "loja-joias-62725.firebaseapp.com",
+    databaseURL: "https://loja-joias-62725-default-rtdb.firebaseio.com",
+    projectId: "loja-joias-62725",
+    storageBucket: "loja-joias-62725.appspot.com",
+    messagingSenderId: "360060012543",
+    appId: "1:360060012543:web:757367c06eb7042858b456"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let produtosCache = {};
-let configEmpresa = { descontoPix: 0 };
+let allProducts = [], categories = [], configEmpresa = {}, promoAtacado = null;
+let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+let currentProd = null, qtd = 1;
 
-const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fM = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-async function carregarConfig() {
-    const snap = await db.ref('settings/empresa').once('value');
-    if(snap.exists()) configEmpresa.descontoPix = Number(snap.val().descontoPix) || 0;
-}
-
-async function atualizarVantagens() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const subtotal = carrinho.reduce((acc, i) => acc + (parseFloat(i.precoFinal || i.price || 0) * i.quantidade), 0);
-    document.getElementById('contadorCarrinho').innerText = fM(subtotal);
-
-    const snap = await db.ref('settings/promocaoValor').once('value');
-    if(snap.exists()){
-        const regras = Object.values(snap.val()).sort((a,b) => a.minimo - b.minimo);
-        let proxima = regras.find(r => subtotal < r.minimo);
-        document.getElementById('bannerProgressoAtacado').style.display = 'block';
-        
-        if(proxima){
-            let falta = proxima.minimo - subtotal;
-            let pct = (subtotal / proxima.minimo) * 100;
-            document.getElementById('msgAtacadoTopo').innerHTML = `Faltam <span class="text-white">${fM(falta)}</span> para <span class="text-white">${proxima.porcentagem}% OFF</span>`;
-            document.getElementById('barraProgressoTopo').style.width = pct + "%";
-        } else {
-            document.getElementById('msgAtacadoTopo').innerText = "🚀 DESCONTO ATACADO ATIVADO!";
-            document.getElementById('barraProgressoTopo').style.width = "100%";
-        }
-    }
-}
-
-function prepararAdd(id) {
-    let p = produtosCache[id];
-    document.getElementById('modalImgProd').src = p.image;
-    document.getElementById('modalNomeProd').innerText = p.name;
-    const container = document.getElementById('containerOpcoes');
+// INICIALIZAR DADOS
+window.onload = () => {
+    db.ref('settings/general').once('value', s => { configEmpresa = s.val() || {}; });
     
-    if(p.variacaoTipo === 'Aro'){
-        let html = '<div class="grid-variacoes">';
-        ["12","14","16","18","20","22","24"].forEach(a => {
-            html += `<div class="bg-black p-2 rounded"> <span class="text-[9px] gold-text">Aro ${a}</span> <input type="number" class="input-var" data-var="${a}" value="0" min="0"> </div>`;
-        });
-        container.innerHTML = html + '</div>';
-    } else {
-        container.innerHTML = `<input type="number" id="qtdSimples" value="1" min="1" class="w-20 bg-black border border-gray-700 p-2 text-center text-xl mt-4">`;
-    }
-    document.getElementById('modalQtd').classList.add('active');
-    window.prodIdAtual = id;
-}
+    // ESCUTA REGRAS DE PROMOÇÃO ATACADO
+    db.ref('settings/promocoesValor').on('value', s => {
+        promoAtacado = s.val();
+        atualizarBarraProgresso();
+    });
 
-document.getElementById('btnConfirmarAdd').onclick = () => {
-    let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    let p = produtosCache[window.prodIdAtual];
-    const inputsVar = document.querySelectorAll('.input-var');
-    
-    const add = (nome, qtd) => {
-        let ex = carrinho.find(i => i.name === nome);
-        if(ex) ex.quantidade += qtd;
-        else carrinho.push({ 
-            ...p, 
-            name: nome, 
-            quantidade: qtd, 
-            sku: p.sku || '---', 
-            peso: p.peso || p.weight || 0,
-            precoFinal: p.price 
-        });
-    };
+    db.ref('categories').once('value', s => {
+        categories = s.val();
+        renderCats();
+    });
 
-    if(inputsVar.length > 0){
-        inputsVar.forEach(i => { if(parseInt(i.value) > 0) add(`${p.name} (${i.dataset.var})`, parseInt(i.value)); });
-    } else {
-        let q = parseInt(document.getElementById('qtdSimples').value);
-        if(q > 0) add(p.name, q);
-    }
-    
-    localStorage.setItem('carrinho', JSON.stringify(carrinho));
-    document.getElementById('modalQtd').classList.remove('active');
-    atualizarVantagens();
+    db.ref('products').on('value', s => {
+        allProducts = [];
+        s.forEach(child => { allProducts.push({ key: child.key, ...child.val() }); });
+        filtrar('TUDO');
+        atualizarCartIcon();
+    });
 };
 
-async function carregar() {
-    await carregarConfig();
-    const params = new URLSearchParams(window.location.search);
-    const catId = params.get('id');
+// ATUALIZA BARRA DE PROGRESSO (VISUAL)
+function atualizarBarraProgresso() {
+    const banner = document.getElementById('bannerProgressoAtacado');
+    const msg = document.getElementById('msgAtacadoTopo');
+    const barra = document.getElementById('barraProgressoTopo');
 
-    db.ref('products').on('value', snap => {
-        const grid = document.getElementById('gridProdutos');
-        grid.innerHTML = '';
-        snap.forEach(s => {
-            const p = s.val();
-            if(p.category === catId && !p.paused){
-                produtosCache[s.key] = p;
-                
-                let temDescontoPix = configEmpresa.descontoPix > 0;
-                let precoPix = p.price * (1 - (configEmpresa.descontoPix / 100));
-                
-                grid.innerHTML += `
-                <div class="card-prod p-4" onclick="prepararAdd('${s.key}')">
-                    <div class="tag-atacado-flash">ATACADO</div>
-                    <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg mb-2">
-                    
-                    <h3 class="text-[11px] font-bold uppercase h-7 overflow-hidden leading-tight mb-1">${p.name}</h3>
-                    
-                    <div class="info-tecnica font-bold mb-2">
-                        SKU: <span class="text-white">${p.sku || '---'}</span> | 
-                        Peso: <span class="gold-text">${p.peso || p.weight || 0}g</span>
-                    </div>
-                    
-                    <div class="mt-auto">
-                        ${temDescontoPix ? `<div class="price-old">${fM(p.price)}</div>` : ''}
-                        <div class="gold-text font-bold text-xl leading-none">
-                            ${temDescontoPix ? fM(precoPix) : fM(p.price)}
-                        </div>
-                        ${temDescontoPix ? `<div class="text-[8px] text-green-500 font-bold uppercase mt-1">no pix com ${configEmpresa.descontoPix}% off</div>` : ''}
-                    </div>
-                    
-                    <button class="w-full border border-[#caa85c] gold-text py-2 rounded-lg mt-3 text-[9px] font-bold uppercase">Adicionar</button>
-                </div>`;
-            }
-        });
-    });
-    atualizarVantagens();
+    if (!promoAtacado || !promoAtacado.ativa || !promoAtacado.regras) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    let subtotal = carrinho.reduce((acc, item) => acc + (item.price * item.qnt), 0);
+    let proximaRegra = promoAtacado.regras.find(r => subtotal < r.min);
+    let regraAtual = [...promoAtacado.regras].reverse().find(r => subtotal >= r.min);
+
+    banner.style.display = 'block';
+
+    if (proximaRegra) {
+        let falta = proximaRegra.min - subtotal;
+        let percentual = (subtotal / proximaRegra.min) * 100;
+        msg.innerHTML = `Faltam <span class="gold-text font-bold">R$ ${falta.toFixed(2)}</span> para você ganhar <span class="gold-text font-bold">${proximaRegra.desc}% OFF</span>`;
+        barra.style.width = `${percentual}%`;
+    } else if (regraAtual) {
+        msg.innerHTML = `<span class="text-green-500 font-bold">✨ DESCONTO DE ${regraAtual.desc}% APLICADO!</span>`;
+        barra.style.width = '100%';
+    } else {
+        let primeira = promoAtacado.regras[0];
+        msg.innerHTML = `Compre <span class="gold-text font-bold">R$ ${primeira.min}</span> e ganhe <span class="gold-text font-bold">${primeira.desc}% de desconto!</span>`;
+        barra.style.width = '0%';
+    }
 }
 
-window.onload = carregar;
+function renderCats() {
+    const container = document.getElementById('catContainer');
+    for (let k in categories) {
+        container.innerHTML += `<button onclick="filtrar('${categories[k].name}')" class="flex-shrink-0 bg-[#141414] border border-[#222] text-gray-400 px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-tighter hover:text-white">${categories[k].name}</button>`;
+    }
+}
+
+function filtrar(cat) {
+    const list = document.getElementById('listaProdutos');
+    list.innerHTML = '';
+    const filtrados = cat === 'TUDO' ? allProducts : allProducts.filter(p => p.category === cat);
+
+    filtrados.forEach(p => {
+        const temDescontoPix = configEmpresa.descontoPix > 0;
+        const precoPix = p.price * (1 - configEmpresa.descontoPix / 100);
+
+        list.innerHTML += `
+            <div class="product-card p-4" onclick="prepararAdd('${p.key}')">
+                ${promoAtacado && promoAtacado.ativa ? '<div class="tag-atacado-flash">ATACADO</div>' : ''}
+                <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg mb-2">
+                <h3 class="text-[11px] font-bold uppercase h-7 overflow-hidden leading-tight mb-1">${p.name}</h3>
+                <div class="info-tecnica font-bold mb-2">SKU: <span class="text-white">${p.sku || '---'}</span></div>
+                <div class="mt-auto">
+                    ${temDescontoPix ? `<div class="price-old">${fM(p.price)}</div>` : ''}
+                    <div class="gold-text font-bold text-xl leading-none">
+                        ${temDescontoPix ? fM(precoPix) : fM(p.price)}
+                    </div>
+                </div>
+                <button class="w-full border border-[#caa85c] gold-text py-2 rounded-lg mt-3 text-[9px] font-bold uppercase">Adicionar</button>
+            </div>`;
+    });
+}
+
+function prepararAdd(key) {
+    currentProd = allProducts.find(p => p.key === key);
+    qtd = 1;
+    document.getElementById('qtdVal').innerText = qtd;
+    document.getElementById('infoProdAdd').innerHTML = `
+        <img src="${currentProd.image}" class="w-16 h-16 rounded-lg object-cover">
+        <div>
+            <h4 class="text-xs font-bold uppercase">${currentProd.name}</h4>
+            <p class="gold-text font-bold">${fM(currentProd.price)}</p>
+        </div>`;
+    document.getElementById('modalAdd').classList.add('active');
+    document.getElementById('overlay').classList.remove('hidden');
+}
+
+function mudarQtd(v) {
+    qtd = Math.max(1, qtd + v);
+    document.getElementById('qtdVal').innerText = qtd;
+}
+
+function fecharAdd() {
+    document.getElementById('modalAdd').classList.remove('active');
+    document.getElementById('overlay').classList.add('hidden');
+}
+
+function confirmarAdd() {
+    const item = { ...currentProd, qnt: qtd };
+    const index = carrinho.findIndex(i => i.key === item.key);
+    
+    if (index > -1) carrinho[index].qnt += qtd;
+    else carrinho.push(item);
+    
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    atualizarCartIcon();
+    atualizarBarraProgresso();
+    fecharAdd();
+}
+
+function atualizarCartIcon() {
+    const count = carrinho.reduce((acc, i) => acc + i.qnt, 0);
+    document.getElementById('cartCount').innerText = count;
+}
 </script>
+
 </body>
 </html>
