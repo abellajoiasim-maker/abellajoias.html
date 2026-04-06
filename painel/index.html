@@ -2,13 +2,29 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Administrativo • Abella Joias</title>
+    <title>Catálogo em Manutenção • Abellize</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <script>
+        // Redirecionamento Automático Imediato para WhatsApp
+        (function() {
+            const seuNumero = "5519988207658";
+            const mensagem = "Olá! O catálogo está em manutenção técnica, mas estou disponível para atendimento por aqui.";
+            window.location.href = `https://api.whatsapp.com/send?phone=${seuNumero}&text=${encodeURIComponent(mensagem)}`;
+        })();
+    </script>
 
     <style>
+        body { background: #0b0b0b; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #caa85c; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <div style="text-align: center; padding: 20px;">
+        <h2 style="text-transform: uppercase; letter-spacing: 2px;">Abellize Semijoias</h2>
+        <p style="color: #eee;">Redirecionando para atendimento no WhatsApp...</p>
+    </div>
+</body>
+</html>
         body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
         nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
         section { display:none; min-height:300px; }
