@@ -24,7 +24,7 @@
         
         #print-area { display: none; }
 
-        /* AJUSTE DE LAYOUT DE IMPRESSÃO PARA EVITAR PÁGINA EM BRANCO */
+        /* AJUSTE DE LAYOUT DE IMPRESSÃO (CORREÇÃO PÁGINA EM BRANCO) */
         @media print {
             @page { size: A4; margin: 10mm; }
             html, body { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
@@ -33,9 +33,22 @@
             #print-area { 
                 position: absolute; left: 0; top: 0; width: 100%; 
                 display: block !important; background: #fff; 
-                page-break-after: avoid !important; /* CORREÇÃO AQUI */
+                page-break-after: avoid !important;
             }
             .no-print { display: none !important; }
+
+            /* Estilos de Romaneio Luxo (index) */
+            .header-luxo { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; }
+            .header-luxo h1 { font-size: 35px; letter-spacing: 5px; margin: 0; font-weight: 900; }
+            .caixa-dados { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 15px; }
+            .caixa-dados td { border: 1.5px solid #d4af37; padding: 12px; vertical-align: top; width: 50%; font-size: 11px; border-radius: 10px; position: relative; }
+            .titulo-box { position: absolute; top: -9px; left: 10px; background: #fff; padding: 0 5px; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #d4af37; }
+            .grid-romaneio { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
+            .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
+            .grid-item img { max-width: 80px; max-height: 80px; object-fit: contain; margin-bottom: 5px; }
+            .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; }
+            .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
+            .tab-romaneio th { background: #f2f2f2; font-size: 10px; text-transform: uppercase; }
         }
     </style>
 </head>
@@ -118,15 +131,47 @@
         <h2 class="text-[#caa85c] font-bold text-lg uppercase">Editar Pedido</h2>
         <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-xl">R$ 0,00</div>
     </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase">Dados do Cliente</h3>
+        <input id="edClienteNome" placeholder="Nome">
+        <input id="edClienteTel" placeholder="WhatsApp">
+      </div>
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest">Endereço de Entrega</h3>
+        <input id="edNomeEntrega" placeholder="Nome do Destinatário">
+        <input id="edRua" placeholder="Rua e Número">
+        <div class="grid grid-cols-2 gap-2">
+            <input id="edBairro" placeholder="Bairro">
+            <input id="edCidade" placeholder="Cidade">
+        </div>
+      </div>
+    </div>
+
+    <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c] uppercase">Itens da Compra</h3>
     <div id="edItens" class="space-y-2"></div>
+    <button class="btn w-full mt-2 border-dashed border-gray-600 text-gray-400" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
+
     <div class="grid grid-cols-3 gap-3 mt-6 p-4 bg-black/40 rounded-xl">
-        <div><label class="text-[9px] text-gray-500">PROMO (R$ ou %)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
         <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
         <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
     </div>
-    <div class="mt-6 flex justify-between gap-4">
-        <button class="btn px-8 text-red-400" onclick="fecharEditorPedido()">SAIR</button>
-        <button class="btn-gold flex-1" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+
+    <div class="mt-6 pt-4 border-t border-[#222]">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <button class="btn bg-gray-800 border-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
+        <button class="btn bg-blue-900 border-blue-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-between">
+        <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR</button>
+        <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+      </div>
     </div>
   </div>
 </div>
@@ -134,7 +179,6 @@
 <div id="print-area"></div>
 
 <script>
-// CONFIGURAÇÃO FIREBASE ORIGINAL
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
@@ -143,9 +187,11 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let pedidoEditando = null;
-const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-// NAVEGAÇÃO
+// CORREÇÃO DE MOEDA E DECIMAIS (Ajuste para evitar erros de subtração)
+const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v.toFixed(2)) || 0);
+const fPeso = g => (Number(g) || 0).toLocaleString('pt-BR') + ' g';
+
 function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -154,130 +200,11 @@ function showTab(id, btn) {
     if (id === 'categorias') carregarCategorias();
     if (id === 'produtos') carregarProdutos();
     if (id === 'pedidos') carregarPedidos();
+    if (id === 'empresa') carregarEmpresa();
 }
 
-// EMPRESA
-function salvarEmpresa() {
-    db.ref('settings/empresa').update({
-        nome: document.getElementById('empNome').value,
-        subtitulo: document.getElementById('empSub').value,
-        whats: document.getElementById('empWhats').value,
-        descontoPix: Number(document.getElementById('empDesc').value),
-        parcelas: Number(document.getElementById('empParc').value)
-    }).then(() => alert('Salvo!'));
-}
-
-// CATEGORIAS & PRODUTOS (CÓDIGO ORIGINAL)
-function carregarCategorias() {
-    db.ref('categories').on('value', s => {
-        const lista = document.getElementById('listaCategorias');
-        lista.innerHTML = '';
-        s.forEach(c => {
-            lista.innerHTML += `<div class="card flex justify-between items-center">
-                <span class="uppercase text-xs font-bold">${c.val().name}</span>
-                <button class="btn text-red-500" onclick="if(confirm('Excluir?')) db.ref('categories/${c.key}').remove()">🗑</button>
-            </div>`;
-        });
-    });
-}
-function novaCategoria() {
-    const n = document.getElementById('newCatName').value;
-    if(n) db.ref('categories').push({name:n}).then(()=>document.getElementById('newCatName').value='');
-}
-
-function carregarProdutos() {
-    const lista = document.getElementById('listaProdutos');
-    lista.innerHTML = 'Carregando...';
-    db.ref('products').once('value', s => {
-        lista.innerHTML = '';
-        s.forEach(p => {
-            const prod = p.val();
-            lista.innerHTML += `<div class="card flex justify-between items-center mb-1 text-xs">
-                <span><b>[${prod.sku}]</b> ${prod.name}</span>
-                <span>${fMoeda(prod.price)}</span>
-            </div>`;
-        });
-    });
-}
-
-// PEDIDOS COM ARREDONDAMENTO CORRIGIDO
-function carregarPedidos() {
-    db.ref('orders').on('value', s => {
-        const lista = document.getElementById('listaPedidos');
-        lista.innerHTML = '';
-        s.forEach(ped => {
-            const p = ped.val();
-            lista.innerHTML += `<div class="card flex justify-between items-center">
-                <div><b class="text-[#caa85c]">${p.cliente?.nome || 'Cliente'}</b><br><small>${p.data}</small></div>
-                <div class="text-right">
-                    <b>${fMoeda(p.total)}</b><br>
-                    <button class="btn mt-2" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
-                </div>
-            </div>`;
-        });
-    });
-}
-
-function recalcularTotalEd() {
-    let subtotal = 0;
-    document.querySelectorAll('#edItens > div').forEach(div => {
-        const inputs = div.querySelectorAll('input');
-        const preco = Number(inputs[3].value) || 0;
-        const qtd = Number(inputs[4].value) || 0;
-        subtotal += Math.round((preco * qtd) * 100) / 100; // ARREDONDAMENTO
-    });
-
-    let descP = Number(document.getElementById('edDescPromo').value) || 0;
-    const descX = Number(document.getElementById('edDescPix').value) || 0;
-    const frete = Number(document.getElementById('edFrete').value) || 0;
-
-    if (descP > 0 && descP < 100) descP = Math.round((subtotal * (descP / 100)) * 100) / 100;
-
-    const total = subtotal - descP - descX + frete;
-    document.getElementById('totalPreview').innerText = fMoeda(Math.round(total * 100) / 100);
-}
-
-// --- FUNÇÃO ADICIONAL: PROMOÇÃO POR VALOR (FAIXAS) ---
-async function abrirPainelPromocoesValor() {
-    const snap = await db.ref('settings/promocoes_valor').once('value');
-    const regras = snap.val() || [];
-    let html = `<div id="listaRegras" class="space-y-3">`;
-    Object.values(regras).sort((a,b)=>a.minimo - b.minimo).forEach(r => {
-        html += `<div class="card bg-black/40 grid grid-cols-2 gap-2 border-[#333]">
-            <div><label class="text-[9px] text-gray-500 uppercase">Mínimo (R$)</label><input type="number" value="${r.minimo}"></div>
-            <div><label class="text-[9px] text-gray-400">Desconto (% ou R$)</label><input type="number" value="${r.desconto}"></div>
-            <button onclick="this.parentElement.remove()" class="text-red-500 text-[9px] col-span-2 text-left">× REMOVER FAIXA</button>
-        </div>`;
-    });
-    html += `</div><button class="btn w-full mt-4 border-dashed" onclick="addRegraHTML()">+ ADICIONAR NOVA FAIXA</button>`;
-    
-    document.getElementById('modalTitle').innerText = 'PROMOÇÕES POR VALOR';
-    document.getElementById('modalBody').innerHTML = html;
-    document.getElementById('mainModal').classList.add('active');
-    document.getElementById('modalSaveBtn').onclick = () => {
-        const novas = [];
-        document.querySelectorAll('#listaRegras > div').forEach(div => {
-            const ins = div.querySelectorAll('input');
-            if(ins[0].value) novas.push({ minimo: Number(ins[0].value), desconto: Number(ins[1].value) });
-        });
-        db.ref('settings/promocoes_valor').set(novas).then(() => { alert("Salvo!"); fecharModal(); });
-    };
-}
-function addRegraHTML() {
-    const div = document.createElement('div');
-    div.className = "card bg-black/40 grid grid-cols-2 gap-2 border-[#333] mt-2";
-    div.innerHTML = `<div><label class="text-[9px]">VALOR MÍNIMO</label><input type="number"></div>
-                     <div><label class="text-[9px]">DESCONTO</label><input type="number"></div>
-                     <button onclick="this.parentElement.remove()" class="text-red-500 text-[9px] col-span-2 text-left">× REMOVER</button>`;
-    document.getElementById('listaRegras').appendChild(div);
-}
-
-// MANUTENÇÃO DOS ORIGINAIS
-function abrirPainelPromocoes() { /* Mantém sua função original de categoria aqui */ alert("Função original de categorias ativa."); }
-function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
-function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
-
-window.onload = () => {
+/* EMPRESA */
+function carregarEmpresa() {
     db.ref('settings/empresa').once('value', s => {
         const v = s.val() || {};
         document.getElementById('empNome').value = v.nome || '';
@@ -286,7 +213,303 @@ window.onload = () => {
         document.getElementById('empDesc').value = v.descontoPix || 0;
         document.getElementById('empParc').value = v.parcelas || 0;
     });
-};
+}
+function salvarEmpresa() {
+    db.ref('settings/empresa').update({
+        nome: document.getElementById('empNome').value,
+        subtitulo: document.getElementById('empSub').value,
+        whats: document.getElementById('empWhats').value,
+        descontoPix: +document.getElementById('empDesc').value,
+        parcelas: +document.getElementById('empParc').value
+    }).then(() => alert('Configurações atualizadas!'));
+}
+
+/* CATEGORIAS & PRODUTOS */
+function carregarCategorias() {
+    db.ref('categories').on('value', s => {
+        const lista = document.getElementById('listaCategorias');
+        lista.innerHTML = '';
+        s.forEach(c => {
+            lista.innerHTML += `<div class="card flex justify-between items-center">
+                <span class="uppercase text-xs font-bold">${c.val().name}</span>
+                <div class="flex gap-2">
+                    <button class="btn text-blue-400" onclick="editarCat('${c.key}','${c.val().name}')">✎</button>
+                    <button class="btn text-red-500" onclick="excluirCat('${c.key}')">🗑</button>
+                </div>
+            </div>`;
+        });
+    });
+}
+function novaCategoria() {
+    const n = document.getElementById('newCatName').value;
+    if(n) db.ref('categories').push({name:n}).then(() => document.getElementById('newCatName').value = '');
+}
+function excluirCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/'+id).remove(); }
+
+function carregarProdutos() {
+    const lista = document.getElementById('listaProdutos');
+    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
+    db.ref('categories').once('value', sCats => {
+        db.ref('products').once('value', sProds => {
+            lista.innerHTML = '';
+            sCats.forEach(cat => {
+                let htmlP = '';
+                sProds.forEach(p => {
+                    const prod = p.val();
+                    if(prod.category === cat.key) {
+                        htmlP += `<div class="card flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 text-[11px]">
+                            <div class="flex items-center gap-3">
+                                <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded border border-[#333]">
+                                <span><b class="text-[#caa85c]">[${prod.sku || '---'}]</b> ${prod.name}</span>
+                            </div>
+                            <button onclick="editarProduto('${p.key}')">✎</button>
+                        </div>`;
+                    }
+                });
+                if(htmlP) lista.innerHTML += `<div class="mb-4"><b class="text-[10px] text-[#caa85c] ml-1 uppercase">${cat.val().name}</b><div class="mt-1">${htmlP}</div></div>`;
+            });
+        });
+    });
+}
+
+function editarProduto(id) {
+    db.ref('products/'+id).once('value', s => {
+        const p = s.val();
+        const nNome = prompt("Nome:", p.name);
+        const nPreco = prompt("Preço:", p.price);
+        const nSku = prompt("SKU:", p.sku);
+        const nPeso = prompt("Peso (g):", p.peso || p.weight || 0);
+        if(nNome) db.ref('products/'+id).update({ name:nNome, price:Number(nPreco), sku:nSku, peso:Number(nPeso) }).then(carregarProdutos);
+    });
+}
+
+/* PEDIDOS */
+function carregarPedidos() {
+    db.ref('orders').on('value', s => {
+        const lista = document.getElementById('listaPedidos');
+        lista.innerHTML = '';
+        s.forEach(ped => {
+            const p = ped.val();
+            lista.innerHTML += `<div class="card border-l-4 border-[#caa85c]">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente'}</b><br>
+                        <small class="text-gray-500">${p.data || ''} | ${p.itens ? (Array.isArray(p.itens) ? p.itens.length : Object.keys(p.itens).length) : 0} itens</small>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-xs">${fMoeda(p.total)}</div>
+                        <div class="flex gap-1 mt-2">
+                             <button class="btn p-1 bg-blue-900" onclick="duplicarPedido('${ped.key}')" title="Duplicar">📑</button>
+                             <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
+                             <button class="btn p-1 bg-red-900" onclick="excluirPedido('${ped.key}')">🗑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    });
+}
+
+function abrirEditorPedido(id) {
+    pedidoEditando = id;
+    db.ref('orders/'+id).once('value', s => {
+        const p = s.val();
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
+        document.getElementById('edNomeEntrega').value = p.entrega?.nomeEntrega || '';
+        document.getElementById('edRua').value = p.entrega?.rua || '';
+        document.getElementById('edBairro').value = p.entrega?.bairro || '';
+        document.getElementById('edCidade').value = p.entrega?.cidade || '';
+        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+        document.getElementById('edDescPix').value = p.descontoPix || 0;
+        document.getElementById('edFrete').value = p.frete || 0;
+        document.getElementById('edItens').innerHTML = '';
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        itens.forEach(addItemEditor);
+        recalcularTotalEd();
+        document.getElementById('editorPedido').classList.remove('hidden');
+    });
+}
+
+function addItemEditor(i={}) {
+    const div = document.createElement('div');
+    div.className = "card bg-black/40 border-[#222] mb-2 p-2";
+    div.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <input placeholder="SKU" value="${i.sku||''}" class="!mb-0 text-[10px]">
+            <input placeholder="Nome" value="${i.name||''}" class="!mb-0 text-[10px]">
+            <input type="number" placeholder="Peso" value="${i.peso||i.weight||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Preço" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Qtd" value="${i.quantidade||i.qtd||1}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+        </div>
+        <button class="text-red-500 text-[9px] uppercase font-bold mt-1" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`;
+    document.getElementById('edItens').appendChild(div);
+}
+
+function recalcularTotalEd() {
+    let subtotal = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const inputs = div.querySelectorAll('input');
+        const preco = Number(inputs[3].value) || 0;
+        const qtd = Number(inputs[4].value) || 0;
+        subtotal += (preco * qtd);
+    });
+    const descP = Number(document.getElementById('edDescPromo').value) || 0;
+    const descX = Number(document.getElementById('edDescPix').value) || 0;
+    const frete = Number(document.getElementById('edFrete').value) || 0;
+    const total = subtotal - descP - descX + frete;
+    document.getElementById('totalPreview').innerText = fMoeda(total);
+}
+
+function salvarPedidoEditado() {
+    const itens = [];
+    let subtotal = 0, pesoTotal = 0, totalPecas = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const ins = div.querySelectorAll('input');
+        const item = {
+            sku: ins[0].value,
+            name: ins[1].value,
+            peso: Number(ins[2].value),
+            price: Number(ins[3].value),
+            quantidade: Number(ins[4].value)
+        };
+        subtotal += (item.price * item.quantidade);
+        pesoTotal += (item.peso * item.quantidade);
+        totalPecas += item.quantidade;
+        itens.push(item);
+    });
+
+    const dPromo = Number(document.getElementById('edDescPromo').value);
+    const dPix = Number(document.getElementById('edDescPix').value);
+    const frete = Number(document.getElementById('edFrete').value);
+
+    db.ref('orders/'+pedidoEditando).update({
+        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
+        entrega: { 
+            nomeEntrega: document.getElementById('edNomeEntrega').value,
+            rua: document.getElementById('edRua').value, 
+            bairro: document.getElementById('edBairro').value, 
+            cidade: document.getElementById('edCidade').value 
+        },
+        itens, subtotal, pesoTotal, totalPecas,
+        descontoPromo: dPromo, descontoPix: dPix, frete,
+        total: Number((subtotal - dPromo - dPix + frete).toFixed(2))
+    }).then(() => { alert("Pedido Salvo!"); fecharEditorPedido(); });
+}
+
+/* NOVAS FUNÇÕES DE PROMOÇÕES (index2) */
+function abrirPainelPromocoesValor() {
+    const modalBody = document.getElementById('modalBody');
+    document.getElementById('modalTitle').innerText = "DESCONTOS POR VALOR";
+    modalBody.innerHTML = '<div id="listaRegras" class="space-y-2"></div><button class="btn w-full mt-4" onclick="addRegraHTML()">+ ADICIONAR REGRA</button>';
+    
+    db.ref('settings/promocoesValor').once('value', s => {
+        const regras = s.val() || [];
+        regras.forEach(r => addRegraHTML(r.min, r.desc));
+        document.getElementById('mainModal').classList.add('active');
+    });
+
+    document.getElementById('modalSaveBtn').onclick = () => {
+        const novas = [];
+        document.querySelectorAll('#listaRegras > div').forEach(div => {
+            const ins = div.querySelectorAll('input');
+            novas.push({ min: Number(ins[0].value), desc: Number(ins[1].value) });
+        });
+        db.ref('settings/promocoesValor').set(novas).then(() => { alert("Salvo!"); fecharModal(); });
+    };
+}
+
+function addRegraHTML(min=0, desc=0) {
+    const div = document.createElement('div');
+    div.className = "card bg-black/40 grid grid-cols-2 gap-2 border-[#333] mt-2";
+    div.innerHTML = `<div><label class="text-[9px]">VALOR MÍNIMO</label><input type="number" value="${min}"></div>
+                     <div><label class="text-[9px]">DESCONTO (%)</label><input type="number" value="${desc}"></div>
+                     <button onclick="this.parentElement.remove()" class="text-red-500 text-[9px] col-span-2 text-left">× REMOVER</button>`;
+    document.getElementById('listaRegras').appendChild(div);
+}
+
+// Mantendo função original de categorias (index)
+function abrirPainelPromocoes() {
+    db.ref('categories').once('value', s => {
+        const modalBody = document.getElementById('modalBody');
+        document.getElementById('modalTitle').innerText = "DESCONTOS POR CATEGORIA";
+        modalBody.innerHTML = '';
+        s.forEach(cat => {
+            const c = cat.val();
+            modalBody.innerHTML += `<div class="card mb-2">
+                <b class="text-[#caa85c] text-[10px] uppercase">${c.name}</b>
+                <input type="number" id="p_pct_${cat.key}" placeholder="%" value="${c.promoPct || 0}">
+            </div>`;
+        });
+        document.getElementById('mainModal').classList.add('active');
+        document.getElementById('modalSaveBtn').onclick = () => {
+            const updates = {};
+            s.forEach(cat => {
+                updates['categories/' + cat.key + '/promoPct'] = +document.getElementById('p_pct_' + cat.key).value || 0;
+            });
+            db.ref().update(updates).then(() => { alert("Salvo!"); fecharModal(); });
+        };
+    });
+}
+
+function duplicarPedido(id) {
+    db.ref('orders/'+id).once('value', s => {
+        const n = s.val(); n.data = new Date().toLocaleString();
+        db.ref('orders').push(n).then(() => alert("Pedido duplicado!"));
+    });
+}
+function excluirPedido(id) { if(confirm("Excluir?")) db.ref('orders/'+id).remove(); }
+function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+
+// IMPRESSÃO (Mantendo o estilo luxo do index mas com a correção de layout do index2)
+function imprimirRomaneio(id, tipo) {
+    db.ref('orders/' + id).once('value', sPed => {
+        const p = sPed.val();
+        db.ref('settings/empresa').once('value', sEmp => {
+            const emp = sEmp.val() || { nome: "Abella Joias", whats: "---" };
+            const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+            const emGrid = tipo >= 4;
+            
+            // Área de Impressão Criada dinamicamente
+            let html = `<div style="padding:10mm; font-family:Arial; color:#000;">
+                <div class="header-luxo"><h1>${emp.nome}</h1><small>${emp.whats}</small></div>
+                <table class="caixa-dados">
+                    <tr>
+                        <td><span class="titulo-box">Cliente</span><b>${p.cliente?.nome || '---'}</b><br>${p.cliente?.telefone || ''}</td>
+                        <td><span class="titulo-box">Entrega</span>${p.entrega?.rua || '---'}<br>${p.entrega?.cidade || ''}</td>
+                    </tr>
+                </table>`;
+
+            if (emGrid) {
+                html += `<div class="grid-romaneio">`;
+                itens.forEach(i => {
+                    html += `<div class="grid-item">
+                        <img src="${i.image || ''}"><br>
+                        <b>[${i.sku || ''}]</b><br>${i.name}<br>
+                        Qtd: ${i.quantidade} | ${fMoeda(i.price)}
+                    </div>`;
+                });
+                html += `</div>`;
+            } else {
+                html += `<table class="tab-romaneio"><thead><tr><th>SKU</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th></tr></thead><tbody>`;
+                itens.forEach(i => {
+                    html += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.quantidade}</td><td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td></tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+            
+            html += `<div style="margin-top:20px; text-align:right;">
+                <b>Subtotal:</b> ${fMoeda(p.subtotal)}<br>
+                <b>Descontos:</b> ${fMoeda((p.descontoPromo || 0) + (p.descontoPix || 0))}<br>
+                <h2 style="color:#d4af37;">TOTAL: ${fMoeda(p.total)}</h2>
+            </div></div>`;
+
+            document.getElementById('print-area').innerHTML = html;
+            window.print();
+        });
+    });
+}
 </script>
 </body>
 </html>
