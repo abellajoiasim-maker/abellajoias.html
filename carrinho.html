@@ -172,46 +172,38 @@ async function carregarCarrinho() {
     box.innerHTML = '';
     let bruto = 0, pesoTotal = 0, pecas = 0;
 
-    if(carrinho.length === 0) {
-        box.innerHTML = '<p class="text-center text-gray-500 py-10">Carrinho vazio</p>';
-    }
-
     carrinho.forEach((item, index) => {
         let q = parseInt(item.quantidade) || 1;
-        let p = Number(item.precoFinal || item.price || 0); // Mantém valor com desconto de categoria
-        let sku = item.sku || '---';
-        let pesoUnit = Number(item.peso || item.weight || 0);
-        
+        let p = Number(item.price || item.precoFinal || 0);
         bruto += (p * q);
         pecas += q;
-        pesoTotal += (pesoUnit * q);
+        pesoTotal += (Number(item.peso || item.weight || 0) * q);
 
         box.innerHTML += `
         <div class="flex items-center gap-3 py-4 border-b border-[#222]">
             <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
             <div class="flex-1">
-                <div class="flex justify-between items-start">
-                    <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
-                    <span class="btn-excluir text-[12px]" onclick="excluirItem(${index})">✕</span>
-                </div>
-                <div class="text-[9px] text-gray-500 mt-0.5">SKU: ${sku} | Peso: ${pesoUnit.toFixed(2)}g</div>
+                <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
                 <div class="text-[#caa85c] text-xs font-bold mt-1">${q}x ${fM(p)}</div>
             </div>
             <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
         </div>`;
     });
 
-    // BUSCA REGRAS DE DESCONTO PROGRESSIVO (ATACADO)
+    // CORREÇÃO: Caminho alterado para 'promocaoValor' conforme o banco de dados
     const snapRegras = await db.ref('settings/promocaoValor').once('value');
+    const regras = snapRegras.val() || {};
     let economiaPromo = 0;
+    let porcentagemAplicada = 0;
 
-    if (snapRegras.exists()) {
-        const regras = Object.values(snapRegras.val()).sort((a, b) => b.minimo - a.minimo);
-        for (let r of regras) {
-            if (bruto >= r.minimo) {
-                economiaPromo = bruto * (Number(r.porcentagem) / 100);
-                break; 
-            }
+    // Ordena do maior valor mínimo para o menor para aplicar o melhor desconto
+    const regrasOrdenadas = Object.values(regras).sort((a, b) => b.minimo - a.minimo);
+
+    for (let r of regrasOrdenadas) {
+        if (bruto >= r.minimo) {
+            porcentagemAplicada = r.porcentagem || r.desconto; // Aceita os dois nomes de campo
+            economiaPromo = bruto * (porcentagemAplicada / 100);
+            break;
         }
     }
 
@@ -219,7 +211,7 @@ async function carregarCarrinho() {
     const descPix = (pagamento === 'Pix') ? (subtotalAposPromo * (configEmpresa.descontoPix / 100)) : 0;
     const totalFinal = subtotalAposPromo - descPix;
 
-    // Interface Atualização
+    // Atualização da Interface
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
@@ -227,6 +219,7 @@ async function carregarCarrinho() {
 
     if (economiaPromo > 0) {
         document.getElementById('linhaDescontoPromo').classList.remove('hidden');
+        document.getElementById('labelPromo').innerText = `Desconto Atacado (${porcentagemAplicada}%)`;
         document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaPromo);
     } else {
         document.getElementById('linhaDescontoPromo').classList.add('hidden');
@@ -234,7 +227,7 @@ async function carregarCarrinho() {
 
     if (descPix > 0) {
         document.getElementById('linhaCondicao').classList.remove('hidden');
-        document.getElementById('labelCondicao').innerText = "Bônus Pix (" + configEmpresa.descontoPix + "%)";
+        document.getElementById('labelCondicao').innerText = "Desconto Pix";
         document.getElementById('valorCondicao').innerText = "- " + fM(descPix);
     } else if (pagamento === 'Cartão') {
         document.getElementById('linhaCondicao').classList.remove('hidden');
