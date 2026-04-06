@@ -21,6 +21,7 @@
         .modal.active { display:flex; }
         .grid-variacoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         input[type="number"] { background: #000; border: 1px solid #333; color: #fff; text-align: center; width: 100%; border-radius: 6px; padding: 5px; }
+        .price-old { text-decoration: line-through; color: #666; font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -50,11 +51,11 @@
 
 <div id="modalQtd" class="modal">
     <div class="bg-[#141414] p-6 rounded-2xl w-full max-w-sm border border-[#2a2a2a] text-center">
-        <h3 id="modalNomeProd" class="gold-text font-bold mb-4">Produto</h3>
+        <h3 id="modalNomeProd" class="gold-text font-bold mb-4 uppercase text-xs">Produto</h3>
         <div id="containerOpcoes"></div>
         <div class="flex gap-2 mt-6">
             <button onclick="document.getElementById('modalQtd').classList.remove('active')" class="flex-1 text-gray-500 text-[10px] uppercase font-bold">Cancelar</button>
-            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">Adicionar</button>
+            <button id="btnConfirmarAdd" class="flex-1 gold-bg text-black py-3 rounded-xl text-[10px] font-bold uppercase">Confirmar</button>
         </div>
     </div>
 </div>
@@ -63,10 +64,16 @@
 const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let produtoAtual = null;
-let produtosCache = {}; // Cache para evitar erro de aspas no HTML
+
+let produtosCache = {};
+let configEmpresa = { descontoPix: 0 };
 
 const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+async function carregarConfig() {
+    const snap = await db.ref('settings/empresa').once('value');
+    if(snap.exists()) configEmpresa.descontoPix = Number(snap.val().descontoPix) || 0;
+}
 
 async function atualizarVantagens() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
@@ -77,27 +84,26 @@ async function atualizarVantagens() {
     if(snap.exists()){
         const regras = Object.values(snap.val()).sort((a,b) => a.minimo - b.minimo);
         let proxima = regras.find(r => subtotal < r.minimo);
-        let banner = document.getElementById('bannerProgressoAtacado');
-        banner.style.display = 'block';
+        document.getElementById('bannerProgressoAtacado').style.display = 'block';
         
         if(proxima){
             let falta = proxima.minimo - subtotal;
             let pct = (subtotal / proxima.minimo) * 100;
-            document.getElementById('msgAtacadoTopo').innerHTML = `Faltam <span class="text-white">${fM(falta)}</span> para ganhar <span class="text-white">${proxima.porcentagem}% OFF</span>`;
+            document.getElementById('msgAtacadoTopo').innerHTML = `Faltam <span class="text-white">${fM(falta)}</span> para <span class="text-white">${proxima.porcentagem}% OFF</span>`;
             document.getElementById('barraProgressoTopo').style.width = pct + "%";
         } else {
-            document.getElementById('msgAtacadoTopo').innerText = "🚀 DESCONTO MÁXIMO ATINGIDO!";
+            document.getElementById('msgAtacadoTopo').innerText = "🚀 DESCONTO ATACADO ATIVADO!";
             document.getElementById('barraProgressoTopo').style.width = "100%";
         }
     }
 }
 
 function prepararAdd(id) {
-    produtoAtual = produtosCache[id];
-    document.getElementById('modalNomeProd').innerText = produtoAtual.name;
+    let p = produtosCache[id];
+    document.getElementById('modalNomeProd').innerText = p.name;
     const container = document.getElementById('containerOpcoes');
     
-    if(produtoAtual.variacaoTipo === 'Aro'){
+    if(p.variacaoTipo === 'Aro'){
         let html = '<div class="grid-variacoes">';
         ["12","14","16","18","20","22","24"].forEach(a => {
             html += `<div class="bg-black p-2 rounded"> <span class="text-[9px] gold-text">Aro ${a}</span> <input type="number" class="input-var" data-var="${a}" value="0" min="0"> </div>`;
@@ -107,36 +113,32 @@ function prepararAdd(id) {
         container.innerHTML = `<input type="number" id="qtdSimples" value="1" min="1" class="w-20 bg-black border border-gray-700 p-2 text-center text-xl mt-4">`;
     }
     document.getElementById('modalQtd').classList.add('active');
+    window.prodIdAtual = id;
 }
 
 document.getElementById('btnConfirmarAdd').onclick = () => {
     let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+    let p = produtosCache[window.prodIdAtual];
     const inputsVar = document.querySelectorAll('.input-var');
     
-    const adicionarAoCarrinho = (prod, nomeFinal, qtd) => {
-        let existente = carrinho.find(item => item.name === nomeFinal);
-        if(existente) {
-            existente.quantidade += qtd;
-        } else {
-            carrinho.push({
-                ...prod, 
-                name: nomeFinal, 
-                quantidade: qtd, 
-                precoFinal: prod.price,
-                sku: prod.sku || 'N/A',
-                peso: prod.peso || prod.weight || 0
-            });
-        }
+    const add = (nome, qtd) => {
+        let ex = carrinho.find(i => i.name === nome);
+        if(ex) ex.quantidade += qtd;
+        else carrinho.push({ 
+            ...p, 
+            name: nome, 
+            quantidade: qtd, 
+            sku: p.sku || '---', 
+            peso: p.peso || p.weight || 0,
+            precoFinal: p.price 
+        });
     };
 
     if(inputsVar.length > 0){
-        inputsVar.forEach(i => { 
-            let qtd = parseInt(i.value);
-            if(qtd > 0) adicionarAoCarrinho(produtoAtual, `${produtoAtual.name} (${i.dataset.var})`, qtd); 
-        });
+        inputsVar.forEach(i => { if(parseInt(i.value) > 0) add(`${p.name} (${i.dataset.var})`, parseInt(i.value)); });
     } else {
-        let qtd = parseInt(document.getElementById('qtdSimples').value);
-        if(qtd > 0) adicionarAoCarrinho(produtoAtual, produtoAtual.name, qtd);
+        let q = parseInt(document.getElementById('qtdSimples').value);
+        if(q > 0) add(p.name, q);
     }
     
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
@@ -145,21 +147,32 @@ document.getElementById('btnConfirmarAdd').onclick = () => {
 };
 
 async function carregar() {
+    await carregarConfig();
     const params = new URLSearchParams(window.location.search);
     const catId = params.get('id');
+
     db.ref('products').on('value', snap => {
         const grid = document.getElementById('gridProdutos');
         grid.innerHTML = '';
         snap.forEach(s => {
             const p = s.val();
             if(p.category === catId && !p.paused){
-                produtosCache[s.key] = p; // Armazena no cache
+                produtosCache[s.key] = p;
+                let precoPix = p.price * (1 - (configEmpresa.descontoPix / 100));
+                
                 grid.innerHTML += `
                 <div class="card-prod p-4" onclick="prepararAdd('${s.key}')">
                     <div class="tag-atacado-flash">ATACADO</div>
                     <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg mb-2">
-                    <h3 class="text-[10px] font-bold uppercase mb-2 h-8 overflow-hidden">${p.name}</h3>
-                    <div class="gold-text font-bold text-lg">${fM(p.price)}</div>
+                    <h3 class="text-[10px] font-bold uppercase h-7 overflow-hidden leading-tight">${p.name}</h3>
+                    <div class="text-[8px] text-gray-500 mb-2">SKU: ${p.sku || '---'} | ${p.peso || p.weight || 0}g</div>
+                    
+                    <div class="mt-auto">
+                        <div class="price-old">${fM(p.price)}</div>
+                        <div class="gold-text font-bold text-lg leading-none">${fM(precoPix)}</div>
+                        <div class="text-[8px] text-green-500 font-bold uppercase">no pix com ${configEmpresa.descontoPix}% off</div>
+                    </div>
+                    
                     <button class="w-full border border-[#caa85c] gold-text py-2 rounded-lg mt-3 text-[9px] font-bold uppercase">Adicionar</button>
                 </div>`;
             }
@@ -167,6 +180,7 @@ async function carregar() {
     });
     atualizarVantagens();
 }
+
 window.onload = carregar;
 </script>
 </body>
