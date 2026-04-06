@@ -21,7 +21,9 @@
         .modal.active { display:flex; }
         .grid-variacoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         input[type="number"] { background: #000; border: 1px solid #333; color: #fff; text-align: center; width: 100%; border-radius: 6px; padding: 5px; }
-        .price-old { text-decoration: line-through; color: #666; font-size: 0.7rem; }
+        .price-old { text-decoration: line-through; color: #666; font-size: 0.75rem; }
+        /* Destaque para Informações Técnicas */
+        .info-tecnica { font-size: 0.85rem; color: #bbb; background: #1a1a1a; padding: 4px 8px; border-radius: 6px; border: 1px solid #333; margin-top: 4px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -101,7 +103,7 @@ async function atualizarVantagens() {
 
 function prepararAdd(id) {
     let p = produtosCache[id];
-    document.getElementById('modalImgProd').src = p.image; // Define imagem no modal
+    document.getElementById('modalImgProd').src = p.image;
     document.getElementById('modalNomeProd').innerText = p.name;
     const container = document.getElementById('containerOpcoes');
     
@@ -161,7 +163,6 @@ async function carregar() {
             if(p.category === catId && !p.paused){
                 produtosCache[s.key] = p;
                 
-                // AJUSTE CIRÚRGICO: Lógica de ocultar informações do Pix se desconto for 0
                 let temDescontoPix = configEmpresa.descontoPix > 0;
                 let precoPix = p.price * (1 - (configEmpresa.descontoPix / 100));
                 
@@ -169,15 +170,20 @@ async function carregar() {
                 <div class="card-prod p-4" onclick="prepararAdd('${s.key}')">
                     <div class="tag-atacado-flash">ATACADO</div>
                     <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg mb-2">
-                    <h3 class="text-[10px] font-bold uppercase h-7 overflow-hidden leading-tight">${p.name}</h3>
-                    <div class="text-[8px] text-gray-500 mb-2">SKU: ${p.sku || '---'} | ${p.peso || p.weight || 0}g</div>
+                    
+                    <h3 class="text-[11px] font-bold uppercase h-7 overflow-hidden leading-tight mb-1">${p.name}</h3>
+                    
+                    <div class="info-tecnica font-bold mb-2">
+                        SKU: <span class="text-white">${p.sku || '---'}</span> | 
+                        Peso: <span class="gold-text">${p.peso || p.weight || 0}g</span>
+                    </div>
                     
                     <div class="mt-auto">
                         ${temDescontoPix ? `<div class="price-old">${fM(p.price)}</div>` : ''}
-                        <div class="gold-text font-bold text-lg leading-none">
+                        <div class="gold-text font-bold text-xl leading-none">
                             ${temDescontoPix ? fM(precoPix) : fM(p.price)}
                         </div>
-                        ${temDescontoPix ? `<div class="text-[8px] text-green-500 font-bold uppercase">no pix com ${configEmpresa.descontoPix}% off</div>` : ''}
+                        ${temDescontoPix ? `<div class="text-[8px] text-green-500 font-bold uppercase mt-1">no pix com ${configEmpresa.descontoPix}% off</div>` : ''}
                     </div>
                     
                     <button class="w-full border border-[#caa85c] gold-text py-2 rounded-lg mt-3 text-[9px] font-bold uppercase">Adicionar</button>
