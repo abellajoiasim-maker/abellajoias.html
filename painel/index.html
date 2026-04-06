@@ -9,38 +9,38 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
     <style>
-        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; } [cite: 1, 2]
-        nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; } [cite: 3]
-        section { display:none; min-height:300px; } [cite: 4]
-        section.active { display:block; } [cite: 5]
-        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; } [cite: 6]
-        .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; } [cite: 7]
-        .btn:hover { background:#333; } [cite: 8]
-        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; } [cite: 9]
-        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; } [cite: 10]
-        #mainModal.active { display: flex; } [cite: 11]
-        .custom-scroll::-webkit-scrollbar { width: 4px; } [cite: 12]
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; } [cite: 13]
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
+        nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
+        section { display:none; min-height:300px; }
+        section.active { display:block; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
+        .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
+        .btn:hover { background:#333; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
+        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
+        #mainModal.active { display: flex; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
         
-        #print-area { display: none; } [cite: 14]
+        #print-area { display: none; }
 
         @media print {
-            @page { size: A4; margin: 10mm; } [cite: 15]
-            html, body { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; } [cite: 16]
-            body * { visibility: hidden; } [cite: 17]
-            #print-area, #print-area * { visibility: visible; } [cite: 18]
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: #fff; } [cite: 19, 20]
-            .header-luxo { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; } [cite: 21]
-            .header-luxo h1 { font-size: 35px; letter-spacing: 5px; margin: 0; font-weight: 900; color: #000; } [cite: 22]
-            .caixa-dados { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 15px; } [cite: 23]
-            .caixa-dados td { border: 1.5px solid #d4af37; padding: 12px; vertical-align: top; width: 50%; font-size: 11px; border-radius: 10px; position: relative; color: #000; } [cite: 24, 25]
-            .titulo-box { position: absolute; top: -9px; left: 10px; background: #fff; padding: 0 5px; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #d4af37; } [cite: 26, 27]
-            .grid-romaneio { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; } [cite: 28]
-            .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; } [cite: 29, 30]
-            .grid-item img { max-width: 80px; max-height: 80px; object-fit: contain; margin-bottom: 5px; } [cite: 31]
-            .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; color: #000; } [cite: 32]
-            .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; } [cite: 33]
-            .tab-romaneio th { background: #f2f2f2; font-size: 10px; } [cite: 34]
+            @page { size: A4; margin: 10mm; }
+            html, body { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: #fff; }
+            .header-luxo { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; }
+            .header-luxo h1 { font-size: 35px; letter-spacing: 5px; margin: 0; font-weight: 900; color: #000; }
+            .caixa-dados { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 15px; }
+            .caixa-dados td { border: 1.5px solid #d4af37; padding: 12px; vertical-align: top; width: 50%; font-size: 11px; border-radius: 10px; position: relative; color: #000; }
+            .titulo-box { position: absolute; top: -9px; left: 10px; background: #fff; padding: 0 5px; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #d4af37; }
+            .grid-romaneio { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #000; border-left: 1px solid #000; }
+            .grid-item { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
+            .grid-item img { max-width: 80px; max-height: 80px; object-fit: contain; margin-bottom: 5px; }
+            .tab-romaneio { width: 100%; border-collapse: collapse; font-size: 11px; color: #000; }
+            .tab-romaneio th, .tab-romaneio td { border: 1px solid #000; padding: 5px; text-align: left; }
+            .tab-romaneio th { background: #f2f2f2; font-size: 10px; }
         }
     </style>
 </head>
@@ -60,17 +60,17 @@
 
 <main class="p-6 max-w-4xl mx-auto">
     <section id="promocoes">
-        <div class="grid md:grid-cols-2 gap-4"> [cite: 35]
+        <div class="grid md:grid-cols-2 gap-4">
             <div class="card text-center border-[#caa85c]/30">
                 <h2 class="text-[#caa85c] font-bold uppercase text-xs mb-4 tracking-widest">Descontos por Categoria</h2>
                 <p class="text-[10px] text-gray-500 mb-4">Gerencie etiquetas, cores e descontos específicos para cada tipo de joia.</p>
                 <button class="btn-gold w-full" onclick="abrirPainelPromocoes()">GERENCIAR CATEGORIAS</button>
-            </div> [cite: 36]
+            </div>
             <div class="card text-center border-blue-900/30">
                 <h2 class="text-blue-400 font-bold uppercase text-xs mb-4 tracking-widest">Descontos por Valor (Atacado)</h2>
                 <p class="text-[10px] text-gray-500 mb-4">Configure faixas automáticas de desconto baseadas no valor total do carrinho.</p>
                 <button class="btn bg-blue-900 text-white w-full border-none" onclick="abrirPainelPromocoesValor()">CONFIGURAR FAIXAS</button>
-            </div> [cite: 37]
+            </div>
         </div>
     </section>
 
@@ -80,8 +80,8 @@
             <input id="empNome" placeholder="Nome da Empresa">
             <input id="empSub" placeholder="Slogan / Subtítulo">
             <input id="empWhats" placeholder="WhatsApp da Loja">
-            <div class="grid grid-cols-2 gap-2"> [cite: 38]
-                <div><label class="text-[10px] text-gray-400">DESC. PIX %</label><input id="empDesc" type="number"></div> [cite: 39]
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-gray-400">DESC. PIX %</label><input id="empDesc" type="number"></div>
                 <div><label class="text-[10px] text-gray-400">PARCELAS MÁX</label><input id="empParc" type="number"></div>
             </div>
             <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
@@ -91,7 +91,7 @@
     <section id="categorias">
         <div class="card mb-4">
             <input id="newCatName" placeholder="Nome da Nova Categoria">
-            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button> [cite: 40]
+            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
         </div>
         <div id="listaCategorias" class="grid gap-2"></div>
     </section>
@@ -107,13 +107,13 @@
 
 <div id="mainModal" class="fixed inset-0 bg-black/95 z-[100] hidden items-center justify-center p-4">
     <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="p-4 border-b border-[#222] flex justify-between items-center"> [cite: 41]
+        <div class="p-4 border-b border-[#222] flex justify-between items-center">
             <h3 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-sm tracking-widest">Painel</h3>
             <button onclick="fecharModal()" class="text-gray-500 hover:text-white text-2xl">&times;</button>
         </div>
         <div id="modalBody" class="p-6 overflow-y-auto custom-scroll" style="max-height: 70vh;"></div>
         <div class="p-4 border-t border-[#222] flex gap-3">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button> [cite: 42]
+            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
             <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Salvar Alterações</button>
         </div>
     </div>
@@ -126,7 +126,7 @@
         <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-2xl">R$ 0,00</div>
     </div>
     
-    <div class="grid md:grid-cols-2 gap-6 mb-6"> [cite: 43]
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
       <div class="card">
         <h3 class="text-[10px] text-gray-400 uppercase font-bold mb-3">Cliente</h3>
         <input id="edClienteNome" placeholder="Nome do Cliente">
@@ -136,7 +136,7 @@
         <h3 class="text-[10px] text-gray-400 uppercase font-bold mb-3">Logística</h3>
         <input id="edNomeEntrega" placeholder="Destinatário">
         <input id="edRua" placeholder="Rua, Número, Complemento">
-        <div class="grid grid-cols-2 gap-2"> [cite: 44]
+        <div class="grid grid-cols-2 gap-2">
             <input id="edBairro" placeholder="Bairro">
             <input id="edCidade" placeholder="Cidade/UF">
         </div>
@@ -147,18 +147,18 @@
     <button class="btn w-full mb-6 border-dashed border-gray-700 text-gray-500" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
 
     <div class="grid grid-cols-3 gap-4 p-4 bg-black/60 rounded-xl mb-6 border border-[#222]">
-        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div> [cite: 45]
-        <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div> [cite: 46]
+        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
         <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
     </div>
 
     <div class="flex flex-wrap gap-2 justify-center border-t border-[#222] pt-6 mb-6">
-        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button> [cite: 47]
-        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button> [cite: 48]
-        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button> [cite: 49]
-        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button> [cite: 50]
-        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button> [cite: 51]
-        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button> [cite: 52]
+        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
+        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
+        <button class="btn bg-gray-800 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 3)">3. FOTOS (TAB)</button>
+        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
+        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
+        <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 6)">6. FOTOS (GRID)</button>
     </div>
 
     <div class="flex gap-4">
@@ -174,7 +174,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
     databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-}; [cite: 53]
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -182,143 +182,142 @@ let pedidoEditando = null;
 
 const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v.toFixed(2)) || 0);
 
-function showTab(id, btn) { [cite: 54]
+function showTab(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    btn.classList.add('active'); [cite: 55]
+    btn.classList.add('active');
     if (id === 'categorias') carregarCategorias();
     if (id === 'produtos') carregarProdutos();
-    if (id === 'pedidos') carregarPedidos(); [cite: 56]
+    if (id === 'pedidos') carregarPedidos();
 }
 
-/* --- PROMOÇÕES POR CATEGORIA --- */
-async function abrirPainelPromocoes() { [cite: 57]
+async function abrirPainelPromocoes() {
     try {
         const snapshot = await db.ref('categories').once('value');
-        const modalBody = document.getElementById('modalBody'); [cite: 58]
+        const modalBody = document.getElementById('modalBody');
         document.getElementById('modalTitle').innerText = "PROMOÇÕES POR CATEGORIA";
         modalBody.innerHTML = '';
-        snapshot.forEach(cat => { [cite: 59]
+        snapshot.forEach(cat => {
             const c = cat.val();
             const id = cat.key;
             const isAtiva = c.promoStatus === 'ATIVA';
-
             modalBody.innerHTML += `
                 <div class="card mb-4 border-[#222] bg-black/40">
-                    <div class="flex justify-between items-center mb-4"> [cite: 60]
+                    <div class="flex justify-between items-center mb-4">
                         <b class="text-[#caa85c] uppercase text-xs">${c.name}</b>
                         <button onclick="togglePromoStatus('${id}', this)" 
-                                class="px-4 py-1 rounded-full text-[9px] font-bold ${isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}"> [cite: 61]
+                                class="px-4 py-1 rounded-full text-[9px] font-bold ${isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}">
                             ${isAtiva ? 'ATIVA' : 'INATIVA'}
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-3"> [cite: 62]
-                        <div>
-                            <label class="text-[9px] text-gray-500 uppercase">Nome da Promoção</label>
-                            <input id="p_name_${id}" value="${c.promoName || ''}" placeholder="Ex: Black Friday"> [cite: 63]
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-gray-500 uppercase">Texto da Etiqueta (Tag)</label>
-                            <input id="p_tag_${id}" value="${c.promoTag || ''}" placeholder="Ex: -20% OFF"> [cite: 64, 65]
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label>
-                            <input type="number" id="p_pct_${id}" value="${c.promoPct || 0}"> [cite: 66, 67]
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-gray-500 uppercase">Cor da Etiqueta</label>
-                            <input type="color" id="p_color_${id}" value="${c.promoColor || '#caa85c'}" class="h-10"> [cite: 68, 69]
-                        </div>
-                        <div class="col-span-2">
-                            <label class="text-[9px] text-gray-500 uppercase">Cor do Texto da Etiqueta</label>
-                            <input type="color" id="p_tcolor_${id}" value="${c.promoTextColor || '#000000'}" class="h-10"> [cite: 70, 71]
-                        </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="text-[9px] text-gray-500 uppercase">Nome da Promoção</label><input id="p_name_${id}" value="${c.promoName || ''}"></div>
+                        <div><label class="text-[9px] text-gray-500 uppercase">Texto da Etiqueta</label><input id="p_tag_${id}" value="${c.promoTag || ''}"></div>
+                        <div><label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label><input type="number" id="p_pct_${id}" value="${c.promoPct || 0}"></div>
+                        <div><label class="text-[9px] text-gray-500 uppercase">Cor Etiqueta</label><input type="color" id="p_color_${id}" value="${c.promoColor || '#caa85c'}" class="h-10"></div>
+                        <div class="col-span-2"><label class="text-[9px] text-gray-500 uppercase">Cor do Texto</label><input type="color" id="p_tcolor_${id}" value="${c.promoTextColor || '#000000'}" class="h-10"></div>
                     </div>
                 </div>`;
         });
         document.getElementById('mainModal').classList.add('active');
-        document.getElementById('modalSaveBtn').onclick = () => { [cite: 72]
+        document.getElementById('modalSaveBtn').onclick = () => {
             const updates = {};
             snapshot.forEach(cat => {
                 const id = cat.key;
                 updates[`categories/${id}/promoName`] = document.getElementById(`p_name_${id}`).value;
                 updates[`categories/${id}/promoTag`] = document.getElementById(`p_tag_${id}`).value;
-                updates[`categories/${id}/promoPct`] = Number(document.getElementById(`p_pct_${id}`).value); [cite: 73]
+                updates[`categories/${id}/promoPct`] = Number(document.getElementById(`p_pct_${id}`).value);
                 updates[`categories/${id}/promoColor`] = document.getElementById(`p_color_${id}`).value;
                 updates[`categories/${id}/promoTextColor`] = document.getElementById(`p_tcolor_${id}`).value;
             });
-            db.ref().update(updates).then(() => { alert("Configurações salvas!"); fecharModal(); }); [cite: 74]
+            db.ref().update(updates).then(() => { alert("Configurações salvas!"); fecharModal(); });
         };
-    } catch (e) { console.error(e); } [cite: 75]
+    } catch (e) { console.error(e); }
 }
 
-function togglePromoStatus(id, btn) { [cite: 76]
+function togglePromoStatus(id, btn) {
     const isAtiva = btn.innerText === 'ATIVA';
-    const newStatus = isAtiva ? 'INATIVA' : 'ATIVA'; [cite: 77]
+    const newStatus = isAtiva ? 'INATIVA' : 'ATIVA';
     db.ref(`categories/${id}/promoStatus`).set(newStatus).then(() => {
         btn.innerText = newStatus;
         btn.className = `px-4 py-1 rounded-full text-[9px] font-bold ${newStatus === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
     });
 }
 
-/* --- AJUSTE CIRÚRGICO: PROMOÇÕES POR VALOR COM STATUS --- */
-function abrirPainelPromocoesValor() { [cite: 78]
+/* --- AJUSTE CIRÚRGICO: PROMOÇÕES POR VALOR COM BOTÃO ATIVAR/DESATIVAR --- */
+function abrirPainelPromocoesValor() {
     const modalBody = document.getElementById('modalBody');
-    document.getElementById('modalTitle').innerText = "DESCONTOS POR VALOR DE COMPRA"; [cite: 79]
-    modalBody.innerHTML = '<div id="listaRegras" class="space-y-3"></div><button class="btn w-full mt-4 border-blue-900 text-blue-400" onclick="addRegraHTML()">+ ADICIONAR NOVA FAIXA</button>'; [cite: 80]
+    document.getElementById('modalTitle').innerText = "DESCONTOS POR VALOR DE COMPRA";
+    
+    modalBody.innerHTML = `
+        <div class="card mb-4 border-blue-900/50 bg-blue-950/20 flex justify-between items-center">
+            <div>
+                <b class="text-blue-400 uppercase text-xs">Status da Promoção de Atacado</b>
+                <p class="text-[9px] text-gray-500">Ative para aplicar descontos progressivos no carrinho.</p>
+            </div>
+            <button id="statusAtacadoBtn" onclick="toggleAtacadoStatus(this)" class="px-6 py-2 rounded-full text-[10px] font-bold bg-gray-700 text-gray-400">CARREGANDO...</button>
+        </div>
+        <div id="listaRegras" class="space-y-3"></div>
+        <button class="btn w-full mt-4 border-blue-900 text-blue-400" onclick="addRegraHTML()">+ ADICIONAR NOVA FAIXA</button>`;
+
     db.ref('settings/promocoesValor').once('value', s => {
-        const regras = s.val() || [];
+        const data = s.val() || { status: 'INATIVA', regras: [] };
+        const status = (typeof data === 'object' && data.status) ? data.status : 'INATIVA';
+        const regras = Array.isArray(data) ? data : (data.regras || []);
+        
+        const btn = document.getElementById('statusAtacadoBtn');
+        btn.innerText = status;
+        btn.className = `px-6 py-2 rounded-full text-[10px] font-bold ${status === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
+        
         regras.forEach(r => addRegraHTML(r));
         document.getElementById('mainModal').classList.add('active');
     });
-    document.getElementById('modalSaveBtn').onclick = () => { [cite: 81]
-        const novas = [];
-        document.querySelectorAll('#listaRegras > .regra-item').forEach(div => { [cite: 82]
+
+    document.getElementById('modalSaveBtn').onclick = () => {
+        const btn = document.getElementById('statusAtacadoBtn');
+        const novasRegras = [];
+        document.querySelectorAll('#listaRegras > .regra-item').forEach(div => {
             const ins = div.querySelectorAll('input');
-            const statusBtn = div.querySelector('.btn-status-faixa');
-            novas.push({ 
+            novasRegras.push({ 
                 min: Number(ins[0].value), 
                 desc: Number(ins[1].value),
                 label: ins[2].value,
-                color: ins[3].value,
-                status: statusBtn.innerText // Captura o status atual do botão
+                color: ins[3].value
             });
         });
-        db.ref('settings/promocoesValor').set(novas).then(() => { alert("Faixas salvas!"); fecharModal(); }); [cite: 83]
+        
+        db.ref('settings/promocoesValor').set({
+            status: btn.innerText,
+            regras: novasRegras
+        }).then(() => { alert("Configurações de Atacado salvas!"); fecharModal(); });
     };
 }
 
-function addRegraHTML(r = {min:0, desc:0, label:'', color:'#1e3a8a', status: 'ATIVA'}) { [cite: 84]
+function toggleAtacadoStatus(btn) {
+    const isAtiva = btn.innerText === 'ATIVA';
+    const newStatus = isAtiva ? 'INATIVA' : 'ATIVA';
+    btn.innerText = newStatus;
+    btn.className = `px-6 py-2 rounded-full text-[10px] font-bold ${newStatus === 'ATIVA' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
+}
+
+function addRegraHTML(r = {min:0, desc:0, label:'', color:'#1e3a8a'}) {
     const div = document.createElement('div');
-    const isAtiva = r.status !== 'INATIVA';
-    div.className = "card bg-black/60 border-blue-900/30 regra-item"; [cite: 85]
+    div.className = "card bg-black/60 border-blue-900/30 regra-item";
     div.innerHTML = `
-        <div class="flex justify-between items-center mb-3">
-            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Faixa de Desconto</span>
-            <button onclick="toggleLocalStatus(this)" 
-                    class="btn-status-faixa px-4 py-1 rounded-full text-[9px] font-bold ${isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}">
-                ${isAtiva ? 'ATIVA' : 'INATIVA'}
-            </button>
-        </div>
         <div class="grid grid-cols-2 gap-2 mb-2">
-            <div><label class="text-[9px] text-gray-500 uppercase">Valor Mínimo (R$)</label><input type="number" value="${r.min}"></div> [cite: 86]
+            <div><label class="text-[9px] text-gray-500 uppercase">Mínimo (R$)</label><input type="number" value="${r.min}"></div>
             <div><label class="text-[9px] text-gray-500 uppercase">Desconto (%)</label><input type="number" value="${r.desc}"></div>
-            <div><label class="text-[9px] text-gray-500 uppercase">Nome da Faixa</label><input type="text" value="${r.label || ''}" placeholder="Ex: Atacado Bronze"></div>
-            <div><label class="text-[9px] text-gray-500 uppercase">Cor Identificadora</label><input type="color" value="${r.color || '#1e3a8a'}" class="h-10"></div>
+            <div><label class="text-[9px] text-gray-500 uppercase">Nome Faixa</label><input type="text" value="${r.label || ''}"></div>
+            <div><label class="text-[9px] text-gray-500 uppercase">Cor</label><input type="color" value="${r.color || '#1e3a8a'}" class="h-10"></div>
         </div>
-        <button onclick="this.parentElement.remove()" class="text-red-500 text-[9px] font-bold uppercase">× Remover esta faixa</button>`;
+        <button onclick="this.parentElement.remove()" class="text-red-500 text-[9px] font-bold uppercase">× Remover</button>`;
     document.getElementById('listaRegras').appendChild(div);
 }
 
-function toggleLocalStatus(btn) { [cite: 76]
-    const isAtiva = btn.innerText === 'ATIVA';
-    btn.innerText = isAtiva ? 'INATIVA' : 'ATIVA';
-    btn.className = `btn-status-faixa px-4 py-1 rounded-full text-[9px] font-bold ${!isAtiva ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`;
-}
+/* --- RESTANTE DAS FUNÇÕES MANTIDAS --- */
 
-/* --- FUNÇÕES RESTANTES PRESERVADAS --- */
-function carregarEmpresa() { [cite: 87]
+function carregarEmpresa() {
     db.ref('settings/empresa').once('value', s => {
         const v = s.val() || {};
         document.getElementById('empNome').value = v.nome || '';
@@ -328,7 +327,7 @@ function carregarEmpresa() { [cite: 87]
         document.getElementById('empParc').value = v.parcelas || 0;
     });
 }
-function salvarEmpresa() { [cite: 88]
+function salvarEmpresa() {
     db.ref('settings/empresa').update({
         nome: document.getElementById('empNome').value,
         subtitulo: document.getElementById('empSub').value,
@@ -337,14 +336,15 @@ function salvarEmpresa() { [cite: 88]
         parcelas: +document.getElementById('empParc').value
     }).then(() => alert('Empresa atualizada!'));
 }
-function carregarCategorias() { [cite: 89]
+
+function carregarCategorias() {
     db.ref('categories').on('value', s => {
         const lista = document.getElementById('listaCategorias');
         lista.innerHTML = '';
         s.forEach(c => {
             lista.innerHTML += `<div class="card flex justify-between items-center">
                 <span class="uppercase text-xs font-bold tracking-widest">${c.val().name}</span>
-                <div class="flex gap-2"> [cite: 90]
+                <div class="flex gap-2">
                     <button class="btn text-blue-400" onclick="editarCat('${c.key}','${c.val().name}')">✎</button>
                     <button class="btn text-red-500" onclick="excluirCat('${c.key}')">🗑</button>
                 </div>
@@ -352,70 +352,69 @@ function carregarCategorias() { [cite: 89]
         });
     });
 }
-function carregarProdutos() { [cite: 91]
+
+function carregarProdutos() {
     const lista = document.getElementById('listaProdutos');
     lista.innerHTML = '<p class="text-center p-8 text-gray-600">Sincronizando estoque...</p>';
-    db.ref('categories').once('value', sCats => { [cite: 92]
+    db.ref('categories').once('value', sCats => {
         db.ref('products').once('value', sProds => {
             lista.innerHTML = '';
             sCats.forEach(cat => {
                 let prodsHtml = '';
                 sProds.forEach(p => {
-                    const prod = p.val(); [cite: 93]
+                    const prod = p.val();
                     if(prod.category === cat.key) {
                         prodsHtml += `
-                            <div class="flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 rounded-lg border border-[#222] text-[11px]"> [cite: 94]
-                               <div class="flex items-center gap-3">
-                                    <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded bg-white"> [cite: 95]
+                            <div class="flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 rounded-lg border border-[#222] text-[11px]">
+                                <div class="flex items-center gap-3">
+                                    <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded bg-white">
                                     <span><b class="text-[#caa85c]">[${prod.sku || '---'}]</b> ${prod.name}</span>
                                 </div>
-                                <div class="flex gap-3 items-center"> [cite: 96]
+                                <div class="flex gap-3 items-center">
                                     <span class="text-gray-400 font-bold">${fMoeda(prod.price)}</span>
                                     <button class="text-[#caa85c]" onclick="editarProduto('${p.key}')">✎</button>
-                                </div> [cite: 97]
+                                </div>
                             </div>`;
-                    } [cite: 98]
+                    }
                 });
-                if(prodsHtml) { [cite: 99]
-                    lista.innerHTML += `
-                        <div class="mb-6">
-                            <h4 class="text-[10px] text-[#caa85c] font-bold uppercase mb-2 ml-2 tracking-widest">${cat.val().name}</h4> [cite: 100]
-                            ${prodsHtml}
-                        </div>`;
-                } [cite: 101]
+                if(prodsHtml) {
+                    lista.innerHTML += `<div class="mb-6"><h4 class="text-[10px] text-[#caa85c] font-bold uppercase mb-2 ml-2 tracking-widest">${cat.val().name}</h4>${prodsHtml}</div>`;
+                }
             });
         });
     });
 }
-function carregarPedidos() { [cite: 102]
+
+function carregarPedidos() {
     db.ref('orders').on('value', s => {
         const lista = document.getElementById('listaPedidos');
         lista.innerHTML = '';
         s.forEach(ped => {
-            const p = ped.val(); [cite: 103]
+            const p = ped.val();
             lista.innerHTML += `
-                <div class="card border-l-4 border-[#caa85c] hover:bg-[#1a1a1a] transition-colors"> [cite: 104]
+                <div class="card border-l-4 border-[#caa85c] hover:bg-[#1a1a1a] transition-colors">
                     <div class="flex justify-between items-start">
                         <div>
-                            <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente Sem Nome'}</b><br> [cite: 105]
+                            <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente Sem Nome'}</b><br>
                             <span class="text-[10px] text-gray-500">${p.data || ''} • ${p.totalPecas || 0} peças</span>
                         </div>
-                        <div class="text-right"> [cite: 106]
+                        <div class="text-right">
                             <div class="font-bold text-sm text-white">${fMoeda(p.total)}</div>
-                            <div class="flex gap-1 mt-2"> [cite: 107]
+                            <div class="flex gap-1 mt-2">
                                 <button class="btn p-1 bg-blue-950 text-white" onclick="duplicarPedido('${ped.key}')">📑</button>
-                                <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">ABRIR</button> [cite: 108]
+                                <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">ABRIR</button>
                                 <button class="btn p-1 bg-red-950 text-red-500" onclick="excluirPedido('${ped.key}')">🗑</button>
                             </div>
-                        </div> [cite: 109]
+                        </div>
                     </div>
                 </div>`;
         });
     });
 }
-function abrirEditorPedido(id) { [cite: 110]
+
+function abrirEditorPedido(id) {
     pedidoEditando = id;
-    db.ref('orders/'+id).once('value', s => { [cite: 111]
+    db.ref('orders/'+id).once('value', s => {
         const p = s.val();
         document.getElementById('edClienteNome').value = p.cliente?.nome || '';
         document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
@@ -423,45 +422,48 @@ function abrirEditorPedido(id) { [cite: 110]
         document.getElementById('edRua').value = p.entrega?.rua || '';
         document.getElementById('edBairro').value = p.entrega?.bairro || '';
         document.getElementById('edCidade').value = p.entrega?.cidade || '';
-        document.getElementById('edDescPromo').value = p.descontoPromo || 0; [cite: 112]
+        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
         document.getElementById('edDescPix').value = p.descontoPix || 0;
         document.getElementById('edFrete').value = p.frete || 0;
         document.getElementById('edItens').innerHTML = '';
         const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
         itens.forEach(addItemEditor);
-        recalcularTotalEd(); [cite: 113]
+        recalcularTotalEd();
         document.getElementById('editorPedido').classList.remove('hidden');
     });
 }
-function addItemEditor(i={}) { [cite: 114]
+
+function addItemEditor(i={}) {
     const div = document.createElement('div');
     div.className = "card bg-black/40 border-[#222] p-3";
-    div.innerHTML = ` [cite: 115]
+    div.innerHTML = `
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2 items-end">
             <div><label class="text-[8px] text-gray-600">SKU</label><input value="${i.sku||''}" class="!mb-0 text-[10px]"></div>
             <div><label class="text-[8px] text-gray-600">PRODUTO</label><input value="${i.name||''}" class="!mb-0 text-[10px]"></div>
             <div><label class="text-[8px] text-gray-600">PESO (G)</label><input type="number" value="${i.peso||i.weight||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div>
-            <div><label class="text-[8px] text-gray-600">VALOR UN.</label><input type="number" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div> [cite: 116]
+            <div><label class="text-[8px] text-gray-600">VALOR UN.</label><input type="number" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div>
             <div><label class="text-[8px] text-gray-600">QTD</label><input type="number" value="${i.quantidade||i.qtd||1}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()"></div>
         </div>
-        <button class="text-red-900 text-[8px] font-bold uppercase mt-2" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`; [cite: 117]
+        <button class="text-red-900 text-[8px] font-bold uppercase mt-2" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`;
     document.getElementById('edItens').appendChild(div);
 }
-function recalcularTotalEd() { [cite: 118]
+
+function recalcularTotalEd() {
     let sub = 0;
-    document.querySelectorAll('#edItens > div').forEach(div => { [cite: 119]
+    document.querySelectorAll('#edItens > div').forEach(div => {
         const ins = div.querySelectorAll('input');
         sub += (Number(ins[3].value) * Number(ins[4].value));
     });
-    const dPr = Number(document.getElementById('edDescPromo').value) || 0; [cite: 120]
+    const dPr = Number(document.getElementById('edDescPromo').value) || 0;
     const dPx = Number(document.getElementById('edDescPix').value) || 0;
-    const fre = Number(document.getElementById('edFrete').value) || 0; [cite: 121]
-    const total = Number((sub - dPr - dPx + fre).toFixed(2)); [cite: 122]
+    const fre = Number(document.getElementById('edFrete').value) || 0;
+    const total = Number((sub - dPr - dPx + fre).toFixed(2));
     document.getElementById('totalPreview').innerText = fMoeda(total);
 }
-function salvarPedidoEditado() { [cite: 123]
+
+function salvarPedidoEditado() {
     const itens = [];
-    let subtotal = 0, pesoTotal = 0, totalPecas = 0; [cite: 124, 125]
+    let subtotal = 0, pesoTotal = 0, totalPecas = 0;
     document.querySelectorAll('#edItens > div').forEach(div => {
         const ins = div.querySelectorAll('input');
         const item = {
@@ -470,80 +472,54 @@ function salvarPedidoEditado() { [cite: 123]
             peso: Number(ins[2].value),
             price: Number(ins[3].value),
             quantidade: Number(ins[4].value)
-        }; [cite: 126]
+        };
         subtotal += (item.price * item.quantidade);
         pesoTotal += (item.peso * item.quantidade);
         totalPecas += item.quantidade;
         itens.push(item);
     });
-    const dPr = Number(document.getElementById('edDescPromo').value); [cite: 127]
+    const dPr = Number(document.getElementById('edDescPromo').value);
     const dPx = Number(document.getElementById('edDescPix').value);
     const fre = Number(document.getElementById('edFrete').value);
-    db.ref('orders/'+pedidoEditando).update({ [cite: 128]
+    db.ref('orders/'+pedidoEditando).update({
         cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
-        entrega: { 
-            nomeEntrega: document.getElementById('edNomeEntrega').value,
-            rua: document.getElementById('edRua').value, 
-            bairro: document.getElementById('edBairro').value, 
-            cidade: document.getElementById('edCidade').value 
-        },
-        itens, subtotal, pesoTotal, totalPecas, [cite: 129]
+        entrega: { nomeEntrega: document.getElementById('edNomeEntrega').value, rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value },
+        itens, subtotal, pesoTotal, totalPecas,
         descontoPromo: dPr, descontoPix: dPx, frete,
         total: Number((subtotal - dPr - dPx + fre).toFixed(2))
-    }).then(() => { alert("Pedido atualizado!"); fecharEditorPedido(); }); [cite: 130]
+    }).then(() => { alert("Pedido atualizado!"); fecharEditorPedido(); });
 }
-function imprimirRomaneio(id, tipo) { [cite: 131]
+
+function imprimirRomaneio(id, tipo) {
     db.ref('orders/' + id).once('value', sPed => {
         const p = sPed.val();
         db.ref('settings/empresa').once('value', sEmp => {
             const emp = sEmp.val() || { nome: "Abella Joias" };
             const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
-            const isGrid = tipo >= 4; [cite: 132, 133]
-            let html = `
-                <div class="header-luxo">
-                    <h1>${emp.nome.toUpperCase()}</h1>
-                    <small>${emp.subtitulo || ''} | ${emp.whats || ''}</small>
-                </div> [cite: 134]
-                <table class="caixa-dados">
-                    <tr>
-                        <td><span class="titulo-box">Cliente</span><b>${p.cliente?.nome || ''}</b><br>${p.cliente?.telefone || ''}</td>
-                        <td><span class="titulo-box">Logística</span>${p.entrega?.rua || ''}<br>${p.entrega?.cidade || ''}</td> [cite: 135, 136]
-                    </tr>
-                </table>`;
-            if (isGrid) { [cite: 137]
+            const isGrid = tipo >= 4;
+            let html = `<div class="header-luxo"><h1>${emp.nome.toUpperCase()}</h1><small>${emp.subtitulo || ''} | ${emp.whats || ''}</small></div>
+                <table class="caixa-dados"><tr><td><span class="titulo-box">Cliente</span><b>${p.cliente?.nome || ''}</b><br>${p.cliente?.telefone || ''}</td>
+                <td><span class="titulo-box">Logística</span>${p.entrega?.rua || ''}<br>${p.entrega?.cidade || ''}</td></tr></table>`;
+            if (isGrid) {
                 html += `<div class="grid-romaneio">`;
-                itens.forEach(i => {
-                    html += `
-                        <div class="grid-item">
-                            <img src="${i.image || ''}"><br>
-                            <b>${i.sku}</b><br>
-                            <span style="font-size:8px">${i.name}</span><br>
-                            <b>${i.quantidade} un</b>
-                        </div>`;
-                });
+                itens.forEach(i => { html += `<div class="grid-item"><img src="${i.image || ''}"><br><b>${i.sku}</b><br><span style="font-size:8px">${i.name}</span><br><b>${i.quantidade} un</b></div>`; });
                 html += `</div>`;
             } else {
-                html += `
-                    <table class="tab-romaneio">
-                        <thead><tr><th>SKU</th><th>DESCRIÇÃO</th><th>QTD</th><th>UN.</th><th>TOTAL</th></tr></thead>
-                        <tbody>`;
-                itens.forEach(i => {
-                    html += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.quantidade}</td><td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td></tr>`;
-                });
+                html += `<table class="tab-romaneio"><thead><tr><th>SKU</th><th>DESCRIÇÃO</th><th>QTD</th><th>UN.</th><th>TOTAL</th></tr></thead><tbody>`;
+                itens.forEach(i => { html += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.quantidade}</td><td>${fMoeda(i.price)}</td><td>${fMoeda(i.price * i.quantidade)}</td></tr>`; });
                 html += `</tbody></table>`;
             }
-            html += `
-                <div style="margin-top:20px; text-align:right; font-family:Arial;">
-                    <div style="font-size:10px">Subtotal: ${fMoeda(p.subtotal)}</div>
-                    <div style="font-size:10px">Descontos: - ${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}</div>
-                    <div style="font-size:10px">Frete: + ${fMoeda(p.frete||0)}</div>
-                    <div style="font-size:18px; font-weight:bold; color:#d4af37; margin-top:5px">TOTAL: ${fMoeda(p.total)}</div>
-                </div>`;
+            html += `<div style="margin-top:20px; text-align:right; font-family:Arial;">
+                <div style="font-size:10px">Subtotal: ${fMoeda(p.subtotal)}</div>
+                <div style="font-size:10px">Descontos: - ${fMoeda((p.descontoPromo||0)+(p.descontoPix||0))}</div>
+                <div style="font-size:10px">Frete: + ${fMoeda(p.frete||0)}</div>
+                <div style="font-size:18px; font-weight:bold; color:#d4af37; margin-top:5px">TOTAL: ${fMoeda(p.total)}</div></div>`;
             document.getElementById('print-area').innerHTML = html;
             window.print();
         });
     });
 }
+
 function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 function duplicarPedido(id) {
@@ -553,6 +529,7 @@ function duplicarPedido(id) {
     });
 }
 function excluirPedido(id) { if(confirm("Remover este pedido permanentemente?")) db.ref('orders/'+id).remove(); }
+
 window.onload = carregarEmpresa;
 </script>
 </body>
