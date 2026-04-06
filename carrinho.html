@@ -19,6 +19,11 @@
         .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .pay-btn.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); }
         .btn-qty { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: #222; border: 1px solid #444; border-radius: 6px; color: #caa85c; font-weight: bold; }
+        
+        /* Estilo da régua de progresso */
+        .progress-container { background: #222; border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin: 10px 0; }
+        .progress-bar { background: #caa85c; height: 100%; transition: width 0.5s ease; width: 0%; }
+        .banner-info { background: rgba(202, 168, 92, 0.1); border: 1px dashed #caa85c; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -31,6 +36,18 @@
 </header>
 
 <main class="max-w-xl mx-auto p-4 pb-40">
+
+    <div id="bannerProgresso" class="banner-info hidden">
+        <div class="flex justify-between items-center mb-1">
+            <span id="msgProgresso" class="text-[10px] gold-text font-bold uppercase tracking-wider">Carregando ofertas...</span>
+            <span id="pctProxima" class="text-[10px] text-white font-bold">0%</span>
+        </div>
+        <div class="progress-container">
+            <div id="barraProgresso" class="progress-bar"></div>
+        </div>
+        <p id="subMsgProgresso" class="text-[9px] text-gray-400 italic text-center mt-1">Adicione mais itens para ganhar desconto!</p>
+    </div>
+
     <div class="card">
         <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest opacity-70 text-center">Itens no Carrinho</h2>
         <div id="listaItens" class="space-y-4"></div>
@@ -62,11 +79,11 @@
         <div class="grid grid-cols-2 gap-4">
             <div class="pay-btn" onclick="setPagamento('Pix', this)">
                 <span class="block text-white font-bold">PIX</span>
-                <span id="labelTxtPix" class="text-[10px] text-green-500 font-bold uppercase">Carregando...</span>
+                <span id="labelTxtPix" class="text-[10px] text-green-500 font-bold uppercase">...</span>
             </div>
             <div class="pay-btn" onclick="setPagamento('Cartão', this)">
                 <span class="block text-white font-bold">CARTÃO</span>
-                <span id="labelTxtCartao" class="text-[10px] text-blue-400 font-bold uppercase">Carregando...</span>
+                <span id="labelTxtCartao" class="text-[10px] text-blue-400 font-bold uppercase">...</span>
             </div>
         </div>
     </div>
@@ -75,7 +92,7 @@
         <h2 class="serif gold-text uppercase text-[10px] mb-6 tracking-widest text-center border-b border-[#222] pb-2">Resumo Financeiro</h2>
         <div class="space-y-4">
             <div class="flex justify-between text-gray-500 text-sm">
-                <span>Subtotal Itens</span>
+                <span>Subtotal Bruto</span>
                 <b id="subtotalTxt" class="text-white">R$ 0,00</b>
             </div>
             <div id="containerDescontos" class="space-y-3 pt-3 border-t border-dashed border-[#333]">
@@ -113,7 +130,7 @@ const db = firebase.database();
 
 let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 let pagamento = '';
-let configEmpresa = { descontoPix: 0, parcelas: 3, fone: '' };
+let configEmpresa = { descontoPix: 0, fone: '' };
 const fM = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 async function inicializar() {
@@ -121,19 +138,16 @@ async function inicializar() {
     if(snapEmp.exists()){
         const d = snapEmp.val();
         configEmpresa.descontoPix = Number(d.descontoPix) || 0;
-        configEmpresa.parcelas = Number(d.parcelas) || 3;
         configEmpresa.fone = d.whats || '';
     }
     document.getElementById('labelTxtPix').innerText = `${configEmpresa.descontoPix}% de Desconto`;
-    document.getElementById('labelTxtCartao').innerText = `Até ${configEmpresa.parcelas}x sem juros`;
+    document.getElementById('labelTxtCartao').innerText = `Sem juros no Cartão`;
     carregarCarrinho();
 }
 
 function alterarQtd(index, delta) {
     carrinho[index].quantidade = (parseInt(carrinho[index].quantidade) || 1) + delta;
-    if (carrinho[index].quantidade <= 0) {
-        carrinho.splice(index, 1);
-    }
+    if (carrinho[index].quantidade <= 0) carrinho.splice(index, 1);
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     carregarCarrinho();
 }
@@ -152,13 +166,11 @@ async function carregarCarrinho() {
 
     carrinho.forEach((item, index) => {
         let q = parseInt(item.quantidade) || 1;
-        let p = Number(item.price || item.precoFinal || 0);
+        let p = Number(item.precoFinal || item.price || 0);
         bruto += (p * q);
         pecas += q;
         pesoTotal += (Number(item.peso || 0) * q);
-
-        box.innerHTML += `
-        <div class="flex items-center gap-3 py-4 border-b border-[#222]">
+        box.innerHTML += `<div class="flex items-center gap-3 py-4 border-b border-[#222]">
             <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-[#333]">
             <div class="flex-1">
                 <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
@@ -166,24 +178,46 @@ async function carregarCarrinho() {
                     <button onclick="alterarQtd(${index}, -1)" class="btn-qty">-</button>
                     <span class="text-xs font-bold text-white">${q}</span>
                     <button onclick="alterarQtd(${index}, 1)" class="btn-qty">+</button>
-                    <span class="text-[#caa85c] text-[10px] ml-2">${fM(p)} un.</span>
                 </div>
             </div>
             <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
         </div>`;
     });
 
-    // CÁLCULO DE DESCONTO POR VALOR (ATACADO)
+    // LÓGICA DE DESCONTO PROGRESSIVO E BANNER
     const snapRegras = await db.ref('settings/promocaoValor').once('value');
     let economiaPromo = 0;
+    let maiorPctGanha = 0;
+
     if (snapRegras.exists()) {
-        const regras = snapRegras.val();
-        const regrasOrdenadas = Object.values(regras).sort((a, b) => b.minimo - a.minimo);
-        for (let r of regrasOrdenadas) {
+        const regras = Object.values(snapRegras.val()).sort((a, b) => a.minimo - b.minimo);
+        let proximaRegra = null;
+
+        regras.forEach(r => {
             if (bruto >= r.minimo) {
-                economiaPromo = (bruto * (Number(r.porcentagem) / 100));
-                break;
+                maiorPctGanha = Number(r.porcentagem);
+                economiaPromo = (bruto * (maiorPctGanha / 100));
+            } else if (!proximaRegra) {
+                proximaRegra = r;
             }
+        });
+
+        const banner = document.getElementById('bannerProgresso');
+        if (proximaRegra) {
+            banner.classList.remove('hidden');
+            let falta = proximaRegra.minimo - bruto;
+            let porcentagemBarra = (bruto / proximaRegra.minimo) * 100;
+            
+            document.getElementById('msgProgresso').innerText = `Faltam ${fM(falta)} para você ganhar ${proximaRegra.porcentagem}% de desconto!`;
+            document.getElementById('pctProxima').innerText = proximaRegra.porcentagem + "%";
+            document.getElementById('barraProgresso').style.width = Math.min(porcentagemBarra, 100) + "%";
+            document.getElementById('subMsgProgresso').innerText = `Você já possui ${maiorPctGanha}% de desconto.`;
+        } else if (maiorPctGanha > 0) {
+            banner.classList.remove('hidden');
+            document.getElementById('msgProgresso').innerText = `PARABÉNS! VOCÊ ATINGIU O DESCONTO MÁXIMO!`;
+            document.getElementById('pctProxima').innerText = maiorPctGanha + "%";
+            document.getElementById('barraProgresso').style.width = "100%";
+            document.getElementById('subMsgProgresso').innerText = `Você ganhou ${fM(economiaPromo)} de desconto no atacado.`;
         }
     }
 
@@ -191,7 +225,7 @@ async function carregarCarrinho() {
     const descPix = (pagamento === 'Pix') ? (subtotalAposPromo * (configEmpresa.descontoPix / 100)) : 0;
     const totalFinal = subtotalAposPromo - descPix;
 
-    // Atualiza Interface
+    // Atualiza Resumo Financeiro
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
@@ -199,6 +233,7 @@ async function carregarCarrinho() {
 
     if (economiaPromo > 0) {
         document.getElementById('linhaDescontoPromo').classList.remove('hidden');
+        document.getElementById('labelPromo').innerText = `Desconto Atacado (${maiorPctGanha}%)`;
         document.getElementById('valorDescontoPromo').innerText = "- " + fM(economiaPromo);
     } else {
         document.getElementById('linhaDescontoPromo').classList.add('hidden');
@@ -206,12 +241,8 @@ async function carregarCarrinho() {
 
     if (descPix > 0) {
         document.getElementById('linhaCondicao').classList.remove('hidden');
-        document.getElementById('labelCondicao').innerText = "Desconto Pix";
+        document.getElementById('labelCondicao').innerText = `Desconto PIX (${configEmpresa.descontoPix}%)`;
         document.getElementById('valorCondicao').innerText = "- " + fM(descPix);
-    } else if (pagamento === 'Cartão') {
-        document.getElementById('linhaCondicao').classList.remove('hidden');
-        document.getElementById('labelCondicao').innerText = `${configEmpresa.parcelas}x no Cartão`;
-        document.getElementById('valorCondicao').innerText = `${fM(totalFinal / configEmpresa.parcelas)} p/ mês`;
     } else {
         document.getElementById('linhaCondicao').classList.add('hidden');
     }
@@ -222,23 +253,8 @@ async function carregarCarrinho() {
 
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if (!nome || !pagamento) return alert("Preencha seu nome e escolha o pagamento.");
-
-    const pedido = {
-        cliente: { nome, telefone: document.getElementById('telefoneCliente').value },
-        pagamento,
-        itens: carrinho,
-        subtotal: window.resumoFinal.bruto,
-        descontoPromo: window.resumoFinal.economiaPromo,
-        descontoPix: window.resumoFinal.descPix,
-        total: window.resumoFinal.totalFinal,
-        data: new Date().toLocaleString('pt-BR'),
-        status: "Novo"
-    };
-
-    await db.ref('orders').push(pedido);
-    let msg = `Olá! Sou *${nome}*.\nPedido realizado!\n*Total:* ${fM(window.resumoFinal.totalFinal)}`;
-    localStorage.removeItem('carrinho');
+    if (!nome || !pagamento) return alert("Preencha seu nome e pagamento.");
+    let msg = `Olá! Pedido de *${nome}*.\n*Total:* ${fM(window.resumoFinal.totalFinal)}\n*Pagamento:* ${pagamento}`;
     window.location.href = `https://api.whatsapp.com/send?phone=${configEmpresa.fone}&text=${encodeURIComponent(msg)}`;
 }
 
