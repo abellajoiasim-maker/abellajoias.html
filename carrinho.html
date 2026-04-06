@@ -18,8 +18,8 @@
         input { background: #000 !important; border: 1px solid #333 !important; color: #fff !important; padding: 12px; border-radius: 10px; width: 100%; outline: none; margin-bottom: 12px; font-size: 14px; }
         .pay-btn { border: 1px solid #333; border-radius: 14px; padding: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .pay-btn.active { border-color: #caa85c; background: rgba(202, 168, 92, 0.05); }
-        .btn-excluir { color: #ff4d4d; cursor: pointer; padding: 5px; transition: 0.2s; }
-        .btn-excluir:hover { transform: scale(1.1); }
+        .btn-excluir { color: #ff4d4d; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+        .btn-excluir:hover { opacity: 0.7; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
@@ -57,18 +57,6 @@
         <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Identificação</h2>
         <input id="nomeCliente" placeholder="Seu Nome Completo *">
         <input id="telefoneCliente" placeholder="WhatsApp (DDD + Número) *">
-    </div>
-
-    <div class="card">
-        <h2 class="serif gold-text uppercase text-[10px] mb-4 tracking-widest border-b border-[#222] pb-2">Local de Entrega</h2>
-        <input id="nomeEntrega" placeholder="Nome do Destinatário">
-        <input id="rua" placeholder="Rua / Avenida">
-        <div class="grid grid-cols-4 gap-2">
-            <input id="num" placeholder="Nº">
-            <input id="bairro" placeholder="Bairro" class="col-span-3">
-        </div>
-        <input id="cidade" placeholder="Cidade">
-        <input id="cepEntrega" placeholder="CEP">
     </div>
 
     <div class="card">
@@ -118,10 +106,7 @@
 </footer>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-};
+const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -140,7 +125,6 @@ async function inicializar() {
         configEmpresa.fone = d.whats || '';
     }
     
-    // REGRA SOLICITADA: Oculta card do Pix se desconto for 0
     if(configEmpresa.descontoPix <= 0) {
         document.getElementById('btnPix').style.display = 'none';
         document.getElementById('gradePagamento').classList.replace('grid-cols-2', 'grid-cols-1');
@@ -172,7 +156,7 @@ async function carregarCarrinho() {
     box.innerHTML = '';
     let bruto = 0, pesoTotal = 0, pecas = 0;
 
-    carrinho.forEach((item) => {
+    carrinho.forEach((item, index) => {
         let q = parseInt(item.quantidade) || 1;
         let p = Number(item.price || item.precoFinal || 0);
         bruto += (p * q);
@@ -186,23 +170,25 @@ async function carregarCarrinho() {
                 <h3 class="text-[10px] font-bold text-white uppercase">${item.name}</h3>
                 <div class="text-[#caa85c] text-xs font-bold mt-1">${q}x ${fM(p)}</div>
             </div>
-            <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
+            <div class="flex items-center gap-3">
+                <div class="text-right font-bold text-white text-sm">${fM(p * q)}</div>
+                <div class="btn-excluir" onclick="excluirItem(${index})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5 v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                </div>
+            </div>
         </div>`;
     });
 
-    // CORREÇÃO 1: Caminho exato do banco conforme seu painel (promocaoValor)
     const snapRegras = await db.ref('settings/promocaoValor').once('value');
-    const regras = snapRegras.val() || {};
+    const regrasVal = snapRegras.val() || {};
     let economiaPromo = 0;
     let porcentagemAplicada = 0;
 
-    // Converte objeto em array e ordena do maior valor mínimo para o menor
-    const regrasOrdenadas = Object.values(regras).sort((a, b) => b.minimo - a.minimo);
+    const regras = Object.values(regrasVal).sort((a, b) => b.minimo - a.minimo);
 
-    for (let r of regrasOrdenadas) {
-        if (bruto >= r.minimo) {
-            // CORREÇÃO 2: Usa o campo 'porcentagem' que vem do seu painel
-            porcentagemAplicada = r.porcentagem || r.desconto || 0;
+    for (let r of regras) {
+        if (bruto >= Number(r.minimo)) {
+            porcentagemAplicada = Number(r.porcentagem || r.desconto || 0);
             economiaPromo = bruto * (porcentagemAplicada / 100);
             break;
         }
@@ -212,7 +198,6 @@ async function carregarCarrinho() {
     const descPix = (pagamento === 'Pix') ? (subtotalAposPromo * (configEmpresa.descontoPix / 100)) : 0;
     const totalFinal = subtotalAposPromo - descPix;
 
-    // Atualização da Interface [cite: 108, 109, 115]
     document.getElementById('totalSkus').innerText = carrinho.length;
     document.getElementById('totalPecas').innerText = pecas;
     document.getElementById('pesoTotal').innerText = pesoTotal.toFixed(2) + "g";
@@ -244,20 +229,19 @@ async function carregarCarrinho() {
 
 async function finalizarPedido() {
     const nome = document.getElementById('nomeCliente').value;
-    if (!nome || !pagamento) return alert("Por favor, preencha seu nome e escolha o pagamento.");
+    if (!nome || !pagamento) return alert("Preencha seu nome e escolha o pagamento.");
     if (carrinho.length === 0) return alert("Seu carrinho está vazio.");
 
     const pedido = {
         cliente: { nome, telefone: document.getElementById('telefoneCliente').value },
-        entrega: {
-            nomeEntrega: document.getElementById('nomeEntrega').value,
-            rua: document.getElementById('rua').value,
-            bairro: document.getElementById('bairro').value,
-            cidade: document.getElementById('cidade').value
-        },
         pagamento,
         itens: carrinho,
+        subtotal: window.resumoFinal.bruto,
+        descontoPromo: window.resumoFinal.economiaPromo,
+        descontoPix: window.resumoFinal.descPix,
         total: window.resumoFinal.totalFinal,
+        totalPecas: window.resumoFinal.pecas,
+        pesoTotal: window.resumoFinal.pesoTotal,
         data: new Date().toLocaleString('pt-BR'),
         status: "Novo"
     };
