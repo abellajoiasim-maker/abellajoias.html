@@ -95,14 +95,27 @@ let configEmpresa = { descontoPix: 5 };
 
 const fM = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-function atualizarContador() {
+async function atualizarContador() {
     const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-    const totalBruto = carrinho.reduce((acc, item) => {
+    const subtotal = carrinho.reduce((acc, item) => {
         const preco = parseFloat(item.precoFinal || item.price || 0);
         const qtd = parseInt(item.quantidade || 1);
         return acc + (preco * qtd);
     }, 0);
-    document.getElementById('contadorCarrinho').innerText = fM(totalBruto);
+
+    // Busca regras de atacado para ver se há desconto disponível
+    const promoSnap = await db.ref('settings/promocoesValor').once('value');
+    const regras = promoSnap.val() || [];
+    regras.sort((a, b) => b.min - a.min); // Maior para o menor
+    
+    const regraAtiva = regras.find(r => subtotal >= r.min);
+    let totalExibicao = subtotal;
+
+    if (regraAtiva) {
+        totalExibicao = subtotal * (1 - (regraAtiva.desc / 100));
+    }
+
+    document.getElementById('contadorCarrinho').innerText = fM(totalExibicao);
 }
 
 async function carregarProdutos() {
