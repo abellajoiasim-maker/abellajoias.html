@@ -8,265 +8,248 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 100px; }
-        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; margin-bottom: 12px; transition: 0.3s; }
-        .card.active { border-color: #caa85c; background: #1a1a14; }
-        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:12px; border-radius:8px; cursor:pointer; width: 100%; }
-        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; color:#fff; outline:none; font-size: 12px; }
-        .module-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .status-badge { font-size: 9px; padding: 2px 8px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 120px; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
+        .card:hover { border-color: #444; }
+        .card.active { border-color: #caa85c; background: #1a1a14; cursor: default; }
+        
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:12px; border-radius:8px; cursor:pointer; width: 100%; transition: 0.3s; }
+        .btn-gold:hover { background: #e2bc6a; transform: translateY(-2px); }
+        
+        input, select { background:#111; border:1px solid #333; padding:10px; border-radius:8px; width:100%; color:#fff; outline:none; font-size: 13px; margin-top: 5px; }
+        
+        .status-badge { font-size: 9px; padding: 4px 10px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
         .on { background: #059669; color: #fff; }
         .off { background: #374151; color: #9ca3af; }
-        .module-content { display: none; margin-top: 15px; padding-top: 15px; border-t: 1px solid #222; }
+
+        /* Esconde o conteúdo por padrão, mostra só se o card for .active */
+        .module-content { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #2a2a2a; cursor: default; }
         .card.active .module-content { display: block; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-3xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-tighter">Central de Ofertas</h1>
-            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Selecione uma modalidade ativa para o catálogo</p>
+            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-tighter">Estratégias de Venda</h1>
+            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Ative apenas um módulo por vez para o catálogo</p>
         </header>
 
         <div id="modulosContainer">
-            <div class="card" id="mod_categorias">
-                <div class="module-header" onclick="ativarModulo('categorias')">
+            <div class="card" id="mod_categorias" onclick="selecionarCard('categorias')">
+                <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-bold text-sm uppercase">1. Ofertas por Categorias</h3>
-                        <p class="text-[10px] text-gray-500">Selo e desconto aplicado em grupos inteiros.</p>
+                        <p class="text-[10px] text-gray-500">Desconto em grupos inteiros (Ex: Anéis).</p>
                     </div>
-                    <span class="status-badge off">Inativo</span>
+                    <span class="status-badge off" id="badge_categorias">Inativo</span>
                 </div>
-                <div class="module-content" id="listaCategorias">
-                    </div>
+                <div class="module-content" onclick="event.stopPropagation()">
+                    <div id="listaCategorias" class="space-y-3"></div>
+                </div>
             </div>
 
-            <div class="card" id="mod_progressivo">
-                <div class="module-header" onclick="ativarModulo('progressivo')">
+            <div class="card" id="mod_progressivo" onclick="selecionarCard('progressivo')">
+                <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-bold text-sm uppercase">2. Desconto Progressivo</h3>
-                        <p class="text-[10px] text-gray-500">Quanto maior o valor do carrinho, maior o desconto.</p>
+                        <p class="text-[10px] text-gray-500">Gatilho por valor total do carrinho.</p>
                     </div>
-                    <span class="status-badge off">Inativo</span>
+                    <span class="status-badge off" id="badge_progressivo">Inativo</span>
                 </div>
-                <div class="module-content space-y-3">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="prog_min_1" placeholder="Valor Mínimo (Ex: 500)">
-                        <input type="number" id="prog_desc_1" placeholder="% Desconto">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="prog_min_2" placeholder="Valor Mínimo (Ex: 1000)">
-                        <input type="number" id="prog_desc_2" placeholder="% Desconto">
+                <div class="module-content space-y-4" onclick="event.stopPropagation()">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase">Mínimo R$</label>
+                            <input type="number" id="prog_min_1" placeholder="500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase">Desconto %</label>
+                            <input type="number" id="prog_desc_1" placeholder="5">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card" id="mod_combo">
-                <div class="module-header" onclick="ativarModulo('combo')">
+            <div class="card" id="mod_produtos" onclick="selecionarCard('produtos')">
+                <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="font-bold text-sm uppercase">3. Combo Leve 3 Pague 2</h3>
-                        <p class="text-[10px] text-gray-500">A peça de menor valor sai de graça em trios.</p>
+                        <h3 class="font-bold text-sm uppercase">3. Saldão / Peças Avulsas</h3>
+                        <p class="text-[10px] text-gray-500">Liquidação de itens específicos fora de linha.</p>
                     </div>
-                    <span class="status-badge off">Inativo</span>
+                    <span class="status-badge off" id="badge_produtos">Inativo</span>
                 </div>
-                <div class="module-content">
-                    <p class="text-[10px] text-gray-400">Este módulo não requer configuração extra. Ao ativar, o carrinho aplicará a regra automaticamente.</p>
+                <div class="module-content" onclick="event.stopPropagation()">
+                    <div id="listaProdutosSaldao" class="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scroll">
+                        <p class="text-center text-xs py-4 text-gray-600">Carregando estoque...</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card" id="mod_brinde">
-                <div class="module-header" onclick="ativarModulo('brinde')">
+            <div class="card" id="mod_brinde" onclick="selecionarCard('brinde')">
+                <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-bold text-sm uppercase">4. Brinde por Compra</h3>
-                        <p class="text-[10px] text-gray-500">Ofereça um presente acima de determinado valor.</p>
+                        <p class="text-[10px] text-gray-500">Ganhe um presente acima de X valor.</p>
                     </div>
-                    <span class="status-badge off">Inativo</span>
+                    <span class="status-badge off" id="badge_brinde">Inativo</span>
                 </div>
-                <div class="module-content space-y-2">
-                    <input type="number" id="brinde_min" placeholder="Valor Mínimo para ganhar">
-                    <input type="text" id="brinde_nome" placeholder="Nome do Brinde (Ex: Flanela Mágica)">
+                <div class="module-content space-y-3" onclick="event.stopPropagation()">
+                    <input type="number" id="brinde_min" placeholder="Valor Mínimo">
+                    <input type="text" id="brinde_nome" placeholder="Nome do Brinde">
                 </div>
             </div>
-
-            <div class="card" id="mod_cupom">
-                <div class="module-header" onclick="ativarModulo('cupom')">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">5. Cupom de Desconto</h3>
-                        <p class="text-[10px] text-gray-500">Crie um código para divulgar no Instagram.</p>
-                    </div>
-                    <span class="status-badge off">Inativo</span>
-                </div>
-                <div class="module-content space-y-2">
-                    <input type="text" id="cupom_codigo" placeholder="Código (Ex: BEMVINDA10)">
-                    <input type="number" id="cupom_valor" placeholder="% de desconto do cupom">
-                </div>
+            
             </div>
 
-            <div class="card" id="mod_frete">
-                <div class="module-header" onclick="ativarModulo('frete')">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">6. Frete Grátis</h3>
-                        <p class="text-[10px] text-gray-500">Zere o frete para compras de alto valor.</p>
-                    </div>
-                    <span class="status-badge off">Inativo</span>
-                </div>
-                <div class="module-content">
-                    <input type="number" id="frete_min" placeholder="Valor Mínimo p/ Frete Grátis">
-                </div>
-            </div>
-
-            <div class="card" id="mod_relampago">
-                <div class="module-header" onclick="ativarModulo('relampago')">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">7. Oferta Relâmpago</h3>
-                        <p class="text-[10px] text-gray-500">Cronômetro de urgência no catálogo.</p>
-                    </div>
-                    <span class="status-badge off">Inativo</span>
-                </div>
-                <div class="module-content space-y-2">
-                    <label class="text-[9px] text-gray-500 uppercase">Data/Hora Final</label>
-                    <input type="datetime-local" id="relampago_fim">
-                    <input type="number" id="relampago_desc" placeholder="% de desconto em tudo">
-                </div>
-            </div>
-
-            <div class="card" id="mod_produtos">
-                <div class="module-header" onclick="ativarModulo('produtos')">
-                    <div>
-                        <h3 class="font-bold text-sm uppercase">8. Saldão de Peças (Individual)</h3>
-                        <p class="text-[10px] text-gray-500">Liquide itens específicos parados no estoque.</p>
-                    </div>
-                    <span class="status-badge off">Inativo</span>
-                </div>
-                <div class="module-content">
-                    <div id="listaProdutosSaldao" class="space-y-2 max-h-60 overflow-y-auto pr-2">
-                        </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black border-t border-[#222] z-50">
             <div class="max-w-3xl mx-auto flex gap-3">
-                <button onclick="window.history.back()" class="flex-1 bg-gray-800 py-4 rounded-xl text-xs font-bold uppercase">Voltar</button>
-                <button onclick="salvarConfiguracoes()" class="flex-1 btn-gold py-4 rounded-xl text-xs uppercase shadow-lg shadow-[#caa85c]/20">Salvar Estratégia</button>
+                <button onclick="window.history.back()" class="flex-1 bg-gray-800 py-4 rounded-xl text-xs font-bold uppercase">Sair</button>
+                <button onclick="salvarConfiguracoes()" class="flex-1 btn-gold py-4 rounded-xl text-xs uppercase">Salvar Estratégia</button>
             </div>
         </div>
     </div>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let moduloAtivo = '';
+let moduloAtivoGlobal = '';
 
-async function carregarDados() {
-    const [snapCats, snapProds, snapConfig] = await Promise.all([
-        db.ref('categories').once('value'),
-        db.ref('products').once('value'),
-        db.ref('settings/promocao').once('value')
-    ]);
+async function inicializar() {
+    try {
+        const [snapCats, snapProds, snapConfig] = await Promise.all([
+            db.ref('categories').once('value'),
+            db.ref('products').once('value'),
+            db.ref('settings/promocao').once('value')
+        ]);
 
-    const config = snapConfig.val() || {};
-    moduloAtivo = config.moduloAtivo || '';
-    if(moduloAtivo) atualizarInterfaceModulo(moduloAtivo);
+        const config = snapConfig.val() || {};
+        moduloAtivoGlobal = config.moduloAtivo || '';
 
-    // Renderizar Categorias para Módulo 1
-    const boxCat = document.getElementById('listaCategorias');
-    snapCats.forEach(c => {
-        const cat = c.val();
-        boxCat.innerHTML += `
-            <div class="bg-black/50 p-3 rounded-lg mb-2 border border-[#333]">
-                <span class="text-[10px] font-bold text-[#caa85c] uppercase">${cat.name}</span>
-                <div class="grid grid-cols-2 gap-2 mt-2">
-                    <input type="number" class="cat_pct" data-key="${c.key}" value="${cat.promoPct || 0}" placeholder="% Off">
-                    <input type="text" class="cat_tag" data-key="${c.key}" value="${cat.promoTag || 'OFERTA'}" placeholder="Selo">
-                </div>
-            </div>`;
-    });
+        // Renderizar Categorias
+        const boxCat = document.getElementById('listaCategorias');
+        boxCat.innerHTML = '';
+        snapCats.forEach(c => {
+            const cat = c.val();
+            boxCat.innerHTML += `
+                <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
+                    <span class="text-[10px] font-bold text-[#caa85c] uppercase">${cat.name}</span>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <input type="number" class="cat_pct" data-key="${c.key}" value="${cat.promoPct || 0}" placeholder="% Off">
+                        <input type="text" class="cat_tag" data-key="${c.key}" value="${cat.promoTag || 'OFERTA'}" placeholder="Selo">
+                    </div>
+                </div>`;
+        });
 
-    // Renderizar Produtos para Módulo 8 (Saldão)
-    const boxProd = document.getElementById('listaProdutosSaldao');
-    snapProds.forEach(p => {
-        const prod = p.val();
-        boxProd.innerHTML += `
-            <div class="flex items-center justify-between bg-black/50 p-2 rounded-lg border border-[#222]">
-                <div class="flex items-center gap-2">
-                    <img src="${prod.image}" class="w-8 h-8 rounded object-cover">
-                    <span class="text-[9px] uppercase font-bold">${prod.name}</span>
-                </div>
-                <div class="flex gap-2 items-center">
-                    <span class="text-[9px] text-gray-500">DESC %</span>
-                    <input type="number" class="prod_desc w-16" data-key="${p.key}" value="${prod.promoPct || 0}">
-                </div>
-            </div>`;
-    });
+        // Renderizar Produtos (Saldão)
+        const boxProd = document.getElementById('listaProdutosSaldao');
+        boxProd.innerHTML = '';
+        snapProds.forEach(p => {
+            const prod = p.val();
+            boxProd.innerHTML += `
+                <div class="flex items-center justify-between bg-black/40 p-2 rounded-lg border border-[#222]">
+                    <div class="flex items-center gap-2">
+                        <img src="${prod.image}" class="w-8 h-8 rounded object-cover">
+                        <span class="text-[9px] uppercase font-medium">${prod.name}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] text-gray-500 uppercase">Desc %</span>
+                        <input type="number" class="prod_desc w-16 !p-1" data-key="${p.key}" value="${prod.promoPct || 0}">
+                    </div>
+                </div>`;
+        });
 
-    // Carregar outros campos da config
-    if(config.progressivo) {
-        document.getElementById('prog_min_1').value = config.progressivo.min1;
-        document.getElementById('prog_desc_1').value = config.progressivo.desc1;
+        // Preencher outros campos se existirem
+        if(config.progressivo) {
+            document.getElementById('prog_min_1').value = config.progressivo.min1 || '';
+            document.getElementById('prog_desc_1').value = config.progressivo.desc1 || '';
+        }
+        if(config.brinde) {
+            document.getElementById('brinde_min').value = config.brinde.min || '';
+            document.getElementById('brinde_nome').value = config.brinde.nome || '';
+        }
+
+        if(moduloAtivoGlobal) atualizarInterface(moduloAtivoGlobal);
+
+    } catch (e) {
+        console.error("Erro ao carregar:", e);
+        alert("Erro de conexão com o banco de dados.");
     }
 }
 
-function ativarModulo(slug) {
-    moduloAtivo = slug;
-    atualizarInterfaceModulo(slug);
+function selecionarCard(slug) {
+    moduloAtivoGlobal = slug;
+    atualizarInterface(slug);
 }
 
-function atualizarInterfaceModulo(slug) {
+function atualizarInterface(slug) {
+    // 1. Remove classe ativa de todos
     document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    
+    // 2. Reseta todos os badges para cinza/inativo
     document.querySelectorAll('.status-badge').forEach(b => {
         b.innerText = 'Inativo';
         b.className = 'status-badge off';
     });
 
-    const cardAtivo = document.getElementById('mod_' + slug);
-    if(cardAtivo) {
-        cardAtivo.classList.add('active');
-        const badge = cardAtivo.querySelector('.status-badge');
+    // 3. Ativa o selecionado
+    const card = document.getElementById('mod_' + slug);
+    const badge = document.getElementById('badge_' + slug);
+    if(card && badge) {
+        card.classList.add('active');
         badge.innerText = 'Ativo';
         badge.className = 'status-badge on';
     }
 }
 
 async function salvarConfiguracoes() {
+    if(!moduloAtivoGlobal) return alert("Selecione um módulo antes de salvar.");
+
     const updates = {};
-    updates['settings/promocao/moduloAtivo'] = moduloAtivo;
+    updates['settings/promocao/moduloAtivo'] = moduloAtivoGlobal;
 
-    // Se categoria ativa, salva os dados delas
-    if(moduloAtivo === 'categorias') {
-        document.querySelectorAll('.cat_pct').forEach(el => {
-            const key = el.dataset.key;
-            updates[`categories/${key}/promoPct`] = +el.value;
-            updates[`categories/${key}/promoTag`] = document.querySelector(`.cat_tag[data-key="${key}"]`).value;
-        });
-    }
+    // Dados Categorias
+    document.querySelectorAll('.cat_pct').forEach(el => {
+        const key = el.dataset.key;
+        updates[`categories/${key}/promoPct`] = +el.value;
+        updates[`categories/${key}/promoTag`] = document.querySelector(`.cat_tag[data-key="${key}"]`).value;
+    });
 
-    // Se produtos/saldão ativo, salva nos produtos
-    if(moduloAtivo === 'produtos') {
-        document.querySelectorAll('.prod_desc').forEach(el => {
-            const key = el.dataset.key;
-            updates[`products/${key}/promoPct`] = +el.value;
-        });
-    }
+    // Dados Saldão (Produtos)
+    document.querySelectorAll('.prod_desc').forEach(el => {
+        const key = el.dataset.key;
+        updates[`products/${key}/promoPct`] = +el.value;
+    });
 
-    // Salva lógica progressiva
+    // Dados Progressivo
     updates['settings/promocao/progressivo'] = {
         min1: +document.getElementById('prog_min_1').value,
-        desc1: +document.getElementById('prog_desc_1').value,
-        min2: +document.getElementById('prog_min_2').value,
-        desc2: +document.getElementById('prog_desc_2').value
+        desc1: +document.getElementById('prog_desc_1').value
+    };
+
+    // Dados Brinde
+    updates['settings/promocao/brinde'] = {
+        min: +document.getElementById('brinde_min').value,
+        nome: document.getElementById('brinde_nome').value
     };
 
     try {
         await db.ref().update(updates);
-        alert("Estratégia salva e aplicada no catálogo!");
-    } catch(e) { alert("Erro ao salvar."); }
+        alert("Estratégia aplicada com sucesso!");
+    } catch(e) {
+        alert("Erro ao salvar no banco.");
+    }
 }
 
-window.onload = carregarDados;
+window.onload = inicializar;
 </script>
 </body>
 </html>
