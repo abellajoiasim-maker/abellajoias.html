@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Estratégias de Elite • Abella Joias</title>
+    <title>Marketing Manager • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -11,35 +11,32 @@
         body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 140px; }
         .card { background:#141414; border:1px solid #222; border-radius:20px; padding:16px; margin-bottom: 12px; }
         .btn-gold { background:#caa85c; color:#000; font-weight:800; padding:12px; border-radius:12px; cursor:pointer; }
-        input, select { background:#000; border:1px solid #222; padding:10px; border-radius:10px; width:100%; color:#fff; outline:none; font-size: 11px; }
-        .tab-btn { padding: 12px; border-radius: 12px; background: #111; color: #666; font-size: 9px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: 1px solid #222; flex: 1; text-align: center; min-width: 120px; }
+        input { background:#000; border:1px solid #222; padding:10px; border-radius:10px; width:100%; color:#fff; outline:none; font-size: 11px; }
+        .tab-btn { padding: 12px; border-radius: 12px; background: #111; color: #666; font-size: 9px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: 1px solid #222; flex: 1; text-align: center; }
         .tab-btn.active { background: #caa85c; color: #000; border-color: #caa85c; }
-        .preview-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .preview-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
         .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .4s; border-radius: 34px; border: 1px solid #333; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .4s; border-radius: 34px; }
+        input:checked + .slider { background-color: #caa85c; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #caa85c; border-color: #caa85c; }
-        input:checked + .slider:before { transform: translateX(18px); background-color: #000; }
-        .custom-scroll::-webkit-scrollbar { height: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; }
+        input:checked + .slider:before { transform: translateX(18px); }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-3xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-[0.2em]">Marketing Manager</h1>
+            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-widest">Abella Marketing</h1>
             <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="text-[9px] text-gray-500 uppercase">Sistema Ativo:</span>
+                <span class="text-[9px] text-gray-500 uppercase">Promoções Gerais:</span>
                 <label class="switch"><input type="checkbox" id="global_ativa"><span class="slider"></span></label>
             </div>
         </header>
 
-        <div class="flex overflow-x-auto gap-2 mb-8 pb-2 custom-scroll">
-            <div class="tab-btn active" onclick="switchTab('categorias', this)">Categorias & Selos</div>
-            <div class="tab-btn" onclick="switchTab('relampago', this)">Oferta Relâmpago</div>
-            <div class="tab-btn" onclick="switchTab('progressivo', this)">Progresso Carrinho</div>
-            <div class="tab-btn" onclick="switchTab('saldao', this)">Saldão Individual</div>
+        <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
+            <div class="tab-btn active" onclick="switchTab('categorias', this)">Categorias</div>
+            <div class="tab-btn" onclick="switchTab('relampago', this)">Relâmpago</div>
+            <div class="tab-btn" onclick="switchTab('progressivo', this)">Progresso</div>
         </div>
 
         <div id="tab_categorias" class="tab-content">
@@ -47,39 +44,26 @@
         </div>
 
         <div id="tab_relampago" class="tab-content hidden">
-            <div class="card border-[#caa85c]/40 bg-[#1a1408]">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-[#caa85c] font-bold text-sm uppercase">Cronômetro Regressivo</h3>
+            <div class="card border-[#caa85c]/30">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[#caa85c] font-bold text-xs uppercase">Oferta com Cronômetro</span>
                     <label class="switch"><input type="checkbox" id="relampago_ativa"><span class="slider"></span></label>
                 </div>
-                <div class="space-y-4">
-                    <input type="text" id="relampago_titulo" placeholder="TÍTULO DO BANNER (Ex: OFERTA EXPIRA EM:)">
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="datetime-local" id="relampago_fim">
-                        <input type="number" id="relampago_desc" placeholder="DESCONTO GERAL %">
-                    </div>
+                <input type="text" id="relampago_titulo" class="mb-3" placeholder="Ex: OFERTA TERMINA EM:">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="datetime-local" id="relampago_fim">
+                    <input type="number" id="relampago_desc" placeholder="Desc. Geral %">
                 </div>
             </div>
         </div>
 
         <div id="tab_progressivo" class="tab-content hidden space-y-4">
-            <div class="flex justify-between items-center bg-[#111] p-4 rounded-2xl border border-[#222]">
-                <span class="text-[#caa85c] font-bold text-[10px] uppercase">Barra de Progresso de Desconto</span>
-                <button onclick="addRegraProg()" class="text-[9px] bg-[#caa85c] text-black font-black px-4 py-2 rounded-lg">+ FAIXA</button>
-            </div>
+            <button onclick="addRegraProg()" class="w-full btn-gold text-[10px] mb-2">+ ADICIONAR FAIXA DE DESCONTO</button>
             <div id="containerProg" class="space-y-2"></div>
         </div>
 
-        <div id="tab_saldao" class="tab-content hidden">
-            <div id="filtrosSaldao" class="flex overflow-x-auto gap-2 mb-4 pb-2 custom-scroll"></div>
-            <div id="listaProdutosSaldao" class="space-y-2"></div>
-        </div>
-
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] backdrop-blur-md z-50">
-            <div class="max-w-3xl mx-auto flex gap-3">
-                <button onclick="window.history.back()" class="flex-1 bg-white/5 text-white font-bold py-4 rounded-xl text-[10px] uppercase">Voltar</button>
-                <button onclick="salvarPainel()" id="btnSalvar" class="flex-[2] btn-gold py-4 rounded-xl text-[10px] uppercase shadow-2xl shadow-[#caa85c]/30">Salvar Estratégias</button>
-            </div>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
+            <button onclick="salvarTudo()" id="btnSalvar" class="w-full btn-gold py-4 uppercase text-[11px]">Salvar Todas as Configurações</button>
         </div>
     </div>
 
@@ -95,38 +79,28 @@ function switchTab(tab, btn) {
     document.getElementById('tab_' + tab).classList.remove('hidden');
 }
 
-async function carregarDados() {
-    const [snapCats, snapPromo] = await Promise.all([
-        db.ref('categories').once('value'),
-        db.ref('settings/promocao').once('value')
-    ]);
+async function carregar() {
+    const [snapCats, snapPromo] = await Promise.all([db.ref('categories').once('value'), db.ref('settings/promocao').once('value')]);
     const promo = snapPromo.val() || {};
     document.getElementById('global_ativa').checked = promo.ativa || false;
 
     const boxCat = document.getElementById('listaCategorias');
-    const filtroSaldao = document.getElementById('filtrosSaldao');
-    boxCat.innerHTML = ''; filtroSaldao.innerHTML = '';
-
+    boxCat.innerHTML = '';
     snapCats.forEach(cat => {
         const c = cat.val();
         boxCat.innerHTML += `
         <div class="card">
             <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3">
-                    <span id="preview_${cat.key}" class="preview-badge" style="background:${c.promoColor || '#caa85c'}; color:${c.promoTextColor || '#ffffff'}">${c.promoTag || 'OFF'}</span>
-                    <span class="text-[10px] font-black uppercase text-gray-400">${c.name}</span>
-                </div>
+                <span id="prev_${cat.key}" class="preview-badge" style="background:${c.promoColor || '#caa85c'}; color:${c.promoTextColor || '#fff'}">${c.promoTag || 'OFF'}</span>
                 <label class="switch"><input type="checkbox" class="c_ativa" data-key="${cat.key}" ${c.promoAtiva ? 'checked' : ''}><span class="slider"></span></label>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <input type="text" data-key="${cat.key}" class="c_tag" value="${c.promoTag || 'OFF'}" oninput="updatePreview('${cat.key}')" placeholder="Texto Selo">
-                <input type="number" data-key="${cat.key}" class="c_pct" value="${c.promoPct || 0}" placeholder="Desconto %">
-                <input type="color" data-key="${cat.key}" class="c_bg !h-10 !p-1" value="${c.promoColor || '#caa85c'}" oninput="updatePreview('${cat.key}')">
-                <input type="color" data-key="${cat.key}" class="c_txt !h-10 !p-1" value="${c.promoTextColor || '#ffffff'}" oninput="updatePreview('${cat.key}')">
-                <input type="text" data-key="${cat.key}" class="col-span-2 c_name" value="${c.promoName || ''}" placeholder="Nome da Promoção na Categoria">
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" data-key="${cat.key}" class="c_tag" value="${c.promoTag || 'OFF'}" oninput="uPrev('${cat.key}')" placeholder="Texto Selo">
+                <input type="number" data-key="${cat.key}" class="c_pct" value="${c.promoPct || 0}" placeholder="Desc %">
+                <input type="color" data-key="${cat.key}" class="c_bg !h-10" value="${c.promoColor || '#caa85c'}" oninput="uPrev('${cat.key}')">
+                <input type="color" data-key="${cat.key}" class="c_txt !h-10" value="${c.promoTextColor || '#ffffff'}" oninput="uPrev('${cat.key}')">
             </div>
         </div>`;
-        filtroSaldao.innerHTML += `<button onclick="carregarSaldao('${cat.key}')" class="bg-[#111] border border-[#222] px-4 py-2 rounded-xl text-[9px] uppercase whitespace-nowrap">${c.name}</button>`;
     });
 
     document.getElementById('relampago_ativa').checked = promo.relampago?.ativa || false;
@@ -134,77 +108,45 @@ async function carregarDados() {
     document.getElementById('relampago_fim').value = promo.relampago?.fim || '';
     document.getElementById('relampago_desc').value = promo.relampago?.desc || '';
 
-    if(promo.regras_progressivas) {
-        Object.values(promo.regras_progressivas).forEach(r => renderRegraProg(r.min, r.desc, r.ativa));
-    }
+    if(promo.regras_progressivas) Object.values(promo.regras_progressivas).forEach(r => renderRegra(r.min, r.desc, r.ativa));
 }
 
-function updatePreview(key) {
-    const badge = document.getElementById(`preview_${key}`);
-    badge.innerText = document.querySelector(`.c_tag[data-key="${key}"]`).value;
-    badge.style.backgroundColor = document.querySelector(`.c_bg[data-key="${key}"]`).value;
-    badge.style.color = document.querySelector(`.c_txt[data-key="${key}"]`).value;
+function uPrev(k) {
+    const b = document.getElementById('prev_'+k);
+    b.innerText = document.querySelector(`.c_tag[data-key="${k}"]`).value;
+    b.style.backgroundColor = document.querySelector(`.c_bg[data-key="${k}"]`).value;
+    b.style.color = document.querySelector(`.c_txt[data-key="${k}"]`).value;
 }
 
-async function carregarSaldao(catId) {
-    const box = document.getElementById('listaProdutosSaldao');
-    box.innerHTML = '<p class="text-center py-10 animate-pulse text-[10px]">BUSCANDO...</p>';
-    const snap = await db.ref('products').orderByChild('category').equalTo(catId).once('value');
-    let html = '';
-    snap.forEach(p => {
-        const prod = p.val();
-        html += `
-        <div class="flex items-center gap-3 bg-[#0a0a0a] p-3 rounded-2xl border border-[#222]">
-            <img src="${prod.image}" class="w-10 h-10 object-cover rounded-lg">
-            <div class="flex-1"><p class="text-[10px] font-bold uppercase truncate">${prod.name}</p></div>
-            <div class="w-16"><input type="number" data-key="${p.key}" class="s_pct text-center" value="${prod.promoPct || 0}"></div>
-            <label class="switch"><input type="checkbox" class="s_ativa" data-key="${p.key}" ${prod.promoAtiva ? 'checked' : ''}><span class="slider"></span></label>
-        </div>`;
-    });
-    box.innerHTML = html || '<p class="text-center py-10">Vazio.</p>';
-}
-
-function addRegraProg() { renderRegraProg('', '', true); }
-
-function renderRegraProg(min, desc, ativa) {
+function addRegraProg() { renderRegra('', '', true); }
+function renderRegra(min, desc, ativa) {
     const div = document.createElement('div');
-    div.className = "card flex flex-col gap-3";
+    div.className = "card flex flex-col gap-2";
     div.innerHTML = `
-        <div class="flex justify-between items-center">
-            <span class="text-[9px] font-black text-[#caa85c] uppercase">Faixa de Desconto</span>
-            <div class="flex gap-4 items-center">
-                <label class="switch"><input type="checkbox" class="p_ativa" ${ativa ? 'checked' : ''}><span class="slider"></span></label>
-                <button onclick="this.closest('.card').remove()" class="text-red-500">✕</button>
-            </div>
+        <div class="flex justify-between">
+            <label class="switch"><input type="checkbox" class="p_ativa" ${ativa ? 'checked' : ''}><span class="slider"></span></label>
+            <button onclick="this.closest('.card').remove()" class="text-red-500 text-xs">REMOVER</button>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-            <input type="number" class="p_min" value="${min}" placeholder="A partir de R$">
+        <div class="grid grid-cols-2 gap-2">
+            <input type="number" class="p_min" value="${min}" placeholder="Mínimo R$">
             <input type="number" class="p_desc" value="${desc}" placeholder="Desconto %">
         </div>`;
     document.getElementById('containerProg').appendChild(div);
 }
 
-function salvarPainel() {
+function salvarTudo() {
     const btn = document.getElementById('btnSalvar');
     btn.innerText = "SALVANDO..."; btn.disabled = true;
     const updates = {};
-
     updates['settings/promocao/ativa'] = document.getElementById('global_ativa').checked;
 
     document.querySelectorAll('.c_ativa').forEach(el => {
         const k = el.dataset.key;
         updates[`categories/${k}/promoAtiva`] = el.checked;
-        updates[`categories/${k}/promoName`] = document.querySelector(`.c_name[data-key="${k}"]`).value;
         updates[`categories/${k}/promoTag`] = document.querySelector(`.c_tag[data-key="${k}"]`).value;
         updates[`categories/${k}/promoPct`] = +document.querySelector(`.c_pct[data-key="${k}"]`).value;
         updates[`categories/${k}/promoColor`] = document.querySelector(`.c_bg[data-key="${k}"]`).value;
         updates[`categories/${k}/promoTextColor`] = document.querySelector(`.c_txt[data-key="${k}"]`).value;
-    });
-
-    document.querySelectorAll('.s_ativa').forEach(el => {
-        const k = el.dataset.key;
-        updates[`products/${k}/promoAtiva`] = el.checked;
-        updates[`products/${k}/promoPct`] = +document.querySelector(`.s_pct[data-key="${k}"]`).value;
     });
 
     updates['settings/promocao/relampago'] = {
@@ -218,20 +160,16 @@ function salvarPainel() {
     document.querySelectorAll('#containerProg .card').forEach(el => {
         const min = +el.querySelector('.p_min').value;
         const desc = +el.querySelector('.p_desc').value;
-        const ativa = el.querySelector('.p_ativa').checked;
-        if(min > 0) regras.push({ min, desc, ativa });
+        if(min > 0) regras.push({ min, desc, ativa: el.querySelector('.p_ativa').checked });
     });
     regras.sort((a,b) => a.min - b.min);
     const regrasObj = {};
     regras.forEach((r,i) => { regrasObj['r'+i] = r; });
     updates['settings/promocao/regras_progressivas'] = regrasObj;
 
-    db.ref().update(updates).then(() => {
-        alert("💎 Sucesso! Catálogo Atualizado.");
-        btn.innerText = "Salvar Estratégias"; btn.disabled = false;
-    });
+    db.ref().update(updates).then(() => { alert("Configurações sincronizadas!"); location.reload(); });
 }
-window.onload = carregarDados;
+window.onload = carregar;
 </script>
 </body>
 </html>
