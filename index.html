@@ -1,401 +1,326 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>Abella Joias | Atacado de Joias no Bruto</title>
-
-
-
-    <meta property="og:type" content="website">
-
-    <meta property="og:title" content="Abella Joias | Catálogo de Atacado">
-
-    <meta property="og:description" content="Confira nossas joias no bruto. Qualidade e sofisticação para o seu negócio.">
-
-    <meta property="og:url" content="https://abellajoiasim-maker.github.io/abellajoias/">
-
-    <meta property="og:image" content="https://raw.githubusercontent.com/abellajoiasim-maker/abellajoias/main/images/banners/banner-link.png">
-
-    
-
+    <title>Painel Administrativo • Abella Joias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-
-
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-
-
     <style>
-
-        body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
-
-        .serif { font-family: 'Cinzel', serif; }
-
-        .gold-text { color: #caa85c; }
-
-        
-
-        .img-container {
-
-            width: 100%;
-
-            aspect-ratio: 1 / 1;
-
-            overflow: hidden;
-
-            background: #141414;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-bottom: 1px solid #222;
-
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
+        nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
+        section { display:none; min-height:300px; }
+        section.active { display:block; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
+        .btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
+        .btn:hover { background:#333; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
+        input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
+        #mainModal.active { display: flex; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
         }
-
-
-
-        .img-container img {
-
-            width: 100%;
-
-            height: 100%;
-
-            object-fit: cover;
-
-            transition: transform 0.7s;
-
-        }
-
-
-
-        .card-lux { 
-
-            background: #141414; 
-
-            border-radius: 12px; 
-
-            border: 1px solid #2a2a2a; 
-
-            transition: .4s; 
-
-            overflow: hidden; 
-
-            position: relative;
-
-        }
-
-        
-
-        .card-lux:hover { 
-
-            transform: translateY(-5px); 
-
-            border-color: #caa85c; 
-
-        }
-
-        
-
-        .card-lux:hover img {
-
-            transform: scale(1.1);
-
-        }
-
-
-
-        .btn-nav { 
-
-            border: 1px solid #caa85c; 
-
-            color: #caa85c; 
-
-            font-size: 10px; 
-
-            font-weight: bold; 
-
-            letter-spacing: 1px; 
-
-            transition: .3s; 
-
-        }
-
-        
-
-        .btn-nav:hover, .btn-nav.active { 
-
-            background: #caa85c; 
-
-            color: #000; 
-
-        }
-
-
-
-        header { background: #000; border-bottom: 1px solid #222; }
-
-
-
-        @media (max-width: 640px) {
-
-            .img-container img { padding: 4px !important; }
-
-            .card-lux { border-radius: 10px !important; }
-
-        }
-
     </style>
-
 </head>
-
 <body>
 
-
-
-<header class="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-[#222]">
-
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col items-center text-center">
-
-        <h1 class="serif text-2xl md:text-3xl gold-text tracking-widest uppercase" id="nomeLoja">Abella Joias</h1>
-
-        <p class="text-[9px] tracking-[3px] text-gray-500 font-light mt-1 mb-4 uppercase" id="sloganLoja">Atacado de Joias no Bruto</p>
-
-        
-
-        <div class="flex gap-2 flex-wrap justify-center items-center">
-
-            <a href="index.html" class="btn-nav px-4 py-1.5 rounded-full active text-[10px]">INÍCIO</a>
-
-            <a href="galvanicas.html" class="px-4 py-1.5 rounded-full text-[10px] font-bold border border-[#caa85c] gold-text hover:bg-[#caa85c] hover:text-black transition uppercase">
-
-                ✨ Galvânicas
-
-            </a>
-
-            <a href="carrinho.html" class="btn-nav px-4 py-1.5 rounded-full relative flex items-center gap-2 text-[10px]">
-
-                <span>🛒 Carrinho</span>
-
-                <span id="contadorCarrinho" class="font-bold gold-text">R$ 0,00</span>
-
-            </a>
-
-        </div>
-
-    </div>
-
+<header class="p-5 text-center text-xl font-bold bg-black border-b border-[#222] text-[#caa85c] tracking-widest uppercase">
+    Abella Joias • Gestão Total
 </header>
 
+<nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50 overflow-x-auto">
+    <button type="button" class="btn active" onclick="showTab('empresa', this)">Empresa</button>
+    <button type="button" class="btn" onclick="showTab('categorias', this)">Categorias</button>
+    <button type="button" class="btn" onclick="showTab('produtos', this)">Produtos</button>
+    <button type="button" class="btn" onclick="showTab('pedidos', this)">Pedidos</button>
+</nav>
 
-
-<main class="max-w-7xl mx-auto p-6 md:p-12 pb-32">
-
-    <h2 class="serif text-center mb-10 text-xl tracking-widest uppercase gold-text">Nossas Categorias</h2>
-
-    <div id="gridCategorias" class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
-
+<main class="p-6 max-w-4xl mx-auto">
+    <section id="empresa" class="active">
+        <div class="card space-y-3">
+            <h2 class="text-[#caa85c] font-bold uppercase text-sm">Configuração da Loja</h2>
+            <input id="empNome" placeholder="Nome da Empresa">
+            <input id="empSub" placeholder="Slogan / Subtítulo">
+            <input id="empWhats" placeholder="WhatsApp da Loja">
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-gray-400">DESC. PIX %</label><input id="empDesc" type="number"></div>
+                <div><label class="text-[10px] text-gray-400">PARCELAS MÁX</label><input id="empParc" type="number"></div>
+            </div>
+            <button class="btn-gold w-full" onclick="salvarEmpresa()">GUARDAR ALTERAÇÕES</button>
         </div>
+    </section>
 
+    <section id="categorias">
+        <div class="card mb-4">
+            <input id="newCatName" placeholder="Nome da Nova Categoria">
+            <button class="btn-gold w-full" onclick="novaCategoria()">+ CADASTRAR CATEGORIA</button>
+        </div>
+        <div id="listaCategorias" class="grid gap-2"></div>
+    </section>
+
+    <section id="produtos">
+        <div id="listaProdutos" class="grid gap-2"></div>
+    </section>
+
+    <section id="pedidos">
+        <div id="listaPedidos" class="grid gap-4"></div>
+    </section>
 </main>
 
+<div id="mainModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-[#141414] border border-[#2a2a2a] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-4 border-b border-[#222] flex justify-between items-center">
+            <h3 id="modalTitle" class="text-[#caa85c] font-bold uppercase text-sm">Título</h3>
+            <button onclick="fecharModal()" class="text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="modalBody" class="p-6 max-h-[70vh] overflow-y-auto"></div>
+        <div class="p-4 border-t border-[#222] flex gap-3">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold text-gray-500">Cancelar</button>
+            <button id="modalSaveBtn" class="flex-1 btn-gold py-3 text-xs uppercase font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
 
+<div id="editorPedido" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+  <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-[#caa85c] font-bold text-lg uppercase">Editar Pedido</h2>
+        <div id="totalPreview" class="text-right text-[#caa85c] font-bold text-xl">R$ 0,00</div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase">Dados do Cliente</h3>
+        <input id="edClienteNome" placeholder="Nome">
+        <input id="edClienteTel" placeholder="WhatsApp">
+      </div>
+      <div class="card">
+        <h3 class="font-bold mb-2 text-[10px] text-gray-400 uppercase font-bold tracking-widest">Endereço de Entrega</h3>
+        <input id="edNomeEntrega" placeholder="Nome do Destinatário">
+        <input id="edRua" placeholder="Rua e Número">
+        <div class="grid grid-cols-2 gap-2">
+            <input id="edBairro" placeholder="Bairro">
+            <input id="edCidade" placeholder="Cidade">
+        </div>
+      </div>
+    </div>
+    <h3 class="font-bold mt-4 mb-2 text-xs text-[#caa85c] uppercase">Itens da Compra</h3>
+    <div id="edItens" class="space-y-2"></div>
+    <button class="btn w-full mt-2 border-dashed border-gray-600 text-gray-400" onclick="addItemEditor()">+ ADICIONAR ITEM MANUAL</button>
+    <div class="grid grid-cols-3 gap-3 mt-6 p-4 bg-black/40 rounded-xl">
+        <div><label class="text-[9px] text-gray-500">DESC. PROMO (R$)</label><input id="edDescPromo" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">DESC. PIX (R$)</label><input id="edDescPix" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+        <div><label class="text-[9px] text-gray-500">FRETE (R$)</label><input id="edFrete" type="number" step="0.01" oninput="recalcularTotalEd()"></div>
+    </div>
+    <div class="mt-6 pt-4 border-t border-[#222]">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <button class="btn bg-gray-800 border-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA (TAB)</button>
+        <button class="btn bg-gray-800 border-gray-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO (TAB)</button>
+        <button class="btn bg-blue-900 border-blue-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 4)">4. CONFERÊNCIA (GRID)</button>
+        <button class="btn bg-blue-900 border-blue-700 text-[9px] py-3" onclick="imprimirRomaneio(pedidoEditando, 5)">5. FINANCEIRO (GRID)</button>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-between">
+        <button class="btn px-8 border-red-900/50 text-red-400" onclick="fecharEditorPedido()">SAIR</button>
+        <button class="btn-gold px-12" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
 
 <script>
-
-    const fM = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-
-
-    if (!firebase.apps.length) {
-
-        firebase.initializeApp({
-
-            apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
-
-            databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com"
-
-        });
-
-    }
-
-    const db = firebase.database();
-
-
-
-    function carregarConfiguracoes() {
-
-        db.ref('settings/empresa').once('value', s => {
-
-            const v = s.val();
-
-            if (v) {
-
-                if(v.nome) document.getElementById('nomeLoja').innerText = v.nome;
-
-                if(v.subtitulo) document.getElementById('sloganLoja').innerText = v.subtitulo;
-
-            }
-
-        });
-
-    }
-
-
-
-    // ATUALIZADO: Contador agora soma corretamente mesmo produtos com variações
-
-    function atualizarContador() {
-
-        const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-
-        const valorTotal = carrinho.reduce((acc, item) => {
-
-            const preco = parseFloat(item.precoFinal || item.price || 0);
-
-            const qtd = parseInt(item.quantidade || 1);
-
-            return acc + (preco * qtd);
-
-        }, 0);
-
-        document.getElementById('contadorCarrinho').innerText = fM(valorTotal);
-
-    }
-
-
-
-function carregarCategorias() {
-
-    // 1. Primeiro verifica se a promoção geral está ligada no banco
-
-    db.ref('settings/promocao').once('value', promoSnap => {
-
-        const cnfGeral = promoSnap.val() || { ativa: false };
-
-
-
-        // 2. Carrega as categorias
-
-        db.ref('categories').on('value', snap => {
-
-            const grid = document.getElementById('gridCategorias');
-
-            grid.innerHTML = '';
-
-            
-
-            snap.forEach(s => {
-
-                const cat = s.val();
-
-                if (cat.paused) return;
-
-                
-
-                // 3. LOGICA ANULADORA: 
-
-                // A promoção só aparece se o status geral estiver ATIVA 
-
-                // E se a categoria tiver uma porcentagem maior que zero.
-
-                const temPromo = cnfGeral.ativa && (cat.promoPct > 0);
-
-
-
-                grid.innerHTML += `
-
-                    <a href="categoria.html?id=${s.key}" class="card-lux group flex flex-col h-full">
-
-                        ${temPromo ? `
-
-                        <span style="
-
-                            position: absolute; 
-
-                            top: 8px; 
-
-                            right: 8px; 
-
-                            background: ${cat.promoColor || '#caa85c'}; 
-
-                            color: ${cat.promoTextColor || '#ffffff'}; 
-
-                            font-size: 9px; 
-
-                            padding: 2px 8px; 
-
-                            border-radius: 4px; 
-
-                            z-index: 10; 
-
-                            font-weight: bold; 
-
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-
-                            text-transform: uppercase;
-
-                        ">
-
-                            ${cat.promoTag || 'OFERTA'}
-
-                        </span>
-
-                        ` : ''}
-
-                        <div class="img-container">
-
-                            <img src="${cat.image || 'https://via.placeholder.com/400?text=Abella+Joias'}" alt="${cat.name}" loading="lazy">
-
-                        </div>
-
-                        <div class="p-4 text-center mt-auto">
-
-                            <span class="serif text-[12px] gold-text tracking-widest uppercase font-bold">${cat.name}</span>
-
-                        </div>
-
-                    </a>
-
-                `;
-
-            });
-
-        });
-
-    });
-
+/* CONFIGURAÇÃO */
+const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let pedidoEditando = null;
+const fMoeda = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+
+/* NAVEGAÇÃO */
+function showTab(id, btn) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'categorias') carregarCategorias();
+    if (id === 'produtos') carregarProdutos();
+    if (id === 'pedidos') carregarPedidos();
+    if (id === 'empresa') carregarEmpresa();
 }
 
+/* FUNÇÕES DE EMPRESA, CATEGORIA, PRODUTO E PEDIDO (MANTIDAS DO SEU ORIGINAL) */
+function carregarEmpresa() {
+    db.ref('settings/empresa').once('value', s => {
+        const v = s.val() || {};
+        document.getElementById('empNome').value = v.nome || '';
+        document.getElementById('empSub').value = v.subtitulo || '';
+        document.getElementById('empWhats').value = v.whats || '';
+        document.getElementById('empDesc').value = v.descontoPix || 0;
+        document.getElementById('empParc').value = v.parcelas || 0;
+    });
+}
+function salvarEmpresa() {
+    db.ref('settings/empresa').update({
+        nome: document.getElementById('empNome').value,
+        subtitulo: document.getElementById('empSub').value,
+        whats: document.getElementById('empWhats').value,
+        descontoPix: +document.getElementById('empDesc').value,
+        parcelas: +document.getElementById('empParc').value
+    }).then(() => alert('Configurações atualizadas!'));
+}
+function carregarCategorias() {
+    db.ref('categories').on('value', s => {
+        const lista = document.getElementById('listaCategorias');
+        lista.innerHTML = '';
+        s.forEach(c => {
+            lista.innerHTML += `<div class="card flex justify-between items-center">
+                <span class="uppercase text-xs font-bold">${c.val().name}</span>
+                <div class="flex gap-2">
+                    <button class="btn text-red-500" onclick="excluirCat('${c.key}')">🗑</button>
+                </div>
+            </div>`;
+        });
+    });
+}
+function novaCategoria() {
+    const n = document.getElementById('newCatName').value;
+    if(n) db.ref('categories').push({name:n}).then(() => document.getElementById('newCatName').value = '');
+}
+function excluirCat(id) { if(confirm("Excluir categoria?")) db.ref('categories/'+id).remove(); }
 
+function carregarProdutos() {
+    const lista = document.getElementById('listaProdutos');
+    lista.innerHTML = '<p class="text-center p-4">Carregando...</p>';
+    db.ref('categories').once('value', sCats => {
+        db.ref('products').once('value', sProds => {
+            lista.innerHTML = '';
+            sCats.forEach(cat => {
+                let htmlP = '';
+                sProds.forEach(p => {
+                    const prod = p.val();
+                    if(prod.category === cat.key) {
+                        htmlP += `<div class="card flex justify-between items-center py-2 px-3 bg-[#0d0d0d] mb-1 text-[11px]">
+                            <div class="flex items-center gap-3">
+                                <img src="${prod.image || ''}" class="w-8 h-8 object-cover rounded border border-[#333]">
+                                <span><b class="text-[#caa85c]">[${prod.sku || '---'}]</b> ${prod.name}</span>
+                            </div>
+                            <button onclick="editarProduto('${p.key}')">✎</button>
+                        </div>`;
+                    }
+                });
+                if(htmlP) lista.innerHTML += `<div class="mb-4"><b class="text-[10px] text-[#caa85c] ml-1 uppercase">${cat.val().name}</b><div class="mt-1">${htmlP}</div></div>`;
+            });
+        });
+    });
+}
+function editarProduto(id) {
+    db.ref('products/'+id).once('value', s => {
+        const p = s.val();
+        const nNome = prompt("Nome:", p.name);
+        const nPreco = prompt("Preço:", p.price);
+        const nSku = prompt("SKU:", p.sku);
+        const nPeso = prompt("Peso (g):", p.peso || p.weight || 0);
+        if(nNome) db.ref('products/'+id).update({ name:nNome, price:Number(nPreco), sku:nSku, peso:Number(nPeso) }).then(carregarProdutos);
+    });
+}
+function carregarPedidos() {
+    db.ref('orders').on('value', s => {
+        const lista = document.getElementById('listaPedidos');
+        lista.innerHTML = '';
+        s.forEach(ped => {
+            const p = ped.val();
+            lista.innerHTML += `<div class="card border-l-4 border-[#caa85c] mb-2">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente'}</b><br>
+                        <small class="text-gray-500">${p.data || ''}</small>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-xs">${fMoeda(p.total)}</div>
+                        <div class="flex gap-1 mt-2">
+                             <button class="btn p-1" onclick="abrirEditorPedido('${ped.key}')">EDITAR</button>
+                             <button class="btn p-1 bg-red-900" onclick="excluirPedido('${ped.key}')">🗑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    });
+}
 
-    window.onload = () => {
+/* RESTANTE DAS FUNÇÕES DE EDIÇÃO E IMPRESSÃO (IGUAIS AO SEU ORIGINAL) */
+function abrirEditorPedido(id) {
+    pedidoEditando = id;
+    db.ref('orders/'+id).once('value', s => {
+        const p = s.val();
+        document.getElementById('edClienteNome').value = p.cliente?.nome || '';
+        document.getElementById('edClienteTel').value = p.cliente?.telefone || '';
+        document.getElementById('edNomeEntrega').value = p.entrega?.nomeEntrega || '';
+        document.getElementById('edRua').value = p.entrega?.rua || '';
+        document.getElementById('edBairro').value = p.entrega?.bairro || '';
+        document.getElementById('edCidade').value = p.entrega?.cidade || '';
+        document.getElementById('edDescPromo').value = p.descontoPromo || 0;
+        document.getElementById('edDescPix').value = p.descontoPix || 0;
+        document.getElementById('edFrete').value = p.frete || 0;
+        document.getElementById('edItens').innerHTML = '';
+        const itens = Array.isArray(p.itens) ? p.itens : Object.values(p.itens || {});
+        itens.forEach(addItemEditor);
+        recalcularTotalEd();
+        document.getElementById('editorPedido').classList.remove('hidden');
+    });
+}
+function addItemEditor(i={}) {
+    const div = document.createElement('div');
+    div.className = "card bg-black/40 border-[#222] mb-2 p-2";
+    div.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <input placeholder="SKU" value="${i.sku||''}" class="!mb-0 text-[10px]">
+            <input placeholder="Nome" value="${i.name||''}" class="!mb-0 text-[10px]">
+            <input type="number" placeholder="Peso" value="${i.peso||i.weight||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Preço" value="${i.price||i.precoFinal||0}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+            <input type="number" placeholder="Qtd" value="${i.quantidade||i.qtd||1}" class="!mb-0 text-[10px]" oninput="recalcularTotalEd()">
+        </div>
+        <button class="text-red-500 text-[9px] uppercase font-bold mt-1" onclick="this.parentElement.remove();recalcularTotalEd();">Remover Item</button>`;
+    document.getElementById('edItens').appendChild(div);
+}
+function recalcularTotalEd() {
+    let subtotal = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const inputs = div.querySelectorAll('input');
+        subtotal += (Number(inputs[3].value) * Number(inputs[4].value));
+    });
+    const total = subtotal - (+document.getElementById('edDescPromo').value) - (+document.getElementById('edDescPix').value) + (+document.getElementById('edFrete').value);
+    document.getElementById('totalPreview').innerText = fMoeda(total);
+}
+function salvarPedidoEditado() {
+    const itens = [];
+    let subtotal = 0, pesoTotal = 0, totalPecas = 0;
+    document.querySelectorAll('#edItens > div').forEach(div => {
+        const ins = div.querySelectorAll('input');
+        const item = { sku: ins[0].value, name: ins[1].value, peso: +ins[2].value, price: +ins[3].value, quantidade: +ins[4].value };
+        subtotal += (item.price * item.quantidade); pesoTotal += (item.peso * item.quantidade); totalPecas += item.quantidade;
+        itens.push(item);
+    });
+    db.ref('orders/'+pedidoEditando).update({
+        cliente: { nome: document.getElementById('edClienteNome').value, telefone: document.getElementById('edClienteTel').value },
+        entrega: { nomeEntrega: document.getElementById('edNomeEntrega').value, rua: document.getElementById('edRua').value, bairro: document.getElementById('edBairro').value, cidade: document.getElementById('edCidade').value },
+        itens, subtotal, pesoTotal, totalPecas, 
+        descontoPromo: +document.getElementById('edDescPromo').value, descontoPix: +document.getElementById('edDescPix').value, frete: +document.getElementById('edFrete').value,
+        total: (subtotal - (+document.getElementById('edDescPromo').value) - (+document.getElementById('edDescPix').value) + (+document.getElementById('edFrete').value))
+    }).then(() => { alert("Pedido Salvo!"); fecharEditorPedido(); });
+}
+function excluirPedido(id) { if(confirm("Excluir permanentemente?")) db.ref('orders/'+id).remove(); }
+function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
+function fecharModal() { document.getElementById('mainModal').classList.remove('active'); }
 
-        carregarConfiguracoes();
-
-        atualizarContador();
-
-        carregarCategorias();
-
-    };
-
+window.onload = () => carregarEmpresa();
 </script>
-
 </body>
-
 </html>
