@@ -8,67 +8,109 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 140px; }
-        .card { background:#141414; border:1px solid #222; border-radius:20px; padding:16px; margin-bottom: 12px; }
-        .btn-gold { background:#caa85c; color:#000; font-weight:800; padding:12px; border-radius:12px; cursor:pointer; }
-        input { background:#000; border:1px solid #222; padding:10px; border-radius:10px; width:100%; color:#fff; outline:none; font-size: 11px; }
-        .tab-btn { padding: 12px; border-radius: 12px; background: #111; color: #666; font-size: 9px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: 1px solid #222; flex: 1; text-align: center; }
+        body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; padding-bottom: 100px; }
+        .card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:16px; margin-bottom: 12px; }
+        .btn-gold { background:#caa85c; color:#000; font-weight:800; padding:12px; border-radius:12px; cursor:pointer; transition: 0.3s; }
+        .btn-gold:hover { background: #b8964d; opacity: 0.9; }
+        input { background:#111; border:1px solid #333; padding:10px; border-radius:10px; width:100%; color:#fff; outline:none; font-size: 12px; transition: 0.2s; }
+        input:focus { border-color: #caa85c; }
+        .tab-btn { padding: 10px; border-radius: 8px; background: #222; color: #888; font-size: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: 1px solid #444; flex: 1; text-align: center; transition: 0.3s; }
         .tab-btn.active { background: #caa85c; color: #000; border-color: #caa85c; }
-        .preview-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .preview-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Switch Estilizado */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .4s; border-radius: 34px; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
         input:checked + .slider { background-color: #caa85c; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider:before { transform: translateX(18px); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-8">
     <div class="max-w-3xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-[#caa85c] font-bold text-2xl uppercase tracking-widest">Abella Marketing</h1>
-            <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="text-[9px] text-gray-500 uppercase">Promoções Gerais:</span>
-                <label class="switch"><input type="checkbox" id="global_ativa"><span class="slider"></span></label>
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-[#caa85c] font-black text-2xl uppercase tracking-tighter italic">ABELLA MARKETING</h1>
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Gestão de Ofertas e Campanhas</p>
+            </div>
+            <div class="bg-[#141414] border border-[#2a2a2a] p-3 rounded-2xl flex items-center gap-4">
+                <span class="text-[10px] text-gray-400 uppercase font-bold">Promoções Ativas:</span>
+                <label class="switch">
+                    <input type="checkbox" id="global_ativa">
+                    <span class="slider"></span>
+                </label>
             </div>
         </header>
 
-        <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
-            <div class="tab-btn active" onclick="switchTab('categorias', this)">Categorias</div>
+        <div class="flex gap-2 mb-6 bg-[#111] p-1.5 rounded-xl border border-[#222]">
+            <div class="tab-btn active" onclick="switchTab('categorias', this)">Por Categorias</div>
             <div class="tab-btn" onclick="switchTab('relampago', this)">Relâmpago</div>
             <div class="tab-btn" onclick="switchTab('progressivo', this)">Progresso</div>
         </div>
 
-        <div id="tab_categorias" class="tab-content">
-            <div id="listaCategorias" class="space-y-4"></div>
+        <div id="tab_categorias" class="tab-content animate-in fade-in duration-300">
+            <div id="listaCategorias" class="space-y-4">
+                </div>
         </div>
 
-        <div id="tab_relampago" class="tab-content hidden">
+        <div id="tab_relampago" class="tab-content hidden animate-in fade-in duration-300">
             <div class="card border-[#caa85c]/30">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-[#caa85c] font-bold text-xs uppercase">Oferta com Cronômetro</span>
-                    <label class="switch"><input type="checkbox" id="relampago_ativa"><span class="slider"></span></label>
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-[#caa85c] font-bold text-sm uppercase">Banner de Oferta Limitada</h3>
+                        <p class="text-[10px] text-gray-500">Exibe um cronômetro no topo da loja</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="relampago_ativa">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <input type="text" id="relampago_titulo" class="mb-3" placeholder="Ex: OFERTA TERMINA EM:">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="datetime-local" id="relampago_fim">
-                    <input type="number" id="relampago_desc" placeholder="Desc. Geral %">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block ml-1">Título da Oferta</label>
+                        <input type="text" id="relampago_titulo" placeholder="Ex: APROVEITE! A OFERTA TERMINA EM:">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block ml-1">Data/Hora Final</label>
+                            <input type="datetime-local" id="relampago_fim">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 font-bold uppercase mb-1 block ml-1">Desconto Geral (%)</label>
+                            <input type="number" id="relampago_desc" placeholder="Ex: 10">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="tab_progressivo" class="tab-content hidden space-y-4">
-            <button onclick="addRegraProg()" class="w-full btn-gold text-[10px] mb-2">+ ADICIONAR FAIXA DE DESCONTO</button>
-            <div id="containerProg" class="space-y-2"></div>
+        <div id="tab_progressivo" class="tab-content hidden space-y-4 animate-in fade-in duration-300">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <h3 class="text-[#caa85c] font-bold text-sm uppercase">Desconto Progressivo</h3>
+                <button onclick="addRegraProg()" class="btn-gold text-[9px] py-1.5 px-4">+ NOVA FAIXA</button>
+            </div>
+            <div id="containerProg" class="space-y-3">
+                </div>
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-[#222] z-50">
-            <button onclick="salvarTudo()" id="btnSalvar" class="w-full btn-gold py-4 uppercase text-[11px]">Salvar Todas as Configurações</button>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-md border-t border-[#2a2a2a] z-[100]">
+            <div class="max-w-3xl mx-auto">
+                <button onclick="salvarTudo()" id="btnSalvar" class="w-full btn-gold py-4 shadow-lg shadow-[#caa85c]/10 uppercase text-xs tracking-widest">
+                    Salvar Alterações de Marketing
+                </button>
+            </div>
         </div>
     </div>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
+    databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -80,35 +122,65 @@ function switchTab(tab, btn) {
 }
 
 async function carregar() {
-    const [snapCats, snapPromo] = await Promise.all([db.ref('categories').once('value'), db.ref('settings/promocao').once('value')]);
+    const [snapCats, snapPromo] = await Promise.all([
+        db.ref('categories').once('value'), 
+        db.ref('settings/promocao').once('value')
+    ]);
+    
     const promo = snapPromo.val() || {};
     document.getElementById('global_ativa').checked = promo.ativa || false;
 
     const boxCat = document.getElementById('listaCategorias');
     boxCat.innerHTML = '';
+    
     snapCats.forEach(cat => {
         const c = cat.val();
         boxCat.innerHTML += `
-        <div class="card">
+        <div class="card border-l-4 border-l-[#caa85c]/20">
             <div class="flex justify-between items-center mb-4">
-                <span id="prev_${cat.key}" class="preview-badge" style="background:${c.promoColor || '#caa85c'}; color:${c.promoTextColor || '#fff'}">${c.promoTag || 'OFF'}</span>
-                <label class="switch"><input type="checkbox" class="c_ativa" data-key="${cat.key}" ${c.promoAtiva ? 'checked' : ''}><span class="slider"></span></label>
+                <div class="flex items-center gap-3">
+                    <span id="prev_${cat.key}" class="preview-badge" style="background:${c.promoColor || '#caa85c'}; color:${c.promoTextColor || '#fff'}">
+                        ${c.promoTag || 'OFF'}
+                    </span>
+                    <span class="text-xs font-black uppercase text-gray-300">${c.name}</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" class="c_ativa" data-key="${cat.key}" ${c.promoAtiva ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input type="text" data-key="${cat.key}" class="c_tag" value="${c.promoTag || 'OFF'}" oninput="uPrev('${cat.key}')" placeholder="Texto Selo">
-                <input type="number" data-key="${cat.key}" class="c_pct" value="${c.promoPct || 0}" placeholder="Desc %">
-                <input type="color" data-key="${cat.key}" class="c_bg !h-10" value="${c.promoColor || '#caa85c'}" oninput="uPrev('${cat.key}')">
-                <input type="color" data-key="${cat.key}" class="c_txt !h-10" value="${c.promoTextColor || '#ffffff'}" oninput="uPrev('${cat.key}')">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div>
+                    <label class="text-[9px] text-gray-600 uppercase font-bold ml-1">Selo (Tag)</label>
+                    <input type="text" data-key="${cat.key}" class="c_tag" value="${c.promoTag || 'OFF'}" oninput="uPrev('${cat.key}')">
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-600 uppercase font-bold ml-1">Desconto %</label>
+                    <input type="number" data-key="${cat.key}" class="c_pct" value="${c.promoPct || 0}">
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-600 uppercase font-bold ml-1">Cor Fundo</label>
+                    <input type="color" data-key="${cat.key}" class="c_bg !h-10 !p-1" value="${c.promoColor || '#caa85c'}" oninput="uPrev('${cat.key}')">
+                </div>
+                <div>
+                    <label class="text-[9px] text-gray-600 uppercase font-bold ml-1">Cor Texto</label>
+                    <input type="color" data-key="${cat.key}" class="c_txt !h-10 !p-1" value="${c.promoTextColor || '#ffffff'}" oninput="uPrev('${cat.key}')">
+                </div>
             </div>
         </div>`;
     });
 
+    // Dados Relâmpago
     document.getElementById('relampago_ativa').checked = promo.relampago?.ativa || false;
     document.getElementById('relampago_titulo').value = promo.relampago?.titulo || '';
     document.getElementById('relampago_fim').value = promo.relampago?.fim || '';
     document.getElementById('relampago_desc').value = promo.relampago?.desc || '';
 
-    if(promo.regras_progressivas) Object.values(promo.regras_progressivas).forEach(r => renderRegra(r.min, r.desc, r.ativa));
+    // Regras Progressivas
+    document.getElementById('containerProg').innerHTML = '';
+    if(promo.regras_progressivas) {
+        Object.values(promo.regras_progressivas).forEach(r => renderRegra(r.min, r.desc, r.ativa));
+    }
 }
 
 function uPrev(k) {
@@ -119,27 +191,37 @@ function uPrev(k) {
 }
 
 function addRegraProg() { renderRegra('', '', true); }
+
 function renderRegra(min, desc, ativa) {
     const div = document.createElement('div');
-    div.className = "card flex flex-col gap-2";
+    div.className = "card bg-black/40 border-[#222]";
     div.innerHTML = `
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center mb-3">
             <label class="switch"><input type="checkbox" class="p_ativa" ${ativa ? 'checked' : ''}><span class="slider"></span></label>
-            <button onclick="this.closest('.card').remove()" class="text-red-500 text-xs">REMOVER</button>
+            <button onclick="this.closest('.card').remove()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline">Remover Faixa</button>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-            <input type="number" class="p_min" value="${min}" placeholder="Mínimo R$">
-            <input type="number" class="p_desc" value="${desc}" placeholder="Desconto %">
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase block mb-1">A partir de (R$)</label>
+                <input type="number" class="p_min" value="${min}" placeholder="Ex: 500">
+            </div>
+            <div>
+                <label class="text-[9px] text-gray-500 uppercase block mb-1">Desconto (%)</label>
+                <input type="number" class="p_desc" value="${desc}" placeholder="Ex: 5">
+            </div>
         </div>`;
     document.getElementById('containerProg').appendChild(div);
 }
 
 function salvarTudo() {
     const btn = document.getElementById('btnSalvar');
-    btn.innerText = "SALVANDO..."; btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = "SINCRONIZANDO..."; btn.disabled = true;
+    
     const updates = {};
     updates['settings/promocao/ativa'] = document.getElementById('global_ativa').checked;
 
+    // Categorias
     document.querySelectorAll('.c_ativa').forEach(el => {
         const k = el.dataset.key;
         updates[`categories/${k}/promoAtiva`] = el.checked;
@@ -149,6 +231,7 @@ function salvarTudo() {
         updates[`categories/${k}/promoTextColor`] = document.querySelector(`.c_txt[data-key="${k}"]`).value;
     });
 
+    // Relâmpago
     updates['settings/promocao/relampago'] = {
         ativa: document.getElementById('relampago_ativa').checked,
         titulo: document.getElementById('relampago_titulo').value,
@@ -156,19 +239,33 @@ function salvarTudo() {
         desc: +document.getElementById('relampago_desc').value
     };
 
+    // Progressivo
     const regras = [];
     document.querySelectorAll('#containerProg .card').forEach(el => {
         const min = +el.querySelector('.p_min').value;
         const desc = +el.querySelector('.p_desc').value;
-        if(min > 0) regras.push({ min, desc, ativa: el.querySelector('.p_ativa').checked });
+        if(min > 0) {
+            regras.push({ min, desc, ativa: el.querySelector('.p_ativa').checked });
+        }
     });
     regras.sort((a,b) => a.min - b.min);
+    
     const regrasObj = {};
     regras.forEach((r,i) => { regrasObj['r'+i] = r; });
     updates['settings/promocao/regras_progressivas'] = regrasObj;
 
-    db.ref().update(updates).then(() => { alert("Configurações sincronizadas!"); location.reload(); });
+    db.ref().update(updates).then(() => {
+        alert("Marketing atualizado com sucesso!");
+        btn.innerText = originalText;
+        btn.disabled = false;
+        carregar();
+    }).catch(err => {
+        alert("Erro ao salvar: " + err.message);
+        btn.innerText = originalText;
+        btn.disabled = false;
+    });
 }
+
 window.onload = carregar;
 </script>
 </body>
