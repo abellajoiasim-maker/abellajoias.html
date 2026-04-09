@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Modelos | Abella Joias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0b0b0b; color: #eee; font-family: 'Inter', sans-serif; }
+        .card-prod { background:#141414; border:1px solid #2a2a2a; border-radius:20px; transition: 0.3s; }
+        .card-prod:hover { border-color: #caa85c; }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center; padding:20px; backdrop-blur: 5px; }
+        .modal.active { display:flex; }
+        .modal-content { background:#141414; border:1px solid #2a2a2a; padding:25px; border-radius:30px; width:100%; max-width:400px; }
+        input[type="number"] { background:#000; border:1px solid #333; color:#fff; text-align:center; padding:8px; border-radius:10px; width:100%; font-weight:bold; }
+        .gold-bg { background: #caa85c; color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="p-5 border-b border-[#222] flex items-center justify-between sticky top-0 bg-[#0b0b0b]/90 backdrop-blur-md z-50">
+    <button onclick="history.back()" class="text-[#caa85c] font-bold text-xs uppercase tracking-widest">← Voltar</button>
+    <h2 id="tituloPagina" class="text-white font-black uppercase text-sm tracking-widest">Carregando...</h2>
+    <a href="carrinho.html" class="text-lg">🛒</a>
+</div>
+
+<div id="gridProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-5"></div>
+
+<div id="modalAdd" class="modal">
+    <div class="modal-content">
+        <div class="flex justify-between items-start mb-4">
+            <div class="text-left">
+                <h3 id="mNome" class="text-white font-bold leading-tight">---</h3>
+                <p id="mSku" class="text-[10px] text-gray-500 font-bold uppercase">SKU: ---</p>
+            </div>
+            <button onclick="fecharModal()" class="text-gray-500 text-xl">&times;</button>
+        </div>
+        <img id="mImg" class="w-full aspect-square object-cover rounded-2xl mb-6 border border-[#222]">
+        
+        <div id="areaVariações"></div>
+
+        <div class="flex gap-3 mt-8">
+            <button onclick="fecharModal()" class="flex-1 py-3 text-gray-500 font-bold uppercase text-[10px]">Sair</button>
+            <button id="btnConfirmar" class="flex-1 gold-bg py-3 rounded-xl font-black uppercase text-[10px] shadow-lg">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUkn?AyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let pAtivo = null;
+    const catId = new URLSearchParams(window.location.search).get('id');
+
+    async function carregarModelos() {
+        const [pSnap, cSnap, prSnap] = await Promise.all([
+            db.ref('products').once('value'),
+            db.ref(`categories/${catId}`).once('value'),
+            db.ref('settings/promocao').once('value')
+        ]);
+
+        const categoria = cSnap.val();
+        const promo = prSnap.val();
+        document.getElementById('tituloPagina').innerText = categoria.name;
+
+        const grid = document.getElementById('gridProdutos');
+        grid.innerHTML = '';
+        
+        pSnap.forEach(s => {
+            const p = s.val();
+            if(p.category !== catId || p.paused) return;
+
+            const desc = (promo.ativa && categoria.promoAtiva) ? (categoria.promoPct || 0) : 0;
+            const precoFinal = p.price * (1 - desc/100);
+
+            const card = document.createElement('div');
+            card.className = 'card-prod p-3 cursor-pointer';
+            card.onclick = () => abrirModal(p, precoFinal, s.key);
+            card.innerHTML = `
+                <img src="${p.image}" class="w-full aspect-square object-cover rounded-xl mb-3">
+                <p class="text-[9px] font-bold text-gray-600 uppercase">SKU: ${p.sku}</p>
+                <h4 class="text-[11px] font-bold truncate text-gray-200">${p.name}</h4>
+                <div class="mt-2">
+                    ${desc > 0 ? `<span class="text-[9px] text-gray-500 line-through">R$ ${p.price.toFixed(2)}</span>` : ''}
+                    <p class="text-[#caa85c] font-black text-sm">R$ ${precoFinal.toFixed(2)}</p>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function abrirModal(p, precoFinal, id) {
+        pAtivo = { ...p, id, precoFinal };
+        document.getElementById('mNome').innerText = p.name;
+        document.getElementById('mSku').innerText = `SKU: ${p.sku}`;
+        document.getElementById('mImg').src = p.image;
+        
+        const area = document.getElementById('areaVariações');
+        area.innerHTML = '';
+
+        if(p.variacaoTipo === 'Aro') {
+            const aros = ["12","14","16","18","20","22","24","26"];
+            let html = '<p class="text-[10px] text-[#caa85c] font-black mb-3 uppercase text-center">Grade de Aros</p><div class="grid grid-cols-4 gap-2">';
+            aros.forEach(aro => {
+                html += `<div><span class="text-[8px] block text-center text-gray-500 mb-1">${aro}</span><input type="number" class="input-aro" data-aro="${aro}" value="0" min="0"></div>`;
+            });
+            area.innerHTML = html + '</div>';
+        } else {
+            area.innerHTML = `<p class="text-[10px] text-[#caa85c] font-black mb-3 uppercase text-center">Quantidade</p>
+                              <input type="number" id="qSimple" value="1" min="1" class="text-xl py-3">`;
+        }
+        document.getElementById('modalAdd').classList.add('active');
+    }
+
+    document.getElementById('btnConfirmar').onclick = () => {
+        let cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        const aroInputs = document.querySelectorAll('.input-aro');
+        
+        if(aroInputs.length > 0) {
+            aroInputs.forEach(input => {
+                const qtd = parseInt(input.value);
+                if(qtd > 0) {
+                    cart.push({ ...pAtivo, name: `${pAtivo.name} (Aro ${input.dataset.aro})`, quantidade: qtd });
+                }
+            });
+        } else {
+            const q = parseInt(document.getElementById('qSimple').value);
+            if(q > 0) cart.push({ ...pAtivo, quantidade: q });
+        }
+
+        localStorage.setItem('carrinho', JSON.stringify(cart));
+        fecharModal();
+        alert('Adicionado ao carrinho!');
+    };
+
+    function fecharModal() { document.getElementById('modalAdd').classList.remove('active'); }
+    window.onload = carregarModelos;
+</script>
+</body>
+</html>
