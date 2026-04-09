@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Galvânicas Parceiras | Abella Joias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --gold: #caa85c; 
+            --dark-bg: #0b0b0b; 
+            --card-bg: #141414;
+            --border: #2a2a2a;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            background: var(--dark-bg); 
+            color: #eee; 
+        }
+
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-text { color: var(--gold); }
+
+        /* Header Padrão Projeto */
+        header { 
+            background: rgba(0,0,0,0.95); 
+            border-bottom: 1px solid var(--border); 
+            backdrop-filter: blur(10px); 
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container { max-width: 1300px; margin: 0 auto; padding: 40px 20px; }
+
+        .titulo-galvanicas {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .galvanicas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        /* Card Luxo Dark */
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            transition: all .4s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover { 
+            border-color: var(--gold); 
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* Selo Estilo Joia */
+        .card::before {
+            content: "PARCEIRO";
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: var(--gold);
+            color: #000;
+            font-weight: 900;
+            font-size: 9px;
+            padding: 5px 15px;
+            border-radius: 50px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(202, 168, 92, 0.4);
+        }
+
+        .card-logo {
+            height: 120px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border-radius: 15px;
+            padding: 10px;
+            border: 1px solid #222;
+        }
+
+        .card-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: grayscale(0.2);
+            transition: 0.4s;
+        }
+        .card:hover .card-logo img { filter: grayscale(0); }
+
+        .card h2 {
+            font-size: 20px;
+            color: var(--gold);
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .info-row {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .info-row b { color: var(--gold); text-transform: uppercase; font-size: 10px; margin-right: 5px; }
+
+        .whatsapp-link {
+            display: block;
+            background: linear-gradient(135deg, #caa85c 0%, #947a42 100%);
+            color: #000;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 800;
+            text-decoration: none;
+            margin-top: 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .whatsapp-link:hover { transform: scale(1.03); opacity: 0.9; }
+
+        .slogan { 
+            margin-top: 20px; 
+            font-size: 12px; 
+            color: #666; 
+            font-style: italic;
+            border-top: 1px solid #222;
+            padding-top: 15px;
+        }
+
+        .partner-gold { margin-top: 60px; }
+        .partner-gold img { border: 1px solid var(--border); transition: 0.4s; }
+        .partner-gold img:hover { border-color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<header class="py-5">
+    <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+        <div>
+            <h1 class="serif text-xl gold-text tracking-widest uppercase">Abella Joias</h1>
+            <p class="text-[8px] tracking-[3px] text-gray-500 font-bold uppercase">Galvânicas Parceiras</p>
+        </div>
+        <div class="flex gap-4">
+            <a href="index.html" class="text-[10px] font-bold border border-[#333] px-4 py-2 rounded-lg hover:border-[#caa85c] transition-all">LOJA</a>
+            <a href="carrinho.html" class="text-[10px] font-bold bg-[#caa85c] text-black px-4 py-2 rounded-lg">CARRINHO</a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <h2 class="titulo-galvanicas serif gold-text uppercase">Centros de Banho Autorizados</h2>
+
+    <div class="galvanicas-grid">
+
+        <div class="card">
+            <div>
+                <div class="card-logo">
+                    <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg" alt="Franco Galvânica">
+                </div>
+                <h2 class="serif">Franco Galvânica</h2>
+                <div class="info-row"><b>Endereço:</b> R: José Motta dos Santos, 113 - Jd. Adélia Cavicchia Grotta</div>
+                <div class="info-row"><b>Telefone:</b> (19) 3451-6246</div>
+            </div>
+            <div>
+                <a href="https://wa.me/5519984202600?text=Ol%C3%A1%20Franco.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">Falar no WhatsApp 📲</a>
+                <div class="slogan">Mais de 20 anos de tradição em Ouro, Prata e Ródio.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="card-logo">
+                    <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0045-300x150.jpg" alt="Costa Rica Galvânica">
+                </div>
+                <h2 class="serif">Costa Rica</h2>
+                <div class="info-row"><b>Endereço:</b> Rua: Mário Lima, 241 - Bairro Jardim Anhanguera</div>
+                <div class="info-row"><b>WhatsApp:</b> (19) 98876-0429</div>
+            </div>
+            <div>
+                <a href="https://wa.me/5519988760429?text=Ol%C3%A1%20Costa%20Rica.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">Falar no WhatsApp 📲</a>
+                <div class="slogan">Especializada em acabamento de alto padrão.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="card-logo">
+                    <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0042-300x150.jpg" alt="Queen Galvânica">
+                </div>
+                <h2 class="serif">Queen Galvânica</h2>
+                <div class="info-row"><b>Endereço:</b> Rua: Arthur Salibe, 589 - Jd. Nova Suiça</div>
+                <div class="info-row"><b>WhatsApp:</b> (19) 99970-2895</div>
+            </div>
+            <div>
+                <a href="https://wa.me/5519999702895?text=Ol%C3%A1%20Queen.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">Falar no WhatsApp 📲</a>
+                <div class="slogan">Melhores produtos e rigoroso controle de qualidade.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="card-logo">
+                    <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0039.jpg" alt="Atenas Galvânica">
+                </div>
+                <h2 class="serif">Atenas Galvânica</h2>
+                <div class="info-row"><b>Endereço:</b> Rua: Tancre Leitão, 34 - Jardim Aeroporto</div>
+                <div class="info-row"><b>WhatsApp:</b> (19) 98122-6758</div>
+            </div>
+            <div>
+                <a href="https://wa.me/5519981226758?text=Ol%C3%A1%20Atenas.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">Falar no WhatsApp 📲</a>
+                <div class="slogan">Atendimento comercial especializado para semijoias.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="card-logo">
+                    <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-7-300x232.jpg" alt="4D Galvânica">
+                </div>
+                <h2 class="serif">4D Galvânica</h2>
+                <div class="info-row"><b>Endereço:</b> Rua: Giocondo Negro, 316 - Vila Rosana</div>
+                <div class="info-row"><b>Telefone:</b> (19) 3451-9651</div>
+            </div>
+            <div>
+                <a href="https://wa.me/5519971796251?text=Ol%C3%A1%204D.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">Falar no WhatsApp 📲</a>
+                <div class="slogan">Soluções completas para fabricantes e empreendedores.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="card-logo">
+                    <img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg" alt="ORO Galvânica">
+                </div>
+                <h2 class="serif">ORO Galvânica</h2>
+                <div class="info-row"><b>Endereço:</b> Rua Pércio Machado Gomes, 243 - Jd. Anhanguera</div>
+                <div class="info-row"><b>WhatsApp:</b> (19) 98907-2453 / 97171-6251</div>
+            </div>
+            <div>
+                <a href="https://wa.me/5519989072453?text=Ol%C3%A1%20ORO.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">Falar no WhatsApp 📲</a>
+                <div class="slogan">Excelência em Banhos para Semijoias de Alto Padrão.</div>
+            </div>
+        </div>
+
+    </div> <div class="partner-gold text-center">
+        <a href="https://wa.me/5519988207658?text=Ol%C3%A1%2C%20tenho%20interesse%20em%20ser%20Parceiro%20GOLD%20Abella%20Joias." 
+           target="_blank" class="inline-block transform transition hover:scale-[1.01]">
+          <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Gemini_Generated_Image_56v05c56v05c56v0.png"
+               alt="Seja Nosso Parceiro GOLD"
+               class="max-w-full rounded-2xl shadow-2xl">
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
