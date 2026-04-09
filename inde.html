@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Abella Joias • Atacado de Luxo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
+        .serif { font-family: 'Cinzel', serif; }
+        .gold-text { color: #caa85c; }
+        header { background: rgba(0,0,0,0.95); border-bottom: 1px solid #222; backdrop-blur: 10px; }
+        .btn-nav { border: 1px solid #333; color: #888; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; text-transform: uppercase; }
+        .btn-nav:hover { border-color: #caa85c; color: #caa85c; }
+        #bannerPromo { background: linear-gradient(90deg, #1a1a1a, #000); border-bottom: 2px solid #caa85c; display: none; }
+        .card-cat { background:#141414; border-radius:24px; border:1px solid #2a2a2a; transition:.4s; overflow:hidden; position: relative; cursor: pointer; }
+        .card-cat:hover { border-color: #caa85c; transform: translateY(-5px); }
+        .img-cat { width:100%; aspect-ratio: 1/1.2; object-fit: cover; transition: 0.6s; opacity: 0.7; }
+        .card-cat:hover .img-cat { scale: 1.05; opacity: 1; }
+        .cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
+        .promo-tag { position: absolute; top: 15px; right: 15px; font-size: 9px; font-weight: 900; padding: 4px 12px; border-radius: 50px; text-transform: uppercase; z-index: 10; }
+    </style>
+</head>
+<body>
+
+<div id="bannerPromo" class="py-2 text-center">
+    <span id="textoRelampago" class="gold-text font-black uppercase text-[10px] tracking-widest italic"></span>
+</div>
+
+<header class="sticky top-0 z-50 py-5">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="serif text-2xl gold-text tracking-widest uppercase leading-none">Abella Joias</h1>
+            <p class="text-[9px] tracking-[4px] text-gray-500 font-bold uppercase mt-1">Atacado de Joias no Bruto</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="galvanicas.html" class="btn-nav px-5 py-2 rounded-xl">✨ Galvânicas</a>
+            <a href="carrinho.html" class="btn-nav px-5 py-2 rounded-xl flex items-center gap-2 bg-[#111] border-[#caa85c]/30">
+                <span class="gold-text">🛒</span> <span id="valCarrinho">R$ 0,00</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto p-6 md:p-12">
+    <h2 class="serif text-2xl text-white mb-8 border-l-4 border-[#caa85c] pl-4 uppercase tracking-widest">Coleções</h2>
+    <div id="gridCategorias" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+</main>
+
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function carregarLoja() {
+        const [promoSnap, catSnap] = await Promise.all([
+            db.ref('settings/promocao').once('value'),
+            db.ref('categories').once('value')
+        ]);
+
+        const promo = promoSnap.val() || {};
+        const categorias = catSnap.val() || {};
+
+        // Banner Relâmpago
+        if(promo.ativa && promo.relampago?.ativa) {
+            document.getElementById('bannerPromo').style.display = 'block';
+            document.getElementById('textoRelampago').innerText = `🔥 ${promo.relampago.titulo} - ACABA EM BREVE!`;
+        }
+
+        // Render Categorias
+        const grid = document.getElementById('gridCategorias');
+        grid.innerHTML = '';
+        Object.entries(categorias).forEach(([id, cat]) => {
+            if(cat.paused) return;
+            const temPromo = promo.ativa && cat.promoAtiva;
+            grid.innerHTML += `
+                <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
+                    ${temPromo ? `<span class="promo-tag shadow-lg" style="background:${cat.promoColor || '#caa85c'}; color:${cat.promoTextColor || '#fff'}">${cat.promoTag || 'OFF'}</span>` : ''}
+                    <img src="${cat.image || 'https://via.placeholder.com/600'}" class="img-cat">
+                    <div class="cat-overlay">
+                        <h3 class="serif text-xl text-white tracking-widest uppercase">${cat.name}</h3>
+                        <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase">Ver Modelos →</p>
+                    </div>
+                </div>`;
+        });
+        atualizarResumo();
+    }
+
+    function atualizarResumo() {
+        const cart = JSON.parse(localStorage.getItem('carrinho') || '[]');
+        const total = cart.reduce((acc, i) => acc + (i.precoFinal * i.quantidade), 0);
+        document.getElementById('valCarrinho').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    window.onload = carregarLoja;
+</script>
+</body>
+</html>
