@@ -10,57 +10,97 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-  body{background:#F8F6F2}
+  body{background:#F8F6F2; font-family: 'Inter', sans-serif;}
   .font-serif{font-family:'Cinzel',serif}
   .gold{color:#A68966}
+  .bg-gold {background:#A68966}
+  input:focus { outline: 2px solid #A68966; border-color: transparent; }
 </style>
 </head>
 
 <body>
 
-<header class="bg-white border-b px-10 py-6 flex justify-between items-center">
+<header class="bg-white border-b px-10 py-6 flex justify-between items-center sticky top-0 z-50">
   <div>
-    <h1 class="font-serif text-xl tracking-widest gold">Galvânicas</h1>
-    <p class="text-xs text-gray-400 uppercase">Painel Administrativo</p>
+    <h1 class="font-serif text-xl tracking-widest gold uppercase">Galvânicas</h1>
+    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Painel de Controle de Parceiros</p>
   </div>
-  <a href="index.html" class="text-xs uppercase tracking-widest text-gray-500">← Voltar</a>
+  <a href="index.html" class="text-xs uppercase tracking-widest text-gray-500 font-bold hover:text-black transition">← Sair do Painel</a>
 </header>
 
-<main class="max-w-6xl mx-auto px-8 py-10 grid md:grid-cols-2 gap-10">
+<main class="max-w-7xl mx-auto px-8 py-10 grid md:grid-cols-12 gap-10">
 
-<!-- FORMULÁRIO -->
-<div class="bg-white border rounded-xl p-8 space-y-4">
-  <h2 class="font-serif gold text-xl mb-4">Cadastrar / Editar Galvânica</h2>
+<div class="md:col-span-5">
+    <div class="bg-white border rounded-2xl p-8 shadow-sm sticky top-28">
+      <h2 id="formTitle" class="font-serif gold text-xl mb-6 uppercase">Cadastrar Parceiro</h2>
+    
+      <div class="space-y-4">
+          <div>
+              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Nome da Empresa</label>
+              <input id="nome" placeholder="Ex: Franco Galvânica" class="w-full border p-3 rounded-xl bg-gray-50">
+          </div>
 
-  <input id="nome" placeholder="Nome da galvânica" class="w-full border p-3 rounded">
-  <input id="descricao" placeholder="Descrição curta" class="w-full border p-3 rounded">
-  <input id="endereco" placeholder="Endereço completo" class="w-full border p-3 rounded">
-  <input id="telefone" placeholder="Telefone fixo" class="w-full border p-3 rounded">
-  <input id="whatsapp" placeholder="WhatsApp (5519...)" class="w-full border p-3 rounded">
-  <input id="imagem" placeholder="URL da imagem / logo" class="w-full border p-3 rounded">
+          <div>
+            <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Slogan / Descrição Curta</label>
+            <input id="descricao" placeholder="Ex: Mais de 20 anos de tradição..." class="w-full border p-3 rounded-xl bg-gray-50">
+          </div>
 
-  <!-- 🔥 SELO EDITÁVEL -->
-  <input id="selo" placeholder="Texto do selo (ex: ABELLA GOLD)" class="w-full border p-3 rounded">
+          <div>
+              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Endereço Completo</label>
+              <input id="endereco" placeholder="Rua, Número, Bairro - Cidade" class="w-full border p-3 rounded-xl bg-gray-50">
+          </div>
 
-  <button onclick="salvarGalvanica()"
-    class="w-full bg-black text-white py-3 rounded uppercase tracking-widest font-bold">
-    Salvar Galvânica
-  </button>
+          <div class="grid grid-cols-2 gap-4">
+              <div>
+                  <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Telefone Fixo</label>
+                  <input id="telefone" placeholder="(19) 0000-0000" class="w-full border p-3 rounded-xl bg-gray-50">
+              </div>
+              <div>
+                  <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">WhatsApp (Apenas Números)</label>
+                  <input id="whatsapp" placeholder="55199..." class="w-full border p-3 rounded-xl bg-gray-50">
+              </div>
+          </div>
+
+          <div>
+              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Link da Logo (URL)</label>
+              <input id="imagem" placeholder="https://..." class="w-full border p-3 rounded-xl bg-gray-50">
+          </div>
+
+          <div>
+              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Texto do Selo (Badge)</label>
+              <input id="selo" placeholder="Ex: PARCEIRO" class="w-full border p-3 rounded-xl bg-gray-50">
+          </div>
+
+          <div class="pt-4 flex gap-2">
+            <button onclick="salvarGalvanica()" id="btnSalvar"
+                class="flex-1 bg-black text-white py-4 rounded-xl uppercase tracking-widest font-bold hover:bg-zinc-800 transition shadow-lg">
+                Salvar Dados
+            </button>
+            <button onclick="limparForm()" id="btnCancelar" class="hidden bg-gray-200 text-gray-600 px-4 rounded-xl font-bold uppercase text-[10px]">
+                Cancelar
+            </button>
+          </div>
+      </div>
+    </div>
 </div>
 
-<!-- LISTA -->
-<div>
-  <h2 class="font-serif gold text-xl mb-4">Galvânicas Cadastradas</h2>
-  <div id="listaGalvanicas" class="space-y-4"></div>
+<div class="md:col-span-7">
+  <div class="flex justify-between items-end mb-6">
+    <h2 class="font-serif gold text-xl uppercase">Parceiros Ativos</h2>
+    <span id="contador" class="text-[10px] font-bold bg-gray-200 px-3 py-1 rounded-full uppercase text-gray-500">carregando...</span>
+  </div>
+  
+  <div id="listaGalvanicas" class="grid gap-4">
+      </div>
 </div>
 
 </main>
 
 <script>
-/* 🔥 FIREBASE */
+/* CONFIGURAÇÃO FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
@@ -70,70 +110,111 @@ const db = firebase.database();
 
 let editId = null;
 
+// ELEMENTOS
+const inputs = {
+    nome: document.getElementById('nome'),
+    descricao: document.getElementById('descricao'),
+    endereco: document.getElementById('endereco'),
+    telefone: document.getElementById('telefone'),
+    whatsapp: document.getElementById('whatsapp'),
+    imagem: document.getElementById('imagem'),
+    selo: document.getElementById('selo')
+};
+
 function salvarGalvanica(){
+  if(!inputs.nome.value) return alert("O nome da empresa é obrigatório.");
+
   const dados = {
-    nome: nome.value,
-    descricao: descricao.value,
-    endereco: endereco.value,
-    telefone: telefone.value,
-    whatsapp: whatsapp.value,
-    imagem: imagem.value,
-    selo: selo.value || ""
+    nome: inputs.nome.value,
+    descricao: inputs.descricao.value,
+    endereco: inputs.endereco.value,
+    telefone: inputs.telefone.value,
+    whatsapp: inputs.whatsapp.value,
+    imagem: inputs.imagem.value,
+    selo: inputs.selo.value || ""
   };
 
   if(editId){
-    db.ref('galvanicas/' + editId).set(dados);
+    db.ref('galvanicas/' + editId).set(dados)
+      .then(() => alert("Atualizado com sucesso!"))
+      .catch(e => console.error(e));
     editId = null;
   } else {
-    db.ref('galvanicas').push(dados);
+    db.ref('galvanicas').push(dados)
+      .then(() => alert("Cadastrado com sucesso!"))
+      .catch(e => console.error(e));
   }
 
   limparForm();
 }
 
 function limparForm(){
-  nome.value = "";
-  descricao.value = "";
-  endereco.value = "";
-  telefone.value = "";
-  whatsapp.value = "";
-  imagem.value = "";
-  selo.value = "";
+  Object.values(inputs).forEach(input => input.value = "");
+  editId = null;
+  document.getElementById('formTitle').innerText = "Cadastrar Parceiro";
+  document.getElementById('btnSalvar').innerText = "Salvar Dados";
+  document.getElementById('btnCancelar').classList.add('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
+// ESCUTAR BANCO DE DADOS
 db.ref('galvanicas').on('value', snap => {
-  listaGalvanicas.innerHTML = "";
+  const lista = document.getElementById('listaGalvanicas');
+  lista.innerHTML = "";
+  let count = 0;
+
   snap.forEach(s => {
+    count++;
     const g = s.val();
-    listaGalvanicas.innerHTML += `
-      <div class="bg-white border rounded-lg p-4 flex justify-between items-start gap-4">
-        <div class="flex-1">
-          <p class="font-bold">${g.nome}</p>
-          <p class="text-xs text-gray-500">${g.telefone || ""}</p>
-          ${g.selo ? `<span class="inline-block mt-1 text-[10px] bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-bold">${g.selo}</span>` : ""}
+    lista.innerHTML += `
+      <div class="bg-white border rounded-2xl p-5 flex items-center justify-between gap-4 hover:shadow-md transition group">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden border flex-shrink-0">
+                <img src="${g.imagem || 'https://via.placeholder.com/150'}" class="w-full h-full object-contain">
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-gray-900">${g.nome}</h3>
+                    ${g.selo ? `<span class="text-[8px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">${g.selo}</span>` : ""}
+                </div>
+                <p class="text-[11px] text-gray-500 leading-tight mt-1 max-w-md">${g.endereco}</p>
+                <p class="text-[10px] gold font-bold mt-1 uppercase">${g.whatsapp || g.telefone || 'Sem contato'}</p>
+            </div>
         </div>
-        <div class="flex gap-3 text-xs uppercase">
-          <button onclick="editar('${s.key}')" class="text-blue-600">Editar</button>
-          <button onclick="if(confirm('Excluir galvânica?')) db.ref('galvanicas/${s.key}').remove()" class="text-red-600">Excluir</button>
+        
+        <div class="flex flex-col gap-2">
+          <button onclick="editar('${s.key}')" class="p-2 px-4 bg-zinc-100 text-zinc-600 rounded-lg text-[10px] font-black hover:bg-zinc-200 transition uppercase">Editar</button>
+          <button onclick="excluir('${s.key}')" class="p-2 px-4 text-red-400 rounded-lg text-[10px] font-black hover:bg-red-50 transition uppercase">Excluir</button>
         </div>
       </div>
     `;
   });
+  document.getElementById('contador').innerText = count + " EMPRESAS";
 });
 
 function editar(id){
   db.ref('galvanicas/' + id).once('value').then(s => {
     const g = s.val();
-    nome.value = g.nome || "";
-    descricao.value = g.descricao || "";
-    endereco.value = g.endereco || "";
-    telefone.value = g.telefone || "";
-    whatsapp.value = g.whatsapp || "";
-    imagem.value = g.imagem || "";
-    selo.value = g.selo || "";
+    inputs.nome.value = g.nome || "";
+    inputs.descricao.value = g.descricao || "";
+    inputs.endereco.value = g.endereco || "";
+    inputs.telefone.value = g.telefone || "";
+    inputs.whatsapp.value = g.whatsapp || "";
+    inputs.imagem.value = g.imagem || "";
+    inputs.selo.value = g.selo || "";
+    
     editId = id;
+    document.getElementById('formTitle').innerText = "Editando: " + g.nome;
+    document.getElementById('btnSalvar').innerText = "Salvar Alterações";
+    document.getElementById('btnCancelar').classList.remove('hidden');
     window.scrollTo({top:0, behavior:'smooth'});
   });
+}
+
+function excluir(id){
+    if(confirm('Tem certeza que deseja remover esta galvânica permanentemente?')){
+        db.ref('galvanicas/' + id).remove();
+    }
 }
 </script>
 
