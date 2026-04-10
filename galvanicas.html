@@ -4,8 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Galvânicas Parceiras | Abella Joias</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
     <style>
         :root { 
             --gold: #caa85c; 
@@ -44,7 +49,7 @@
 
         .galvanicas-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 30px;
         }
 
@@ -67,8 +72,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
-        .card::before {
-            content: "PARCEIRO";
+        .selo-parceiro {
             position: absolute;
             top: -12px;
             right: 20px;
@@ -80,6 +84,7 @@
             border-radius: 50px;
             letter-spacing: 1px;
             box-shadow: 0 4px 15px rgba(202, 168, 92, 0.4);
+            text-transform: uppercase;
         }
 
         .card-logo {
@@ -98,7 +103,6 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transition: 0.4s;
         }
 
         .card h2 {
@@ -144,8 +148,6 @@
             border-top: 1px solid #222;
             padding-top: 15px;
         }
-
-        .partner-gold { margin-top: 60px; }
     </style>
 </head>
 <body>
@@ -166,201 +168,66 @@
 <div class="container">
     <h2 class="titulo-galvanicas serif gold-text uppercase">Centros de Banho Autorizados</h2>
 
-    <div class="galvanicas-grid">
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-5-300x129.jpg"></div>
-                <h2 class="serif">Franco Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> R: José Motta dos Santos, 113 - Jd. Adélia Cavicchia Grotta</div>
-                <div class="info-row"><b>Telefone:</b> (19) 3451-6246</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519984202600?text=Ol%C3%A1%20Franco.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Mais de 20 anos de tradição em Ouro, Prata, Ródio Branco e Negro.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0045-300x150.jpg"></div>
-                <h2 class="serif">Costa Rica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Mário Lima, 241 - Bairro Jardim Anhanguera</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 98876-0429</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519988760429?text=Ol%C3%A1%20Costa%20Rica.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Especializada em banhos folheados com foco em alto padrão.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0042-300x150.jpg"></div>
-                <h2 class="serif">Queen Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Arthur Salibe, 589 - Jd. Nova Suiça</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 99970-2895</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519999702895?text=Ol%C3%A1%20Queen.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Serviços de galvanoplastia com os melhores produtos e controles.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0039.jpg"></div>
-                <h2 class="serif">Atenas Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Tancre Leitão, 34 - Jardim Aeroporto</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 98122-6758</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519981226758?text=Ol%C3%A1%20Atenas.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Atendimento comercial especializado para o mercado de semijoias.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-7-300x232.jpg"></div>
-                <h2 class="serif">4D Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Giocondo Negro, 316 - Vila Rosana</div>
-                <div class="info-row"><b>Telefone:</b> (19) 3451-9651</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519971796251?text=Ol%C3%A1%204D.%20Sou%20cliente%20da%20Abella%20Joias..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Soluções completas para fabricantes e empreendedores.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/unnamed-6-300x121.jpg"></div>
-                <h2 class="serif">Sul Folheados</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Major Francisco Barcellos, 453 - Jd Glória</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 98324-2156</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519983242156?text=Ol%C3%A1%20Sul%20Folheados..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Galvanoplastia com credibilidade e pontualidade.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Imagem-do-WhatsApp-de-2025-10-14-as-21.47.01_f45b979f.jpg"></div>
-                <h2 class="serif">Viena Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: João Bozza, 496 - Jd. Maria Buchi Modeneis</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 99216-2908</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519992162908?text=Ol%C3%A1%20Viena..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Excelência em serviços de galvanoplastia.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0041-300x150.jpg"></div>
-                <h2 class="serif">Fiori Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Des. Júlio César da Silveira, 1352 - V. Claudia</div>
-                <div class="info-row"><b>Telefone:</b> (19) 3704-4590</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519983148195?text=Ol%C3%A1%20Fiori..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Foco na rapidez de entrega e qualidade do acabamento.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0043-300x150.jpg"></div>
-                <h2 class="serif">Amazon Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Clarindo Peixoto de Oliveira, 201 - Jd Maria Buchi Modeneis</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 3792-9005</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519988839762?text=Ol%C3%A1%20Amazon..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Banhos em ouro, prata, ródio e verniz Diamond.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0044-300x150.jpg"></div>
-                <h2 class="serif">Reluz Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Av. Mal. Artur da Costa e Silva, 708 – Jd Glória</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 99380-6585</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519998893690?text=Ol%C3%A1%20Reluz..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Três décadas de experiência em banhos duradouros.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Imagem-do-WhatsApp-de-2025-10-18-as-12.02.21_cf8ffdba-300x150.jpg"></div>
-                <h2 class="serif">Magri Folheados</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Roque Vaz Gonçalves, 88 - Jd Boa Vista</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 3442-4287</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519996942050?text=Ol%C3%A1%20Magri..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Qualidade e honestidade em banho de ouro 18k.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/72dpi_0002_LOGO_SALVADOR_HORIZONTAL_FUNDO_CLARO.png"></div>
-                <h2 class="serif">Banho Salvador</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Paraná, 698 - Vila Rocha</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 99817-3164</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519998173164?text=Ol%C3%A1%20Salvador..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Referência no mercado há mais de 30 anos.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/10/IMG-20251018-WA0038.jpg"></div>
-                <h2 class="serif">Fenix Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua: Maria Tomeo de Almeida, 94 - Jd Glória</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 98829-2435</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519988292435?text=Ol%C3%A1%20Fenix..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Focada em serviços especializados para semijoias.</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div>
-                <div class="card-logo"><img src="https://abellajoias.com.br/wp-content/uploads/2025/11/Imagem-do-WhatsApp-de-2025-11-06-as-18.41.47_4b4afb87.jpg"></div>
-                <h2 class="serif">ORO Galvânica</h2>
-                <div class="info-row"><b>Endereço:</b> Rua Pércio Machado Gomes, 243 - Jd Anhanguera</div>
-                <div class="info-row"><b>WhatsApp:</b> (19) 98907-2453 / 97171-6251</div>
-            </div>
-            <div>
-                <a href="https://wa.me/5519989072453?text=Ol%C3%A1%20ORO..." target="_blank" class="whatsapp-link">WhatsApp 📲</a>
-                <div class="slogan">Excelência em Banhos para Semijoias de Alto Padrão.</div>
-            </div>
-        </div>
-
+    <div id="gridGalvanicas" class="galvanicas-grid">
+        <p class="text-center col-span-full opacity-50">Sincronizando com a rede de parceiros...</p>
     </div>
 
-    <div class="partner-gold text-center">
-        <a href="https://wa.me/5519988207658?text=Ol%C3%A1%2C%20tenho%20interesse%20em%20ser%20Parceiro%20GOLD%20Abella%20Joias." 
+    <div class="mt-20 text-center">
+        <a href="https://wa.me/5519988207658?text=Olá, tenho interesse em ser Parceiro GOLD Abella Joias." 
            target="_blank" class="inline-block transform transition hover:scale-[1.01]">
+          
           <img src="https://abellajoias.com.br/wp-content/uploads/2025/10/Gemini_Generated_Image_56v05c56v05c56v0.png"
                alt="Seja Nosso Parceiro GOLD"
                class="max-w-full rounded-2xl shadow-2xl border border-[#2a2a2a]">
         </a>
     </div>
 </div>
+
+<script>
+/* CONFIGURAÇÃO DO SEU BANCO DE DADOS */
+firebase.initializeApp({
+  apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
+  databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
+  projectId: "catalogo-abella-joias"
+});
+const db = firebase.database();
+
+/* BUSCAR AS EMPRESAS DO FIREBASE EM TEMPO REAL */
+db.ref('galvanicas').on('value', snap => {
+    const grid = document.getElementById('gridGalvanicas');
+    grid.innerHTML = ""; 
+
+    if(!snap.exists()) {
+        grid.innerHTML = "<p class='text-center col-span-full'>Nenhuma empresa encontrada no banco de dados.</p>";
+        return;
+    }
+
+    snap.forEach(child => {
+        const g = child.val();
+        
+        grid.innerHTML += `
+            <div class="card">
+                <div>
+                    ${g.selo ? `<div class="selo-parceiro">${g.selo}</div>` : ''}
+                    <div class="card-logo">
+                        <img src="${g.imagem || 'https://via.placeholder.com/300x150?text=Logo+Indisponível'}" alt="${g.nome}">
+                    </div>
+                    <h2 class="serif">${g.nome}</h2>
+                    <div class="info-row"><b>Endereço:</b> ${g.endereco || 'Consultar endereço'}</div>
+                    ${g.telefone ? `<div class="info-row"><b>Fixo:</b> ${g.telefone}</div>` : ''}
+                </div>
+                <div>
+                    <a href="https://wa.me/${g.whatsapp}?text=Olá%20${g.nome}.%20Sou%20cliente%20da%20Abella%20Joias..." 
+                       target="_blank" class="whatsapp-link">
+                        WhatsApp 📲
+                    </a>
+                    <div class="slogan">${g.descricao || 'Parceiro homologado Abella Joias.'}</div>
+                </div>
+            </div>
+        `;
+    });
+});
+</script>
 
 </body>
 </html>
