@@ -2,105 +2,134 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Galvânicas | Painel Abella Joias</title>
+<title>Admin Galvânicas | Abella Joias</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
 <style>
-  body{background:#F8F6F2; font-family: 'Inter', sans-serif;}
-  .font-serif{font-family:'Cinzel',serif}
-  .gold{color:#A68966}
-  .bg-gold {background:#A68966}
-  input:focus { outline: 2px solid #A68966; border-color: transparent; }
+    :root { --gold: #caa85c; --dark: #0b0b0b; --card: #141414; --border: #2a2a2a; }
+    body { background: var(--dark); color: #eee; font-family: 'Inter', sans-serif; }
+    .serif { font-family: 'Cinzel', serif; }
+    .gold-text { color: var(--gold); }
+    
+    input, textarea { 
+        background: #000 !important; 
+        border: 1px solid var(--border) !important; 
+        color: white !important;
+        transition: 0.3s;
+    }
+    input:focus { border-color: var(--gold) !important; outline: none; box-shadow: 0 0 10px rgba(202, 168, 92, 0.2); }
+    
+    .btn-gold { 
+        background: linear-gradient(135deg, #caa85c 0%, #947a42 100%); 
+        color: black; 
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .card-preview {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        transition: 0.4s;
+    }
+    .card-preview:hover { border-color: var(--gold); }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0b0b0b; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
 </style>
 </head>
 
-<body>
+<body class="pb-20">
 
-<header class="bg-white border-b px-10 py-6 flex justify-between items-center sticky top-0 z-50">
-  <div>
-    <h1 class="font-serif text-xl tracking-widest gold uppercase">Galvânicas</h1>
-    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Painel de Controle de Parceiros</p>
-  </div>
-  <a href="index.html" class="text-xs uppercase tracking-widest text-gray-500 font-bold hover:text-black transition">← Sair do Painel</a>
+<header class="border-b border-[#2a2a2a] bg-black/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+        <div>
+            <h1 class="serif gold-text text-2xl tracking-widest">GALVÂNICAS</h1>
+            <p class="text-[9px] uppercase tracking-[3px] font-bold opacity-50">Gestão de Parceiros Autorizados</p>
+        </div>
+        <a href="index.html" class="text-[10px] font-bold border border-zinc-800 px-5 py-2 rounded-full hover:border-[#caa85c] transition-all">VOLTAR AO SITE</a>
+    </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-8 py-10 grid md:grid-cols-12 gap-10">
+<main class="max-w-7xl mx-auto px-6 mt-10 grid lg:grid-cols-12 gap-10">
 
-<div class="md:col-span-5">
-    <div class="bg-white border rounded-2xl p-8 shadow-sm sticky top-28">
-      <h2 id="formTitle" class="font-serif gold text-xl mb-6 uppercase">Cadastrar Parceiro</h2>
-    
-      <div class="space-y-4">
-          <div>
-              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Nome da Empresa</label>
-              <input id="nome" placeholder="Ex: Franco Galvânica" class="w-full border p-3 rounded-xl bg-gray-50">
-          </div>
+    <div class="lg:col-span-5">
+        <div class="bg-[#111] border border-zinc-800 rounded-3xl p-8 sticky top-28 shadow-2xl">
+            <h2 id="formTitle" class="serif gold-text text-xl mb-6 uppercase tracking-wider">Novo Cadastro</h2>
+            
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">Nome da Empresa</label>
+                        <input id="nome" type="text" placeholder="Ex: Franco Galvânica" class="w-full p-4 rounded-2xl text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">Slogan / Texto de Destaque</label>
+                        <input id="descricao" type="text" placeholder="Ex: Especialista em Ouro 18k" class="w-full p-4 rounded-2xl text-sm">
+                    </div>
 
-          <div>
-            <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Slogan / Descrição Curta</label>
-            <input id="descricao" placeholder="Ex: Mais de 20 anos de tradição..." class="w-full border p-3 rounded-xl bg-gray-50">
-          </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">Endereço Completo</label>
+                        <input id="endereco" type="text" placeholder="Rua, Número - Bairro, Cidade" class="w-full p-4 rounded-2xl text-sm">
+                    </div>
 
-          <div>
-              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Endereço Completo</label>
-              <input id="endereco" placeholder="Rua, Número, Bairro - Cidade" class="w-full border p-3 rounded-xl bg-gray-50">
-          </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">WhatsApp (DDD+N)</label>
+                            <input id="whatsapp" type="text" placeholder="199..." class="w-full p-4 rounded-2xl text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">Telefone Fixo</label>
+                            <input id="telefone" type="text" placeholder="(19) 3451..." class="w-full p-4 rounded-2xl text-sm">
+                        </div>
+                    </div>
 
-          <div class="grid grid-cols-2 gap-4">
-              <div>
-                  <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Telefone Fixo</label>
-                  <input id="telefone" placeholder="(19) 0000-0000" class="w-full border p-3 rounded-xl bg-gray-50">
-              </div>
-              <div>
-                  <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">WhatsApp (Apenas Números)</label>
-                  <input id="whatsapp" placeholder="55199..." class="w-full border p-3 rounded-xl bg-gray-50">
-              </div>
-          </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">URL da Logo (Imagem)</label>
+                        <input id="imagem" type="text" placeholder="https://link-da-imagem.jpg" class="w-full p-4 rounded-2xl text-sm">
+                    </div>
 
-          <div>
-              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Link da Logo (URL)</label>
-              <input id="imagem" placeholder="https://..." class="w-full border p-3 rounded-xl bg-gray-50">
-          </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-black text-zinc-500 mb-1 block ml-1">Selo Superior (Ex: PARCEIRO)</label>
+                        <input id="selo" type="text" placeholder="Deixe vazio se não houver" class="w-full p-4 rounded-2xl text-sm">
+                    </div>
+                </div>
 
-          <div>
-              <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Texto do Selo (Badge)</label>
-              <input id="selo" placeholder="Ex: PARCEIRO" class="w-full border p-3 rounded-xl bg-gray-50">
-          </div>
-
-          <div class="pt-4 flex gap-2">
-            <button onclick="salvarGalvanica()" id="btnSalvar"
-                class="flex-1 bg-black text-white py-4 rounded-xl uppercase tracking-widest font-bold hover:bg-zinc-800 transition shadow-lg">
-                Salvar Dados
-            </button>
-            <button onclick="limparForm()" id="btnCancelar" class="hidden bg-gray-200 text-gray-600 px-4 rounded-xl font-bold uppercase text-[10px]">
-                Cancelar
-            </button>
-          </div>
-      </div>
+                <div class="pt-4 flex flex-col gap-3">
+                    <button onclick="salvarGalvanica()" id="btnSalvar" class="btn-gold w-full py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                        Salvar Galvânica
+                    </button>
+                    <button onclick="limparForm()" id="btnCancelar" class="hidden text-zinc-500 text-[10px] font-bold uppercase tracking-widest hover:text-white transition">
+                        ✕ Cancelar Edição
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="md:col-span-7">
-  <div class="flex justify-between items-end mb-6">
-    <h2 class="font-serif gold text-xl uppercase">Parceiros Ativos</h2>
-    <span id="contador" class="text-[10px] font-bold bg-gray-200 px-3 py-1 rounded-full uppercase text-gray-500">carregando...</span>
-  </div>
-  
-  <div id="listaGalvanicas" class="grid gap-4">
-      </div>
-</div>
+    <div class="lg:col-span-7">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="serif gold-text text-xl uppercase tracking-widest">Empresas Cadastradas</h2>
+            <div id="contador" class="bg-zinc-900 border border-zinc-800 px-4 py-1 rounded-full text-[10px] font-bold text-zinc-400 uppercase">...</div>
+        </div>
+
+        <div id="listaGalvanicas" class="space-y-6">
+            </div>
+    </div>
 
 </main>
 
 <script>
-/* CONFIGURAÇÃO FIREBASE */
+/* FIREBASE CONFIG */
 firebase.initializeApp({
   apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY",
   databaseURL: "https://catalogo-abella-joias-default-rtdb.firebaseio.com",
@@ -110,109 +139,83 @@ const db = firebase.database();
 
 let editId = null;
 
-// ELEMENTOS
-const inputs = {
-    nome: document.getElementById('nome'),
-    descricao: document.getElementById('descricao'),
-    endereco: document.getElementById('endereco'),
-    telefone: document.getElementById('telefone'),
-    whatsapp: document.getElementById('whatsapp'),
-    imagem: document.getElementById('imagem'),
-    selo: document.getElementById('selo')
-};
+const campos = ['nome', 'descricao', 'endereco', 'telefone', 'whatsapp', 'imagem', 'selo'];
 
 function salvarGalvanica(){
-  if(!inputs.nome.value) return alert("O nome da empresa é obrigatório.");
+    const dados = {};
+    campos.forEach(c => dados[c] = document.getElementById(c).value);
 
-  const dados = {
-    nome: inputs.nome.value,
-    descricao: inputs.descricao.value,
-    endereco: inputs.endereco.value,
-    telefone: inputs.telefone.value,
-    whatsapp: inputs.whatsapp.value,
-    imagem: inputs.imagem.value,
-    selo: inputs.selo.value || ""
-  };
+    if(!dados.nome) return alert("Por favor, insira o nome da empresa.");
 
-  if(editId){
-    db.ref('galvanicas/' + editId).set(dados)
-      .then(() => alert("Atualizado com sucesso!"))
-      .catch(e => console.error(e));
-    editId = null;
-  } else {
-    db.ref('galvanicas').push(dados)
-      .then(() => alert("Cadastrado com sucesso!"))
-      .catch(e => console.error(e));
-  }
-
-  limparForm();
+    if(editId){
+        db.ref('galvanicas/' + editId).set(dados)
+          .then(() => { alert("Atualizado com sucesso!"); limparForm(); });
+    } else {
+        db.ref('galvanicas').push(dados)
+          .then(() => { alert("Cadastrado com sucesso!"); limparForm(); });
+    }
 }
 
 function limparForm(){
-  Object.values(inputs).forEach(input => input.value = "");
-  editId = null;
-  document.getElementById('formTitle').innerText = "Cadastrar Parceiro";
-  document.getElementById('btnSalvar').innerText = "Salvar Dados";
-  document.getElementById('btnCancelar').classList.add('hidden');
-  window.scrollTo({top:0, behavior:'smooth'});
+    campos.forEach(c => document.getElementById(c).value = "");
+    editId = null;
+    document.getElementById('formTitle').innerText = "Novo Cadastro";
+    document.getElementById('btnSalvar').innerText = "Salvar Galvânica";
+    document.getElementById('btnCancelar').classList.add('hidden');
+    window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-// ESCUTAR BANCO DE DADOS
 db.ref('galvanicas').on('value', snap => {
-  const lista = document.getElementById('listaGalvanicas');
-  lista.innerHTML = "";
-  let count = 0;
+    const container = document.getElementById('listaGalvanicas');
+    container.innerHTML = "";
+    let i = 0;
 
-  snap.forEach(s => {
-    count++;
-    const g = s.val();
-    lista.innerHTML += `
-      <div class="bg-white border rounded-2xl p-5 flex items-center justify-between gap-4 hover:shadow-md transition group">
-        <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden border flex-shrink-0">
-                <img src="${g.imagem || 'https://via.placeholder.com/150'}" class="w-full h-full object-contain">
-            </div>
-            <div>
-                <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-gray-900">${g.nome}</h3>
-                    ${g.selo ? `<span class="text-[8px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">${g.selo}</span>` : ""}
+    snap.forEach(s => {
+        i++;
+        const g = s.val();
+        container.innerHTML += `
+            <div class="card-preview p-6 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden group">
+                ${g.selo ? `<div class="absolute top-3 right-[-30px] bg-[#caa85c] text-black text-[8px] font-black px-10 py-1 rotate-45 shadow-lg uppercase">${g.selo}</div>` : ''}
+                
+                <div class="w-24 h-24 bg-black rounded-2xl border border-zinc-800 flex items-center justify-center p-2 flex-shrink-0 group-hover:border-[#caa85c] transition">
+                    <img src="${g.imagem || 'https://via.placeholder.com/150'}" class="max-w-full max-h-full object-contain">
                 </div>
-                <p class="text-[11px] text-gray-500 leading-tight mt-1 max-w-md">${g.endereco}</p>
-                <p class="text-[10px] gold font-bold mt-1 uppercase">${g.whatsapp || g.telefone || 'Sem contato'}</p>
+
+                <div class="flex-1 text-center md:text-left">
+                    <h3 class="serif gold-text text-lg uppercase">${g.nome}</h3>
+                    <p class="text-zinc-500 text-[11px] mt-1 italic">${g.descricao || 'Sem descrição'}</p>
+                    <p class="text-zinc-400 text-[10px] mt-2"><b class="gold-text">📍</b> ${g.endereco}</p>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-4 mt-3">
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase"><b class="gold-text">📞</b> ${g.telefone || '-'}</span>
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase"><b class="gold-text">💬</b> ${g.whatsapp || '-'}</span>
+                    </div>
+                </div>
+
+                <div class="flex md:flex-col gap-2 w-full md:w-auto">
+                    <button onclick="editar('${s.key}')" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-black py-3 px-6 rounded-xl uppercase transition">Editar</button>
+                    <button onclick="excluir('${s.key}')" class="flex-1 bg-red-900/20 hover:bg-red-900/40 text-red-500 text-[10px] font-black py-3 px-6 rounded-xl uppercase transition">Excluir</button>
+                </div>
             </div>
-        </div>
-        
-        <div class="flex flex-col gap-2">
-          <button onclick="editar('${s.key}')" class="p-2 px-4 bg-zinc-100 text-zinc-600 rounded-lg text-[10px] font-black hover:bg-zinc-200 transition uppercase">Editar</button>
-          <button onclick="excluir('${s.key}')" class="p-2 px-4 text-red-400 rounded-lg text-[10px] font-black hover:bg-red-50 transition uppercase">Excluir</button>
-        </div>
-      </div>
-    `;
-  });
-  document.getElementById('contador').innerText = count + " EMPRESAS";
+        `;
+    });
+    document.getElementById('contador').innerText = `${i} Empresas`;
 });
 
 function editar(id){
-  db.ref('galvanicas/' + id).once('value').then(s => {
-    const g = s.val();
-    inputs.nome.value = g.nome || "";
-    inputs.descricao.value = g.descricao || "";
-    inputs.endereco.value = g.endereco || "";
-    inputs.telefone.value = g.telefone || "";
-    inputs.whatsapp.value = g.whatsapp || "";
-    inputs.imagem.value = g.imagem || "";
-    inputs.selo.value = g.selo || "";
-    
-    editId = id;
-    document.getElementById('formTitle').innerText = "Editando: " + g.nome;
-    document.getElementById('btnSalvar').innerText = "Salvar Alterações";
-    document.getElementById('btnCancelar').classList.remove('hidden');
-    window.scrollTo({top:0, behavior:'smooth'});
-  });
+    db.ref('galvanicas/' + id).once('value').then(s => {
+        const g = s.val();
+        campos.forEach(c => document.getElementById(c).value = g[c] || "");
+        
+        editId = id;
+        document.getElementById('formTitle').innerText = "Editando Parceiro";
+        document.getElementById('btnSalvar').innerText = "Atualizar Cadastro";
+        document.getElementById('btnCancelar').classList.remove('hidden');
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
 }
 
 function excluir(id){
-    if(confirm('Tem certeza que deseja remover esta galvânica permanentemente?')){
+    if(confirm("Deseja realmente excluir esta galvânica do banco de dados?")){
         db.ref('galvanicas/' + id).remove();
     }
 }
