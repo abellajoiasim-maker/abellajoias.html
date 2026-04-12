@@ -12,18 +12,36 @@
         body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #eee; margin:0; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { color: #caa85c; }
+        
+        /* Oculta o conteúdo por padrão para evitar que apareça antes do check da manutenção */
+        #site-content, #btnWhats { display: none; }
+
         header { background: rgba(0,0,0,0.95); border-bottom: 1px solid #222; backdrop-filter: blur(10px); }
         .btn-nav { border: 1px solid #333; color: #888; font-size: 10px; font-weight: bold; letter-spacing: 1px; transition: .3s; text-transform: uppercase; }
         .btn-nav:hover { border-color: #caa85c; color: #caa85c; }
-        #bannerPromo { background: linear-gradient(90deg, #1a1a1a, #000); border-bottom: 2px solid #caa85c; display: none; }
-        .card-cat { background:#141414; border-radius:24px; border:1px solid #2a2a2a; transition:.4s; overflow:hidden; position: relative; cursor: pointer; }
-        .card-cat:hover { border-color: #caa85c; transform: translateY(-5px); }
-        .img-cat { width:100%; aspect-ratio: 1/1.2; object-fit: cover; transition: 0.6s; opacity: 0.7; }
-        .card-cat:hover .img-cat { scale: 1.05; opacity: 1; }
-        .cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
-        .promo-tag { position: absolute; top: 15px; right: 15px; font-size: 9px; font-weight: 900; padding: 4px 12px; border-radius: 50px; text-transform: uppercase; z-index: 10; }
         
-        /* Botão WhatsApp Flutuante */
+        /* Estilo Manutenção */
+        #manutencao-screen { 
+            display:none; background:#000; color:#caa85c; height:100vh; 
+            flex-direction:column; align-items:center; justify-content:center; 
+            text-align:center; padding:20px; position:fixed; inset:0; z-index:9999; 
+        }
+
+        .btn-site-oficial {
+            margin-top: 30px;
+            padding: 12px 30px;
+            border: 1px solid #caa85c;
+            color: #caa85c;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            transition: 0.4s;
+            text-decoration: none;
+        }
+        .btn-site-oficial:hover { background: #caa85c; color: #000; }
+
+        /* Botão WhatsApp */
         .btn-whats { 
             position: fixed; bottom: 30px; right: 30px; z-index: 100;
             background: #111; border: 1px solid #caa85c; color: #caa85c;
@@ -33,29 +51,25 @@
             transition: 0.3s; text-decoration: none;
         }
         .btn-whats:hover { transform: scale(1.1); background: #caa85c; color: #000; }
-
-        /* Estilo Manutenção */
-        #manutencao-screen { display:none; background:#000; color:#caa85c; height:100vh; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; position:fixed; inset:0; z-index:9999; }
     </style>
 </head>
 <body>
 
-<a href="https://wa.me/5511999999999" id="btnWhats" target="_blank" class="btn-whats">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.834-2.505-2.921-2.62-.087-.116-.712-.943-.712-1.792 0-.85.447-1.266.607-1.446.16-.18.347-.226.463-.226s.231.002.332.006c.107.005.251-.041.392.296.144.348.491 1.199.535 1.288.044.089.072.192.015.307-.058.114-.087.186-.174.286-.088.1-.184.223-.263.3-.089.087-.183.181-.079.359.103.179.458.756.983 1.223.676.602 1.246.789 1.424.878.179.089.283.076.388-.046.106-.123.456-.531.579-.712.12-.182.243-.153.409-.093.165.061 1.045.493 1.226.583s.301.135.346.213c.043.08.043.46-.1.865z"/></svg>
-</a>
-
 <div id="manutencao-screen">
-    <h1 class="serif text-4xl tracking-[5px] mb-4">ABELLA JOIAS</h1>
+    <h1 class="serif text-4xl tracking-[5px] mb-1">ABELLA JOIAS</h1>
+    <p class="text-[9px] tracking-[4px] text-gray-500 font-bold uppercase mb-6">Atacado de Joias no Bruto</p>
+    
     <div class="w-12 h-[1px] bg-[#caa85c] mb-6"></div>
+    
     <p class="text-white uppercase tracking-widest text-sm mb-2 font-light">Estamos preparando novidades incríveis!</p>
     <p class="text-gray-500 text-[10px] uppercase tracking-widest">Voltamos em alguns instantes.</p>
+
+    <a href="https://abellajoias.com.br" target="_blank" class="btn-site-oficial">
+        Visitar Site Oficial
+    </a>
 </div>
 
 <div id="site-content">
-    <div id="bannerPromo" class="py-2 text-center">
-        <span id="textoRelampago" class="gold-text font-black uppercase text-[10px] tracking-widest italic"></span>
-    </div>
-
     <header class="sticky top-0 z-50 py-5">
         <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-center md:text-left">
@@ -77,6 +91,10 @@
     </main>
 </div>
 
+<a href="https://wa.me/5511999999999" id="btnWhats" target="_blank" class="btn-whats">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.834-2.505-2.921-2.62-.087-.116-.712-.943-.712-1.792 0-.85.447-1.266.607-1.446.16-.18.347-.226.463-.226s.231.002.332.006c.107.005.251-.041.392.296.144.348.491 1.199.535 1.288.044.089.072.192.015.307-.058.114-.087.186-.174.286-.088.1-.184.223-.263.3-.089.087-.183.181-.079.359.103.179.458.756.983 1.223.676.602 1.246.789 1.424.878.179.089.283.076.388-.046.106-.123.456-.531.579-.712.12-.182.243-.153.409-.093.165.061 1.045.493 1.226.583s.301.135.346.213c.043.08.043.46-.1.865z"/></svg>
+</a>
+
 <script>
     const firebaseConfig = { 
         apiKey: "AIzaSyDPBZSxW8XjtQmDMUknzAyIlFda51MvMJY", 
@@ -85,12 +103,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. ESCUTA DE MANUTENÇÃO E WHATSAPP
+    // ESCUTA DE STATUS (Manutenção e WhatsApp)
     db.ref('settings').on('value', s => {
         const settings = s.val() || {};
         const isManutencao = settings.manutencao;
         
-        // Controle Manutenção
         const screen = document.getElementById('manutencao-screen');
         const content = document.getElementById('site-content');
         const btnW = document.getElementById('btnWhats');
@@ -103,9 +120,12 @@
             screen.style.display = 'none';
             content.style.display = 'block';
             btnW.style.display = 'flex';
+            
+            // Se acabou de sair da manutenção, recarrega a grade
+            if(screen.dataset.lastState === "true") carregarLoja();
         }
+        screen.dataset.lastState = isManutencao;
 
-        // Atualiza Link do WhatsApp (caso você mude no painel depois)
         if(settings.whatsapp) {
             btnW.href = `https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`;
         }
@@ -113,35 +133,15 @@
 
     async function carregarLoja() {
         try {
-            const [promoSnap, catSnap] = await Promise.all([
-                db.ref('settings/promocao').once('value'),
-                db.ref('categories').once('value')
-            ]);
-
-            const promo = promoSnap.val() || {};
+            const catSnap = await db.ref('categories').once('value');
             const categorias = catSnap.val() || {};
-
-            const banner = document.getElementById('bannerPromo');
-            if(promo.ativa && promo.relampago?.ativa) {
-                banner.style.display = 'block';
-                document.getElementById('textoRelampago').innerText = `🔥 ${promo.relampago.titulo} - ACABA EM BREVE!`;
-            } else {
-                banner.style.display = 'none';
-            }
-
             const grid = document.getElementById('gridCategorias');
             grid.innerHTML = '';
             
             Object.entries(categorias).forEach(([id, cat]) => {
                 if(cat.paused) return;
-                const temPromo = promo.ativa && cat.promoAtiva;
-                
                 grid.innerHTML += `
                     <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
-                        ${temPromo ? `
-                            <span class="promo-tag shadow-lg" style="background:${cat.promoColor || '#caa85c'}; color:${cat.promoTextColor || '#fff'}">
-                                ${cat.promoTag || 'OFF'}
-                            </span>` : ''}
                         <img src="${cat.image || 'https://via.placeholder.com/600'}" class="img-cat" loading="lazy">
                         <div class="cat-overlay">
                             <h3 class="serif text-xl text-white tracking-widest uppercase">${cat.name}</h3>
@@ -149,11 +149,8 @@
                         </div>
                     </div>`;
             });
-            
             atualizarResumo();
-        } catch (error) {
-            console.error("Erro:", error);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function atualizarResumo() {
@@ -162,7 +159,6 @@
         document.getElementById('valCarrinho').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    window.addEventListener('storage', atualizarResumo);
     window.onload = carregarLoja;
 </script>
 </body>
