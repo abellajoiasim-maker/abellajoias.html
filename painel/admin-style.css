@@ -1,0 +1,21 @@
+/* Estilo Base - Abella Joias */
+body { background:#0b0b0b; color:#eee; font-family:Inter,Arial; margin:0; }
+nav button.active { border-bottom:2px solid #caa85c; color:#caa85c; }
+section { display:none; min-height:300px; }
+section.active { display:block; }
+.card { background:#141414; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
+.btn { background:#222; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:11px; cursor:pointer; transition: 0.3s; }
+.btn:hover { background:#333; }
+.btn-gold { background:#caa85c; color:#000; font-weight:700; padding:10px; border-radius:8px; cursor:pointer; }
+input, select { background:#111; border:1px solid #333; padding:8px; border-radius:8px; width:100%; margin-bottom:8px; color:#fff; outline:none; }
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #caa85c; border-radius: 10px; }
+
+/* Estilos de Impressão */
+#print-area { display: none; }
+@media print {
+    @page { size: A4; margin: 10mm; }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; background: #fff; color: #000; }
+}
