@@ -39,33 +39,57 @@ function buscarDadosProduto(sku, inputElement) {
     });
 }
 
-// GESTÃO DE PEDIDOS
 function carregarPedidos() {
     const busca = document.getElementById('buscaPedido')?.value.toLowerCase() || "";
     db.ref('orders').on('value', s => {
         const lista = document.getElementById('listaPedidos');
         if(!lista) return;
         lista.innerHTML = '';
-        s.forEach(ped => {
-            const p = ped.val();
+        
+        // Inverter para mostrar os mais recentes primeiro
+        const pedidos = [];
+        s.forEach(child => { pedidos.unshift({key: child.key, ...child.val()}); });
+
+        pedidos.forEach(p => {
             const nomeCli = (p.cliente?.nome || "").toLowerCase();
             if(busca && !nomeCli.includes(busca)) return;
 
             lista.innerHTML += `
-            <div class="card border-l-4 border-[#caa85c] flex justify-between items-center group mb-2">
-                <div onclick="abrirEditorPedido('${ped.key}')" class="cursor-pointer flex-grow">
-                    <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente'}</b>
-                    <p class="text-[10px] text-gray-500">${p.data || ''} • ${p.totalPecas || 0} peças</p>
+            <div class="card border-l-4 border-[#caa85c] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3 group">
+                <div class="flex-grow">
+                    <div class="flex items-center gap-2">
+                         <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente Sem Nome'}</b>
+                         <span class="text-[9px] bg-[#222] px-2 py-0.5 rounded text-gray-400">ID: ${p.key.substring(1,6)}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-1">
+                        📅 ${p.data || '---'} | 📦 ${p.totalPecas || 0} peças | ⚖️ ${(p.pesoTotal || 0).toFixed(2)}g
+                    </p>
                 </div>
-                <div class="flex gap-2">
-                    <button class="btn" title="Duplicar" onclick="duplicarPedido('${ped.key}')">👯</button>
-                    <div class="font-bold text-xs self-center ml-2">${fMoeda(p.total)}</div>
+
+                <div class="flex items-center gap-2 w-full md:w-auto border-t md:border-t-0 border-[#222] pt-2 md:pt-0">
+                    <div class="text-right mr-4">
+                        <div class="font-bold text-white text-sm">${fMoeda(p.total)}</div>
+                    </div>
+                    
+                    <button class="btn bg-blue-900/20 text-blue-400 border-blue-900/50 hover:bg-blue-900" 
+                            onclick="abrirEditorPedido('${p.key}')" title="Editar Pedido">
+                        ✏️ <span class="hidden md:inline ml-1">Editar</span>
+                    </button>
+
+                    <button class="btn hover:border-[#caa85c]" 
+                            onclick="duplicarPedido('${p.key}')" title="Duplicar Pedido">
+                        👯
+                    </button>
+
+                    <button class="btn bg-red-900/10 text-red-500 border-red-900/30 hover:bg-red-600 hover:text-white" 
+                            onclick="excluirPedido('${p.key}')" title="Excluir Pedido">
+                        🗑️
+                    </button>
                 </div>
             </div>`;
         });
     });
 }
-
 function abrirEditorPedido(id) {
     pedidoEditando = id;
     db.ref('orders/'+id).once('value', s => {
