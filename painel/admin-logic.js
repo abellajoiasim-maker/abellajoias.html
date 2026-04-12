@@ -214,6 +214,35 @@ function imprimirRomaneio(id, tipo) {
         });
     });
 }
+// FUNÇÃO PARA MODO MANUTENÇÃO
+function carregarStatusSite() {
+    db.ref('settings/statusSite').on('value', s => {
+        const emManutencao = s.val() || false;
+        const btn = document.getElementById('btnManutencao');
+        const statusTexto = document.getElementById('statusTexto');
+        
+        if (emManutencao) {
+            btn.classList.remove('bg-gray-700');
+            btn.classList.add('bg-red-600');
+            btn.innerText = "DESATIVAR MANUTENÇÃO";
+            statusTexto.innerText = "O SITE ESTÁ FORA DO AR";
+            statusTexto.classList.add('text-red-500');
+        } else {
+            btn.classList.remove('bg-red-600');
+            btn.classList.add('bg-gray-700');
+            btn.innerText = "ATIVAR MANUTENÇÃO";
+            statusTexto.innerText = "O SITE ESTÁ ONLINE";
+            statusTexto.classList.remove('text-red-500');
+        }
+    });
+}
+
+function alternarManutencao() {
+    db.ref('settings/statusSite').once('value', s => {
+        const atual = s.val() || false;
+        db.ref('settings/statusSite').set(!atual);
+    });
+}
 
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 function excluirCat(id) { if(confirm("Excluir?")) db.ref('categories/'+id).remove(); }
