@@ -243,6 +243,122 @@ function alternarManutencao() {
         db.ref('settings/statusSite').set(!atual);
     });
 }
+// ... (mantenha sua configuração do Firebase no topo)
+
+function carregarPedidos() {
+    const busca = document.getElementById('buscaPedido')?.value.toLowerCase() || "";
+    db.ref('orders').on('value', s => {
+        const lista = document.getElementById('listaPedidos');
+        if(!lista) return;
+        lista.innerHTML = '';
+        s.forEach(ped => {
+            const p = ped.val();
+            const nomeCli = (p.cliente?.nome || "").toLowerCase();
+            if(busca && !nomeCli.includes(busca)) return;
+
+            lista.innerHTML += `
+            <div class="card border-l-4 border-[#caa85c] flex justify-between items-center group">
+                <div onclick="abrirEditorPedido('${ped.key}')" class="cursor-pointer flex-grow">
+                    <b class="text-[#caa85c] uppercase text-sm">${p.cliente?.nome || 'Cliente'}</b>
+                    <p class="text-[10px] text-gray-500">${p.data || ''} • ${p.totalPecas || 0} peças</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn hover:text-[#caa85c]" title="Duplicar" onclick="duplicarPedido('${ped.key}')">👯</button>
+                    <div class="font-bold text-xs self-center ml-2">${fMoeda(p.total)}</div>
+                </div>
+            </div>`;
+        });
+    });
+}
+
+// BUSCA AUTOMÁTICA POR SKU
+function buscarDadosProduto(sku, inputElement) {
+    if(!sku) return;
+    db.ref('products').once('value', s => {
+        let achou = false;
+        s.forEach(child => {
+            const p = child.val();
+            if(p.sku && p.sku.toLowerCase() === sku.toLowerCase()) {
+                const card = inputElement.closest('.item-editor');
+                card.querySelector('.in-nome').value = p.name || '';
+                card.querySelector('.in-peso').value = p.weight || p.peso || 0;
+                card.querySelector('.in-preco').value = p.price || 0;
+                card.querySelector('.in-foto').value = p.image || '';
+                achou = true;
+                recalcularTotalEd();
+            }
+        });
+        if(!achou) inputElement.classList.add('border-red-500');
+        else inputElement.classList.remove('border-red-500');
+    });
+}
+
+function addItemEditor(i={}) {
+    const div = document.createElement('div');
+    div.className = "item-editor card bg-black/40 border-[#222] p-3 relative group";
+    div.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+            <div class="md:col-span-1">
+                <label class="text-[8px] text-gray-500 uppercase">SKU</label>
+                <input class="in-sku !mb-0 text-[10px] border-dashed" value="${i.sku||''}" onblur="buscarDadosProduto(this.value, this)">
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[8px] text-gray-500 uppercase">Nome do Produto</label>
+                <input class="in-nome !mb-0 text-[10px]" value="${i.name||i.nome||''}">
+            </div>
+            <div>
+                <label class="text-[8px] text-gray-500 uppercase">Peso(g)</label>
+                <input type="number" class="in-peso !mb-0 text-[10px]" value="${i.peso||i.weight||0}" oninput="recalcularTotalEd()">
+            </div>
+            <div>
+                <label class="text-[8px] text-gray-500 uppercase">Preço</label>
+                <input type="number" class="in-preco !mb-0 text-[10px]" value="${i.price||i.precoFinal||0}" oninput="recalcularTotalEd()">
+            </div>
+            <div>
+                <label class="text-[8px] text-gray-500 uppercase">Qtd</label>
+                <input type="number" class="in-qtd !mb-0 text-[10px] font-bold text-[#caa85c]" value="${i.quantidade||i.qtd||1}" oninput="recalcularTotalEd()">
+            </div>
+            <input type="hidden" class="in-foto" value="${i.image||i.foto||''}">
+        </div>
+        <button class="absolute -right-2 -top-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition-all" onclick="this.parentElement.remove();recalcularTotalEd();">×</button>
+    `;
+    document.getElementById('edItens').appendChild(div);
+}
+
+function duplicarPedido(id) {
+    if(!confirm("Deseja duplicar este pedido?")) return;
+    db.ref('orders/'+id).once('value', s => {
+        const novo = s.val();
+        novo.data = new Date().toLocaleString('pt-BR');
+        db.ref('orders').push(novo).then(() => alert("Pedido Duplicado!"));
+    });
+}
+
+function excluirPedido(id) {
+    if(confirm("⚠️ TEM CERTEZA? Esta ação não pode ser desfeita.")) {
+        db.ref('orders/'+id).remove().then(() => fecharEditorPedido());
+    }
+}
+
+// RECALCULAR TUDO NO EDITOR
+function recalcularTotalEd() {
+    let subtotal = 0, qtdT = 0;
+    document.querySelectorAll('.item-editor').forEach(div => {
+        const p = Number(div.querySelector('.in-preco').value);
+        const q = Number(div.querySelector('.in-qtd').value);
+        subtotal += (p * q);
+        qtdT += q;
+    });
+    const descP = Number(document.getElementById('edDescPromo').value);
+    const descX = Number(document.getElementById('edDescPix').value);
+    const frete = Number(document.getElementById('edFrete').value);
+    const total = subtotal - descP - descX + frete;
+    
+    document.getElementById('totalPreview').innerText = fMoeda(total);
+    document.getElementById('edQtdTotal').value = qtdT;
+}
+
+// ... (Função salvarPedidoEditado ajustada para pegar os novos campos in-sku, in-nome etc)
 
 function fecharEditorPedido() { document.getElementById('editorPedido').classList.add('hidden'); }
 function excluirCat(id) { if(confirm("Excluir?")) db.ref('categories/'+id).remove(); }
