@@ -70,60 +70,73 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    async function carregarLoja() {
-        // 1. Verificar Modo Manutenção primeiro
-        db.ref('settings/statusSite').on('value', s => {
-            if (s.val() === true) {
-                document.getElementById('manutencao-screen').style.display = 'flex';
-                document.getElementById('site-content').style.display = 'none';
-                return;
-            } else {
-                document.getElementById('manutencao-screen').style.display = 'none';
-                document.getElementById('site-content').style.display = 'block';
+    // 1. ESCUTA DE MANUTENÇÃO (Independente do resto para ser instantâneo)
+    // Ajustado para 'manutencao' que é o que seu painel administrativo envia
+    db.ref('settings/manutencao').on('value', s => {
+        const isManutencao = s.val();
+        const screen = document.getElementById('manutencao-screen');
+        const content = document.getElementById('site-content');
+
+        if (isManutencao === true) {
+            screen.style.display = 'flex';
+            content.style.display = 'none';
+        } else {
+            screen.style.display = 'none';
+            content.style.display = 'block';
+            // Se estava em manutenção e agora não está, recarrega os dados uma vez
+            if (screen.dataset.active === "true") {
+                location.reload();
             }
-        });
-
-        // 2. Carregar Dados da Loja
-        const [promoSnap, catSnap] = await Promise.all([
-            db.ref('settings/promocao').once('value'),
-            db.ref('categories').once('value')
-        ]);
-
-        const promo = promoSnap.val() || {};
-        const categorias = catSnap.val() || {};
-
-        // Banner Relâmpago
-        if(promo.ativa && promo.relampago?.ativa) {
-            document.getElementById('bannerPromo').style.display = 'block';
-            document.getElementById('textoRelampago').innerText = `🔥 ${promo.relampago.titulo} - ACABA EM BREVE!`;
         }
+        screen.dataset.active = isManutencao;
+    });
 
-        // Render Categorias
-        const grid = document.getElementById('gridCategorias');
-        grid.innerHTML = '';
-        
-        // Converter categorias em array para facilitar a organização se necessário
-        Object.entries(categorias).forEach(([id, cat]) => {
-            if(cat.paused) return; // Não mostra se estiver pausada
+    async function carregarLoja() {
+        try {
+            const [promoSnap, catSnap] = await Promise.all([
+                db.ref('settings/promocao').once('value'),
+                db.ref('categories').once('value')
+            ]);
 
-            // Lógica de Promoção por Categoria
-            const temPromo = promo.ativa && cat.promoAtiva;
+            const promo = promoSnap.val() || {};
+            const categorias = catSnap.val() || {};
+
+            // Banner Relâmpago
+            const banner = document.getElementById('bannerPromo');
+            if(promo.ativa && promo.relampago?.ativa) {
+                banner.style.display = 'block';
+                document.getElementById('textoRelampago').innerText = `🔥 ${promo.relampago.titulo} - ACABA EM BREVE!`;
+            } else {
+                banner.style.display = 'none';
+            }
+
+            // Render Categorias
+            const grid = document.getElementById('gridCategorias');
+            grid.innerHTML = '';
             
-            grid.innerHTML += `
-                <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
-                    ${temPromo ? `
-                        <span class="promo-tag shadow-lg" style="background:${cat.promoColor || '#caa85c'}; color:${cat.promoTextColor || '#fff'}">
-                            ${cat.promoTag || 'OFF'}
-                        </span>` : ''}
-                    <img src="${cat.image || 'https://via.placeholder.com/600'}" class="img-cat" loading="lazy">
-                    <div class="cat-overlay">
-                        <h3 class="serif text-xl text-white tracking-widest uppercase">${cat.name}</h3>
-                        <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase">Ver Modelos →</p>
-                    </div>
-                </div>`;
-        });
-        
-        atualizarResumo();
+            Object.entries(categorias).forEach(([id, cat]) => {
+                if(cat.paused) return;
+
+                const temPromo = promo.ativa && cat.promoAtiva;
+                
+                grid.innerHTML += `
+                    <div class="card-cat" onclick="location.href='produtos.html?id=${id}'">
+                        ${temPromo ? `
+                            <span class="promo-tag shadow-lg" style="background:${cat.promoColor || '#caa85c'}; color:${cat.promoTextColor || '#fff'}">
+                                ${cat.promoTag || 'OFF'}
+                            </span>` : ''}
+                        <img src="${cat.image || 'https://via.placeholder.com/600'}" class="img-cat" loading="lazy">
+                        <div class="cat-overlay">
+                            <h3 class="serif text-xl text-white tracking-widest uppercase">${cat.name}</h3>
+                            <p class="text-[10px] text-gray-400 font-bold mt-1 uppercase">Ver Modelos →</p>
+                        </div>
+                    </div>`;
+            });
+            
+            atualizarResumo();
+        } catch (error) {
+            console.error("Erro ao carregar loja:", error);
+        }
     }
 
     function atualizarResumo() {
@@ -132,7 +145,6 @@
         document.getElementById('valCarrinho').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Escutar mudanças no carrinho em outras abas
     window.addEventListener('storage', atualizarResumo);
     window.onload = carregarLoja;
 </script>
