@@ -14,17 +14,20 @@
         Abella Joias • Gestão de Pedidos
     </header>
 
-    <nav class="flex gap-2 p-2 bg-[#111] sticky top-0 z-50">
-        <a href="estoque.html" class="btn">❮ Estoque</a>
-        <button class="btn active">Pedidos Recebidos</button>
+    <nav class="flex flex-col md:flex-row gap-2 p-2 bg-[#111] sticky top-0 z-50">
+        <div class="flex gap-2">
+            <a href="estoque.html" class="btn">❮ Estoque</a>
+            <button class="btn active">Pedidos Recebidos</button>
+        </div>
+        <input type="text" id="buscaPedido" placeholder="🔍 Buscar cliente..." class="md:ml-auto !mb-0 max-w-xs" oninput="carregarPedidos()">
     </nav>
 
     <main class="p-6 max-w-4xl mx-auto">
         <div id="listaPedidos" class="grid gap-4"></div>
     </main>
 
-    <div id="editorPedido" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-        <div class="bg-[#111] w-full max-w-4xl rounded-2xl p-5 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
+    <div id="editorPedido" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
+        <div class="bg-[#111] w-full max-w-5xl rounded-2xl p-5 overflow-auto max-h-[95vh] border border-[#333] custom-scroll">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-[#caa85c] font-bold uppercase">Editar Pedido</h2>
                 <div id="totalPreview" class="text-[#caa85c] font-bold text-xl">R$ 0,00</div>
@@ -32,22 +35,47 @@
             
             <div class="grid md:grid-cols-2 gap-4">
                 <div class="card">
-                    <input id="edClienteNome" placeholder="Cliente">
+                    <p class="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-widest">Dados Pessoais</p>
+                    <input id="edClienteNome" placeholder="Nome do Cliente">
                     <input id="edClienteTel" placeholder="WhatsApp">
                 </div>
                 <div class="card">
-                    <input id="edRua" placeholder="Endereço">
-                    <input id="edCidade" placeholder="Cidade">
+                    <p class="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-widest">Entrega / Logística</p>
+                    <input id="edRua" placeholder="Endereço Completo">
+                    <input id="edCidade" placeholder="Cidade / Estado">
                 </div>
             </div>
 
-            <div id="edItens" class="mt-4"></div>
+            <div class="mt-6 flex justify-between items-center px-1">
+                <h3 class="text-[#caa85c] font-bold text-sm uppercase italic">Itens do Pedido</h3>
+                <button class="btn bg-green-900/30 text-green-500 border-green-900" onclick="addItemEditor()">+ ADICIONAR ITEM</button>
+            </div>
+
+            <div id="edItens" class="mt-2 space-y-2"></div>
+
+            <div class="card mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Promo</label><input id="edDescPromo" type="number" oninput="recalcularTotalEd()"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase">Desc. Pix</label><input id="edDescPix" type="number" oninput="recalcularTotalEd()"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase">Frete</label><input id="edFrete" type="number" oninput="recalcularTotalEd()"></div>
+                <div><label class="text-[9px] text-gray-500 uppercase">Total Peças</label><input id="edQtdTotal" type="number" readonly class="opacity-50"></div>
+            </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-6">
-                <button class="btn bg-blue-900" onclick="imprimirRomaneio(pedidoEditando, 1)">CONFERÊNCIA</button>
-                <button class="btn bg-blue-900" onclick="imprimirRomaneio(pedidoEditando, 2)">FINANCEIRO</button>
-                <button class="btn-gold" onclick="salvarPedidoEditado()">SALVAR</button>
-                <button class="btn text-red-500" onclick="fecharEditorPedido()">FECHAR</button>
+            <div class="mt-6">
+                <p class="text-[10px] text-gray-500 mb-2 uppercase font-bold">Gerar Romaneio (Impressão):</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
+                    <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 1)">1. CONFERÊNCIA</button>
+                    <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 2)">2. FINANCEIRO</button>
+                    <button class="btn bg-blue-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 3)">3. VITRINE (FOTO)</button>
+                    <button class="btn bg-indigo-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 4)">4. GRADE CONF.</button>
+                    <button class="btn bg-indigo-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 5)">5. GRADE FIN.</button>
+                    <button class="btn bg-indigo-900 text-[9px]" onclick="imprimirRomaneio(pedidoEditando, 6)">6. GRADE TOTAL</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-2 pt-4 border-t border-[#222]">
+                <button class="btn-gold flex-grow" onclick="salvarPedidoEditado()">SALVAR ALTERAÇÕES</button>
+                <button class="btn bg-red-900/20 text-red-500 border-red-900" onclick="excluirPedido(pedidoEditando)">EXCLUIR</button>
+                <button class="btn" onclick="fecharEditorPedido()">CANCELAR</button>
             </div>
         </div>
     </div>
